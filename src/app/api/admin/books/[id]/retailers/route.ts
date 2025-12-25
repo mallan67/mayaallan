@@ -5,8 +5,9 @@ import { z } from "zod"
 
 const AddRetailerSchema = z.object({
   retailerId: z.string().min(1),
-  purchaseUrl: z.string().url(),
-  displayOrder: z.number().int().optional(),
+  url: z.string().url(),
+  formatType: z.string().default("paperback"),
+  isActive: z.boolean().default(true),
 })
 
 export async function GET(
@@ -16,7 +17,6 @@ export async function GET(
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-
   const { id } = await params
   const retailers = await getBookRetailerLinks(parseInt(id))
   return NextResponse.json(retailers)
@@ -29,13 +29,18 @@ export async function POST(
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-
   const { id } = await params
   
   try {
     const body = await request.json()
     const data = AddRetailerSchema.parse(body)
-    const result = await createBookRetailerLink({ bookId: parseInt(id), ...data })
+    const result = await createBookRetailerLink({ 
+      bookId: parseInt(id), 
+      retailerId: data.retailerId,
+      url: data.url,
+      formatType: data.formatType,
+      isActive: data.isActive,
+    })
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -52,8 +57,6 @@ export async function DELETE(
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-
-  const { id } = await params
   const { searchParams } = new URL(request.url)
   const linkId = searchParams.get("linkId")
   
