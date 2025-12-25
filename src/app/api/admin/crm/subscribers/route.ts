@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getAllSubscribers, updateSubscriber, deleteSubscriber, exportSubscribers } from "@/lib/mock-data"
-import { z } from "zod"
-
-const UpdateSubscriberSchema = z.object({
-  status: z.enum(["active", "unsubscribed", "bounced"]).optional(),
-  tags: z.array(z.string()).optional(),
-  notes: z.string().optional().nullable(),
-})
+import { getAllEmailSubscribers } from "@/lib/mock-data"
 
 export async function GET(request: Request) {
   if (!(await isAuthenticated())) {
@@ -15,13 +8,22 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url)
-  const status = searchParams.get("status")
   const page = parseInt(searchParams.get("page") || "1")
   const limit = parseInt(searchParams.get("limit") || "20")
   const format = searchParams.get("format")
 
+  const subscribers = await getAllEmailSubscribers()
+
   if (format === "csv") {
-    const csv = await exportSubscribers()
+    // Generate CSV export
+    const headers = ["email", "subscribedAt", "status"]
+    const rows = subscribers.map(s => [
+      s.email,
+      s.subscribedAt || "",
+      s.status || "active"
+    ])
+    const csv = [headers.join(","), ...rows.map(r => r.join(","))].join("\n")
+    
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv",
@@ -30,57 +32,29 @@ export async function GET(request: Request) {
     })
   }
 
-  const subscribers = await getAllSubscribers({ status, page, limit })
-  return NextResponse.json(subscribers)
+  // Simple pagination
+  const start = (page - 1) * limit
+  const paginatedSubscribers = subscribers.slice(start, start + limit)
+  
+  return NextResponse.json({
+    data: paginatedSubscribers,
+    total: subscribers.length,
+    page,
+    limit,
+  })
 }
 
-export async function PATCH(request: Request) {
+// Note: updateSubscriber and deleteSubscriber not available in mock-data
+export async function PATCH() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-
-  const { searchParams } = new URL(request.url)
-  const id = searchParams.get("id")
-  
-  if (!id) {
-    return NextResponse.json({ error: "Subscriber ID required" }, { status: 400 })
-  }
-
-  try {
-    const body = await request.json()
-    const data = UpdateSubscriberSchema.parse(body)
-    const subscriber = await updateSubscriber(id, data)
-    
-    if (!subscriber) {
-      return NextResponse.json({ error: "Subscriber not found" }, { status: 404 })
-    }
-    
-    return NextResponse.json(subscriber)
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation failed", details: error.issues }, { status: 400 })
-    }
-    return NextResponse.json({ error: "Failed to update subscriber" }, { status: 500 })
-  }
+  return NextResponse.json({ error: "Not implemented" }, { status: 501 })
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-
-  const { searchParams } = new URL(request.url)
-  const id = searchParams.get("id")
-  
-  if (!id) {
-    return NextResponse.json({ error: "Subscriber ID required" }, { status: 400 })
-  }
-  
-  const success = await deleteSubscriber(id)
-  
-  if (!success) {
-    return NextResponse.json({ error: "Subscriber not found" }, { status: 404 })
-  }
-  
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ error: "Not implemented" }, { status: 501 })
 }

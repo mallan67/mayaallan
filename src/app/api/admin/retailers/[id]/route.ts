@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getRetailerById, updateRetailer, deleteRetailer } from "@/lib/mock-data"
+import { getAllRetailers, updateRetailer } from "@/lib/mock-data"
 import { z } from "zod"
 
 const UpdateRetailerSchema = z.object({
@@ -21,7 +21,8 @@ export async function GET(
   }
 
   const { id } = await params
-  const retailer = await getRetailerById(id)
+  const allRetailers = await getAllRetailers()
+  const retailer = allRetailers.find(r => r.id === id)
   
   if (!retailer) {
     return NextResponse.json({ error: "Retailer not found" }, { status: 404 })
@@ -66,12 +67,6 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { id } = await params
-  const success = await deleteRetailer(id)
-  
-  if (!success) {
-    return NextResponse.json({ error: "Retailer not found" }, { status: 404 })
-  }
-  
-  return NextResponse.json({ ok: true })
+  // Note: deleteRetailer not available in mock-data, return not implemented
+  return NextResponse.json({ error: "Delete not implemented" }, { status: 501 })
 }

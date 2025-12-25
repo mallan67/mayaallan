@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getBookById, updateBook, deleteBook } from "@/lib/mock-data"
+import { getBookBySlug, updateBook, deleteBook } from "@/lib/mock-data"
 import { z } from "zod"
 
 const UpdateBookSchema = z.object({
@@ -36,7 +36,7 @@ export async function GET(
   }
 
   const { id } = await params
-  const book = await getBookById(id)
+  const book = await getBookBySlug(id)
   
   if (!book) {
     return NextResponse.json({ error: "Book not found" }, { status: 404 })

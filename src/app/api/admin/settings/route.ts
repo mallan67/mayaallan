@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getSettings, updateSettings } from "@/lib/mock-data"
+import { getSiteSettings, updateSiteSettings } from "@/lib/mock-data"
 import { z } from "zod"
 
 const UpdateSettingsSchema = z.object({
@@ -33,7 +33,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const settings = await getSettings()
+  const settings = await getSiteSettings()
   return NextResponse.json(settings)
 }
 
@@ -45,7 +45,7 @@ export async function PATCH(request: Request) {
   try {
     const body = await request.json()
     const data = UpdateSettingsSchema.parse(body)
-    const settings = await updateSettings(data)
+    const settings = await updateSiteSettings(data)
     return NextResponse.json(settings)
   } catch (error) {
     if (error instanceof z.ZodError) {

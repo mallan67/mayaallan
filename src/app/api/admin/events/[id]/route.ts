@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getEventById, updateEvent, deleteEvent } from "@/lib/mock-data"
+import { getAllEvents, updateEvent, deleteEvent } from "@/lib/mock-data"
 import { z } from "zod"
 
 const UpdateEventSchema = z.object({
@@ -28,7 +28,8 @@ export async function GET(
   }
 
   const { id } = await params
-  const event = await getEventById(id)
+  const allEvents = await getAllEvents()
+  const event = allEvents.find(e => e.id === id)
   
   if (!event) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 })

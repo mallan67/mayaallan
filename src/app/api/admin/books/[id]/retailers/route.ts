@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getBookRetailers, addBookRetailer, removeBookRetailer } from "@/lib/mock-data"
+import { getBookRetailerLinks, createBookRetailerLink, deleteBookRetailerLink } from "@/lib/mock-data"
 import { z } from "zod"
 
 const AddRetailerSchema = z.object({
@@ -18,7 +18,7 @@ export async function GET(
   }
 
   const { id } = await params
-  const retailers = await getBookRetailers(id)
+  const retailers = await getBookRetailerLinks(id)
   return NextResponse.json(retailers)
 }
 
@@ -35,7 +35,7 @@ export async function POST(
   try {
     const body = await request.json()
     const data = AddRetailerSchema.parse(body)
-    const result = await addBookRetailer(id, data)
+    const result = await createBookRetailerLink({ bookId: id, ...data })
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -55,16 +55,16 @@ export async function DELETE(
 
   const { id } = await params
   const { searchParams } = new URL(request.url)
-  const retailerId = searchParams.get("retailerId")
+  const linkId = searchParams.get("linkId")
   
-  if (!retailerId) {
-    return NextResponse.json({ error: "retailerId is required" }, { status: 400 })
+  if (!linkId) {
+    return NextResponse.json({ error: "linkId is required" }, { status: 400 })
   }
   
-  const success = await removeBookRetailer(id, retailerId)
+  const success = await deleteBookRetailerLink(linkId)
   
   if (!success) {
-    return NextResponse.json({ error: "Retailer not found for this book" }, { status: 404 })
+    return NextResponse.json({ error: "Retailer link not found" }, { status: 404 })
   }
   
   return NextResponse.json({ ok: true })

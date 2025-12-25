@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getMediaById, updateMedia, deleteMedia } from "@/lib/mock-data"
+import { getAllMedia, updateMedia, deleteMedia } from "@/lib/mock-data"
 import { z } from "zod"
 
 const UpdateMediaSchema = z.object({
@@ -29,7 +29,8 @@ export async function GET(
   }
 
   const { id } = await params
-  const media = await getMediaById(id)
+  const allMedia = await getAllMedia()
+  const media = allMedia.find(m => m.id === id)
   
   if (!media) {
     return NextResponse.json({ error: "Media not found" }, { status: 404 })
