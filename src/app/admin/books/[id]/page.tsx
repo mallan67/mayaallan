@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import type { Book, Retailer } from "@/lib/mock-data"
 import ImageUpload from "@/components/ImageUpload"
+import ImageUpload from "@/components/ImageUpload"
 
 export default function AdminEditBookPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
