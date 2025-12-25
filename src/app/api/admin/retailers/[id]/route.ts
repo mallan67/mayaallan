@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getAllRetailers, updateRetailer } from "@/lib/mock-data"
+import { getAllRetailers, updateRetailer, deleteRetailer } from "@/lib/mock-data"
 import { z } from "zod"
 
 const UpdateRetailerSchema = z.object({
   name: z.string().min(1).optional(),
-  slug: z.string().min(1).optional(),
-  logoUrl: z.string().optional().nullable(),
-  websiteUrl: z.string().url().optional().nullable(),
-  displayOrder: z.number().int().optional(),
+  icon: z.string().optional().nullable(),
   isActive: z.boolean().optional(),
 })
 
@@ -21,13 +18,15 @@ export async function GET(
   }
 
   const { id } = await params
+  const retailerId = Number(id)
+
   const allRetailers = await getAllRetailers()
-  const retailer = allRetailers.find(r => r.id === id)
-  
+  const retailer = allRetailers.find((r) => r.id === retailerId)
+
   if (!retailer) {
     return NextResponse.json({ error: "Retailer not found" }, { status: 404 })
   }
-  
+
   return NextResponse.json(retailer)
 }
 
@@ -40,21 +39,26 @@ export async function PATCH(
   }
 
   const { id } = await params
-  
+  const retailerId = Number(id)
+
   try {
     const body = await request.json()
     const data = UpdateRetailerSchema.parse(body)
-    const retailer = await updateRetailer(id, data)
-    
-    if (!retailer) {
+
+    const updated = await updateRetailer(retailerId, data as any)
+    if (!updated) {
       return NextResponse.json({ error: "Retailer not found" }, { status: 404 })
     }
-    
-    return NextResponse.json(retailer)
+
+    return NextResponse.json(updated)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation failed", details: error.issues }, { status: 400 })
+      return NextResponse.json(
+        { error: "Validation failed", details: error.issues },
+        { status: 400 }
+      )
     }
+
     return NextResponse.json({ error: "Failed to update retailer" }, { status: 500 })
   }
 }
@@ -67,6 +71,13 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  // Note: deleteRetailer not available in mock-data, return not implemented
-  return NextResponse.json({ error: "Delete not implemented" }, { status: 501 })
+  const { id } = await params
+  const retailerId = Number(id)
+
+  const ok = await deleteRetailer(retailerId)
+  if (!ok) {
+    return NextResponse.json({ error: "Retailer not found" }, { status: 404 })
+  }
+
+  return NextResponse.json({ ok: true })
 }
