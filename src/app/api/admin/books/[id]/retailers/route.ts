@@ -81,7 +81,7 @@ export async function DELETE(
   }
 
   const { id } = await params
-  const success = await deleteBookRetailerLink(Number(id), linkId)
+  const success = await deleteBookRetailerLink(Number(id), Number(linkId))
 
   if (!success) {
     return NextResponse.json(
