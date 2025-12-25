@@ -1,7 +1,10 @@
 import { getIronSession, type IronSession } from "iron-session"
 import { cookies } from "next/headers"
 
-export type AdminSession = IronSession<{ adminId?: string }>
+export type AdminSession = IronSession<{ 
+  adminId?: string
+  user?: { id: string; email?: string }
+}>
 
 export const sessionOptions = {
   password: process.env.SESSION_SECRET || "complex_password_at_least_32_characters_long_for_demo",
