@@ -43,7 +43,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json(link, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation failed", details: error.errors }, { status: 400 })
+      return NextResponse.json({ error: "Validation failed", details: error.issues }, { status: 400 })
     }
     return NextResponse.json({ error: "Failed to create retailer link" }, { status: 500 })
   }
