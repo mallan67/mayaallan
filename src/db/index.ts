@@ -9,6 +9,8 @@ function getConnectionString() {
 
 
 
+const connectionString = getConnectionString()
+
 if (!connectionString) {
   throw new Error("Missing POSTGRES_URL or DATABASE_URL")
 }
