@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getAllRetailers, updateRetailer, deleteRetailer } from "@/lib/mock-data"
+import { getAllRetailers, updateRetailer } from "@/lib/mock-data"
 import { z } from "zod"
 
 const UpdateRetailerSchema = z.object({
