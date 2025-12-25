@@ -3,11 +3,14 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import ImageUpload from "@/components/ImageUpload"
 
 export default function AdminNewEventPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
+  
+  const [eventImageUrl, setEventImageUrl] = useState<string>("")
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -22,11 +25,12 @@ export default function AdminNewEventPage() {
       const data = {
         slug: formData.get("slug") as string,
         title: formData.get("title") as string,
-        description: formData.get("description") as string || null,
-        startsAt: new Date(startsAt).toISOString(),
+        description: (formData.get("description") as string) || null,
+        startsAt: startsAt ? new Date(startsAt).toISOString() : null,
         endsAt: endsAt ? new Date(endsAt).toISOString() : null,
-        locationText: formData.get("locationText") as string || null,
-        locationUrl: formData.get("locationUrl") as string || null,
+        locationText: (formData.get("locationText") as string) || null,
+        locationUrl: (formData.get("locationUrl") as string) || null,
+        eventImageUrl: eventImageUrl || null,
         isPublished: false,
         isVisible: false,
         keepVisibleAfterEnd: false,
@@ -66,31 +70,16 @@ export default function AdminNewEventPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Title *</label>
-              <input
-                type="text"
-                name="title"
-                required
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <input type="text" name="title" required className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">URL Slug *</label>
-              <input
-                type="text"
-                name="slug"
-                required
-                placeholder="book-reading-march-2025"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <input type="text" name="slug" required placeholder="book-reading-march-2025" className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
               <p className="text-xs text-slate-500 mt-1">Used in URL: /events/your-slug</p>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Description</label>
-              <textarea
-                name="description"
-                rows={4}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <textarea name="description" rows={4} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
           </div>
         </div>
@@ -100,20 +89,11 @@ export default function AdminNewEventPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Starts At *</label>
-              <input
-                type="datetime-local"
-                name="startsAt"
-                required
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <input type="datetime-local" name="startsAt" required className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Ends At (optional)</label>
-              <input
-                type="datetime-local"
-                name="endsAt"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <input type="datetime-local" name="endsAt" className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
           </div>
         </div>
@@ -123,44 +103,29 @@ export default function AdminNewEventPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Location Name / Address</label>
-              <input
-                type="text"
-                name="locationText"
-                placeholder="Online Event or Physical Address"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <input type="text" name="locationText" placeholder="Online Event or Physical Address" className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Location URL (optional)</label>
-              <input
-                type="url"
-                name="locationUrl"
-                placeholder="https://zoom.us/... or Google Maps link"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <input type="url" name="locationUrl" placeholder="https://zoom.us/... or Google Maps link" className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
           </div>
         </div>
 
+        <div className="border border-slate-200 rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">Event Image</h2>
+          <ImageUpload label="Event Banner / Photo" currentUrl={eventImageUrl} onUpload={setEventImageUrl} accept="image/*" />
+        </div>
+
         {message && (
-          <div className="p-4 rounded-lg bg-red-50 text-red-700">
-            {message}
-          </div>
+          <div className="p-4 rounded-lg bg-red-50 text-red-700">{message}</div>
         )}
 
         <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex-1 px-6 py-3 bg-black text-white rounded-lg hover:bg-black/80 transition disabled:opacity-50"
-          >
+          <button type="submit" disabled={saving} className="flex-1 px-6 py-3 bg-black text-white rounded-lg hover:bg-black/80 transition disabled:opacity-50">
             {saving ? "Creating..." : "Create Event"}
           </button>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-6 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 transition"
-          >
+          <button type="button" onClick={() => router.back()} className="px-6 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 transition">
             Cancel
           </button>
         </div>
