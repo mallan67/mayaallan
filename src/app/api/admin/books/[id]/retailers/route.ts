@@ -10,7 +10,7 @@ import { z } from "zod"
 const AddRetailerSchema = z.object({
   retailerId: z.union([z.string(), z.number()]),
   url: z.string().url(),
-  formatType: z.string().default("paperback"),
+  formatType: z.enum(["ebook", "print", "hardcover"]).default("print"),
   isActive: z.boolean().default(true),
 })
 
@@ -43,7 +43,7 @@ export async function POST(
 
     const result = await createBookRetailerLink({
       bookId: Number(id),
-      retailerId: Number(data.retailerId), // 🔒 FORCE NUMBER – TS CANNOT FAIL HERE
+      retailerId: Number(data.retailerId),
       url: data.url,
       formatType: data.formatType,
       isActive: data.isActive,
@@ -65,9 +65,7 @@ export async function POST(
   }
 }
 
-export async function DELETE(
-  request: Request
-) {
+export async function DELETE(request: Request) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
