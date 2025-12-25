@@ -1,14 +1,14 @@
 "use client"
 import { useState, useRef } from "react"
 
-interface ImageUploadProps {
+interface Props {
   currentUrl?: string | null
   onUpload: (url: string) => void
   label?: string
   accept?: string
 }
 
-export default function ImageUpload({ currentUrl, onUpload, label = "Upload Image", accept = "image/*" }: ImageUploadProps) {
+export default function ImageUpload({ currentUrl, onUpload, label = "Upload Image", accept = "image/*" }: Props) {
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(currentUrl || null)
   const [error, setError] = useState<string | null>(null)
@@ -17,7 +17,6 @@ export default function ImageUpload({ currentUrl, onUpload, label = "Upload Imag
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-
     setError(null)
     setUploading(true)
 
@@ -30,14 +29,8 @@ export default function ImageUpload({ currentUrl, onUpload, label = "Upload Imag
     try {
       const formData = new FormData()
       formData.append("file", file)
-
       const response = await fetch("/api/upload", { method: "POST", body: formData })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Upload failed")
-      }
-
+      if (!response.ok) throw new Error((await response.json()).error || "Upload failed")
       const data = await response.json()
       setPreview(data.url)
       onUpload(data.url)
@@ -58,7 +51,6 @@ export default function ImageUpload({ currentUrl, onUpload, label = "Upload Imag
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-slate-700">{label}</label>
-      
       {preview ? (
         <div className="relative inline-block">
           {accept.includes("audio") ? (
@@ -70,9 +62,7 @@ export default function ImageUpload({ currentUrl, onUpload, label = "Upload Imag
         </div>
       ) : (
         <div onClick={() => inputRef.current?.click()} className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center cursor-pointer hover:border-slate-400 transition">
-          {uploading ? (
-            <div className="text-slate-500">Uploading...</div>
-          ) : (
+          {uploading ? <div className="text-slate-500">Uploading...</div> : (
             <div className="text-slate-500">
               <div className="text-3xl mb-2">📁</div>
               <div>Click to upload</div>
@@ -81,7 +71,6 @@ export default function ImageUpload({ currentUrl, onUpload, label = "Upload Imag
           )}
         </div>
       )}
-
       <input ref={inputRef} type="file" accept={accept} onChange={handleFileChange} className="hidden" disabled={uploading} />
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
