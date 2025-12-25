@@ -18,7 +18,7 @@ export async function GET(
   }
 
   const { id } = await params
-  const retailers = await getBookRetailerLinks(id)
+  const retailers = await getBookRetailerLinks(parseInt(id))
   return NextResponse.json(retailers)
 }
 
