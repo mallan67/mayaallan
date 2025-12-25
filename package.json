@@ -21,6 +21,7 @@
     "@opentelemetry/api": "latest",
     "@planetscale/database": "latest",
     "@prisma/client": "7.2.0",
+    "@radix-ui/react-accordion": "^1.2.12",
     "@tidbcloud/serverless": "latest",
     "@types/better-sqlite3": "latest",
     "@types/pg": "latest",
