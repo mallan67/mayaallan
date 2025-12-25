@@ -25,8 +25,6 @@ export async function GET(
   }
 
   const { id } = await params
-
-  // In this project, [id] maps to the book "slug" (string), not a numeric ID.
   const book = await getBookBySlug(id)
 
   if (!book) {
@@ -45,19 +43,44 @@ export async function PUT(
   }
 
   const { id } = await params
-  const body = await request.json()
-  const data = UpdateBookSchema.parse(body)
 
-  // updateBook expects a numeric ID in this project.
-  const book = await updateBook(Number(id), data)
+  try {
+    const body = await request.json()
+    const data = UpdateBookSchema.parse(body)
 
-  if (!book) {
-    return NextResponse.json({ error: "Book not found" }, { status: 404 })
+    const book = await updateBook(Number(id), data)
+
+    if (!book) {
+      return NextResponse.json({ error: "Book not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(book)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: "Validation failed", details: error.issues },
+        { status: 400 }
+      )
+    }
+
+    return NextResponse.json({ error: "Failed to update book" }, { status: 500 })
   }
-
-  return NextResponse.json(book)
 }
 
 export async function DELETE(
   request: Request,
-  { pa
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { id } = await params
+  const success = await deleteBook(Number(id))
+
+  if (!success) {
+    return NextResponse.json({ error: "Book not found" }, { status: 404 })
+  }
+
+  return NextResponse.json({ ok: true })
+}
