@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import {
-  getBookById,
-  updateBook,
-  deleteBook,
-} from "@/lib/mock-data"
+import { getBookBySlug, updateBook, deleteBook } from "@/lib/mock-data"
 import { z } from "zod"
 
 const UpdateBookSchema = z.object({
@@ -29,7 +25,9 @@ export async function GET(
   }
 
   const { id } = await params
-  const book = await getBookById(Number(id))
+
+  // In this project, [id] maps to the book "slug" (string), not a numeric ID.
+  const book = await getBookBySlug(id)
 
   if (!book) {
     return NextResponse.json({ error: "Book not found" }, { status: 404 })
@@ -50,6 +48,7 @@ export async function PUT(
   const body = await request.json()
   const data = UpdateBookSchema.parse(body)
 
+  // updateBook expects a numeric ID in this project.
   const book = await updateBook(Number(id), data)
 
   if (!book) {
@@ -61,18 +60,4 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  const { id } = await params
-  const success = await deleteBook(Number(id))
-
-  if (!success) {
-    return NextResponse.json({ error: "Book not found" }, { status: 404 })
-  }
-
-  return NextResponse.json({ ok: true })
-}
+  { pa
