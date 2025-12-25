@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 export type AdminSession = IronSession<{ 
   adminId?: string
   user?: { id: string; email?: string }
+  isLoggedIn?: boolean
 }>
 
 export const sessionOptions = {
