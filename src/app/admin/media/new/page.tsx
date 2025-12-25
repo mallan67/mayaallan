@@ -3,11 +3,15 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import ImageUpload from "@/components/ImageUpload"
 
 export default function AdminNewMediaPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
+  
+  const [coverUrl, setCoverUrl] = useState<string>("")
+  const [fileUrl, setFileUrl] = useState<string>("")
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -17,15 +21,15 @@ export default function AdminNewMediaPage() {
     try {
       const formData = new FormData(e.currentTarget)
       const data = {
-        kind: formData.get("kind") as "audio" | "video",
         slug: formData.get("slug") as string,
         title: formData.get("title") as string,
-        description: formData.get("description") as string || null,
-        coverUrl: formData.get("coverUrl") as string || null,
-        fileUrl: formData.get("fileUrl") as string || null,
-        externalUrl: formData.get("externalUrl") as string || null,
-        isbn: formData.get("isbn") as string || null,
-        isPublished: false,
+        description: (formData.get("description") as string) || null,
+        mediaType: formData.get("mediaType") as string,
+        coverUrl: coverUrl || null,
+        fileUrl: fileUrl || null,
+        externalUrl: (formData.get("externalUrl") as string) || null,
+        duration: (formData.get("duration") as string) || null,
+        publishedAt: (formData.get("publishedAt") as string) || null,
         isVisible: false,
       }
 
@@ -59,125 +63,71 @@ export default function AdminNewMediaPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="border border-slate-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Basic Information</h2>
+          <h2 className="text-lg font-semibold mb-4">Media Details</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Type *</label>
-              <select
-                name="kind"
-                required
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="audio">Audio</option>
-                <option value="video">Video</option>
-              </select>
-            </div>
-            <div>
               <label className="block text-sm font-medium mb-1">Title *</label>
-              <input
-                type="text"
-                name="title"
-                required
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <input type="text" name="title" required className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">URL Slug *</label>
-              <input
-                type="text"
-                name="slug"
-                required
-                placeholder="my-audio-guide"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <input type="text" name="slug" required placeholder="my-podcast-episode" className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
               <p className="text-xs text-slate-500 mt-1">Used in URL: /media/your-slug</p>
             </div>
             <div>
+              <label className="block text-sm font-medium mb-1">Media Type *</label>
+              <select name="mediaType" required className="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                <option value="">Select type...</option>
+                <option value="podcast">Podcast</option>
+                <option value="video">Video</option>
+                <option value="interview">Interview</option>
+                <option value="article">Article</option>
+                <option value="audio">Audio</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-sm font-medium mb-1">Description</label>
-              <textarea
-                name="description"
-                rows={4}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <textarea name="description" rows={4} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Duration</label>
+              <input type="text" name="duration" placeholder="45:30" className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Published Date</label>
+              <input type="date" name="publishedAt" className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
           </div>
         </div>
 
         <div className="border border-slate-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Media Source</h2>
-          <p className="text-sm text-slate-600 mb-4">Provide either a file URL or external URL (YouTube, Vimeo, etc.)</p>
-          <div className="space-y-4">
+          <h2 className="text-lg font-semibold mb-4">Files & Links</h2>
+          <div className="space-y-6">
+            <ImageUpload label="Cover Image / Thumbnail" currentUrl={coverUrl} onUpload={setCoverUrl} accept="image/*" />
+            <ImageUpload label="Media File (Audio/Video)" currentUrl={fileUrl} onUpload={setFileUrl} accept="audio/*,video/*,.mp3,.mp4,.wav,.webm" />
             <div>
-              <label className="block text-sm font-medium mb-1">File URL</label>
-              <input
-                type="url"
-                name="fileUrl"
-                placeholder="https://..."
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              <p className="text-xs text-slate-500 mt-1">Direct link to audio/video file</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">External URL</label>
-              <input
-                type="url"
-                name="externalUrl"
-                placeholder="https://youtube.com/watch?v=..."
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              <p className="text-xs text-slate-500 mt-1">YouTube, Vimeo, or other embed URL</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="border border-slate-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Additional Info</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Cover Image URL</label>
-              <input
-                type="url"
-                name="coverUrl"
-                placeholder="https://..."
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">ISBN (optional)</label>
-              <input
-                type="text"
-                name="isbn"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-              />
+              <label className="block text-sm font-medium mb-1">External URL (YouTube, Spotify, etc.)</label>
+              <input type="url" name="externalUrl" placeholder="https://..." className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              <p className="text-xs text-slate-500 mt-1">Use this for embedded content from external platforms</p>
             </div>
           </div>
         </div>
 
         {message && (
-          <div className="p-4 rounded-lg bg-red-50 text-red-700">
-            {message}
-          </div>
+          <div className="p-4 rounded-lg bg-red-50 text-red-700">{message}</div>
         )}
 
         <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex-1 px-6 py-3 bg-black text-white rounded-lg hover:bg-black/80 transition disabled:opacity-50"
-          >
+          <button type="submit" disabled={saving} className="flex-1 px-6 py-3 bg-black text-white rounded-lg hover:bg-black/80 transition disabled:opacity-50">
             {saving ? "Creating..." : "Create Media"}
           </button>
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-6 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 transition"
-          >
+          <button type="button" onClick={() => router.back()} className="px-6 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 transition">
             Cancel
           </button>
         </div>
 
         <p className="text-sm text-slate-500 text-center">
-          Media will be created as draft (unpublished). You can configure visibility after creation.
+          Media will be created as hidden. You can make it visible after creation.
         </p>
       </form>
     </div>
