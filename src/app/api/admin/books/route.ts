@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getAllBooks, createBook } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const BookSchema = z.object({
@@ -28,28 +28,64 @@ const BookSchema = z.object({
 })
 
 export async function GET() {
-  if (!(await isAuthenticated())) {
+  const authed = await isAuthenticated()
+  if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const books = await getAllBooks()
-  return NextResponse.json(books)
+  try {
+    const books = await prisma.book.findMany({
+      orderBy: { createdAt: "desc" },
+    })
+    return NextResponse.json(books)
+  } catch (error) {
+    console.error("Error fetching books:", error)
+    return NextResponse.json({ error: "Failed to fetch books" }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
-  if (!(await isAuthenticated())) {
+  const authed = await isAuthenticated()
+  if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   try {
     const body = await request.json()
-    const data = BookSchema.parse(body)
-    const book = await createBook(data)
+    const parsed = BookSchema.parse(body)
+
+    const book = await prisma.book.create({
+      data: {
+        slug: parsed.slug,
+        title: parsed.title,
+        subtitle1: parsed.subtitle1,
+        subtitle2: parsed.subtitle2,
+        tagsCsv: parsed.tagsCsv,
+        isbn: parsed.isbn,
+        copyright: parsed.copyright,
+        blurb: parsed.blurb,
+        coverUrl: parsed.coverUrl,
+        backCoverUrl: parsed.backCoverUrl,
+        ebookFileUrl: parsed.ebookFileUrl,
+        isPublished: parsed.isPublished,
+        isVisible: parsed.isVisible,
+        isComingSoon: parsed.isComingSoon,
+        allowDirectSale: parsed.allowDirectSale,
+        stripePaymentLink: parsed.stripePaymentLink,
+        paypalPaymentLink: parsed.paypalPaymentLink,
+        seoTitle: parsed.seoTitle,
+        seoDescription: parsed.seoDescription,
+        ogImageUrl: parsed.ogImageUrl,
+        publishedAt: parsed.publishedAt ? new Date(parsed.publishedAt) : null,
+      },
+    })
+
     return NextResponse.json(book, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation failed", details: error.issues }, { status: 400 })
+      return NextResponse.json({ error: error.errors }, { status: 400 })
     }
+    console.error("Error creating book:", error)
     return NextResponse.json({ error: "Failed to create book" }, { status: 500 })
   }
 }
