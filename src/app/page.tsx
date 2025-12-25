@@ -77,7 +77,7 @@ export default async function HomePage() {
               <ShareButtons
                 url={`https://mayaallan.com/books/${mainBook.slug}`}
                 title={mainBook.title}
-                description={mainBook.blurb || mainBook.subtitle1}
+                description={(mainBook.blurb ?? mainBook.subtitle1) ?? undefined}
                 hashtags={mainBook.tagsCsv?.split(",").map((t) => t.trim())}
               />
             </div>
