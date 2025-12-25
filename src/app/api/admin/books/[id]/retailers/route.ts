@@ -65,7 +65,10 @@ export async function POST(
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -77,7 +80,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "linkId is required" }, { status: 400 })
   }
 
-  const success = await deleteBookRetailerLink(linkId)
+  const { id } = await params
+  const success = await deleteBookRetailerLink(Number(id), linkId)
 
   if (!success) {
     return NextResponse.json(
