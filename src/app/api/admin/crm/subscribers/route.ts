@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getEmailSubscribers } from "@/lib/mock-data"
+import { getAllEmailSubscribers } from "@/lib/mock-data"
 
 export async function GET(request: Request) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const subscribers = await getEmailSubscribers()
+  const subscribers = await getAllEmailSubscribers()
 
   const headers = ["email", "status"]
-  const rows = subscribers.map((s) => [
+  const rows = subscribers.map((s: any) => [
     s.email,
-    (s as any).status || "active",
+    s.status || "active",
   ])
 
-  const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n")
+  const csv = [headers.join(","), ...rows.map((r: any) => r.join(","))].join("\n")
 
   return new NextResponse(csv, {
     status: 200,
