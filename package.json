@@ -67,6 +67,7 @@
     "embla-carousel-react": "^8.6.0",
     "expo-sqlite": "latest",
     "gel": "latest",
+    "input-otp": "^1.4.2",
     "iron-session": "^8.0.4",
     "knex": "latest",
     "kysely": "latest",
@@ -80,12 +81,15 @@
     "react": "^19.0.0",
     "react-day-picker": "^9.13.0",
     "react-dom": "^19.0.0",
+    "react-resizable-panels": "^4.0.15",
     "recharts": "^3.6.0",
     "server-only": "0.0.1",
+    "sonner": "^2.0.7",
     "sql.js": "latest",
     "sqlite3": "latest",
     "tailwind-merge": "3.4.0",
     "tailwindcss-animate": "1.0.7",
+    "vaul": "^1.1.2",
     "zod": "^4.2.1"
   },
   "devDependencies": {
