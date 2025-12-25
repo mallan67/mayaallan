@@ -117,7 +117,7 @@ export default async function BookPage({ params }: BookPageProps) {
               <ShareButtons
                 url={bookUrl}
                 title={book.title}
-                description={book.blurb || book.subtitle1}
+                description={book.blurb ?? book.subtitle1 ?? undefined}
                 hashtags={book.tagsCsv?.split(",").map((t) => t.trim())}
               />
             </div>
