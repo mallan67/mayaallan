@@ -43,7 +43,7 @@ export async function POST(
 
     const result = await createBookRetailerLink({
       bookId: Number(id),
-      retailerId: Number(data.retailerId), // ← THIS ENDS THE ERROR
+      retailerId: Number(data.retailerId), // 🔒 FORCE NUMBER – TS CANNOT FAIL HERE
       url: data.url,
       formatType: data.formatType,
       isActive: data.isActive,
@@ -66,8 +66,7 @@ export async function POST(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: Request
 ) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
