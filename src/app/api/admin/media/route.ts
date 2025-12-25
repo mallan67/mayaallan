@@ -1,26 +1,27 @@
 import { NextResponse } from "next/server"
-import { getSession } from "@/lib/session"
+import { isAuthenticated } from "@/lib/session"
 import { getAllMedia, createMedia } from "@/lib/mock-data"
 import { z } from "zod"
 
 const MediaSchema = z.object({
-  kind: z.enum(["audio", "video"]),
   slug: z.string().min(1),
   title: z.string().min(1),
+  type: z.enum(["audio", "video"]),
   description: z.string().optional().nullable(),
-  coverUrl: z.string().optional().nullable(),
   fileUrl: z.string().optional().nullable(),
   externalUrl: z.string().optional().nullable(),
+  coverUrl: z.string().optional().nullable(),
   isbn: z.string().optional().nullable(),
   isPublished: z.boolean().default(false),
-  isVisible: z.boolean().default(true),
+  isVisible: z.boolean().default(false),
   seoTitle: z.string().optional().nullable(),
   seoDescription: z.string().optional().nullable(),
+  ogImageUrl: z.string().optional().nullable(),
+  publishedAt: z.string().optional().nullable(),
 })
 
 export async function GET() {
-  const session = await getSession()
-  if (!session?.user) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -29,8 +30,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getSession()
-  if (!session?.user) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

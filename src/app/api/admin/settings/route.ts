@@ -1,40 +1,51 @@
 import { NextResponse } from "next/server"
-import { getSession } from "@/lib/session"
-import { getSiteSettings, updateSiteSettings } from "@/lib/mock-data"
+import { isAuthenticated } from "@/lib/session"
+import { getSettings, updateSettings } from "@/lib/mock-data"
 import { z } from "zod"
 
-const settingsSchema = z.object({
+const UpdateSettingsSchema = z.object({
   siteTitle: z.string().optional(),
   siteDescription: z.string().optional(),
+  authorName: z.string().optional(),
+  authorBio: z.string().optional(),
   authorPhotoUrl: z.string().optional().nullable(),
+  socialLinks: z.object({
+    twitter: z.string().optional().nullable(),
+    instagram: z.string().optional().nullable(),
+    facebook: z.string().optional().nullable(),
+    tiktok: z.string().optional().nullable(),
+    youtube: z.string().optional().nullable(),
+    goodreads: z.string().optional().nullable(),
+    amazon: z.string().optional().nullable(),
+  }).optional(),
+  contactEmail: z.string().email().optional(),
+  newsletterProvider: z.enum(["mailchimp", "convertkit", "custom"]).optional(),
+  newsletterApiKey: z.string().optional().nullable(),
+  newsletterListId: z.string().optional().nullable(),
+  analyticsId: z.string().optional().nullable(),
+  defaultSeoTitle: z.string().optional(),
+  defaultSeoDescription: z.string().optional(),
   defaultOgImageUrl: z.string().optional().nullable(),
-  fontBody: z.string().optional(),
-  fontHeading: z.string().optional(),
-  accentColor: z.string().optional(),
-  maxWidth: z.string().optional(),
-  buttonStyle: z.string().optional(),
 })
 
 export async function GET() {
-  const session = await getSession()
-  if (!session?.user) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const settings = await getSiteSettings()
+  const settings = await getSettings()
   return NextResponse.json(settings)
 }
 
-export async function PUT(request: Request) {
-  const session = await getSession()
-  if (!session?.user) {
+export async function PATCH(request: Request) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   try {
     const body = await request.json()
-    const data = settingsSchema.parse(body)
-    const settings = await updateSiteSettings(data)
+    const data = UpdateSettingsSchema.parse(body)
+    const settings = await updateSettings(data)
     return NextResponse.json(settings)
   } catch (error) {
     if (error instanceof z.ZodError) {

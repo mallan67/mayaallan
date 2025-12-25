@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server"
-import { getSession } from "@/lib/session"
-import { updateBook, deleteBook } from "@/lib/mock-data"
+import { isAuthenticated } from "@/lib/session"
+import { getBookById, updateBook, deleteBook } from "@/lib/mock-data"
 import { z } from "zod"
 
-const BookUpdateSchema = z.object({
-  slug: z.string().optional(),
-  title: z.string().optional(),
+const UpdateBookSchema = z.object({
+  slug: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
   subtitle1: z.string().optional().nullable(),
   subtitle2: z.string().optional().nullable(),
   tagsCsv: z.string().optional().nullable(),
@@ -24,24 +24,46 @@ const BookUpdateSchema = z.object({
   seoTitle: z.string().optional().nullable(),
   seoDescription: z.string().optional().nullable(),
   ogImageUrl: z.string().optional().nullable(),
+  publishedAt: z.string().optional().nullable(),
 })
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession()
-  if (!session?.user) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  try {
-    const { id } = await params
-    const body = await request.json()
-    const data = BookUpdateSchema.parse(body)
-    const book = await updateBook(Number(id), data)
+  const { id } = await params
+  const book = await getBookById(id)
+  
+  if (!book) {
+    return NextResponse.json({ error: "Book not found" }, { status: 404 })
+  }
+  
+  return NextResponse.json(book)
+}
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { id } = await params
+  
+  try {
+    const body = await request.json()
+    const data = UpdateBookSchema.parse(body)
+    const book = await updateBook(id, data)
+    
     if (!book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
-
+    
     return NextResponse.json(book)
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -51,18 +73,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession()
-  if (!session?.user) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const { id } = await params
-  const success = await deleteBook(Number(id))
-
+  const success = await deleteBook(id)
+  
   if (!success) {
     return NextResponse.json({ error: "Book not found" }, { status: 404 })
   }
-
-  return NextResponse.json({ success: true })
+  
+  return NextResponse.json({ ok: true })
 }

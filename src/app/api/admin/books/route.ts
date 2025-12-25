@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getSession } from "@/lib/session"
+import { isAuthenticated } from "@/lib/session"
 import { getAllBooks, createBook } from "@/lib/mock-data"
 import { z } from "zod"
 
@@ -16,7 +16,7 @@ const BookSchema = z.object({
   backCoverUrl: z.string().optional().nullable(),
   ebookFileUrl: z.string().optional().nullable(),
   isPublished: z.boolean().default(false),
-  isVisible: z.boolean().default(true),
+  isVisible: z.boolean().default(false),
   isComingSoon: z.boolean().default(false),
   allowDirectSale: z.boolean().default(false),
   stripePaymentLink: z.string().optional().nullable(),
@@ -28,8 +28,7 @@ const BookSchema = z.object({
 })
 
 export async function GET() {
-  const session = await getSession()
-  if (!session?.user) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -38,8 +37,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getSession()
-  if (!session?.user) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

@@ -1,39 +1,62 @@
 import { NextResponse } from "next/server"
-import { getSession } from "@/lib/session"
-import { updateMedia, deleteMedia } from "@/lib/mock-data"
+import { isAuthenticated } from "@/lib/session"
+import { getMediaById, updateMedia, deleteMedia } from "@/lib/mock-data"
 import { z } from "zod"
 
-const MediaUpdateSchema = z.object({
-  kind: z.enum(["audio", "video"]).optional(),
-  slug: z.string().optional(),
-  title: z.string().optional(),
+const UpdateMediaSchema = z.object({
+  slug: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
+  type: z.enum(["audio", "video"]).optional(),
   description: z.string().optional().nullable(),
-  coverUrl: z.string().optional().nullable(),
   fileUrl: z.string().optional().nullable(),
   externalUrl: z.string().optional().nullable(),
+  coverUrl: z.string().optional().nullable(),
   isbn: z.string().optional().nullable(),
   isPublished: z.boolean().optional(),
   isVisible: z.boolean().optional(),
   seoTitle: z.string().optional().nullable(),
   seoDescription: z.string().optional().nullable(),
+  ogImageUrl: z.string().optional().nullable(),
+  publishedAt: z.string().optional().nullable(),
 })
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession()
-  if (!session?.user) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  try {
-    const { id } = await params
-    const body = await request.json()
-    const data = MediaUpdateSchema.parse(body)
-    const media = await updateMedia(Number(id), data)
+  const { id } = await params
+  const media = await getMediaById(id)
+  
+  if (!media) {
+    return NextResponse.json({ error: "Media not found" }, { status: 404 })
+  }
+  
+  return NextResponse.json(media)
+}
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { id } = await params
+  
+  try {
+    const body = await request.json()
+    const data = UpdateMediaSchema.parse(body)
+    const media = await updateMedia(id, data)
+    
     if (!media) {
       return NextResponse.json({ error: "Media not found" }, { status: 404 })
     }
-
+    
     return NextResponse.json(media)
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -43,18 +66,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession()
-  if (!session?.user) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const { id } = await params
-  const success = await deleteMedia(Number(id))
-
+  const success = await deleteMedia(id)
+  
   if (!success) {
     return NextResponse.json({ error: "Media not found" }, { status: 404 })
   }
-
-  return NextResponse.json({ success: true })
+  
+  return NextResponse.json({ ok: true })
 }

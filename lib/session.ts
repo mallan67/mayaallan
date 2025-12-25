@@ -3,7 +3,6 @@ import { cookies } from "next/headers"
 
 export type AdminSession = IronSession<{ 
   adminId?: string
-  user?: { id: string; email?: string }
   isLoggedIn?: boolean
 }>
 
@@ -23,3 +22,8 @@ export async function getAdminSession() {
 }
 
 export const getSession = getAdminSession
+
+export async function isAuthenticated(): Promise<boolean> {
+  const session = await getAdminSession()
+  return !!(session.adminId || session.isLoggedIn)
+}

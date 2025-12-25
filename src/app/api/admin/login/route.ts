@@ -4,34 +4,31 @@ import { getAdminSession } from "@/lib/session"
 
 const Body = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(1),
 })
-
-const MOCK_ADMIN = {
-  id: 1,
-  email: "admin@mayaallan.com",
-  // Password: "password123" (hashed)
-  passwordHash: "$2a$10$YourHashedPasswordHere",
-}
 
 export async function POST(req: Request) {
   const json = await req.json().catch(() => null)
   const parsed = Body.safeParse(json)
-  if (!parsed.success) return NextResponse.json({ ok: false }, { status: 400 })
+  
+  if (!parsed.success) {
+    return NextResponse.json({ ok: false, error: "Invalid input" }, { status: 400 })
+  }
 
   const { email, password } = parsed.data
 
-  if (email !== MOCK_ADMIN.email) {
-    return NextResponse.json({ ok: false }, { status: 401 })
+  // Check against environment variables (single admin)
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@mayaallan.com"
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin123"
+
+  if (email !== adminEmail || password !== adminPassword) {
+    return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 })
   }
 
-  // In production with database, use: await bcrypt.compare(password, MOCK_ADMIN.passwordHash)
-  const ok = password.length >= 8
-
-  if (!ok) return NextResponse.json({ ok: false }, { status: 401 })
-
+  // Set session
   const session = await getAdminSession()
-  session.adminId = MOCK_ADMIN.id.toString()
+  session.adminId = "1"
+  session.isLoggedIn = true
   await session.save()
 
   return NextResponse.json({ ok: true })

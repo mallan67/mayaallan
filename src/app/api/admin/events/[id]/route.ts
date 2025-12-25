@@ -1,40 +1,61 @@
 import { NextResponse } from "next/server"
-import { getSession } from "@/lib/session"
-import { updateEvent, deleteEvent } from "@/lib/mock-data"
+import { isAuthenticated } from "@/lib/session"
+import { getEventById, updateEvent, deleteEvent } from "@/lib/mock-data"
 import { z } from "zod"
 
-const EventUpdateSchema = z.object({
-  slug: z.string().optional(),
-  title: z.string().optional(),
+const UpdateEventSchema = z.object({
+  slug: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
   description: z.string().optional().nullable(),
   startsAt: z.string().optional(),
   endsAt: z.string().optional().nullable(),
   locationText: z.string().optional().nullable(),
   locationUrl: z.string().optional().nullable(),
-  photoUrls: z.array(z.string()).optional(),
   isPublished: z.boolean().optional(),
   isVisible: z.boolean().optional(),
   keepVisibleAfterEnd: z.boolean().optional(),
   seoTitle: z.string().optional().nullable(),
   seoDescription: z.string().optional().nullable(),
+  ogImageUrl: z.string().optional().nullable(),
 })
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession()
-  if (!session?.user) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  try {
-    const { id } = await params
-    const body = await request.json()
-    const data = EventUpdateSchema.parse(body)
-    const event = await updateEvent(Number(id), data)
+  const { id } = await params
+  const event = await getEventById(id)
+  
+  if (!event) {
+    return NextResponse.json({ error: "Event not found" }, { status: 404 })
+  }
+  
+  return NextResponse.json(event)
+}
 
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { id } = await params
+  
+  try {
+    const body = await request.json()
+    const data = UpdateEventSchema.parse(body)
+    const event = await updateEvent(id, data)
+    
     if (!event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
-
+    
     return NextResponse.json(event)
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -44,18 +65,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getSession()
-  if (!session?.user) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const { id } = await params
-  const success = await deleteEvent(Number(id))
-
+  const success = await deleteEvent(id)
+  
   if (!success) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 })
   }
-
-  return NextResponse.json({ success: true })
+  
+  return NextResponse.json({ ok: true })
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getSession } from "@/lib/session"
+import { isAuthenticated } from "@/lib/session"
 import { getAllEvents, createEvent } from "@/lib/mock-data"
 import { z } from "zod"
 
@@ -11,17 +11,16 @@ const EventSchema = z.object({
   endsAt: z.string().optional().nullable(),
   locationText: z.string().optional().nullable(),
   locationUrl: z.string().optional().nullable(),
-  photoUrls: z.array(z.string()).optional(),
   isPublished: z.boolean().default(false),
-  isVisible: z.boolean().default(true),
+  isVisible: z.boolean().default(false),
   keepVisibleAfterEnd: z.boolean().default(false),
   seoTitle: z.string().optional().nullable(),
   seoDescription: z.string().optional().nullable(),
+  ogImageUrl: z.string().optional().nullable(),
 })
 
 export async function GET() {
-  const session = await getSession()
-  if (!session?.user) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -30,8 +29,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getSession()
-  if (!session?.user) {
+  if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
