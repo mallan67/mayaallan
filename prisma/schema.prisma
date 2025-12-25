@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Book {
+  id                Int       @id @default(autoincrement())
+  slug              String    @unique
+  title             String
+  subtitle1         String?
+  subtitle2         String?
+  tagsCsv           String?
+  isbn              String?
+  copyright         String?
+  blurb             String?
+  coverUrl          String?
+  backCoverUrl      String?
+  ebookFileUrl      String?
+  isPublished       Boolean   @default(false)
+  isVisible         Boolean   @default(false)
+  isComingSoon      Boolean   @default(false)
+  allowDirectSale   Boolean   @default(false)
+  stripePaymentLink String?
+  paypalPaymentLink String?
+  seoTitle          String?
+  seoDescription    String?
+  ogImageUrl        String?
+  publishedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  retailers         BookRetailerLink[]
+}
+
+model Retailer {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  iconUrl   String?
+  isActive  Boolean   @default(true)
+  books     BookRetailerLink[]
+}
+
+model BookRetailerLink {
+  id         Int      @id @default(autoincrement())
+  bookId     Int
+  retailerId Int
+  url        String
+  formatType String   @default("ebook")
+  isActive   Boolean  @default(true)
+  book       Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  retailer   Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  @@unique([bookId, retailerId, formatType])
+}
+
+model MediaItem {
+  id             Int       @id @default(autoincrement())
+  kind           String    @default("audio")
+  slug           String    @unique
+  title          String
+  description    String?
+  coverUrl       String?
+  fileUrl        String?
+  externalUrl    String?
+  duration       String?
+  publishedAt    DateTime?
+  isPublished    Boolean   @default(false)
+  isVisible      Boolean   @default(false)
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Event {
+  id                  Int       @id @default(autoincrement())
+  slug                String    @unique
+  title               String
+  description         String?
+  startsAt            DateTime
+  endsAt              DateTime?
+  locationText        String?
+  locationUrl         String?
+  eventImageUrl       String?
+  isPublished         Boolean   @default(false)
+  isVisible           Boolean   @default(false)
+  keepVisibleAfterEnd Boolean   @default(false)
+  seoTitle            String?
+  seoDescription      String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model ContactSubmission {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  email     String?
+  message   String?
+  source    String?
+  createdAt DateTime @default(now())
+}
+
+model EmailSubscriber {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  source    String?
+  createdAt DateTime @default(now())
+}
+
+model NavigationItem {
+  id        Int      @id @default(autoincrement())
+  label     String
+  href      String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+}
+
+model SiteSettings {
+  id               Int      @id @default(1)
+  siteName         String   @default("Maya Allan")
+  tagline          String?
+  contactEmail     String?
+  socialTwitter    String?
+  socialInstagram  String?
+  socialFacebook   String?
+  socialYoutube    String?
+  footerText       String?
+  updatedAt        DateTime @updatedAt
+}
