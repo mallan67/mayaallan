@@ -35,7 +35,7 @@ export async function POST(
   try {
     const body = await request.json()
     const data = AddRetailerSchema.parse(body)
-    const result = await createBookRetailerLink({ bookId: id, ...data })
+    const result = await createBookRetailerLink({ bookId: parseInt(id), ...data })
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
