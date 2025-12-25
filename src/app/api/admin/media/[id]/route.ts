@@ -4,20 +4,16 @@ import { getAllMedia, updateMedia, deleteMedia } from "@/lib/mock-data"
 import { z } from "zod"
 
 const UpdateMediaSchema = z.object({
-  slug: z.string().min(1).optional(),
-  title: z.string().min(1).optional(),
-  type: z.enum(["audio", "video"]).optional(),
-  description: z.string().optional().nullable(),
-  fileUrl: z.string().optional().nullable(),
-  externalUrl: z.string().optional().nullable(),
-  coverUrl: z.string().optional().nullable(),
-  isbn: z.string().optional().nullable(),
-  isPublished: z.boolean().optional(),
-  isVisible: z.boolean().optional(),
-  seoTitle: z.string().optional().nullable(),
-  seoDescription: z.string().optional().nullable(),
-  ogImageUrl: z.string().optional().nullable(),
-  publishedAt: z.string().optional().nullable(),
+  type: z.string().optional(),
+  url: z.string().optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  altText: z.string().optional(),
+  coverImage: z.string().optional(),
+  isbn: z.string().optional(),
+  published: z.boolean().optional(),
+  visible: z.boolean().optional(),
+  sortOrder: z.number().optional(),
 })
 
 export async function GET(
@@ -30,16 +26,16 @@ export async function GET(
 
   const { id } = await params
   const allMedia = await getAllMedia()
-  const media = allMedia.find(m => m.id === id)
-  
+  const media = allMedia.find((m: any) => m.id === Number(id))
+
   if (!media) {
     return NextResponse.json({ error: "Media not found" }, { status: 404 })
   }
-  
+
   return NextResponse.json(media)
 }
 
-export async function PATCH(
+export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -48,21 +44,26 @@ export async function PATCH(
   }
 
   const { id } = await params
-  
+
   try {
     const body = await request.json()
     const data = UpdateMediaSchema.parse(body)
-    const media = await updateMedia(id, data)
-    
+
+    const media = await updateMedia(Number(id), data)
+
     if (!media) {
       return NextResponse.json({ error: "Media not found" }, { status: 404 })
     }
-    
+
     return NextResponse.json(media)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation failed", details: error.issues }, { status: 400 })
+      return NextResponse.json(
+        { error: "Validation failed", details: error.issues },
+        { status: 400 }
+      )
     }
+
     return NextResponse.json({ error: "Failed to update media" }, { status: 500 })
   }
 }
@@ -76,11 +77,11 @@ export async function DELETE(
   }
 
   const { id } = await params
-  const success = await deleteMedia(id)
-  
+  const success = await deleteMedia(Number(id))
+
   if (!success) {
     return NextResponse.json({ error: "Media not found" }, { status: 404 })
   }
-  
+
   return NextResponse.json({ ok: true })
 }
