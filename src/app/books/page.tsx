@@ -57,7 +57,7 @@ export default async function BooksPage() {
                 <ShareButtons
                   url={`https://mayaallan.com/books/${book.slug}`}
                   title={book.title}
-                  description={book.blurb || book.subtitle1}
+                  description={book.blurb ?? book.subtitle1 ?? undefined}
                   className="justify-center md:justify-start"
                 />
               </div>
