@@ -8,7 +8,7 @@ import {
 import { z } from "zod"
 
 const AddRetailerSchema = z.object({
-  retailerId: z.coerce.number().int(),
+  retailerId: z.union([z.string(), z.number()]),
   url: z.string().url(),
   formatType: z.string().default("paperback"),
   isActive: z.boolean().default(true),
@@ -23,7 +23,7 @@ export async function GET(
   }
 
   const { id } = await params
-  const retailers = await getBookRetailerLinks(parseInt(id))
+  const retailers = await getBookRetailerLinks(Number(id))
   return NextResponse.json(retailers)
 }
 
@@ -42,8 +42,8 @@ export async function POST(
     const data = AddRetailerSchema.parse(body)
 
     const result = await createBookRetailerLink({
-      bookId: parseInt(id),
-      retailerId: data.retailerId,
+      bookId: Number(id),
+      retailerId: Number(data.retailerId), // ← THIS ENDS THE ERROR
       url: data.url,
       formatType: data.formatType,
       isActive: data.isActive,
