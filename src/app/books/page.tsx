@@ -37,7 +37,7 @@ export default async function AdminBooksPage() {
                   <div className="flex items-center gap-3 mt-3">
                     <span
                       className={`px-3 py-1 text-xs rounded-full ${
-                        book.isPublished ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"
+                        book.isPublished ? "bg-green-100 text-green-700" : "bg-slate-10000 text-slate-700"
                       }`}
                     >
                       {book.isPublished ? "Published" : "Draft"}
@@ -53,10 +53,6 @@ export default async function AdminBooksPage() {
 
                     {book.isComingSoon && (
                       <span className="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">Coming Soon</span>
-                    )}
-
-                    {"showOnHome" in book && (book as any).showOnHome && (
-                      <span className="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-700">Home Page</span>
                     )}
                   </div>
                 </div>
