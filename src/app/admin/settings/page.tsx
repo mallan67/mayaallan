@@ -4,17 +4,19 @@ import React, { useEffect, useState } from "react"
 
 type SiteSettings = {
   id: number
-  siteTitle: string
-  siteDescription: string
+  siteName: string
+  tagline?: string | null
+  footerText?: string | null
+  contactEmail?: string | null
+  socialTwitter?: string | null
+  socialInstagram?: string | null
+  socialFacebook?: string | null
+  socialYoutube?: string | null
+  socialTiktok?: string | null
   authorName?: string | null
   authorBio?: string | null
   authorPhotoUrl?: string | null
   defaultOgImageUrl?: string | null
-  fontBody: string
-  fontHeading: string
-  accentColor: string
-  maxWidth: string
-  buttonStyle: string
 }
 
 export default function AdminSettingsPage() {
@@ -46,17 +48,19 @@ export default function AdminSettingsPage() {
       const form = new FormData(e.currentTarget)
 
       const payload = {
-        siteTitle: String(form.get("siteTitle") || ""),
-        siteDescription: String(form.get("siteDescription") || ""),
+        siteName: String(form.get("siteName") || ""),
+        tagline: String(form.get("tagline") || ""),
+        footerText: String(form.get("footerText") || ""),
+        contactEmail: String(form.get("contactEmail") || ""),
+        socialTwitter: String(form.get("socialTwitter") || ""),
+        socialInstagram: String(form.get("socialInstagram") || ""),
+        socialFacebook: String(form.get("socialFacebook") || ""),
+        socialYoutube: String(form.get("socialYoutube") || ""),
+        socialTiktok: String(form.get("socialTiktok") || ""),
         authorName: String(form.get("authorName") || ""),
         authorBio: String(form.get("authorBio") || ""),
         authorPhotoUrl: String(form.get("authorPhotoUrl") || ""),
         defaultOgImageUrl: String(form.get("defaultOgImageUrl") || ""),
-        fontBody: String(form.get("fontBody") || "serif"),
-        fontHeading: String(form.get("fontHeading") || "serif"),
-        accentColor: String(form.get("accentColor") || "#0f172a"),
-        maxWidth: String(form.get("maxWidth") || "max-w-6xl"),
-        buttonStyle: String(form.get("buttonStyle") || "rounded"),
       }
 
       const res = await fetch("/api/admin/settings", {
@@ -91,26 +95,50 @@ export default function AdminSettingsPage() {
 
       <form onSubmit={handleSave} className="space-y-6">
         <div className="border border-slate-200 rounded-lg p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Site Information</h2>
+          <h2 className="text-lg font-semibold">Site</h2>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Site Title</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Site Name</label>
             <input
-              name="siteTitle"
-              defaultValue={settings.siteTitle}
+              name="siteName"
+              defaultValue={settings.siteName || ""}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Site Description</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Tagline</label>
             <textarea
-              name="siteDescription"
+              name="tagline"
               rows={3}
-              defaultValue={settings.siteDescription}
+              defaultValue={settings.tagline || ""}
               className="w-full px-3 py-2 border border-slate-300 rounded-lg"
             />
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Footer Text</label>
+            <textarea
+              name="footerText"
+              rows={2}
+              defaultValue={settings.footerText || ""}
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Contact Email</label>
+            <input
+              name="contactEmail"
+              defaultValue={settings.contactEmail || ""}
+              placeholder="you@email.com"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+            />
+          </div>
+        </div>
+
+        <div className="border border-slate-200 rounded-lg p-6 space-y-4">
+          <h2 className="text-lg font-semibold">Author</h2>
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Author Name</label>
@@ -153,51 +181,29 @@ export default function AdminSettingsPage() {
         </div>
 
         <div className="border border-slate-200 rounded-lg p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Style</h2>
+          <h2 className="text-lg font-semibold">Social</h2>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Body Font</label>
-              <select name="fontBody" defaultValue={settings.fontBody} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
-                <option value="sans">Sans</option>
-                <option value="serif">Serif</option>
-                <option value="mono">Mono</option>
-              </select>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Twitter/X</label>
+              <input name="socialTwitter" defaultValue={settings.socialTwitter || ""} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Heading Font</label>
-              <select name="fontHeading" defaultValue={settings.fontHeading} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
-                <option value="sans">Sans</option>
-                <option value="serif">Serif</option>
-                <option value="mono">Mono</option>
-              </select>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Instagram</label>
+              <input name="socialInstagram" defaultValue={settings.socialInstagram || ""} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Accent Color</label>
-            <input name="accentColor" defaultValue={settings.accentColor} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Max Width</label>
-            <select name="maxWidth" defaultValue={settings.maxWidth} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
-              <option value="max-w-4xl">max-w-4xl</option>
-              <option value="max-w-5xl">max-w-5xl</option>
-              <option value="max-w-6xl">max-w-6xl</option>
-              <option value="max-w-7xl">max-w-7xl</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Button Style</label>
-            <select name="buttonStyle" defaultValue={settings.buttonStyle} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
-              <option value="rounded">rounded</option>
-              <option value="rounded-lg">rounded-lg</option>
-              <option value="rounded-full">rounded-full</option>
-              <option value="rounded-none">rounded-none</option>
-            </select>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Facebook</label>
+              <input name="socialFacebook" defaultValue={settings.socialFacebook || ""} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">YouTube</label>
+              <input name="socialYoutube" defaultValue={settings.socialYoutube || ""} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">TikTok</label>
+              <input name="socialTiktok" defaultValue={settings.socialTiktok || ""} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+            </div>
           </div>
         </div>
 
