@@ -1,24 +1,21 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getAllRetailers, createRetailer } from "@/lib/mock-data"
-import { z } from "zod"
-
-const RetailerSchema = z.object({
-  name: z.string().min(1),
-  slug: z.string().min(1),
-  logoUrl: z.string().optional().nullable(),
-  websiteUrl: z.string().url().optional().nullable(),
-  displayOrder: z.number().int().default(0),
-  isActive: z.boolean().default(true),
-})
+import { prisma } from "@/lib/prisma"
 
 export async function GET() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const retailers = await getAllRetailers()
-  return NextResponse.json(retailers)
+  try {
+    const retailers = await prisma.retailer.findMany({
+      orderBy: { name: "asc" },
+    })
+    return NextResponse.json(retailers)
+  } catch (error) {
+    console.error("Error fetching retailers:", error)
+    return NextResponse.json({ error: "Failed to fetch retailers" }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
@@ -28,12 +25,25 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const data = RetailerSchema.parse(body)
-    const retailer = await createRetailer(data)
+
+    if (!body.name || !body.slug) {
+      return NextResponse.json({ error: "Name and slug are required" }, { status: 400 })
+    }
+
+    const retailer = await prisma.retailer.create({
+      data: {
+        name: body.name,
+        slug: body.slug,
+        iconUrl: body.iconUrl || null,
+        isActive: body.isActive !== false,
+      },
+    })
+
     return NextResponse.json(retailer, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation failed", details: error.issues }, { status: 400 })
+  } catch (error: any) {
+    console.error("Error creating retailer:", error)
+    if (error?.code === "P2002") {
+      return NextResponse.json({ error: "Retailer with this slug already exists" }, { status: 409 })
     }
     return NextResponse.json({ error: "Failed to create retailer" }, { status: 500 })
   }
