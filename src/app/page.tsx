@@ -1,17 +1,29 @@
 import Link from "next/link"
 import Image from "next/image"
-import { getPublishedBooks, getVisibleMedia, getVisibleEvents } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
 import { ShareButtons } from "@/components/share-buttons"
 
+export const dynamic = "force-dynamic"
+
 export default async function HomePage() {
-  const publishedBooks = await getPublishedBooks()
-  const publishedMedia = await getVisibleMedia()
-  const publishedEvents = await getVisibleEvents()
+  const publishedBooks = await prisma.book.findMany({
+    where: { isPublished: true, isVisible: true },
+    orderBy: { createdAt: "desc" },
+  })
 
-  // Get the main/featured book (first published book)
+  const publishedEvents = await prisma.event.findMany({
+    where: { isPublished: true, isVisible: true },
+    orderBy: { startsAt: "asc" },
+    take: 2,
+  })
+
+  const publishedMedia = await prisma.mediaItem.findMany({
+    where: { isPublished: true, isVisible: true },
+    orderBy: { createdAt: "desc" },
+    take: 4,
+  })
+
   const mainBook = publishedBooks[0]
-
-  const hasArticles = false // Articles feature not yet implemented
   const hasEvents = publishedEvents.length > 0
   const hasMedia = publishedMedia.length > 0
 
@@ -23,10 +35,10 @@ export default async function HomePage() {
             {mainBook.coverUrl ? (
               <div className="relative w-48 md:w-64 aspect-[2/3] border border-slate-200 shadow-md rounded-md overflow-hidden">
                 <Image
-                  src={mainBook.coverUrl || "/placeholder.svg"}
+                  src={mainBook.coverUrl}
                   alt={mainBook.title}
                   fill
-                  className="object-cover"
+                  className="object-contain bg-slate-50"
                 />
               </div>
             ) : (
@@ -56,20 +68,16 @@ export default async function HomePage() {
 
             <div className="mt-6 flex flex-wrap gap-3 items-center">
               {mainBook.isComingSoon ? (
-                <>
-                  <span className="px-5 py-2.5 text-sm font-semibold border border-black/70 bg-black/80 text-white rounded-full">
-                    Coming Soon
-                  </span>
-                </>
+                <span className="px-5 py-2.5 text-sm font-semibold border border-black/70 bg-black/80 text-white rounded-full">
+                  Coming Soon
+                </span>
               ) : (
-                <>
-                  <Link
-                    href={`/books/${mainBook.slug}`}
-                    className="px-5 py-2.5 text-sm font-semibold border border-black/70 bg-black/80 text-white rounded-full hover:bg-black/60 transition"
-                  >
-                    View Book
-                  </Link>
-                </>
+                <Link
+                  href={`/books/${mainBook.slug}`}
+                  className="px-5 py-2.5 text-sm font-semibold border border-black/70 bg-black/80 text-white rounded-full hover:bg-black/60 transition"
+                >
+                  View Book
+                </Link>
               )}
             </div>
 
@@ -77,7 +85,7 @@ export default async function HomePage() {
               <ShareButtons
                 url={`https://mayaallan.com/books/${mainBook.slug}`}
                 title={mainBook.title}
-                description={(mainBook.blurb ?? mainBook.subtitle1) ?? undefined}
+                description={mainBook.blurb ?? mainBook.subtitle1 ?? undefined}
                 hashtags={mainBook.tagsCsv?.split(",").map((t) => t.trim())}
               />
             </div>
@@ -99,15 +107,12 @@ export default async function HomePage() {
           <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-serif text-xl md:text-2xl font-semibold">Events</h2>
-              <Link
-                href="/events"
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:opacity-70"
-              >
+              <Link href="/events" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:opacity-70">
                 View all
               </Link>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
-              {publishedEvents.slice(0, 2).map((evt) => (
+              {publishedEvents.map((evt) => (
                 <Link
                   key={evt.id}
                   href={`/events/${evt.slug}`}
@@ -128,10 +133,7 @@ export default async function HomePage() {
           <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-serif text-xl md:text-2xl font-semibold">Media – Music, Guides &amp; Videos</h2>
-              <Link
-                href="/media"
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:opacity-70"
-              >
+              <Link href="/media" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:opacity-70">
                 View all
               </Link>
             </div>
@@ -153,10 +155,7 @@ export default async function HomePage() {
               strictly educational and reflective, helping readers think through their experiences without promising
               cures or outcomes.
             </p>
-            <Link
-              href="/about"
-              className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:opacity-70"
-            >
+            <Link href="/about" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:opacity-70">
               Read full bio
             </Link>
           </div>
