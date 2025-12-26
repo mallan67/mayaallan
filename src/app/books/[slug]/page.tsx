@@ -1,21 +1,17 @@
-import Image from "next/image"
-import Link from "next/link"
 import { notFound } from "next/navigation"
-import { prisma } from "@/lib/prisma"
-import { ShareButtons } from "@/components/share-buttons"
-import type { Metadata } from "next"
-
-interface BookPageProps {
-  params: Promise<{ slug: string }>
-}
+import Link from "next/link"
+import { getBookBySlug } from "@/lib/mock-data" // CHANGE THIS TO YOUR LIVE DATA SOURCE IF YOU ALREADY MIGRATED
+import { generateBookStructuredData } from "@/lib/structured-data"
 
 export const dynamic = "force-dynamic"
 
-export async function generateMetadata({ params }: BookPageProps): Promise<Metadata> {
+type BookPageProps = {
+  params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: BookPageProps) {
   const { slug } = await params
-  const book = await prisma.book.findUnique({
-    where: { slug },
-  })
+  const book = await getBookBySlug(slug)
 
   if (!book) {
     return {
@@ -24,160 +20,99 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
   }
 
   return {
-    title: book.title,
-    description: book.blurb || book.subtitle1 || `${book.title} by Maya Allan`,
+    title: book.seoTitle || book.title,
+    description: book.seoDescription || book.shortBlurb || "",
     openGraph: {
-      title: book.title,
-      description: book.blurb || book.subtitle1 || "",
-      url: `https://mayaallan.com/books/${book.slug}`,
-      images: book.coverUrl ? [{ url: book.coverUrl }] : [],
-      type: "book",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: book.title,
-      description: book.blurb || book.subtitle1 || "",
-      images: book.coverUrl ? [book.coverUrl] : [],
+      title: book.seoTitle || book.title,
+      description: book.seoDescription || book.shortBlurb || "",
+      images: book.ogImageUrl ? [book.ogImageUrl] : book.coverUrl ? [book.coverUrl] : [],
     },
   }
 }
 
 export default async function BookPage({ params }: BookPageProps) {
   const { slug } = await params
-  const book = await prisma.book.findUnique({
-    where: { slug },
-    include: {
-      retailers: {
-        where: { isActive: true },
-        include: { retailer: true },
-      },
-    },
-  })
+  const book = await getBookBySlug(slug)
 
-  if (!book || !book.isPublished || !book.isVisible) {
-    notFound()
-  }
+  if (!book) return notFound()
 
-  const bookUrl = `https://mayaallan.com/books/${book.slug}`
+  const structuredData = generateBookStructuredData(book)
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
-      <Link href="/books" className="text-sm text-slate-500 hover:text-slate-700 mb-6 inline-block">
-        ← Back to Books
-      </Link>
+    <div className="max-w-6xl mx-auto px-6 py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 
-      <div className="grid md:grid-cols-[300px_1fr] gap-10 mt-6">
+      <div className="mb-6">
+        <Link href="/books" className="text-sm text-slate-600 hover:text-black transition">
+          ← Back to Books
+        </Link>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-10">
         <div>
-          {book.coverUrl && (
-            <div className="relative w-full aspect-[2/3] border border-slate-200 shadow-lg rounded-md overflow-hidden sticky top-6">
-              <Image src={book.coverUrl} alt={book.title} fill className="object-contain bg-slate-50" />
-            </div>
-          )}
-
-          {book.backCoverUrl && (
-            <div className="relative w-full aspect-[2/3] border border-slate-200 shadow-lg rounded-md overflow-hidden mt-4">
-              <Image src={book.backCoverUrl} alt={`${book.title} - Back Cover`} fill className="object-contain bg-slate-50" />
+          {book.coverUrl ? (
+            <img
+              src={book.coverUrl}
+              alt={book.title}
+              className="w-full rounded-lg border border-slate-200 object-cover"
+            />
+          ) : (
+            <div className="w-full aspect-[2/3] rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-500">
+              No Cover Image
             </div>
           )}
         </div>
 
         <div>
-          <h1 className="font-serif text-3xl md:text-4xl font-semibold leading-tight">{book.title}</h1>
-          {book.subtitle1 && <p className="mt-3 text-lg text-slate-700">{book.subtitle1}</p>}
-          {book.subtitle2 && <p className="mt-2 text-base text-slate-600">{book.subtitle2}</p>}
+          <h1 className="text-3xl font-semibold">{book.title}</h1>
 
-          {(book.isbn || book.copyright) && (
-            <div className="mt-4 text-sm text-slate-600 space-y-1">
-              {book.isbn && <p>ISBN: {book.isbn}</p>}
-              {book.copyright && <p>{book.copyright}</p>}
+          {book.subtitle1 && <p className="text-lg text-slate-700 mt-2">{book.subtitle1}</p>}
+          {book.subtitle2 && <p className="text-lg text-slate-700 mt-1">{book.subtitle2}</p>}
+
+          {book.shortBlurb && <p className="text-slate-700 mt-4 leading-relaxed">{book.shortBlurb}</p>}
+
+          {book.isComingSoon && (
+            <div className="mt-6 inline-flex items-center px-3 py-1 text-sm rounded-full bg-yellow-100 text-yellow-700">
+              Coming Soon
             </div>
           )}
 
-          <div className="mt-6 pt-6 border-t border-slate-200">
-            <ShareButtons
-              url={bookUrl}
-              title={book.title}
-              description={book.blurb ?? book.subtitle1 ?? undefined}
-              hashtags={book.tagsCsv?.split(",").map((t) => t.trim())}
-            />
-          </div>
+          {(book.allowDirectSale || book.stripePaymentLink || book.paypalPaymentLink) && (
+            <div className="mt-8 space-y-3">
+              {book.stripePaymentLink && (
+                <a
+                  href={book.stripePaymentLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full px-6 py-3 text-sm font-semibold text-center border-2 border-black bg-black text-white rounded-full hover:bg-black/80 transition"
+                >
+                  Buy with Stripe
+                </a>
+              )}
 
-          {book.tagsCsv && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {book.tagsCsv.split(",").map((tag, i) => (
-                <span key={i} className="px-3 py-1 text-xs bg-slate-100 text-slate-700 rounded-full">
-                  {tag.trim()}
-                </span>
-              ))}
+              {book.paypalPaymentLink && (
+                <a
+                  href={book.paypalPaymentLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full px-6 py-3 text-sm font-semibold text-center border-2 border-black bg-white text-black rounded-full hover:bg-slate-50 transition"
+                >
+                  Buy with PayPal
+                </a>
+              )}
             </div>
           )}
 
-          {book.blurb && (
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <h2 className="font-serif text-xl font-semibold mb-3">About This Book</h2>
-              <p className="text-base leading-relaxed text-slate-700 whitespace-pre-wrap">{book.blurb}</p>
-            </div>
-          )}
-
-          {book.isComingSoon ? (
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <span className="inline-block px-6 py-3 text-sm font-semibold border-2 border-black bg-black text-white rounded-full">
-                Coming Soon
-              </span>
-            </div>
-          ) : (
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <h2 className="font-serif text-xl font-semibold mb-4">Get This Book</h2>
-
-              {book.allowDirectSale && (book.stripePaymentLink || book.paypalPaymentLink) && (
-                <div className="mb-6 space-y-3">
-                  {book.stripePaymentLink && (
-                    
-                      href={book.stripePaymentLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full px-6 py-3 text-sm font-semibold text-center border-2 border-black bg-black text-white rounded-full hover:bg-black/80 transition"
-                    >
-                      Buy with Stripe
-                    </a>
-                  )}
-                  {book.paypalPaymentLink && (
-                    
-                      href={book.paypalPaymentLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full px-6 py-3 text-sm font-semibold text-center border-2 border-blue-600 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
-                    >
-                      Buy with PayPal
-                    </a>
-                  )}
-                  <p className="text-xs text-slate-500 text-center">Ebook will be delivered via email after purchase</p>
-                </div>
-              )}
-
-              {book.retailers.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-sm font-semibold text-slate-600 mb-3">Also available at:</p>
-                  <div className="space-y-2">
-                    {book.retailers.map((link) => (
-                      
-                        key={link.id}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between px-4 py-3 text-sm border border-slate-300 rounded-lg hover:border-slate-400 hover:bg-slate-50 transition"
-                      >
-                        <span className="font-medium">{link.retailer.name}</span>
-                        <span className="text-xs text-slate-500 capitalize">{link.formatType}</span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {!book.allowDirectSale && book.retailers.length === 0 && !book.isComingSoon && (
-                <p className="text-sm text-slate-600">Purchase options will be available soon.</p>
-              )}
+          {book.tags && book.tags.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-sm font-semibold text-slate-700 mb-2">Tags</h2>
+              <div className="flex flex-wrap gap-2">
+                {book.tags.map((tag: string) => (
+                  <span key={tag} className="px-3 py-1 text-xs rounded-full bg-slate-100 text-slate-700">
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>
