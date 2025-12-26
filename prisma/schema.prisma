@@ -21,8 +21,13 @@ model Book {
   coverUrl          String?
   backCoverUrl      String?
   ebookFileUrl      String?
-  bookType          String?   @default("ebook")
-  price             Decimal?  @db.Decimal(10, 2)
+  hasEbook          Boolean   @default(true)
+  ebookPrice        Decimal?  @db.Decimal(10, 2)
+  hasPaperback      Boolean   @default(false)
+  hasHardcover      Boolean   @default(false)
+  paperbackPrice    Decimal?  @db.Decimal(10, 2)
+  hardcoverPrice    Decimal?  @db.Decimal(10, 2)
+  allowRetailerSale Boolean   @default(false)
   isFeatured        Boolean   @default(false)
   isPublished       Boolean   @default(false)
   isVisible         Boolean   @default(false)
