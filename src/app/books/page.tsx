@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { getPublishedBooks } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
 import { ShareButtons } from "@/components/share-buttons"
 import type { Metadata } from "next"
 
@@ -19,8 +19,16 @@ export const metadata: Metadata = {
   },
 }
 
+export const dynamic = "force-dynamic"
+
 export default async function BooksPage() {
-  const books = await getPublishedBooks()
+  const books = await prisma.book.findMany({
+    where: {
+      isPublished: true,
+      isVisible: true,
+    },
+    orderBy: { createdAt: "desc" },
+  })
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
@@ -32,7 +40,6 @@ export default async function BooksPage() {
           description="Explore books on psychedelic integration, consciousness, and personal transformation."
         />
       </div>
-
       {books.length === 0 ? (
         <p className="text-sm text-slate-700">No books published yet. Check back soon!</p>
       ) : (
@@ -52,7 +59,6 @@ export default async function BooksPage() {
               <h2 className="font-serif text-lg font-semibold mb-2">{book.title}</h2>
               {book.subtitle1 && <p className="text-sm text-slate-600 mb-2">{book.subtitle1}</p>}
               {book.blurb && <p className="text-sm text-slate-700 mb-4 line-clamp-3">{book.blurb}</p>}
-
               <div className="mb-3 pt-3 border-t border-slate-100">
                 <ShareButtons
                   url={`https://mayaallan.com/books/${book.slug}`}
@@ -61,7 +67,6 @@ export default async function BooksPage() {
                   className="justify-center md:justify-start"
                 />
               </div>
-
               <Link href={`/books/${book.slug}`} className="text-sm font-semibold text-black hover:underline">
                 Learn More →
               </Link>
