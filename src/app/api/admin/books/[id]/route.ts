@@ -1,4 +1,6 @@
-cat > src/app/api/admin/books/'[id]'/route.ts <<'EOF'
+cd /workspaces/mayaallan
+
+cat > src/app/api/admin/books/\[id\]/route.ts <<'EOF'
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
@@ -21,26 +23,17 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const authed = await isAuthenticated()
-  if (!authed) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
 
   try {
     const book = await prisma.book.findUnique({
       where: { id: parseInt(id) },
-      include: {
-        retailers: {
-          include: { retailer: true },
-        },
-      },
+      include: { retailers: { include: { retailer: true } } },
     })
 
-    if (!book) {
-      return NextResponse.json({ error: "Book not found" }, { status: 404 })
-    }
-
+    if (!book) return NextResponse.json({ error: "Book not found" }, { status: 404 })
     return NextResponse.json(book)
   } catch (error) {
     console.error("Error fetching book:", error)
@@ -53,15 +46,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const authed = await isAuthenticated()
-  if (!authed) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
 
   try {
     const body = await request.json()
-
     const data: Prisma.BookUpdateInput = {}
 
     if (body.slug !== undefined) data.slug = body.slug
@@ -101,11 +91,7 @@ export async function PUT(
     const book = await prisma.book.update({
       where: { id: parseInt(id) },
       data,
-      include: {
-        retailers: {
-          include: { retailer: true },
-        },
-      },
+      include: { retailers: { include: { retailer: true } } },
     })
 
     return NextResponse.json(book)
@@ -113,17 +99,11 @@ export async function PUT(
     console.error("Error updating book:", error)
 
     if (error?.code === "P2002") {
-      return NextResponse.json(
-        { error: "Slug already exists", details: error?.meta },
-        { status: 409 }
-      )
+      return NextResponse.json({ error: "Slug already exists", details: error?.meta }, { status: 409 })
     }
 
     const message = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json(
-      { error: "Failed to update book", details: message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to update book", details: message }, { status: 500 })
   }
 }
 
@@ -132,17 +112,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const authed = await isAuthenticated()
-  if (!authed) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const { id } = await params
 
   try {
-    await prisma.book.delete({
-      where: { id: parseInt(id) },
-    })
-
+    await prisma.book.delete({ where: { id: parseInt(id) } })
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Error deleting book:", error)
