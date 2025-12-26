@@ -36,14 +36,16 @@ export default async function AdminBooksPage() {
                 <div>
                   <h2 className="text-lg font-semibold">{book.title}</h2>
 
-                  {"subtitle1" in book && (book as any).subtitle1 && (
-                    <p className="text-sm text-slate-600 mt-1">{(book as any).subtitle1}</p>
+                  {book.subtitle1 && (
+                    <p className="text-sm text-slate-600 mt-1">{book.subtitle1}</p>
                   )}
 
                   <div className="flex items-center gap-3 mt-3">
                     <span
                       className={`px-3 py-1 text-xs rounded-full ${
-                        book.isPublished ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"
+                        book.isPublished
+                          ? "bg-green-100 text-green-700"
+                          : "bg-slate-100 text-slate-700"
                       }`}
                     >
                       {book.isPublished ? "Published" : "Draft"}
@@ -51,7 +53,9 @@ export default async function AdminBooksPage() {
 
                     <span
                       className={`px-3 py-1 text-xs rounded-full ${
-                        book.isVisible ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700"
+                        book.isVisible
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-slate-100 text-slate-700"
                       }`}
                     >
                       {book.isVisible ? "Visible" : "Hidden"}
