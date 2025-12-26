@@ -39,4 +39,37 @@ export default async function BooksPage() {
                     sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-s
+                  <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
+                    No Cover Image
+                  </div>
+                )}
+              </div>
+
+              <div className="p-5">
+                <h2 className="text-lg font-semibold">{book.title}</h2>
+
+                {book.subtitle1 && (
+                  <p className="text-sm text-slate-600 mt-1">{book.subtitle1}</p>
+                )}
+
+                {book.blurb && (
+                  <p className="text-sm text-slate-700 mt-3 line-clamp-3">
+                    {book.blurb}
+                  </p>
+                )}
+
+                {book.isComingSoon && (
+                  <div className="mt-4">
+                    <span className="inline-block px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                      Coming Soon
+                    </span>
+                  </div>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
