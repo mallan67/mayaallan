@@ -1,35 +1,37 @@
 import { NextResponse } from "next/server"
-import { isAuthenticated } from "@/lib/session"
-import {
-  getBookRetailerLinks,
-  createBookRetailerLink,
-  deleteBookRetailerLink,
-} from "@/lib/mock-data"
 import { z } from "zod"
+import { isAuthenticated } from "@/lib/session"
+import { prisma } from "@/lib/prisma"
 
 const AddRetailerSchema = z.object({
   retailerId: z.union([z.string(), z.number()]),
-  url: z.string().url(),
-  formatType: z.enum(["ebook", "print", "hardcover"]).default("print"),
-  isActive: z.boolean().default(true),
+  url: z.string().optional().default(""),
+  formatType: z.enum(["ebook", "paperback", "hardcover", "audiobook"]).optional().default("ebook"),
+  isActive: z.boolean().optional(),
 })
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const { id } = await params
-  const retailers = await getBookRetailerLinks(Number(id))
-  return NextResponse.json(retailers)
+
+  const links = await prisma.bookRetailerLink.findMany({
+    where: { bookId: Number(id) },
+    include: { retailer: true },
+    orderBy: [{ retailerId: "asc" }, { formatType: "asc" }],
+  })
+
+  return NextResponse.json(links)
 }
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -41,33 +43,44 @@ export async function POST(
     const body = await request.json()
     const data = AddRetailerSchema.parse(body)
 
-    const result = await createBookRetailerLink({
-      bookId: Number(id),
-      retailerId: Number(data.retailerId),
-      url: data.url,
-      formatType: data.formatType,
-      isActive: data.isActive,
+    const retailerId = Number(data.retailerId)
+    const url = (data.url ?? "").trim()
+
+    // If no URL yet, keep link inactive so it never shows on the frontend.
+    const isActive = data.isActive ?? (url.length > 0)
+
+    const link = await prisma.bookRetailerLink.upsert({
+      where: {
+        bookId_retailerId_formatType: {
+          bookId: Number(id),
+          retailerId,
+          formatType: data.formatType,
+        },
+      },
+      create: {
+        bookId: Number(id),
+        retailerId,
+        url,
+        formatType: data.formatType,
+        isActive,
+      },
+      update: {
+        url,
+        isActive,
+      },
+      include: { retailer: true },
     })
 
-    return NextResponse.json(result, { status: 201 })
+    return NextResponse.json(link, { status: 201 })
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.issues },
-        { status: 400 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: "Failed to add retailer" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to add retailer" }, { status: 500 })
   }
 }
 
+// Back-compat for old admin screen: DELETE /api/admin/books/:id/retailers?linkId=123
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -80,15 +93,10 @@ export async function DELETE(
     return NextResponse.json({ error: "linkId is required" }, { status: 400 })
   }
 
-  const { id } = await params
-  const success = await deleteBookRetailerLink(Number(id), Number(linkId))
-
-  if (!success) {
-    return NextResponse.json(
-      { error: "Retailer link not found" },
-      { status: 404 }
-    )
+  try {
+    await prisma.bookRetailerLink.delete({ where: { id: Number(linkId) } })
+    return NextResponse.json({ ok: true })
+  } catch {
+    return NextResponse.json({ error: "Retailer link not found" }, { status: 404 })
   }
-
-  return NextResponse.json({ ok: true })
 }
