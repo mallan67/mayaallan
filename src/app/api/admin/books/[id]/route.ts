@@ -15,12 +15,25 @@ const BookUpdateSchema = z.object({
   coverUrl: z.string().optional().nullable(),
   backCoverUrl: z.string().optional().nullable(),
   ebookFileUrl: z.string().optional().nullable(),
+  // Book formats
+  hasEbook: z.boolean().optional(),
+  hasPaperback: z.boolean().optional(),
+  hasHardcover: z.boolean().optional(),
+  // Prices
+  ebookPrice: z.number().optional().nullable(),
+  paperbackPrice: z.number().optional().nullable(),
+  hardcoverPrice: z.number().optional().nullable(),
+  // Publishing
+  isFeatured: z.boolean().optional(),
   isPublished: z.boolean().optional(),
   isVisible: z.boolean().optional(),
   isComingSoon: z.boolean().optional(),
+  // Sales
   allowDirectSale: z.boolean().optional(),
+  allowRetailerSale: z.boolean().optional(),
   stripePaymentLink: z.string().optional().nullable(),
   paypalPaymentLink: z.string().optional().nullable(),
+  // SEO
   seoTitle: z.string().optional().nullable(),
   seoDescription: z.string().optional().nullable(),
   ogImageUrl: z.string().optional().nullable(),
@@ -41,7 +54,11 @@ export async function GET(
   try {
     const book = await prisma.book.findUnique({
       where: { id: parseInt(id) },
-      include: { retailers: true },
+      include: {
+        retailers: {
+          include: { retailer: true },
+        },
+      },
     })
 
     if (!book) {
@@ -68,7 +85,11 @@ export async function PUT(
 
   try {
     const body = await request.json()
-    const parsed = BookUpdateSchema.parse(body)
+    
+    // Remove fields that shouldn't be updated directly
+    const { retailers, createdAt, updatedAt, id: bodyId, ...rest } = body
+    
+    const parsed = BookUpdateSchema.parse(rest)
 
     const updateData: Record<string, unknown> = { ...parsed }
     if (parsed.publishedAt) {
@@ -78,11 +99,17 @@ export async function PUT(
     const book = await prisma.book.update({
       where: { id: parseInt(id) },
       data: updateData,
+      include: {
+        retailers: {
+          include: { retailer: true },
+        },
+      },
     })
 
     return NextResponse.json(book)
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.issues)
       return NextResponse.json({ error: error.issues }, { status: 400 })
     }
     console.error("Error updating book:", error)
