@@ -1,6 +1,3 @@
-cd /workspaces/mayaallan
-
-cat > src/app/api/admin/books/\[id\]/route.ts <<'EOF'
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
@@ -10,10 +7,8 @@ function toDecimalOrNull(value: unknown): number | null {
   if (value === null || value === undefined) return null
   if (typeof value === "number") return Number.isFinite(value) ? value : null
   if (typeof value !== "string") return null
-
   const cleaned = value.trim().replace(/[$,]/g, "")
   if (!cleaned) return null
-
   const n = Number(cleaned)
   return Number.isFinite(n) ? n : null
 }
@@ -32,7 +27,6 @@ export async function GET(
       where: { id: parseInt(id) },
       include: { retailers: { include: { retailer: true } } },
     })
-
     if (!book) return NextResponse.json({ error: "Book not found" }, { status: 404 })
     return NextResponse.json(book)
   } catch (error) {
@@ -65,28 +59,23 @@ export async function PUT(
     if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl || null
     if (body.backCoverUrl !== undefined) data.backCoverUrl = body.backCoverUrl || null
     if (body.ebookFileUrl !== undefined) data.ebookFileUrl = body.ebookFileUrl || null
-
     if (body.hasEbook !== undefined) data.hasEbook = Boolean(body.hasEbook)
     if (body.hasPaperback !== undefined) data.hasPaperback = Boolean(body.hasPaperback)
     if (body.hasHardcover !== undefined) data.hasHardcover = Boolean(body.hasHardcover)
-
     if (body.ebookPrice !== undefined) data.ebookPrice = toDecimalOrNull(body.ebookPrice)
     if (body.paperbackPrice !== undefined) data.paperbackPrice = toDecimalOrNull(body.paperbackPrice)
     if (body.hardcoverPrice !== undefined) data.hardcoverPrice = toDecimalOrNull(body.hardcoverPrice)
-
     if (body.isFeatured !== undefined) data.isFeatured = Boolean(body.isFeatured)
     if (body.isPublished !== undefined) data.isPublished = Boolean(body.isPublished)
     if (body.isVisible !== undefined) data.isVisible = Boolean(body.isVisible)
     if (body.isComingSoon !== undefined) data.isComingSoon = Boolean(body.isComingSoon)
     if (body.allowDirectSale !== undefined) data.allowDirectSale = Boolean(body.allowDirectSale)
     if (body.allowRetailerSale !== undefined) data.allowRetailerSale = Boolean(body.allowRetailerSale)
-
     if (body.stripePaymentLink !== undefined) data.stripePaymentLink = body.stripePaymentLink || null
     if (body.paypalPaymentLink !== undefined) data.paypalPaymentLink = body.paypalPaymentLink || null
     if (body.seoTitle !== undefined) data.seoTitle = body.seoTitle || null
     if (body.seoDescription !== undefined) data.seoDescription = body.seoDescription || null
     if (body.ogImageUrl !== undefined) data.ogImageUrl = body.ogImageUrl || null
-    if (body.publishedAt !== undefined) data.publishedAt = body.publishedAt ? new Date(body.publishedAt) : null
 
     const book = await prisma.book.update({
       where: { id: parseInt(id) },
@@ -97,13 +86,10 @@ export async function PUT(
     return NextResponse.json(book)
   } catch (error: any) {
     console.error("Error updating book:", error)
-
     if (error?.code === "P2002") {
-      return NextResponse.json({ error: "Slug already exists", details: error?.meta }, { status: 409 })
+      return NextResponse.json({ error: "Slug already exists" }, { status: 409 })
     }
-
-    const message = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json({ error: "Failed to update book", details: message }, { status: 500 })
+    return NextResponse.json({ error: "Failed to update book" }, { status: 500 })
   }
 }
 
@@ -124,4 +110,3 @@ export async function DELETE(
     return NextResponse.json({ error: "Failed to delete book" }, { status: 500 })
   }
 }
-EOF
