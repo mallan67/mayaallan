@@ -23,7 +23,7 @@ export default async function AdminBooksPage() {
         <div className="border border-red-200 bg-red-50 rounded-lg p-6">
           <h1 className="text-xl font-semibold text-red-700">Failed to load books</h1>
           <p className="text-red-600 mt-2">
-            Admin books API returned <strong>{res.status}</strong>. Check your server logs.
+            Admin books API returned <strong>{res.status}</strong>. Check Vercel logs for /api/admin/books.
           </p>
         </div>
       </div>
@@ -77,3 +77,22 @@ export default async function AdminBooksPage() {
 
                     {book.isComingSoon && (
                       <span className="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">Coming Soon</span>
+                    )}
+
+                    {book.showOnHome && (
+                      <span className="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-700">Home Page</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="text-right text-sm text-slate-500">
+                  <p>/{book.slug}</p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
