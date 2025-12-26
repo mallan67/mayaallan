@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 
 interface Book {
   id: number
@@ -77,21 +76,25 @@ export default function AdminBooksPage() {
         books.map((b) =>
           selectedIds.includes(b.id)
             ? { ...b, isPublished: action === "publish", isVisible: action === "publish" }
-            : b
-        )
+            : b,
+        ),
       )
     }
     setSelectedIds([])
   }
 
-  const handleDelete = async (id: number, slug: string) => {
+  const handleDelete = async (id: number) => {
     if (!confirm("Delete this book?")) return
     const res = await fetch(`/api/admin/books/${id}`, { method: "DELETE" })
     if (res.ok) setBooks(books.filter((b) => b.id !== id))
   }
 
   if (loading) {
-    return <div className="max-w-5xl mx-auto px-4 py-10"><p>Loading...</p></div>
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-10">
+        <p>Loading...</p>
+      </div>
+    )
   }
 
   return (
@@ -158,9 +161,15 @@ export default function AdminBooksPage() {
                   className="w-4 h-4 mt-1"
                 />
 
+                {/* Thumbnail (use <img> so it ALWAYS renders regardless of Next image domain config) */}
                 {book.coverUrl && (
-                  <div className="relative w-16 h-24 flex-shrink-0 border border-slate-200 rounded overflow-hidden">
-                    <Image src={book.coverUrl} alt={book.title} fill className="object-cover" />
+                  <div className="relative w-16 h-24 flex-shrink-0 border border-slate-200 rounded overflow-hidden bg-slate-50">
+                    <img
+                      src={book.coverUrl}
+                      alt={book.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                   </div>
                 )}
 
@@ -174,15 +183,27 @@ export default function AdminBooksPage() {
                     {book.isFeatured && (
                       <span className="px-2 py-0.5 text-xs rounded bg-purple-100 text-purple-800">Featured</span>
                     )}
-                    <span className={`px-2 py-0.5 text-xs rounded ${book.isPublished ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600"}`}>
+                    <span
+                      className={`px-2 py-0.5 text-xs rounded ${
+                        book.isPublished ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
                       {book.isPublished ? "Published" : "Draft"}
                     </span>
-                    <span className={`px-2 py-0.5 text-xs rounded ${book.isVisible ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-600"}`}>
+                    <span
+                      className={`px-2 py-0.5 text-xs rounded ${
+                        book.isVisible ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
                       {book.isVisible ? "Visible" : "Hidden"}
                     </span>
                     {book.hasEbook && <span className="px-2 py-0.5 text-xs rounded bg-slate-100 text-slate-600">Ebook</span>}
-                    {book.hasPaperback && <span className="px-2 py-0.5 text-xs rounded bg-slate-100 text-slate-600">Paperback</span>}
-                    {book.hasHardcover && <span className="px-2 py-0.5 text-xs rounded bg-slate-100 text-slate-600">Hardcover</span>}
+                    {book.hasPaperback && (
+                      <span className="px-2 py-0.5 text-xs rounded bg-slate-100 text-slate-600">Paperback</span>
+                    )}
+                    {book.hasHardcover && (
+                      <span className="px-2 py-0.5 text-xs rounded bg-slate-100 text-slate-600">Hardcover</span>
+                    )}
                   </div>
 
                   <div className="flex gap-3 mt-3">
@@ -192,7 +213,7 @@ export default function AdminBooksPage() {
                     <Link href={`/books/${book.slug}`} target="_blank" className="text-sm text-slate-500 hover:underline">
                       View
                     </Link>
-                    <button onClick={() => handleDelete(book.id, book.slug)} className="text-sm text-red-600 hover:underline">
+                    <button onClick={() => handleDelete(book.id)} className="text-sm text-red-600 hover:underline">
                       Delete
                     </button>
                   </div>
@@ -203,6 +224,8 @@ export default function AdminBooksPage() {
                   {(book.ebookPrice || book.paperbackPrice || book.hardcoverPrice) && (
                     <p className="mt-1">
                       {book.ebookPrice && <span>${Number(book.ebookPrice).toFixed(2)}</span>}
+                      {book.paperbackPrice && <span className="ml-2">${Number(book.paperbackPrice).toFixed(2)}</span>}
+                      {book.hardcoverPrice && <span className="ml-2">${Number(book.hardcoverPrice).toFixed(2)}</span>}
                     </p>
                   )}
                 </div>
