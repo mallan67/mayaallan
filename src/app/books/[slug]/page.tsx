@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { getBookBySlug } from "@/lib/mock-data" // CHANGE THIS TO YOUR LIVE DATA SOURCE IF YOU ALREADY MIGRATED
-import { generateBookStructuredData } from "@/lib/structured-data"
+import { getBookBySlug } from "@/lib/mock-data"
+import { generateBookSchema } from "@/lib/structured-data"
 
 export const dynamic = "force-dynamic"
 
@@ -36,7 +36,7 @@ export default async function BookPage({ params }: BookPageProps) {
 
   if (!book) return notFound()
 
-  const structuredData = generateBookStructuredData(book)
+  const structuredData = generateBookSchema(book)
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
@@ -87,36 +87,3 @@ export default async function BookPage({ params }: BookPageProps) {
                   className="block w-full px-6 py-3 text-sm font-semibold text-center border-2 border-black bg-black text-white rounded-full hover:bg-black/80 transition"
                 >
                   Buy with Stripe
-                </a>
-              )}
-
-              {book.paypalPaymentLink && (
-                <a
-                  href={book.paypalPaymentLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full px-6 py-3 text-sm font-semibold text-center border-2 border-black bg-white text-black rounded-full hover:bg-slate-50 transition"
-                >
-                  Buy with PayPal
-                </a>
-              )}
-            </div>
-          )}
-
-          {book.tags && book.tags.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-sm font-semibold text-slate-700 mb-2">Tags</h2>
-              <div className="flex flex-wrap gap-2">
-                {book.tags.map((tag: string) => (
-                  <span key={tag} className="px-3 py-1 text-xs rounded-full bg-slate-100 text-slate-700">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
