@@ -21,25 +21,15 @@ model Book {
   coverUrl          String?
   backCoverUrl      String?
   ebookFileUrl      String?
-  // Book formats
-  hasEbook          Boolean   @default(true)
-  hasPaperback      Boolean   @default(false)
-  hasHardcover      Boolean   @default(false)
-  // Prices per format
-  ebookPrice        Decimal?  @db.Decimal(10, 2)
-  paperbackPrice    Decimal?  @db.Decimal(10, 2)
-  hardcoverPrice    Decimal?  @db.Decimal(10, 2)
-  // Publishing status
+  bookType          String?   @default("ebook")
+  price             Decimal?  @db.Decimal(10, 2)
   isFeatured        Boolean   @default(false)
   isPublished       Boolean   @default(false)
   isVisible         Boolean   @default(false)
   isComingSoon      Boolean   @default(false)
-  // Sales options
   allowDirectSale   Boolean   @default(false)
-  allowRetailerSale Boolean   @default(false)
   stripePaymentLink String?
   paypalPaymentLink String?
-  // SEO
   seoTitle          String?
   seoDescription    String?
   ogImageUrl        String?
