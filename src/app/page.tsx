@@ -68,6 +68,7 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
       {mainBook?.blurb && (
         <section className="border-t border-slate-200">
           <div className="max-w-4xl mx-auto px-4 py-10 md:py-12">
@@ -76,6 +77,7 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
       {hasEvents && (
         <section className="border-t border-slate-200" id="events">
           <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
@@ -95,6 +97,7 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
       {hasMedia && (
         <section className="border-t border-slate-200" id="media">
           <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
@@ -105,6 +108,7 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
       <section className="border-t border-slate-200" id="about">
         <div className="max-w-4xl mx-auto px-4 py-10 md:py-12 grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,2fr)] gap-8 items-start">
           <div className="flex justify-center md:justify-start">
