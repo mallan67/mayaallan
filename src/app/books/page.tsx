@@ -1,88 +1,42 @@
 import Link from "next/link"
+import Image from "next/image"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
-export default async function AdminBooksPage() {
+export default async function BooksPage() {
   const books = await prisma.book.findMany({
+    where: {
+      isPublished: true,
+      isVisible: true,
+    },
     orderBy: { createdAt: "desc" },
   })
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Manage Books</h1>
-        <Link
-          href="/admin/books/new"
-          className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition"
-        >
-          Add New Book
-        </Link>
-      </div>
+    <div className="max-w-6xl mx-auto px-6 py-12">
+      <h1 className="text-3xl font-semibold mb-8">Books</h1>
 
       {books.length === 0 ? (
         <div className="border border-slate-200 rounded-lg p-8 text-center">
-          <p className="text-slate-600">No books yet. Create your first book!</p>
+          <p className="text-slate-600">No books have been published yet.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {books.map((book) => (
             <Link
               key={book.id}
-              href={`/admin/books/${book.id}`}
-              className="block border border-slate-200 rounded-lg p-6 hover:border-slate-300 transition"
+              href={`/books/${book.slug}`}
+              className="block border border-slate-200 rounded-lg overflow-hidden hover:border-slate-300 transition"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">{book.title}</h2>
-
-                  {book.subtitle1 && (
-                    <p className="text-sm text-slate-600 mt-1">{book.subtitle1}</p>
-                  )}
-
-                  <div className="flex items-center gap-3 mt-3">
-                    <span
-                      className={`px-3 py-1 text-xs rounded-full ${
-                        book.isPublished
-                          ? "bg-green-100 text-green-700"
-                          : "bg-slate-100 text-slate-700"
-                      }`}
-                    >
-                      {book.isPublished ? "Published" : "Draft"}
-                    </span>
-
-                    <span
-                      className={`px-3 py-1 text-xs rounded-full ${
-                        book.isVisible
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-slate-100 text-slate-700"
-                      }`}
-                    >
-                      {book.isVisible ? "Visible" : "Hidden"}
-                    </span>
-
-                    {book.isComingSoon && (
-                      <span className="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
-                        Coming Soon
-                      </span>
-                    )}
-
-                    {"showOnHome" in book && (book as any).showOnHome && (
-                      <span className="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-700">
-                        Home Page
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="text-right text-sm text-slate-500">
-                  <p>/{book.slug}</p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
+              <div className="relative w-full aspect-[2/3] bg-slate-50">
+                {book.coverUrl ? (
+                  <Image
+                    src={book.coverUrl}
+                    alt={book.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-s
