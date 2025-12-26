@@ -4,13 +4,14 @@ import { useState, useRef } from "react"
 import Image from "next/image"
 
 interface Props {
+  label?: string
   currentUrl?: string | null
   onUpload: (url: string) => void
   onRemove?: () => void
   accept?: string
 }
 
-export default function ImageUpload({ currentUrl, onUpload, onRemove, accept = "image/*" }: Props) {
+export default function ImageUpload({ label, currentUrl, onUpload, onRemove, accept = "image/*" }: Props) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -58,6 +59,8 @@ export default function ImageUpload({ currentUrl, onUpload, onRemove, accept = "
 
   return (
     <div className="space-y-2">
+      {label && <label className="block text-sm font-medium mb-1">{label}</label>}
+      
       {currentUrl ? (
         <div className="relative">
           {isImage ? (
