@@ -17,7 +17,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function PATCH(request: Request) {
   const authed = await isAuthenticated()
   if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -34,12 +34,11 @@ export async function POST(request: Request) {
         where: { id: existing.id },
         data: {
           siteName: data.siteName || null,
-          siteTagline: data.siteTagline || null,
+          tagline: data.tagline || null,
           contactEmail: data.contactEmail || null,
           socialTwitter: data.socialTwitter || null,
           socialInstagram: data.socialInstagram || null,
           socialFacebook: data.socialFacebook || null,
-          socialLinkedin: data.socialLinkedin || null,
           socialYoutube: data.socialYoutube || null,
           socialTiktok: data.socialTiktok || null,
         },
@@ -48,12 +47,11 @@ export async function POST(request: Request) {
       settings = await prisma.siteSettings.create({
         data: {
           siteName: data.siteName || null,
-          siteTagline: data.siteTagline || null,
+          tagline: data.tagline || null,
           contactEmail: data.contactEmail || null,
           socialTwitter: data.socialTwitter || null,
           socialInstagram: data.socialInstagram || null,
           socialFacebook: data.socialFacebook || null,
-          socialLinkedin: data.socialLinkedin || null,
           socialYoutube: data.socialYoutube || null,
           socialTiktok: data.socialTiktok || null,
         },

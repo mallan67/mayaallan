@@ -22,7 +22,7 @@ export default async function HomePage() {
     take: 4,
   })
 
-  const publishedMedia = await prisma.media.findMany({
+  const publishedMedia = await prisma.mediaItem.findMany({
     where: { isPublished: true, isVisible: true },
     orderBy: { createdAt: "desc" },
     take: 4,

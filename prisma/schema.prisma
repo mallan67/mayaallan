@@ -28,6 +28,7 @@ model Book {
   paperbackPrice    Decimal?  @db.Decimal(10, 2)
   hardcoverPrice    Decimal?  @db.Decimal(10, 2)
   allowRetailerSale Boolean   @default(false)
+
   isFeatured        Boolean   @default(false)
   isPublished       Boolean   @default(false)
   isVisible         Boolean   @default(false)
