@@ -1,95 +1,118 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { cookies } from "next/headers"
 
-export const dynamic = "force-dynamic"
+interface Book {
+  id: number
+  title: string
+  subtitle1: string | null
+  slug: string
+  isPublished: boolean
+  isVisible: boolean
+  coverUrl: string | null
+}
 
-export default async function AdminBooksPage() {
-  const cookieHeader = cookies().toString()
+export default function AdminBooksPage() {
+  const [books, setBooks] = useState<Book[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+  useEffect(() => {
+    fetch("/api/admin/books")
+      .then((res) => res.json())
+      .then((data) => {
+        setBooks(data)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
 
-  const res = await fetch(`${baseUrl}/api/admin/books`, {
-    headers: {
-      Cookie: cookieHeader,
-    },
-    cache: "no-store",
-  })
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this book?")) return
 
-  if (!res.ok) {
+    const res = await fetch(`/api/admin/books/${id}`, { method: "DELETE" })
+    if (res.ok) {
+      setBooks(books.filter((b) => b.id !== id))
+    }
+  }
+
+  if (loading) {
     return (
-      <div className="p-6 max-w-6xl mx-auto">
-        <div className="border border-red-200 bg-red-50 rounded-lg p-6">
-          <h1 className="text-xl font-semibold text-red-700">Failed to load books</h1>
-          <p className="text-red-600 mt-2">
-            Admin books API returned <strong>{res.status}</strong>. Check Vercel logs for /api/admin/books.
-          </p>
-        </div>
+      <div className="max-w-4xl mx-auto px-4 py-10">
+        <p>Loading...</p>
       </div>
     )
   }
 
-  const books = await res.json()
-
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 py-10">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Manage Books</h1>
-        <Link href="/admin/books/new" className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition">
+        <h1 className="font-serif text-2xl font-semibold">Manage Books</h1>
+        <Link
+          href="/admin/books/new"
+          className="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-black/80"
+        >
           Add New Book
         </Link>
       </div>
 
-      {!books || books.length === 0 ? (
-        <div className="border border-slate-200 rounded-lg p-8 text-center">
-          <p className="text-slate-600">No books yet. Create your first book!</p>
-        </div>
+      {books.length === 0 ? (
+        <p className="text-slate-600">No books yet. Add your first book!</p>
       ) : (
         <div className="space-y-4">
-          {books.map((book: any) => (
-            <Link
+          {books.map((book) => (
+            <div
               key={book.id}
-              href={`/admin/books/${book.id}`}
-              className="block border border-slate-200 rounded-lg p-6 hover:border-slate-300 transition"
+              className="border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition"
             >
               <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold">{book.title}</h2>
-                  {book.subtitle1 && <p className="text-sm text-slate-600 mt-1">{book.subtitle1}</p>}
-
-                  <div className="flex items-center gap-3 mt-3">
+                <div className="flex-1">
+                  <Link href={`/admin/books/${book.id}`} className="hover:underline">
+                    <h2 className="font-serif text-lg font-semibold">{book.title}</h2>
+                  </Link>
+                  {book.subtitle1 && (
+                    <p className="text-sm text-slate-600 mt-1">{book.subtitle1}</p>
+                  )}
+                  <div className="flex gap-2 mt-2">
                     <span
-                      className={`px-3 py-1 text-xs rounded-full ${
-                        book.isPublished ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"
+                      className={`px-2 py-0.5 text-xs rounded ${
+                        book.isPublished
+                          ? "bg-green-100 text-green-800"
+                          : "bg-slate-100 text-slate-600"
                       }`}
                     >
                       {book.isPublished ? "Published" : "Draft"}
                     </span>
-
                     <span
-                      className={`px-3 py-1 text-xs rounded-full ${
-                        book.isVisible ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700"
+                      className={`px-2 py-0.5 text-xs rounded ${
+                        book.isVisible
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-slate-100 text-slate-600"
                       }`}
                     >
                       {book.isVisible ? "Visible" : "Hidden"}
                     </span>
-
-                    {book.isComingSoon && (
-                      <span className="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">Coming Soon</span>
-                    )}
-
-                    {book.showOnHome && (
-                      <span className="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-700">Home Page</span>
-                    )}
                   </div>
                 </div>
-
-                <div className="text-right text-sm text-slate-500">
-                  <p>/{book.slug}</p>
+                <div className="text-right">
+                  <p className="text-sm text-slate-500">/{book.slug}</p>
+                  <div className="flex gap-2 mt-2">
+                    <Link
+                      href={`/admin/books/${book.id}`}
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(book.id)}
+                      className="text-sm text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}
