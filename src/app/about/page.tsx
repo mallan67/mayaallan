@@ -1,31 +1,50 @@
-import type { Metadata } from "next"
+import Image from "next/image"
+import { prisma } from "@/lib/prisma"
 
-export const metadata: Metadata = {
-  title: "About Maya Allan",
-  description: "Learn about Maya Allan, author focused on integration, self-agency, and inner transformation.",
-  openGraph: {
-    title: "About Maya Allan",
-    description: "Author focused on integration, self-agency, and inner transformation.",
-    url: "https://mayaallan.com/about",
-  },
-  twitter: {
-    card: "summary",
-    title: "About Maya Allan",
-    description: "Author focused on integration, self-agency, and inner transformation.",
-  },
-}
+export const dynamic = "force-dynamic"
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const settings = await prisma.siteSettings.findFirst()
+
+  const authorName = settings?.authorName?.trim() || "Maya Allan"
+  const authorBio =
+    settings?.authorBio?.trim() ||
+    "Maya Allan is an author focused on integration, self-agency, and inner transformation."
+  const authorPhotoUrl = settings?.authorPhotoUrl?.trim() || ""
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 md:py-12">
-      <h1 className="font-serif text-2xl md:text-3xl font-semibold mb-4">About Maya Allan</h1>
-      <p className="text-sm md:text-base leading-relaxed text-slate-700 space-y-3">
-        <span>
-          Maya Allan writes about integration, self-agency, and inner transformation. Her work is educational and
-          reflective, offering structured ways to think about profound experiences without making clinical, medical, or
-          therapeutic claims.
-        </span>
-      </p>
+      <h1 className="font-serif text-3xl md:text-4xl font-semibold mb-8">
+        About
+      </h1>
+
+      <div className="grid md:grid-cols-[200px_1fr] gap-8 items-start">
+        <div className="flex justify-center md:justify-start">
+          {authorPhotoUrl ? (
+            <div className="relative w-40 h-40 rounded-full overflow-hidden border border-slate-200 bg-slate-50">
+              <Image
+                src={authorPhotoUrl}
+                alt={authorName}
+                fill
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-40 h-40 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs text-slate-500">
+              Author Photo
+            </div>
+          )}
+        </div>
+
+        <div>
+          <h2 className="font-serif text-2xl font-semibold mb-4">
+            {authorName}
+          </h2>
+          <div className="text-base leading-relaxed text-slate-700 whitespace-pre-wrap">
+            {authorBio}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
