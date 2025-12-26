@@ -3,6 +3,18 @@ import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@prisma/client"
 
+function toDecimalOrNull(value: unknown): number | null {
+  if (value === null || value === undefined) return null
+  if (typeof value === "number") return Number.isFinite(value) ? value : null
+  if (typeof value !== "string") return null
+
+  const cleaned = value.trim().replace(/[$,]/g, "")
+  if (!cleaned) return null
+
+  const n = Number(cleaned)
+  return Number.isFinite(n) ? n : null
+}
+
 export async function GET() {
   const authed = await isAuthenticated()
   if (!authed) {
