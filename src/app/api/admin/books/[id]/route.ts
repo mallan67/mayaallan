@@ -3,6 +3,18 @@ import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@prisma/client"
 
+function toDecimalOrNull(value: unknown): number | null {
+  if (value === null || value === undefined) return null
+  if (typeof value === "number") return Number.isFinite(value) ? value : null
+  if (typeof value !== "string") return null
+
+  const cleaned = value.trim().replace(/[$,]/g, "")
+  if (!cleaned) return null
+
+  const n = Number(cleaned)
+  return Number.isFinite(n) ? n : null
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -51,7 +63,6 @@ export async function PUT(
 
     const data: Prisma.BookUpdateInput = {}
 
-    // Only include fields that are present in the request
     if (body.slug !== undefined) data.slug = body.slug
     if (body.title !== undefined) data.title = body.title
     if (body.subtitle1 !== undefined) data.subtitle1 = body.subtitle1 || null
@@ -66,9 +77,11 @@ export async function PUT(
     if (body.hasEbook !== undefined) data.hasEbook = Boolean(body.hasEbook)
     if (body.hasPaperback !== undefined) data.hasPaperback = Boolean(body.hasPaperback)
     if (body.hasHardcover !== undefined) data.hasHardcover = Boolean(body.hasHardcover)
-    if (body.ebookPrice !== undefined) data.ebookPrice = body.ebookPrice ? Number(body.ebookPrice) : null
-    if (body.paperbackPrice !== undefined) data.paperbackPrice = body.paperbackPrice ? Number(body.paperbackPrice) : null
-    if (body.hardcoverPrice !== undefined) data.hardcoverPrice = body.hardcoverPrice ? Number(body.hardcoverPrice) : null
+
+    if (body.ebookPrice !== undefined) data.ebookPrice = toDecimalOrNull(body.ebookPrice)
+    if (body.paperbackPrice !== undefined) data.paperbackPrice = toDecimalOrNull(body.paperbackPrice)
+    if (body.hardcoverPrice !== undefined) data.hardcoverPrice = toDecimalOrNull(body.hardcoverPrice)
+
     if (body.isFeatured !== undefined) data.isFeatured = Boolean(body.isFeatured)
     if (body.isPublished !== undefined) data.isPublished = Boolean(body.isPublished)
     if (body.isVisible !== undefined) data.isVisible = Boolean(body.isVisible)
@@ -93,10 +106,21 @@ export async function PUT(
     })
 
     return NextResponse.json(book)
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating book:", error)
+
+    if (error?.code === "P2002") {
+      return NextResponse.json(
+        { error: "Slug already exists", details: error?.meta },
+        { status: 409 }
+      )
+    }
+
     const message = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json({ error: "Failed to update book", details: message }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to update book", details: message },
+      { status: 500 }
+    )
   }
 }
 
