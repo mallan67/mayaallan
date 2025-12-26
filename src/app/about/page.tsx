@@ -1,4 +1,3 @@
-import Image from "next/image"
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
@@ -6,11 +5,11 @@ export const dynamic = "force-dynamic"
 export default async function AboutPage() {
   const settings = await prisma.siteSettings.findFirst()
 
-  const authorName = settings?.authorName?.trim() || "Maya Allan"
+  const authorName = settings?.siteName?.trim() || "Maya Allan"
   const authorBio =
-    settings?.authorBio?.trim() ||
+    settings?.tagline?.trim() ||
+    settings?.footerText?.trim() ||
     "Maya Allan is an author focused on integration, self-agency, and inner transformation."
-  const authorPhotoUrl = settings?.authorPhotoUrl?.trim() || ""
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 md:py-12">
@@ -20,20 +19,9 @@ export default async function AboutPage() {
 
       <div className="grid md:grid-cols-[200px_1fr] gap-8 items-start">
         <div className="flex justify-center md:justify-start">
-          {authorPhotoUrl ? (
-            <div className="relative w-40 h-40 rounded-full overflow-hidden border border-slate-200 bg-slate-50">
-              <Image
-                src={authorPhotoUrl}
-                alt={authorName}
-                fill
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-40 h-40 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs text-slate-500">
-              Author Photo
-            </div>
-          )}
+          <div className="w-40 h-40 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs text-slate-500">
+            Author Photo
+          </div>
         </div>
 
         <div>
