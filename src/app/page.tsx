@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 export default async function HomePage() {
   const mainBook =
     (await prisma.book.findFirst({
-      where: { isPublished: true, isVisible: true, isFeatured: true },
+      where: { isPublished: true, isFeatured: true },
       orderBy: { updatedAt: "desc" },
     })) ??
     (await prisma.book.findFirst({
