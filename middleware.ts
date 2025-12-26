@@ -1,17 +1,26 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export function middleware(req: NextRequest) {
-  if (req.nextUrl.pathname === "/admin/login") return NextResponse.next()
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
-  if (!req.nextUrl.pathname.startsWith("/admin")) return NextResponse.next()
+  // Skip login page and API routes
+  if (pathname === "/admin/login" || pathname.startsWith("/api/")) {
+    return NextResponse.next()
+  }
 
-  const hasSession = req.cookies.get("mayaallan_admin_session")?.value
-  if (hasSession) return NextResponse.next()
+  // Check for admin session cookie
+  const sessionCookie = request.cookies.get("mayaallan_admin_session")
 
-  const url = req.nextUrl.clone()
-  url.pathname = "/admin/login"
-  return NextResponse.redirect(url)
+  // If no session and trying to access admin, redirect to login
+  if (pathname.startsWith("/admin") && !sessionCookie) {
+    const loginUrl = new URL("/admin/login", request.url)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  return NextResponse.next()
 }
 
-export const config = { matcher: ["/admin/:path*"] }
+export const config = {
+  matcher: ["/admin/:path*"],
+}
