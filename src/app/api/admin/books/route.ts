@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
 
 export async function GET() {
   const authed = await isAuthenticated()
@@ -32,52 +33,38 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    
-    // Log what we received for debugging
-    console.log("Creating book with data:", JSON.stringify(body, null, 2))
 
-    // Build data object with only the fields we need
-    const data: Record<string, unknown> = {
+    const data: Prisma.BookCreateInput = {
       slug: body.slug || "",
       title: body.title || "",
+      subtitle1: body.subtitle1 || null,
+      subtitle2: body.subtitle2 || null,
+      tagsCsv: body.tagsCsv || null,
+      isbn: body.isbn || null,
+      copyright: body.copyright || null,
+      blurb: body.blurb || null,
+      coverUrl: body.coverUrl || null,
+      backCoverUrl: body.backCoverUrl || null,
+      ebookFileUrl: body.ebookFileUrl || null,
+      hasEbook: Boolean(body.hasEbook),
+      hasPaperback: Boolean(body.hasPaperback),
+      hasHardcover: Boolean(body.hasHardcover),
+      ebookPrice: body.ebookPrice ? Number(body.ebookPrice) : null,
+      paperbackPrice: body.paperbackPrice ? Number(body.paperbackPrice) : null,
+      hardcoverPrice: body.hardcoverPrice ? Number(body.hardcoverPrice) : null,
+      isFeatured: Boolean(body.isFeatured),
+      isPublished: Boolean(body.isPublished),
+      isVisible: Boolean(body.isVisible),
+      isComingSoon: Boolean(body.isComingSoon),
+      allowDirectSale: Boolean(body.allowDirectSale),
+      allowRetailerSale: Boolean(body.allowRetailerSale),
+      stripePaymentLink: body.stripePaymentLink || null,
+      paypalPaymentLink: body.paypalPaymentLink || null,
+      seoTitle: body.seoTitle || null,
+      seoDescription: body.seoDescription || null,
+      ogImageUrl: body.ogImageUrl || null,
+      publishedAt: body.publishedAt ? new Date(body.publishedAt) : null,
     }
-
-    // Optional string fields
-    if (body.subtitle1 !== undefined) data.subtitle1 = body.subtitle1 || null
-    if (body.subtitle2 !== undefined) data.subtitle2 = body.subtitle2 || null
-    if (body.tagsCsv !== undefined) data.tagsCsv = body.tagsCsv || null
-    if (body.isbn !== undefined) data.isbn = body.isbn || null
-    if (body.copyright !== undefined) data.copyright = body.copyright || null
-    if (body.blurb !== undefined) data.blurb = body.blurb || null
-    if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl || null
-    if (body.backCoverUrl !== undefined) data.backCoverUrl = body.backCoverUrl || null
-    if (body.ebookFileUrl !== undefined) data.ebookFileUrl = body.ebookFileUrl || null
-    if (body.stripePaymentLink !== undefined) data.stripePaymentLink = body.stripePaymentLink || null
-    if (body.paypalPaymentLink !== undefined) data.paypalPaymentLink = body.paypalPaymentLink || null
-    if (body.seoTitle !== undefined) data.seoTitle = body.seoTitle || null
-    if (body.seoDescription !== undefined) data.seoDescription = body.seoDescription || null
-    if (body.ogImageUrl !== undefined) data.ogImageUrl = body.ogImageUrl || null
-
-    // Boolean fields
-    if (body.hasEbook !== undefined) data.hasEbook = Boolean(body.hasEbook)
-    if (body.hasPaperback !== undefined) data.hasPaperback = Boolean(body.hasPaperback)
-    if (body.hasHardcover !== undefined) data.hasHardcover = Boolean(body.hasHardcover)
-    if (body.isFeatured !== undefined) data.isFeatured = Boolean(body.isFeatured)
-    if (body.isPublished !== undefined) data.isPublished = Boolean(body.isPublished)
-    if (body.isVisible !== undefined) data.isVisible = Boolean(body.isVisible)
-    if (body.isComingSoon !== undefined) data.isComingSoon = Boolean(body.isComingSoon)
-    if (body.allowDirectSale !== undefined) data.allowDirectSale = Boolean(body.allowDirectSale)
-    if (body.allowRetailerSale !== undefined) data.allowRetailerSale = Boolean(body.allowRetailerSale)
-
-    // Number fields (prices)
-    if (body.ebookPrice !== undefined) data.ebookPrice = body.ebookPrice ? Number(body.ebookPrice) : null
-    if (body.paperbackPrice !== undefined) data.paperbackPrice = body.paperbackPrice ? Number(body.paperbackPrice) : null
-    if (body.hardcoverPrice !== undefined) data.hardcoverPrice = body.hardcoverPrice ? Number(body.hardcoverPrice) : null
-
-    // Date field
-    if (body.publishedAt) data.publishedAt = new Date(body.publishedAt)
-
-    console.log("Prisma create data:", JSON.stringify(data, null, 2))
 
     const book = await prisma.book.create({ data })
 
