@@ -35,25 +35,20 @@ interface Book {
   coverUrl: string | null
   backCoverUrl: string | null
   ebookFileUrl: string | null
-  // Book formats (multi-select)
   hasEbook: boolean
   hasPaperback: boolean
   hasHardcover: boolean
-  // Prices per format
   ebookPrice: number | null
   paperbackPrice: number | null
   hardcoverPrice: number | null
-  // Publishing
   isFeatured: boolean
   isPublished: boolean
   isVisible: boolean
   isComingSoon: boolean
-  // Sales options
   allowDirectSale: boolean
   allowRetailerSale: boolean
   stripePaymentLink: string | null
   paypalPaymentLink: string | null
-  // SEO
   seoTitle: string | null
   seoDescription: string | null
   ogImageUrl: string | null
@@ -112,7 +107,6 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
   useEffect(() => {
     if (bookSlug === null) return
 
-    // Fetch retailers
     fetch("/api/admin/retailers")
       .then((res) => res.json())
       .then((data) => setAllRetailers(Array.isArray(data) ? data : []))
@@ -123,7 +117,6 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
       return
     }
 
-    // Fetch existing book
     fetch(`/api/admin/books/by-slug/${bookSlug}`)
       .then((res) => {
         if (!res.ok) throw new Error("Not found")
@@ -160,8 +153,11 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
     setMessage({ type: "", text: "" })
 
     try {
-      const url = isNew ? "/api/admin/books" : `/api/admin/books/by-slug/${bookSlug}`
+      // KEY FIX: Use book.id for updates, not slug!
+      const url = isNew ? "/api/admin/books" : `/api/admin/books/${book.id}`
       const method = isNew ? "POST" : "PUT"
+
+      console.log("Saving to:", url, "Method:", method)
 
       const res = await fetch(url, {
         method,
@@ -171,30 +167,30 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
 
       if (res.ok) {
         const savedBook = await res.json()
-        setMessage({ type: "success", text: isNew ? "Book created successfully!" : "Book updated successfully!" })
+        setBook(savedBook)
+        setMessage({ type: "success", text: isNew ? "Book created!" : "Book saved!" })
         
         if (isNew) {
-          // Redirect to edit page with new slug
           router.push(`/admin/books/${savedBook.slug}`)
         }
       } else {
         const error = await res.json()
-        setMessage({ type: "error", text: error.error || "Failed to save book" })
+        setMessage({ type: "error", text: error.error || "Failed to save" })
       }
-    } catch {
+    } catch (err) {
+      console.error("Save error:", err)
       setMessage({ type: "error", text: "Failed to save book" })
     }
     setSaving(false)
   }
 
   const handleRetailerToggle = async (retailerId: number, checked: boolean) => {
-    if (isNew) {
-      setMessage({ type: "error", text: "Please save the book first before adding retailers" })
+    if (isNew || !book.id) {
+      setMessage({ type: "error", text: "Save the book first" })
       return
     }
 
     if (checked) {
-      // Add retailer link
       const res = await fetch(`/api/admin/books/${book.id}/retailers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -205,7 +201,6 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
         setBook({ ...book, retailers: [...(book.retailers || []), link] })
       }
     } else {
-      // Remove retailer link
       const link = book.retailers?.find((r) => r.retailerId === retailerId)
       if (link) {
         await fetch(`/api/admin/books/${book.id}/retailers/${link.id}`, { method: "DELETE" })
@@ -215,6 +210,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
   }
 
   const handleRetailerUpdate = async (linkId: number, field: string, value: string) => {
+    if (!book.id) return
     const res = await fetch(`/api/admin/books/${book.id}/retailers/${linkId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
