@@ -1,44 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import { z } from "zod"
-
-const BookUpdateSchema = z.object({
-  slug: z.string().min(1).optional(),
-  title: z.string().min(1).optional(),
-  subtitle1: z.string().optional().nullable(),
-  subtitle2: z.string().optional().nullable(),
-  tagsCsv: z.string().optional().nullable(),
-  isbn: z.string().optional().nullable(),
-  copyright: z.string().optional().nullable(),
-  blurb: z.string().optional().nullable(),
-  coverUrl: z.string().optional().nullable(),
-  backCoverUrl: z.string().optional().nullable(),
-  ebookFileUrl: z.string().optional().nullable(),
-  // Book formats
-  hasEbook: z.boolean().optional(),
-  hasPaperback: z.boolean().optional(),
-  hasHardcover: z.boolean().optional(),
-  // Prices
-  ebookPrice: z.number().optional().nullable(),
-  paperbackPrice: z.number().optional().nullable(),
-  hardcoverPrice: z.number().optional().nullable(),
-  // Publishing
-  isFeatured: z.boolean().optional(),
-  isPublished: z.boolean().optional(),
-  isVisible: z.boolean().optional(),
-  isComingSoon: z.boolean().optional(),
-  // Sales
-  allowDirectSale: z.boolean().optional(),
-  allowRetailerSale: z.boolean().optional(),
-  stripePaymentLink: z.string().optional().nullable(),
-  paypalPaymentLink: z.string().optional().nullable(),
-  // SEO
-  seoTitle: z.string().optional().nullable(),
-  seoDescription: z.string().optional().nullable(),
-  ogImageUrl: z.string().optional().nullable(),
-  publishedAt: z.string().optional().nullable(),
-})
 
 export async function GET(
   request: Request,
@@ -86,19 +48,55 @@ export async function PUT(
   try {
     const body = await request.json()
     
-    // Remove fields that shouldn't be updated directly
-    const { retailers, createdAt, updatedAt, id: bodyId, ...rest } = body
-    
-    const parsed = BookUpdateSchema.parse(rest)
+    console.log("Updating book", id, "with data:", JSON.stringify(body, null, 2))
 
-    const updateData: Record<string, unknown> = { ...parsed }
-    if (parsed.publishedAt) {
-      updateData.publishedAt = new Date(parsed.publishedAt)
+    // Build update data object
+    const data: Record<string, unknown> = {}
+
+    // String fields
+    if (body.slug !== undefined) data.slug = body.slug
+    if (body.title !== undefined) data.title = body.title
+    if (body.subtitle1 !== undefined) data.subtitle1 = body.subtitle1 || null
+    if (body.subtitle2 !== undefined) data.subtitle2 = body.subtitle2 || null
+    if (body.tagsCsv !== undefined) data.tagsCsv = body.tagsCsv || null
+    if (body.isbn !== undefined) data.isbn = body.isbn || null
+    if (body.copyright !== undefined) data.copyright = body.copyright || null
+    if (body.blurb !== undefined) data.blurb = body.blurb || null
+    if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl || null
+    if (body.backCoverUrl !== undefined) data.backCoverUrl = body.backCoverUrl || null
+    if (body.ebookFileUrl !== undefined) data.ebookFileUrl = body.ebookFileUrl || null
+    if (body.stripePaymentLink !== undefined) data.stripePaymentLink = body.stripePaymentLink || null
+    if (body.paypalPaymentLink !== undefined) data.paypalPaymentLink = body.paypalPaymentLink || null
+    if (body.seoTitle !== undefined) data.seoTitle = body.seoTitle || null
+    if (body.seoDescription !== undefined) data.seoDescription = body.seoDescription || null
+    if (body.ogImageUrl !== undefined) data.ogImageUrl = body.ogImageUrl || null
+
+    // Boolean fields
+    if (body.hasEbook !== undefined) data.hasEbook = Boolean(body.hasEbook)
+    if (body.hasPaperback !== undefined) data.hasPaperback = Boolean(body.hasPaperback)
+    if (body.hasHardcover !== undefined) data.hasHardcover = Boolean(body.hasHardcover)
+    if (body.isFeatured !== undefined) data.isFeatured = Boolean(body.isFeatured)
+    if (body.isPublished !== undefined) data.isPublished = Boolean(body.isPublished)
+    if (body.isVisible !== undefined) data.isVisible = Boolean(body.isVisible)
+    if (body.isComingSoon !== undefined) data.isComingSoon = Boolean(body.isComingSoon)
+    if (body.allowDirectSale !== undefined) data.allowDirectSale = Boolean(body.allowDirectSale)
+    if (body.allowRetailerSale !== undefined) data.allowRetailerSale = Boolean(body.allowRetailerSale)
+
+    // Number fields
+    if (body.ebookPrice !== undefined) data.ebookPrice = body.ebookPrice ? Number(body.ebookPrice) : null
+    if (body.paperbackPrice !== undefined) data.paperbackPrice = body.paperbackPrice ? Number(body.paperbackPrice) : null
+    if (body.hardcoverPrice !== undefined) data.hardcoverPrice = body.hardcoverPrice ? Number(body.hardcoverPrice) : null
+
+    // Date field
+    if (body.publishedAt !== undefined) {
+      data.publishedAt = body.publishedAt ? new Date(body.publishedAt) : null
     }
+
+    console.log("Prisma update data:", JSON.stringify(data, null, 2))
 
     const book = await prisma.book.update({
       where: { id: parseInt(id) },
-      data: updateData,
+      data,
       include: {
         retailers: {
           include: { retailer: true },
@@ -108,12 +106,9 @@ export async function PUT(
 
     return NextResponse.json(book)
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      console.error("Validation error:", error.issues)
-      return NextResponse.json({ error: error.issues }, { status: 400 })
-    }
     console.error("Error updating book:", error)
-    return NextResponse.json({ error: "Failed to update book" }, { status: 500 })
+    const message = error instanceof Error ? error.message : "Unknown error"
+    return NextResponse.json({ error: "Failed to update book", details: message }, { status: 500 })
   }
 }
 
