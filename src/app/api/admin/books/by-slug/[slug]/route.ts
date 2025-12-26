@@ -29,41 +29,7 @@ export async function GET(
 
     return NextResponse.json(book)
   } catch (error) {
-    console.error("Error fetching book:", error)
+    console.error("Error fetching book by slug:", error)
     return NextResponse.json({ error: "Failed to fetch book" }, { status: 500 })
-  }
-}
-
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ slug: string }> }
-) {
-  const authed = await isAuthenticated()
-  if (!authed) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  const { slug } = await params
-
-  try {
-    const body = await request.json()
-    
-    // Remove fields that shouldn't be updated directly
-    const { retailers, id, createdAt, updatedAt, ...updateData } = body
-
-    const book = await prisma.book.update({
-      where: { slug },
-      data: updateData,
-      include: {
-        retailers: {
-          include: { retailer: true },
-        },
-      },
-    })
-
-    return NextResponse.json(book)
-  } catch (error) {
-    console.error("Error updating book:", error)
-    return NextResponse.json({ error: "Failed to update book" }, { status: 500 })
   }
 }
