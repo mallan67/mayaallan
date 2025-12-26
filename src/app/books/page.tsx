@@ -1,75 +1,71 @@
 import Link from "next/link"
-import Image from "next/image"
 import { prisma } from "@/lib/prisma"
-import { ShareButtons } from "@/components/share-buttons"
-import type { Metadata } from "next"
-
-export const metadata: Metadata = {
-  title: "Books",
-  description: "Explore books by Maya Allan on psychedelic integration, consciousness, and personal transformation.",
-  openGraph: {
-    title: "Books by Maya Allan",
-    description: "Explore books on psychedelic integration, consciousness, and personal transformation.",
-    url: "https://mayaallan.com/books",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Books by Maya Allan",
-    description: "Explore books on psychedelic integration, consciousness, and personal transformation.",
-  },
-}
 
 export const dynamic = "force-dynamic"
 
-export default async function BooksPage() {
+export default async function AdminBooksPage() {
   const books = await prisma.book.findMany({
-    where: {
-      isPublished: true,
-      isVisible: true,
-    },
     orderBy: { createdAt: "desc" },
   })
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
-      <h1 className="font-serif text-2xl md:text-3xl font-semibold mb-8">Books</h1>
-      
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold">Manage Books</h1>
+        <Link href="/admin/books/new" className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition">
+          Add New Book
+        </Link>
+      </div>
+
       {books.length === 0 ? (
-        <p className="text-sm text-slate-700">No books published yet. Check back soon!</p>
+        <div className="border border-slate-200 rounded-lg p-8 text-center">
+          <p className="text-slate-600">No books yet. Create your first book!</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="space-y-4">
           {books.map((book) => (
-            <div key={book.id} className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-lg transition">
-              {book.coverUrl && (
-                <Link href={`/books/${book.slug}`}>
-                  <div className="relative w-full h-80 bg-slate-50">
-                    <Image
-                      src={book.coverUrl}
-                      alt={book.title}
-                      fill
-                      className="object-contain p-4"
-                    />
+            <Link
+              key={book.id}
+              href={`/admin/books/${book.id}`}
+              className="block border border-slate-200 rounded-lg p-6 hover:border-slate-300 transition"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold">{book.title}</h2>
+                  {book.subtitle1 && <p className="text-sm text-slate-600 mt-1">{book.subtitle1}</p>}
+
+                  <div className="flex items-center gap-3 mt-3">
+                    <span
+                      className={`px-3 py-1 text-xs rounded-full ${
+                        book.isPublished ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"
+                      }`}
+                    >
+                      {book.isPublished ? "Published" : "Draft"}
+                    </span>
+
+                    <span
+                      className={`px-3 py-1 text-xs rounded-full ${
+                        book.isVisible ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700"
+                      }`}
+                    >
+                      {book.isVisible ? "Visible" : "Hidden"}
+                    </span>
+
+                    {book.isComingSoon && (
+                      <span className="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">Coming Soon</span>
+                    )}
+
+                    {"showOnHome" in book && (book as any).showOnHome && (
+                      <span className="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-700">Home Page</span>
+                    )}
                   </div>
-                </Link>
-              )}
-              <div className="p-4">
-                <Link href={`/books/${book.slug}`}>
-                  <h2 className="font-serif text-xl font-semibold mb-2 hover:text-slate-600">{book.title}</h2>
-                </Link>
-                {book.subtitle1 && <p className="text-sm text-slate-600 mb-2">{book.subtitle1}</p>}
-                {book.blurb && <p className="text-sm text-slate-700 mb-4 line-clamp-3">{book.blurb}</p>}
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                  <Link href={`/books/${book.slug}`} className="text-sm font-semibold text-black hover:underline">
-                    Learn More →
-                  </Link>
-                  <ShareButtons
-                    url={`https://mayaallan.com/books/${book.slug}`}
-                    title={book.title}
-                    description={book.blurb ?? book.subtitle1 ?? undefined}
-                  />
+                </div>
+
+                <div className="text-right text-sm text-slate-500">
+                  <p>/{book.slug}</p>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
