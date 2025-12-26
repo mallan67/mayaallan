@@ -1,3 +1,4 @@
+cat > src/app/api/admin/books/route.ts <<'EOF'
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
@@ -7,20 +8,28 @@ function toDecimalOrNull(value: unknown): number | null {
   if (value === null || value === undefined) return null
   if (typeof value === "number") return Number.isFinite(value) ? value : null
   if (typeof value !== "string") return null
+
   const cleaned = value.trim().replace(/[$,]/g, "")
   if (!cleaned) return null
+
   const n = Number(cleaned)
   return Number.isFinite(n) ? n : null
 }
 
 export async function GET() {
   const authed = await isAuthenticated()
-  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!authed) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
 
   try {
     const books = await prisma.book.findMany({
       orderBy: { createdAt: "desc" },
-      include: { retailers: { include: { retailer: true } } },
+      include: {
+        retailers: {
+          include: { retailer: true },
+        },
+      },
     })
     return NextResponse.json(books)
   } catch (error) {
@@ -31,7 +40,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const authed = await isAuthenticated()
-  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!authed) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
 
   try {
     const body = await request.json()
@@ -48,22 +59,18 @@ export async function POST(request: Request) {
       coverUrl: body.coverUrl || null,
       backCoverUrl: body.backCoverUrl || null,
       ebookFileUrl: body.ebookFileUrl || null,
-
       hasEbook: Boolean(body.hasEbook),
       hasPaperback: Boolean(body.hasPaperback),
       hasHardcover: Boolean(body.hasHardcover),
-
       ebookPrice: toDecimalOrNull(body.ebookPrice),
       paperbackPrice: toDecimalOrNull(body.paperbackPrice),
       hardcoverPrice: toDecimalOrNull(body.hardcoverPrice),
-
       isFeatured: Boolean(body.isFeatured),
       isPublished: Boolean(body.isPublished),
       isVisible: Boolean(body.isVisible),
       isComingSoon: Boolean(body.isComingSoon),
       allowDirectSale: Boolean(body.allowDirectSale),
       allowRetailerSale: Boolean(body.allowRetailerSale),
-
       stripePaymentLink: body.stripePaymentLink || null,
       paypalPaymentLink: body.paypalPaymentLink || null,
       seoTitle: body.seoTitle || null,
@@ -73,6 +80,7 @@ export async function POST(request: Request) {
     }
 
     const book = await prisma.book.create({ data })
+
     return NextResponse.json(book, { status: 201 })
   } catch (error: any) {
     console.error("Error creating book:", error)
@@ -85,6 +93,10 @@ export async function POST(request: Request) {
     }
 
     const message = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json({ error: "Failed to create book", details: message }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to create book", details: message },
+      { status: 500 }
+    )
   }
 }
+EOF
