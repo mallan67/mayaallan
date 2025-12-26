@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
 
 export async function GET(
   request: Request,
@@ -47,13 +48,10 @@ export async function PUT(
 
   try {
     const body = await request.json()
-    
-    console.log("Updating book", id, "with data:", JSON.stringify(body, null, 2))
 
-    // Build update data object
-    const data: Record<string, unknown> = {}
+    const data: Prisma.BookUpdateInput = {}
 
-    // String fields
+    // Only include fields that are present in the request
     if (body.slug !== undefined) data.slug = body.slug
     if (body.title !== undefined) data.title = body.title
     if (body.subtitle1 !== undefined) data.subtitle1 = body.subtitle1 || null
@@ -65,34 +63,24 @@ export async function PUT(
     if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl || null
     if (body.backCoverUrl !== undefined) data.backCoverUrl = body.backCoverUrl || null
     if (body.ebookFileUrl !== undefined) data.ebookFileUrl = body.ebookFileUrl || null
-    if (body.stripePaymentLink !== undefined) data.stripePaymentLink = body.stripePaymentLink || null
-    if (body.paypalPaymentLink !== undefined) data.paypalPaymentLink = body.paypalPaymentLink || null
-    if (body.seoTitle !== undefined) data.seoTitle = body.seoTitle || null
-    if (body.seoDescription !== undefined) data.seoDescription = body.seoDescription || null
-    if (body.ogImageUrl !== undefined) data.ogImageUrl = body.ogImageUrl || null
-
-    // Boolean fields
     if (body.hasEbook !== undefined) data.hasEbook = Boolean(body.hasEbook)
     if (body.hasPaperback !== undefined) data.hasPaperback = Boolean(body.hasPaperback)
     if (body.hasHardcover !== undefined) data.hasHardcover = Boolean(body.hasHardcover)
+    if (body.ebookPrice !== undefined) data.ebookPrice = body.ebookPrice ? Number(body.ebookPrice) : null
+    if (body.paperbackPrice !== undefined) data.paperbackPrice = body.paperbackPrice ? Number(body.paperbackPrice) : null
+    if (body.hardcoverPrice !== undefined) data.hardcoverPrice = body.hardcoverPrice ? Number(body.hardcoverPrice) : null
     if (body.isFeatured !== undefined) data.isFeatured = Boolean(body.isFeatured)
     if (body.isPublished !== undefined) data.isPublished = Boolean(body.isPublished)
     if (body.isVisible !== undefined) data.isVisible = Boolean(body.isVisible)
     if (body.isComingSoon !== undefined) data.isComingSoon = Boolean(body.isComingSoon)
     if (body.allowDirectSale !== undefined) data.allowDirectSale = Boolean(body.allowDirectSale)
     if (body.allowRetailerSale !== undefined) data.allowRetailerSale = Boolean(body.allowRetailerSale)
-
-    // Number fields
-    if (body.ebookPrice !== undefined) data.ebookPrice = body.ebookPrice ? Number(body.ebookPrice) : null
-    if (body.paperbackPrice !== undefined) data.paperbackPrice = body.paperbackPrice ? Number(body.paperbackPrice) : null
-    if (body.hardcoverPrice !== undefined) data.hardcoverPrice = body.hardcoverPrice ? Number(body.hardcoverPrice) : null
-
-    // Date field
-    if (body.publishedAt !== undefined) {
-      data.publishedAt = body.publishedAt ? new Date(body.publishedAt) : null
-    }
-
-    console.log("Prisma update data:", JSON.stringify(data, null, 2))
+    if (body.stripePaymentLink !== undefined) data.stripePaymentLink = body.stripePaymentLink || null
+    if (body.paypalPaymentLink !== undefined) data.paypalPaymentLink = body.paypalPaymentLink || null
+    if (body.seoTitle !== undefined) data.seoTitle = body.seoTitle || null
+    if (body.seoDescription !== undefined) data.seoDescription = body.seoDescription || null
+    if (body.ogImageUrl !== undefined) data.ogImageUrl = body.ogImageUrl || null
+    if (body.publishedAt !== undefined) data.publishedAt = body.publishedAt ? new Date(body.publishedAt) : null
 
     const book = await prisma.book.update({
       where: { id: parseInt(id) },
