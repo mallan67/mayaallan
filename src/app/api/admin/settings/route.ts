@@ -1,26 +1,21 @@
 import { NextResponse } from "next/server"
-import { isAuthenticated } from "@/lib/session"
-import { getSiteSettings, updateSiteSettings } from "@/lib/mock-data"
 import { z } from "zod"
+import { isAuthenticated } from "@/lib/session"
+import { prisma } from "@/lib/prisma"
 
 const UpdateSettingsSchema = z.object({
-  siteTitle: z.string().optional(),
-  siteDescription: z.string().optional(),
+  siteName: z.string().optional(),
+  tagline: z.string().optional(),
+  footerText: z.string().optional(),
+  contactEmail: z.string().email().optional().or(z.literal("")),
+  socialTwitter: z.string().optional(),
+  socialInstagram: z.string().optional(),
+  socialFacebook: z.string().optional(),
+  socialYoutube: z.string().optional(),
+  socialTiktok: z.string().optional(),
   authorName: z.string().optional(),
   authorBio: z.string().optional(),
   authorPhotoUrl: z.string().optional(),
-  socialLinks: z.object({
-    twitter: z.string().optional(),
-    instagram: z.string().optional(),
-    facebook: z.string().optional(),
-    tiktok: z.string().optional(),
-    youtube: z.string().optional(),
-    linkedin: z.string().optional(),
-  }).optional(),
-  contactEmail: z.string().email().optional(),
-  analyticsId: z.string().optional(),
-  defaultSeoTitle: z.string().optional(),
-  defaultSeoDescription: z.string().optional(),
   defaultOgImageUrl: z.string().optional(),
 })
 
@@ -29,7 +24,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const settings = await getSiteSettings()
+  const settings = await prisma.siteSettings.findFirst()
   return NextResponse.json(settings)
 }
 
@@ -41,8 +36,44 @@ export async function PATCH(request: Request) {
   try {
     const body = await request.json()
     const data = UpdateSettingsSchema.parse(body)
-    const settings = await updateSiteSettings(data)
-    return NextResponse.json(settings)
+
+    // Ensure single row exists (id=1)
+    const updated = await prisma.siteSettings.upsert({
+      where: { id: 1 },
+      create: {
+        id: 1,
+        siteName: data.siteName || "Maya Allan",
+        tagline: data.tagline || null,
+        footerText: data.footerText || null,
+        contactEmail: data.contactEmail ? data.contactEmail : null,
+        socialTwitter: data.socialTwitter || null,
+        socialInstagram: data.socialInstagram || null,
+        socialFacebook: data.socialFacebook || null,
+        socialYoutube: data.socialYoutube || null,
+        socialTiktok: data.socialTiktok || null,
+        authorName: data.authorName || null,
+        authorBio: data.authorBio || null,
+        authorPhotoUrl: data.authorPhotoUrl || null,
+        defaultOgImageUrl: data.defaultOgImageUrl || null,
+      },
+      update: {
+        siteName: data.siteName ?? undefined,
+        tagline: data.tagline ?? undefined,
+        footerText: data.footerText ?? undefined,
+        contactEmail: data.contactEmail === "" ? null : data.contactEmail ?? undefined,
+        socialTwitter: data.socialTwitter ?? undefined,
+        socialInstagram: data.socialInstagram ?? undefined,
+        socialFacebook: data.socialFacebook ?? undefined,
+        socialYoutube: data.socialYoutube ?? undefined,
+        socialTiktok: data.socialTiktok ?? undefined,
+        authorName: data.authorName ?? undefined,
+        authorBio: data.authorBio ?? undefined,
+        authorPhotoUrl: data.authorPhotoUrl ?? undefined,
+        defaultOgImageUrl: data.defaultOgImageUrl ?? undefined,
+      },
+    })
+
+    return NextResponse.json(updated)
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Validation failed", details: error.issues }, { status: 400 })
