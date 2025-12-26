@@ -1,8 +1,36 @@
 import Link from "next/link"
-import { getAllBooks } from "@/lib/mock-data"
+import { cookies } from "next/headers"
+
+export const dynamic = "force-dynamic"
 
 export default async function AdminBooksPage() {
-  const books = await getAllBooks()
+  const cookieHeader = cookies().toString()
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
+
+  const res = await fetch(`${baseUrl}/api/admin/books`, {
+    headers: {
+      Cookie: cookieHeader,
+    },
+    cache: "no-store",
+  })
+
+  if (!res.ok) {
+    return (
+      <div className="p-6 max-w-6xl mx-auto">
+        <div className="border border-red-200 bg-red-50 rounded-lg p-6">
+          <h1 className="text-xl font-semibold text-red-700">Failed to load books</h1>
+          <p className="text-red-600 mt-2">
+            Admin books API returned <strong>{res.status}</strong>. Check your server logs.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  const books = await res.json()
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -13,13 +41,13 @@ export default async function AdminBooksPage() {
         </Link>
       </div>
 
-      {books.length === 0 ? (
+      {!books || books.length === 0 ? (
         <div className="border border-slate-200 rounded-lg p-8 text-center">
           <p className="text-slate-600">No books yet. Create your first book!</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {books.map((book) => (
+          {books.map((book: any) => (
             <Link
               key={book.id}
               href={`/admin/books/${book.id}`}
@@ -29,6 +57,7 @@ export default async function AdminBooksPage() {
                 <div>
                   <h2 className="text-lg font-semibold">{book.title}</h2>
                   {book.subtitle1 && <p className="text-sm text-slate-600 mt-1">{book.subtitle1}</p>}
+
                   <div className="flex items-center gap-3 mt-3">
                     <span
                       className={`px-3 py-1 text-xs rounded-full ${
@@ -37,6 +66,7 @@ export default async function AdminBooksPage() {
                     >
                       {book.isPublished ? "Published" : "Draft"}
                     </span>
+
                     <span
                       className={`px-3 py-1 text-xs rounded-full ${
                         book.isVisible ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-700"
@@ -44,19 +74,6 @@ export default async function AdminBooksPage() {
                     >
                       {book.isVisible ? "Visible" : "Hidden"}
                     </span>
+
                     {book.isComingSoon && (
                       <span className="px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">Coming Soon</span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right text-sm text-slate-500">
-                  <p>/{book.slug}</p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
