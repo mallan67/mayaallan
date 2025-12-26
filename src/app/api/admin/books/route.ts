@@ -15,12 +15,25 @@ const BookSchema = z.object({
   coverUrl: z.string().optional().nullable(),
   backCoverUrl: z.string().optional().nullable(),
   ebookFileUrl: z.string().optional().nullable(),
+  // Book formats
+  hasEbook: z.boolean().default(true),
+  hasPaperback: z.boolean().default(false),
+  hasHardcover: z.boolean().default(false),
+  // Prices
+  ebookPrice: z.number().optional().nullable(),
+  paperbackPrice: z.number().optional().nullable(),
+  hardcoverPrice: z.number().optional().nullable(),
+  // Publishing
+  isFeatured: z.boolean().default(false),
   isPublished: z.boolean().default(false),
   isVisible: z.boolean().default(false),
   isComingSoon: z.boolean().default(false),
+  // Sales
   allowDirectSale: z.boolean().default(false),
+  allowRetailerSale: z.boolean().default(false),
   stripePaymentLink: z.string().optional().nullable(),
   paypalPaymentLink: z.string().optional().nullable(),
+  // SEO
   seoTitle: z.string().optional().nullable(),
   seoDescription: z.string().optional().nullable(),
   ogImageUrl: z.string().optional().nullable(),
@@ -36,6 +49,11 @@ export async function GET() {
   try {
     const books = await prisma.book.findMany({
       orderBy: { createdAt: "desc" },
+      include: {
+        retailers: {
+          include: { retailer: true },
+        },
+      },
     })
     return NextResponse.json(books)
   } catch (error) {
@@ -52,7 +70,11 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const parsed = BookSchema.parse(body)
+    
+    // Remove fields that shouldn't be in create
+    const { id, retailers, createdAt, updatedAt, ...rest } = body
+    
+    const parsed = BookSchema.parse(rest)
 
     const book = await prisma.book.create({
       data: {
@@ -67,10 +89,18 @@ export async function POST(request: Request) {
         coverUrl: parsed.coverUrl,
         backCoverUrl: parsed.backCoverUrl,
         ebookFileUrl: parsed.ebookFileUrl,
+        hasEbook: parsed.hasEbook,
+        hasPaperback: parsed.hasPaperback,
+        hasHardcover: parsed.hasHardcover,
+        ebookPrice: parsed.ebookPrice,
+        paperbackPrice: parsed.paperbackPrice,
+        hardcoverPrice: parsed.hardcoverPrice,
+        isFeatured: parsed.isFeatured,
         isPublished: parsed.isPublished,
         isVisible: parsed.isVisible,
         isComingSoon: parsed.isComingSoon,
         allowDirectSale: parsed.allowDirectSale,
+        allowRetailerSale: parsed.allowRetailerSale,
         stripePaymentLink: parsed.stripePaymentLink,
         paypalPaymentLink: parsed.paypalPaymentLink,
         seoTitle: parsed.seoTitle,
@@ -83,6 +113,7 @@ export async function POST(request: Request) {
     return NextResponse.json(book, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error("Validation error:", error.issues)
       return NextResponse.json({ error: error.issues }, { status: 400 })
     }
     console.error("Error creating book:", error)
