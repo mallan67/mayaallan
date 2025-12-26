@@ -14,62 +14,41 @@ export default async function BooksPage() {
   })
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-semibold mb-8">Books</h1>
+    <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
+      <h1 className="font-serif text-3xl md:text-4xl font-semibold mb-8">
+        Books
+      </h1>
 
-      {books.length === 0 ? (
-        <div className="border border-slate-200 rounded-lg p-8 text-center">
-          <p className="text-slate-600">No books have been published yet.</p>
-        </div>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {books.map((book) => (
-            <Link
-              key={book.id}
-              href={`/books/${book.slug}`}
-              className="block border border-slate-200 rounded-lg overflow-hidden hover:border-slate-300 transition"
-            >
-              <div className="relative w-full aspect-[2/3] bg-slate-50">
-                {book.coverUrl ? (
-                  <Image
-                    src={book.coverUrl}
-                    alt={book.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
-                    No Cover Image
-                  </div>
-                )}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {books.map((book) => (
+          <Link
+            key={book.id}
+            href={`/books/${book.slug}`}
+            className="group border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition"
+          >
+            {book.coverUrl && (
+              <div className="relative aspect-[2/3] mb-4 overflow-hidden rounded">
+                <Image
+                  src={book.coverUrl}
+                  alt={book.title}
+                  fill
+                  className="object-contain bg-slate-50"
+                />
               </div>
+            )}
 
-              <div className="p-5">
-                <h2 className="text-lg font-semibold">{book.title}</h2>
+            <h2 className="font-serif text-lg font-semibold group-hover:underline">
+              {book.title}
+            </h2>
 
-                {book.subtitle1 && (
-                  <p className="text-sm text-slate-600 mt-1">{book.subtitle1}</p>
-                )}
-
-                {book.blurb && (
-                  <p className="text-sm text-slate-700 mt-3 line-clamp-3">
-                    {book.blurb}
-                  </p>
-                )}
-
-                {book.isComingSoon && (
-                  <div className="mt-4">
-                    <span className="inline-block px-3 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
-                      Coming Soon
-                    </span>
-                  </div>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+            {book.subtitle1 && (
+              <p className="mt-1 text-sm text-slate-600">
+                {book.subtitle1}
+              </p>
+            )}
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }
