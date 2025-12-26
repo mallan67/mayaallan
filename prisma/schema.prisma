@@ -21,31 +21,33 @@ model Book {
   coverUrl          String?
   backCoverUrl      String?
   ebookFileUrl      String?
-  // Book formats
+
   hasEbook          Boolean   @default(true)
   hasPaperback      Boolean   @default(false)
   hasHardcover      Boolean   @default(false)
-  // Prices per format
+
   ebookPrice        Decimal?  @db.Decimal(10, 2)
   paperbackPrice    Decimal?  @db.Decimal(10, 2)
   hardcoverPrice    Decimal?  @db.Decimal(10, 2)
-  // Publishing status
+
   isFeatured        Boolean   @default(false)
   isPublished       Boolean   @default(false)
   isVisible         Boolean   @default(false)
   isComingSoon      Boolean   @default(false)
-  // Sales options
+
   allowDirectSale   Boolean   @default(false)
   allowRetailerSale Boolean   @default(false)
   stripePaymentLink String?
   paypalPaymentLink String?
-  // SEO
+
   seoTitle          String?
   seoDescription    String?
   ogImageUrl        String?
+
   publishedAt       DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
   retailers         BookRetailerLink[]
 }
 
@@ -65,8 +67,10 @@ model BookRetailerLink {
   url        String
   formatType String   @default("ebook")
   isActive   Boolean  @default(true)
+
   book       Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
   retailer   Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+
   @@unique([bookId, retailerId, formatType])
 }
 
@@ -133,15 +137,21 @@ model NavigationItem {
 }
 
 model SiteSettings {
-  id               Int      @id @default(1)
-  siteName         String   @default("Maya Allan")
-  tagline          String?
-  contactEmail     String?
-  socialTwitter    String?
-  socialInstagram  String?
-  socialFacebook   String?
-  socialYoutube    String?
-  socialTiktok     String?
-  footerText       String?
-  updatedAt        DateTime @updatedAt
+  id                Int      @id @default(1)
+  siteName          String   @default("Maya Allan")
+  tagline           String?
+  contactEmail      String?
+  socialTwitter     String?
+  socialInstagram   String?
+  socialFacebook    String?
+  socialYoutube     String?
+  socialTiktok      String?
+  footerText        String?
+  updatedAt         DateTime @updatedAt
+
+  // NEW — author fields (admin-editable)
+  authorName        String?
+  authorBio         String?
+  authorPhotoUrl    String?
+  defaultOgImageUrl String?
 }
