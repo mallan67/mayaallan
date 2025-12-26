@@ -61,9 +61,9 @@ export async function POST(request: Request) {
       hasEbook: Boolean(body.hasEbook),
       hasPaperback: Boolean(body.hasPaperback),
       hasHardcover: Boolean(body.hasHardcover),
-      ebookPrice: body.ebookPrice ? Number(body.ebookPrice) : null,
-      paperbackPrice: body.paperbackPrice ? Number(body.paperbackPrice) : null,
-      hardcoverPrice: body.hardcoverPrice ? Number(body.hardcoverPrice) : null,
+      ebookPrice: toDecimalOrNull(body.ebookPrice),
+      paperbackPrice: toDecimalOrNull(body.paperbackPrice),
+      hardcoverPrice: toDecimalOrNull(body.hardcoverPrice),
       isFeatured: Boolean(body.isFeatured),
       isPublished: Boolean(body.isPublished),
       isVisible: Boolean(body.isVisible),
@@ -81,9 +81,21 @@ export async function POST(request: Request) {
     const book = await prisma.book.create({ data })
 
     return NextResponse.json(book, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating book:", error)
+
+    // Prisma unique constraint (slug already exists)
+    if (error?.code === "P2002") {
+      return NextResponse.json(
+        { error: "Slug already exists", details: error?.meta },
+        { status: 409 }
+      )
+    }
+
     const message = error instanceof Error ? error.message : "Unknown error"
-    return NextResponse.json({ error: "Failed to create book", details: message }, { status: 500 })
+    return NextResponse.json(
+      { error: "Failed to create book", details: message },
+      { status: 500 }
+    )
   }
 }
