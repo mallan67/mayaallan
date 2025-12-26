@@ -1,44 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import { z } from "zod"
-
-const BookSchema = z.object({
-  slug: z.string().min(1),
-  title: z.string().min(1),
-  subtitle1: z.string().optional().nullable(),
-  subtitle2: z.string().optional().nullable(),
-  tagsCsv: z.string().optional().nullable(),
-  isbn: z.string().optional().nullable(),
-  copyright: z.string().optional().nullable(),
-  blurb: z.string().optional().nullable(),
-  coverUrl: z.string().optional().nullable(),
-  backCoverUrl: z.string().optional().nullable(),
-  ebookFileUrl: z.string().optional().nullable(),
-  // Book formats
-  hasEbook: z.boolean().default(true),
-  hasPaperback: z.boolean().default(false),
-  hasHardcover: z.boolean().default(false),
-  // Prices
-  ebookPrice: z.number().optional().nullable(),
-  paperbackPrice: z.number().optional().nullable(),
-  hardcoverPrice: z.number().optional().nullable(),
-  // Publishing
-  isFeatured: z.boolean().default(false),
-  isPublished: z.boolean().default(false),
-  isVisible: z.boolean().default(false),
-  isComingSoon: z.boolean().default(false),
-  // Sales
-  allowDirectSale: z.boolean().default(false),
-  allowRetailerSale: z.boolean().default(false),
-  stripePaymentLink: z.string().optional().nullable(),
-  paypalPaymentLink: z.string().optional().nullable(),
-  // SEO
-  seoTitle: z.string().optional().nullable(),
-  seoDescription: z.string().optional().nullable(),
-  ogImageUrl: z.string().optional().nullable(),
-  publishedAt: z.string().optional().nullable(),
-})
 
 export async function GET() {
   const authed = await isAuthenticated()
@@ -71,52 +33,58 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     
-    // Remove fields that shouldn't be in create
-    const { id, retailers, createdAt, updatedAt, ...rest } = body
-    
-    const parsed = BookSchema.parse(rest)
+    // Log what we received for debugging
+    console.log("Creating book with data:", JSON.stringify(body, null, 2))
 
-    const book = await prisma.book.create({
-      data: {
-        slug: parsed.slug,
-        title: parsed.title,
-        subtitle1: parsed.subtitle1,
-        subtitle2: parsed.subtitle2,
-        tagsCsv: parsed.tagsCsv,
-        isbn: parsed.isbn,
-        copyright: parsed.copyright,
-        blurb: parsed.blurb,
-        coverUrl: parsed.coverUrl,
-        backCoverUrl: parsed.backCoverUrl,
-        ebookFileUrl: parsed.ebookFileUrl,
-        hasEbook: parsed.hasEbook,
-        hasPaperback: parsed.hasPaperback,
-        hasHardcover: parsed.hasHardcover,
-        ebookPrice: parsed.ebookPrice,
-        paperbackPrice: parsed.paperbackPrice,
-        hardcoverPrice: parsed.hardcoverPrice,
-        isFeatured: parsed.isFeatured,
-        isPublished: parsed.isPublished,
-        isVisible: parsed.isVisible,
-        isComingSoon: parsed.isComingSoon,
-        allowDirectSale: parsed.allowDirectSale,
-        allowRetailerSale: parsed.allowRetailerSale,
-        stripePaymentLink: parsed.stripePaymentLink,
-        paypalPaymentLink: parsed.paypalPaymentLink,
-        seoTitle: parsed.seoTitle,
-        seoDescription: parsed.seoDescription,
-        ogImageUrl: parsed.ogImageUrl,
-        publishedAt: parsed.publishedAt ? new Date(parsed.publishedAt) : null,
-      },
-    })
+    // Build data object with only the fields we need
+    const data: Record<string, unknown> = {
+      slug: body.slug || "",
+      title: body.title || "",
+    }
+
+    // Optional string fields
+    if (body.subtitle1 !== undefined) data.subtitle1 = body.subtitle1 || null
+    if (body.subtitle2 !== undefined) data.subtitle2 = body.subtitle2 || null
+    if (body.tagsCsv !== undefined) data.tagsCsv = body.tagsCsv || null
+    if (body.isbn !== undefined) data.isbn = body.isbn || null
+    if (body.copyright !== undefined) data.copyright = body.copyright || null
+    if (body.blurb !== undefined) data.blurb = body.blurb || null
+    if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl || null
+    if (body.backCoverUrl !== undefined) data.backCoverUrl = body.backCoverUrl || null
+    if (body.ebookFileUrl !== undefined) data.ebookFileUrl = body.ebookFileUrl || null
+    if (body.stripePaymentLink !== undefined) data.stripePaymentLink = body.stripePaymentLink || null
+    if (body.paypalPaymentLink !== undefined) data.paypalPaymentLink = body.paypalPaymentLink || null
+    if (body.seoTitle !== undefined) data.seoTitle = body.seoTitle || null
+    if (body.seoDescription !== undefined) data.seoDescription = body.seoDescription || null
+    if (body.ogImageUrl !== undefined) data.ogImageUrl = body.ogImageUrl || null
+
+    // Boolean fields
+    if (body.hasEbook !== undefined) data.hasEbook = Boolean(body.hasEbook)
+    if (body.hasPaperback !== undefined) data.hasPaperback = Boolean(body.hasPaperback)
+    if (body.hasHardcover !== undefined) data.hasHardcover = Boolean(body.hasHardcover)
+    if (body.isFeatured !== undefined) data.isFeatured = Boolean(body.isFeatured)
+    if (body.isPublished !== undefined) data.isPublished = Boolean(body.isPublished)
+    if (body.isVisible !== undefined) data.isVisible = Boolean(body.isVisible)
+    if (body.isComingSoon !== undefined) data.isComingSoon = Boolean(body.isComingSoon)
+    if (body.allowDirectSale !== undefined) data.allowDirectSale = Boolean(body.allowDirectSale)
+    if (body.allowRetailerSale !== undefined) data.allowRetailerSale = Boolean(body.allowRetailerSale)
+
+    // Number fields (prices)
+    if (body.ebookPrice !== undefined) data.ebookPrice = body.ebookPrice ? Number(body.ebookPrice) : null
+    if (body.paperbackPrice !== undefined) data.paperbackPrice = body.paperbackPrice ? Number(body.paperbackPrice) : null
+    if (body.hardcoverPrice !== undefined) data.hardcoverPrice = body.hardcoverPrice ? Number(body.hardcoverPrice) : null
+
+    // Date field
+    if (body.publishedAt) data.publishedAt = new Date(body.publishedAt)
+
+    console.log("Prisma create data:", JSON.stringify(data, null, 2))
+
+    const book = await prisma.book.create({ data })
 
     return NextResponse.json(book, { status: 201 })
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      console.error("Validation error:", error.issues)
-      return NextResponse.json({ error: error.issues }, { status: 400 })
-    }
     console.error("Error creating book:", error)
-    return NextResponse.json({ error: "Failed to create book" }, { status: 500 })
+    const message = error instanceof Error ? error.message : "Unknown error"
+    return NextResponse.json({ error: "Failed to create book", details: message }, { status: 500 })
   }
 }
