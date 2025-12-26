@@ -6,13 +6,27 @@ import { ShareButtons } from "@/components/share-buttons"
 export const dynamic = "force-dynamic"
 
 export default async function HomePage() {
+  // Get featured book (isFeatured + isPublished)
+  // Falls back to most recent published book if no featured
   const mainBook =
     (await prisma.book.findFirst({
-      where: { isPublished: true, isVisible: true, isFeatured: true },
+      where: { isPublished: true, isFeatured: true },
+      include: {
+        retailers: {
+          where: { isActive: true, url: { not: "" } },
+          include: { retailer: true },
+        },
+      },
       orderBy: { updatedAt: "desc" },
     })) ??
     (await prisma.book.findFirst({
-      where: { isPublished: true, isVisible: true },
+      where: { isPublished: true },
+      include: {
+        retailers: {
+          where: { isActive: true, url: { not: "" } },
+          include: { retailer: true },
+        },
+      },
       orderBy: { createdAt: "desc" },
     }))
 
@@ -34,7 +48,7 @@ export default async function HomePage() {
   return (
     <main className="flex-1">
       {/* Hero / Featured Book */}
-      {mainBook && (
+      {mainBook ? (
         <section className="max-w-6xl mx-auto px-4 py-10 md:py-16 grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] gap-8 items-center">
           <div className="flex justify-center md:justify-end">
             {mainBook.coverUrl ? (
@@ -58,7 +72,7 @@ export default async function HomePage() {
           </div>
           <div>
             <p className="text-xs font-semibold tracking-[0.2em] uppercase text-slate-500 mb-2">
-              New Release
+              {mainBook.isFeatured ? "Featured" : "New Release"}
             </p>
             <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight">
               {mainBook.title}
@@ -78,20 +92,77 @@ export default async function HomePage() {
                 <p>{mainBook.tagsCsv}</p>
               </div>
             )}
+
+            {/* Pricing */}
+            {!mainBook.isComingSoon && (
+              <div className="mt-4 flex flex-wrap gap-4">
+                {mainBook.hasEbook && mainBook.ebookPrice && (
+                  <div className="text-center">
+                    <span className="block text-xl font-bold">${Number(mainBook.ebookPrice).toFixed(2)}</span>
+                    <span className="text-xs text-slate-500">Ebook</span>
+                  </div>
+                )}
+                {mainBook.hasPaperback && mainBook.paperbackPrice && (
+                  <div className="text-center">
+                    <span className="block text-xl font-bold">${Number(mainBook.paperbackPrice).toFixed(2)}</span>
+                    <span className="text-xs text-slate-500">Paperback</span>
+                  </div>
+                )}
+                {mainBook.hasHardcover && mainBook.hardcoverPrice && (
+                  <div className="text-center">
+                    <span className="block text-xl font-bold">${Number(mainBook.hardcoverPrice).toFixed(2)}</span>
+                    <span className="text-xs text-slate-500">Hardcover</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Action Buttons */}
             <div className="mt-6 flex flex-wrap gap-3 items-center">
               {mainBook.isComingSoon ? (
-                <span className="px-5 py-2.5 text-sm font-semibold border border-black/70 bg-black/80 text-white rounded-full">
+                <span className="px-5 py-2.5 text-sm font-semibold border border-amber-500 bg-amber-500 text-white rounded-full">
                   Coming Soon
                 </span>
               ) : (
-                <Link
-                  href={`/books/${mainBook.slug}`}
-                  className="px-5 py-2.5 text-sm font-semibold border border-black/70 bg-black/80 text-white rounded-full hover:bg-black/60 transition"
-                >
-                  View Book
-                </Link>
+                <>
+                  {/* Direct Sale */}
+                  {mainBook.allowDirectSale && mainBook.stripePaymentLink && (
+                    <a
+                      href={mainBook.stripePaymentLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-5 py-2.5 text-sm font-semibold border border-black bg-black text-white rounded-full hover:bg-slate-800 transition"
+                    >
+                      Buy Now
+                    </a>
+                  )}
+
+                  {/* Retailer Links */}
+                  {mainBook.allowRetailerSale && mainBook.retailers && mainBook.retailers.length > 0 && (
+                    mainBook.retailers.slice(0, 2).map((link) => (
+                      <a
+                        key={link.id}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-5 py-2.5 text-sm font-semibold border border-slate-300 text-slate-700 rounded-full hover:bg-slate-50 transition"
+                      >
+                        Buy on {link.retailer.name}
+                      </a>
+                    ))
+                  )}
+
+                  <Link
+                    href={`/books/${mainBook.slug}`}
+                    className="px-5 py-2.5 text-sm font-semibold border border-slate-300 text-slate-700 rounded-full hover:bg-slate-50 transition"
+                  >
+                    Learn More
+                  </Link>
+                </>
               )}
             </div>
+
+            {/* Share Buttons */}
             <div className="mt-6 pt-6 border-t border-slate-200">
               <ShareButtons
                 url={`https://mayaallan.com/books/${mainBook.slug}`}
@@ -101,6 +172,22 @@ export default async function HomePage() {
               />
             </div>
           </div>
+        </section>
+      ) : (
+        /* No Book - Show Author Info */
+        <section className="max-w-6xl mx-auto px-4 py-20 text-center">
+          <h1 className="font-serif text-5xl font-bold text-slate-900 mb-6">
+            Maya Allan
+          </h1>
+          <p className="text-xl text-slate-600 mb-8">
+            Author & Writer
+          </p>
+          <Link
+            href="/books"
+            className="inline-block px-8 py-4 bg-black text-white rounded-lg font-medium hover:bg-slate-800 transition"
+          >
+            View Books
+          </Link>
         </section>
       )}
 
@@ -123,13 +210,8 @@ export default async function HomePage() {
         <section className="border-t border-slate-200" id="events">
           <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-serif text-xl md:text-2xl font-semibold">
-                Events
-              </h2>
-              <Link
-                href="/events"
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:opacity-70"
-              >
+              <h2 className="font-serif text-xl md:text-2xl font-semibold">Events</h2>
+              <Link href="/events" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:opacity-70">
                 View all
               </Link>
             </div>
@@ -140,16 +222,12 @@ export default async function HomePage() {
                   href={`/events/${evt.slug}`}
                   className="border border-slate-200 rounded-lg p-6 hover:border-slate-300 transition"
                 >
-                  <h3 className="font-serif text-lg font-semibold">
-                    {evt.title}
-                  </h3>
+                  <h3 className="font-serif text-lg font-semibold">{evt.title}</h3>
                   <p className="mt-2 text-sm text-slate-600">
                     {new Date(evt.startsAt).toLocaleDateString()}
                   </p>
                   {evt.description && (
-                    <p className="mt-2 text-sm text-slate-700 line-clamp-2">
-                      {evt.description}
-                    </p>
+                    <p className="mt-2 text-sm text-slate-700 line-clamp-2">{evt.description}</p>
                   )}
                 </Link>
               ))}
@@ -163,15 +241,18 @@ export default async function HomePage() {
         <section className="border-t border-slate-200" id="media">
           <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-serif text-xl md:text-2xl font-semibold">
-                Media
-              </h2>
-              <Link
-                href="/media"
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:opacity-70"
-              >
+              <h2 className="font-serif text-xl md:text-2xl font-semibold">Media</h2>
+              <Link href="/media" className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:opacity-70">
                 View all
               </Link>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {publishedMedia.map((item) => (
+                <div key={item.id} className="border border-slate-200 rounded-lg p-4">
+                  <span className="text-xs font-semibold uppercase text-slate-500">{item.kind}</span>
+                  <h3 className="font-semibold mt-1">{item.title}</h3>
+                </div>
+              ))}
             </div>
           </div>
         </section>
