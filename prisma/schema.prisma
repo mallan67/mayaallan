@@ -21,6 +21,9 @@ model Book {
   coverUrl          String?
   backCoverUrl      String?
   ebookFileUrl      String?
+  bookType          String?   @default("ebook")
+  price             Decimal?  @db.Decimal(10, 2)
+  isFeatured        Boolean   @default(false)
   isPublished       Boolean   @default(false)
   isVisible         Boolean   @default(false)
   isComingSoon      Boolean   @default(false)
@@ -128,6 +131,7 @@ model SiteSettings {
   socialInstagram  String?
   socialFacebook   String?
   socialYoutube    String?
+  socialTiktok     String?
   footerText       String?
   updatedAt        DateTime @updatedAt
 }
