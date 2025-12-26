@@ -18,9 +18,7 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
   })
 
   if (!book) {
-    return {
-      title: "Book Not Found",
-    }
+    return { title: "Book Not Found" }
   }
 
   return {
@@ -76,12 +74,7 @@ export default async function BookPage({ params }: BookPageProps) {
 
           {book.backCoverUrl && (
             <div className="relative w-full aspect-[2/3] border border-slate-200 shadow-lg rounded-md overflow-hidden mt-4">
-              <Image
-                src={book.backCoverUrl}
-                alt={`${book.title} - Back Cover`}
-                fill
-                className="object-contain bg-slate-50"
-              />
+              <Image src={book.backCoverUrl} alt={`${book.title} - Back Cover`} fill className="object-contain bg-slate-50" />
             </div>
           )}
         </div>
@@ -146,7 +139,6 @@ export default async function BookPage({ params }: BookPageProps) {
                       Buy with Stripe
                     </a>
                   )}
-
                   {book.paypalPaymentLink && (
                     <a
                       href={book.paypalPaymentLink}
@@ -157,7 +149,6 @@ export default async function BookPage({ params }: BookPageProps) {
                       Buy with PayPal
                     </a>
                   )}
-
                   <p className="text-xs text-slate-500 text-center">Ebook will be delivered via email after purchase</p>
                 </div>
               )}
