@@ -1,52 +1,54 @@
-import type React from "react"
-import "./globals.css"
 import type { Metadata, Viewport } from "next"
-import Link from "next/link"
-import { getVisibleNavigationItems, getSiteSettings } from "@/lib/mock-data"
-import { Facebook, Twitter, Instagram, Linkedin, Youtube } from "lucide-react"
+import { Inter, Playfair_Display } from "next/font/google"
+import "./globals.css"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+})
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-playfair",
+})
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+  ],
+}
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mayaallan.com"),
   title: {
-    default: "Maya Allan – Guide to Psilocybin Integration",
+    default: "Maya Allan | Author",
     template: "%s | Maya Allan",
   },
-  description:
-    "Guide to Psilocybin Integration – 40 Real Scenarios for Navigating What You See, Feel & Experience. Educational resources for psychedelic integration and inner transformation.",
-  keywords: [
-    "psilocybin integration",
-    "psychedelic integration",
-    "Maya Allan",
-    "integration guide",
-    "mental health",
-    "consciousness",
-    "self-development",
-  ],
+  description: "Official website of Maya Allan - Author, Speaker, and Wellness Advocate",
+  keywords: ["Maya Allan", "author", "books", "wellness", "psilocybin", "integration"],
   authors: [{ name: "Maya Allan" }],
   creator: "Maya Allan",
-  publisher: "Maya Allan",
+  metadataBase: new URL("https://mayaallan.com"),
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://mayaallan.com",
     siteName: "Maya Allan",
-    title: "Maya Allan – Guide to Psilocybin Integration",
-    description: "Guide to Psilocybin Integration – 40 Real Scenarios for Navigating What You See, Feel & Experience.",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Maya Allan - Author",
-      },
-    ],
+    title: "Maya Allan | Author",
+    description: "Official website of Maya Allan - Author, Speaker, and Wellness Advocate",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Maya Allan – Guide to Psilocybin Integration",
-    description: "Guide to Psilocybin Integration – 40 Real Scenarios for Navigating What You See, Feel & Experience.",
-    creator: "@mayaallan",
-    images: ["/og-image.jpg"],
+    title: "Maya Allan | Author",
+    description: "Official website of Maya Allan - Author, Speaker, and Wellness Advocate",
   },
   robots: {
     index: true,
@@ -59,16 +61,27 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "your-google-site-verification-code",
+  // Icons for all platforms
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180" },
+    ],
   },
-}
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 5,
-  themeColor: "#ffffff",
+  // PWA manifest
+  manifest: "/manifest.json",
+  // Additional compatibility
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+    "format-detection": "telephone=no",
+    "msapplication-TileColor": "#ffffff",
+    "msapplication-config": "/browserconfig.xml",
+  },
 }
 
 export default function RootLayout({
@@ -77,130 +90,34 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html 
+      lang="en" 
+      className={`${inter.variable} ${playfair.variable}`}
+      suppressHydrationWarning
+    >
       <head>
-        <link rel="canonical" href="https://mayaallan.com" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
+        {/* IE/Edge compatibility */}
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        {/* Ensure proper rendering on older browsers */}
+        <meta name="renderer" content="webkit" />
       </head>
-      <body className="bg-white text-slate-900 antialiased font-serif">
-        <div className="min-h-screen flex flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Person",
-              name: "Maya Allan",
-              url: "https://mayaallan.com",
-              jobTitle: "Author",
-              description: "Author focused on integration, self-agency, and inner transformation.",
-              knowsAbout: ["Psychedelic Integration", "Mental Health", "Personal Development"],
-              sameAs: [
-                "https://linkedin.com/in/mayaallan",
-                "https://instagram.com/mayaallan",
-                "https://youtube.com/@mayaallan",
-              ],
-            }),
-          }}
-        />
+      <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased font-sans">
+        {/* Skip to content for accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-black focus:text-white focus:rounded"
+        >
+          Skip to main content
+        </a>
+        
+        <Header />
+        
+        <main id="main-content" className="flex-1">
+          {children}
+        </main>
+        
+        <Footer />
       </body>
     </html>
-  )
-}
-
-async function Header() {
-  const navItems = await getVisibleNavigationItems()
-
-  return (
-    <header className="border-b border-slate-200">
-      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="font-serif text-xl tracking-wide font-semibold">
-          MAYA ALLAN
-        </Link>
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          {navItems.map((item) => (
-            <Link key={item.id} href={item.href} className="hover:opacity-70">
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-    </header>
-  )
-}
-
-async function Footer() {
-  const settings = await getSiteSettings()
-  const socialLinks = settings.socialLinks || {}
-
-  return (
-    <footer className="border-t border-slate-200 mt-8">
-      <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-        <div>© {new Date().getFullYear()} Maya Allan. Informational only. No medical, legal or therapeutic advice.</div>
-        <div className="flex items-center gap-3">
-          {socialLinks.linkedin && (
-            <a
-              href={socialLinks.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-700 transition"
-              aria-label="LinkedIn"
-            >
-              <Linkedin className="w-4 h-4" />
-            </a>
-          )}
-          {socialLinks.instagram && (
-            <a
-              href={socialLinks.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-700 transition"
-              aria-label="Instagram"
-            >
-              <Instagram className="w-4 h-4" />
-            </a>
-          )}
-          {socialLinks.youtube && (
-            <a
-              href={socialLinks.youtube}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-700 transition"
-              aria-label="YouTube"
-            >
-              <Youtube className="w-4 h-4" />
-            </a>
-          )}
-          {socialLinks.facebook && (
-            <a
-              href={socialLinks.facebook}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-700 transition"
-              aria-label="Facebook"
-            >
-              <Facebook className="w-4 h-4" />
-            </a>
-          )}
-          {socialLinks.twitter && (
-            <a
-              href={socialLinks.twitter}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-slate-700 transition"
-              aria-label="X (Twitter)"
-            >
-              <Twitter className="w-4 h-4" />
-            </a>
-          )}
-        </div>
-      </div>
-    </footer>
   )
 }
