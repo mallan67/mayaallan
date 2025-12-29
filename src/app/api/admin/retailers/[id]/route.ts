@@ -34,15 +34,25 @@ export async function PATCH(
     const body = await request.json()
 
     const updateData: any = {}
-    if (body.name !== undefined) updateData.name = body.name.trim()
+    
+    if (body.name !== undefined) {
+      updateData.name = body.name.trim()
+    }
+    
     if (body.slug !== undefined) {
       updateData.slug = body.slug
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "")
     }
-    if (body.iconUrl !== undefined) updateData.iconUrl = body.iconUrl || null
-    if (body.isActive !== undefined) updateData.isActive = body.isActive
+    
+    if (body.iconUrl !== undefined) {
+      updateData.iconUrl = body.iconUrl || null
+    }
+    
+    if (body.isActive !== undefined) {
+      updateData.isActive = body.isActive
+    }
 
     const retailer = await prisma.retailer.update({
       where: { id: parseInt(id) },
@@ -54,6 +64,9 @@ export async function PATCH(
     console.error("Error updating retailer:", error)
     if (error?.code === "P2002") {
       return NextResponse.json({ error: "A retailer with this slug already exists" }, { status: 409 })
+    }
+    if (error?.code === "P2025") {
+      return NextResponse.json({ error: "Retailer not found" }, { status: 404 })
     }
     return NextResponse.json({ error: "Failed to update retailer" }, { status: 500 })
   }
@@ -78,8 +91,11 @@ export async function DELETE(
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting retailer:", error)
+    if (error?.code === "P2025") {
+      return NextResponse.json({ error: "Retailer not found" }, { status: 404 })
+    }
     return NextResponse.json({ error: "Failed to delete retailer" }, { status: 500 })
   }
 }
