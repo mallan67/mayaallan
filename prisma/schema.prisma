@@ -28,7 +28,6 @@ model Book {
   paperbackPrice    Decimal?  @db.Decimal(10, 2)
   hardcoverPrice    Decimal?  @db.Decimal(10, 2)
   allowRetailerSale Boolean   @default(false)
-
   isFeatured        Boolean   @default(false)
   isPublished       Boolean   @default(false)
   isVisible         Boolean   @default(false)
@@ -43,6 +42,8 @@ model Book {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   retailers         BookRetailerLink[]
+  orders            Order[]
+  downloadTokens    DownloadToken[]
 }
 
 model Retailer {
@@ -64,6 +65,46 @@ model BookRetailerLink {
   book       Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
   retailer   Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
   @@unique([bookId, retailerId, formatType])
+}
+
+model Order {
+  id              Int       @id @default(autoincrement())
+  email           String
+  customerName    String?
+  stripeSessionId String?   @unique
+  stripePaymentId String?
+  paypalOrderId   String?   @unique
+  bookId          Int
+  book            Book      @relation(fields: [bookId], references: [id])
+  formatType      String
+  amount          Decimal   @db.Decimal(10, 2)
+  currency        String    @default("usd")
+  status          String    @default("pending")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+  downloadTokens  DownloadToken[]
+  @@index([email])
+  @@index([stripeSessionId])
+  @@index([paypalOrderId])
+  @@index([bookId])
+}
+
+model DownloadToken {
+  id              Int       @id @default(autoincrement())
+  token           String    @unique @default(cuid())
+  orderId         Int
+  order           Order     @relation(fields: [orderId], references: [id])
+  bookId          Int
+  book            Book      @relation(fields: [bookId], references: [id])
+  maxDownloads    Int       @default(5)
+  downloadCount   Int       @default(0)
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  lastUsedAt      DateTime?
+  @@index([token])
+  @@index([orderId])
+  @@index([bookId])
 }
 
 model MediaItem {
