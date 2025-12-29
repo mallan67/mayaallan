@@ -19,20 +19,20 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    if (!body.name || !body.slug) {
-      return NextResponse.json({ error: "Name and slug are required" }, { status: 400 })
+    if (!body.name || !body.name.trim()) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 })
     }
 
-    // Clean the slug
-    const cleanSlug = body.slug
+    const name = body.name.trim()
+    const slug = (body.slug || name)
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "")
 
     const retailer = await prisma.retailer.create({
       data: {
-        name: body.name.trim(),
-        slug: cleanSlug,
+        name,
+        slug,
         iconUrl: body.iconUrl || null,
         isActive: body.isActive !== false,
       },
