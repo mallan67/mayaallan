@@ -11,28 +11,11 @@ interface BookPageProps {
 
 export const dynamic = "force-dynamic"
 
-const retailerIcons: Record<string, string> = {
-  amazon: "🛒",
-  "amazon-kindle": "📱",
-  lulu: "📕",
-  "google-books": "📖",
-  "barnes-noble": "📚",
-  "barnes-&-noble": "📚",
-  "b&n": "📚",
-  kobo: "📱",
-  apple: "🍎",
-  "apple-books": "🍎",
-  audible: "🎧",
-}
-
+// Retailer icon mapping
 function getRetailerIcon(name: string): string {
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
-  
-  // Check exact match first
-  if (retailerIcons[slug]) return retailerIcons[slug]
-  
-  // Check if name contains known retailer
+  if (!name) return "🔗"
   const lowerName = name.toLowerCase()
+  
   if (lowerName.includes("amazon") || lowerName.includes("kindle")) return "🛒"
   if (lowerName.includes("lulu")) return "📕"
   if (lowerName.includes("barnes") || lowerName.includes("noble") || lowerName.includes("b&n")) return "📚"
@@ -53,7 +36,6 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
       OR: [
         { slug: decodedSlug },
         { slug: slug },
-        { title: decodedSlug },
       ]
     }
   })
@@ -72,12 +54,12 @@ export default async function BookPage({ params }: BookPageProps) {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
 
+  // Find the book - must be published to view
   const book = await prisma.book.findFirst({
     where: {
       OR: [
         { slug: decodedSlug },
         { slug: slug },
-        { title: decodedSlug },
       ],
       isPublished: true,
     },
@@ -95,10 +77,31 @@ export default async function BookPage({ params }: BookPageProps) {
 
   const bookUrl = `https://mayaallan.com/books/${book.slug}`
 
-  // Group retailer links by format - only include links with actual URLs and retailer names
+  // ============================================
+  // DIRECT SALE LOGIC
+  // ============================================
+  // Show direct sale section if:
+  // 1. allowDirectSale is TRUE
+  // 2. AND at least one payment link exists (Stripe or PayPal)
+  const hasStripeLink = book.stripePaymentLink && book.stripePaymentLink.trim() !== ""
+  const hasPayPalLink = book.paypalPaymentLink && book.paypalPaymentLink.trim() !== ""
+  const showDirectSale = book.allowDirectSale === true && (hasStripeLink || hasPayPalLink)
+
+  // ============================================
+  // RETAILER LINKS LOGIC
+  // ============================================
+  // Group retailer links by format type
+  // Only include links that have:
+  // 1. A non-empty URL
+  // 2. A retailer with a non-empty name
   const retailersByFormat: Record<string, typeof book.retailers> = {}
+  
   book.retailers
-    .filter((link) => link.url && link.url.trim() !== "" && link.retailer?.name)
+    .filter((link) => {
+      const hasUrl = link.url && link.url.trim() !== ""
+      const hasRetailerName = link.retailer && link.retailer.name && link.retailer.name.trim() !== ""
+      return hasUrl && hasRetailerName
+    })
     .forEach((link) => {
       const format = link.formatType || "ebook"
       if (!retailersByFormat[format]) {
@@ -108,17 +111,20 @@ export default async function BookPage({ params }: BookPageProps) {
     })
 
   const hasRetailerLinks = Object.keys(retailersByFormat).length > 0
+  const showRetailerSale = book.allowRetailerSale === true && hasRetailerLinks
 
-  // Available formats with prices
+  // ============================================
+  // FORMATS & PRICING
+  // ============================================
   const formats = [
     { key: "ebook", label: "Ebook", available: book.hasEbook, price: book.ebookPrice },
     { key: "paperback", label: "Paperback", available: book.hasPaperback, price: book.paperbackPrice },
     { key: "hardcover", label: "Hardcover", available: book.hasHardcover, price: book.hardcoverPrice },
   ].filter((f) => f.available)
 
-  // Check if direct sale is configured
-  const hasDirectSale = book.allowDirectSale && (book.stripePaymentLink || book.paypalPaymentLink)
-
+  // ============================================
+  // RENDER
+  // ============================================
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
       <Link href="/books" className="text-sm text-slate-500 hover:text-slate-700">
@@ -126,7 +132,7 @@ export default async function BookPage({ params }: BookPageProps) {
       </Link>
 
       <div className="grid md:grid-cols-[280px_1fr] lg:grid-cols-[320px_1fr] gap-6 md:gap-10 mt-6">
-        {/* Cover */}
+        {/* Cover Image */}
         <div>
           {book.coverUrl ? (
             <div className="relative w-full max-w-[260px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 shadow-lg rounded-md overflow-hidden md:sticky md:top-6">
@@ -145,13 +151,15 @@ export default async function BookPage({ params }: BookPageProps) {
           )}
         </div>
 
-        {/* Details */}
+        {/* Book Details */}
         <div className="min-w-0">
+          {/* Title & Author */}
           <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight">
             {book.title}
           </h1>
           <p className="mt-2 text-slate-600">by Maya Allan</p>
 
+          {/* Subtitles */}
           {book.subtitle1 && (
             <p className="mt-3 text-base md:text-lg text-slate-700">{book.subtitle1}</p>
           )}
@@ -166,7 +174,9 @@ export default async function BookPage({ params }: BookPageProps) {
             </p>
           )}
 
-          {/* FORMATS & PRICING - Mobile Responsive */}
+          {/* ============================================ */}
+          {/* FORMATS & PRICING SECTION */}
+          {/* ============================================ */}
           {formats.length > 0 && !book.isComingSoon && (
             <div className="mt-6 p-4 border border-slate-200 rounded-xl bg-slate-50">
               <h3 className="text-sm font-semibold text-slate-600 mb-3">Available Formats</h3>
@@ -199,18 +209,24 @@ export default async function BookPage({ params }: BookPageProps) {
             </div>
           )}
 
-          {/* PURCHASE OPTIONS */}
+          {/* ============================================ */}
+          {/* PURCHASE OPTIONS - Only if NOT coming soon */}
+          {/* ============================================ */}
           {!book.isComingSoon && (
             <div className="mt-6 space-y-4">
               
-              {/* DIRECT SALE BUTTONS */}
-              {hasDirectSale && (
+              {/* ---------------------------------------- */}
+              {/* DIRECT SALE SECTION */}
+              {/* ---------------------------------------- */}
+              {showDirectSale && (
                 <div className="p-4 border border-green-200 rounded-xl bg-green-50">
-                  <h3 className="text-sm font-semibold text-green-800 mb-3">💳 Buy Direct from Author</h3>
+                  <h3 className="text-sm font-semibold text-green-800 mb-3">
+                    💳 Buy Direct from Author
+                  </h3>
                   <div className="flex flex-wrap gap-3">
-                    {book.stripePaymentLink && (
+                    {hasStripeLink && (
                       <a
-                        href={book.stripePaymentLink}
+                        href={book.stripePaymentLink!}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-block px-5 py-2.5 text-sm font-semibold text-center bg-black text-white rounded-full hover:bg-slate-800 transition"
@@ -218,9 +234,9 @@ export default async function BookPage({ params }: BookPageProps) {
                         Buy Now - Card
                       </a>
                     )}
-                    {book.paypalPaymentLink && (
+                    {hasPayPalLink && (
                       <a
-                        href={book.paypalPaymentLink}
+                        href={book.paypalPaymentLink!}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-block px-5 py-2.5 text-sm font-semibold text-center bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
@@ -232,10 +248,14 @@ export default async function BookPage({ params }: BookPageProps) {
                 </div>
               )}
 
-              {/* RETAILER LINKS */}
-              {book.allowRetailerSale && hasRetailerLinks && (
+              {/* ---------------------------------------- */}
+              {/* RETAILER LINKS SECTION */}
+              {/* ---------------------------------------- */}
+              {showRetailerSale && (
                 <div className="p-4 border border-slate-200 rounded-xl bg-slate-50">
-                  <h3 className="text-sm font-semibold text-slate-600 mb-4">🏪 Buy from Retailers</h3>
+                  <h3 className="text-sm font-semibold text-slate-600 mb-4">
+                    🏪 Buy from Retailers
+                  </h3>
                   
                   {Object.entries(retailersByFormat).map(([formatType, links]) => (
                     <div key={formatType} className="mb-4 last:mb-0">
@@ -254,7 +274,9 @@ export default async function BookPage({ params }: BookPageProps) {
                             <span className="text-lg">
                               {getRetailerIcon(link.retailer.name)}
                             </span>
-                            <span className="truncate max-w-[150px]">{link.retailer.name}</span>
+                            <span className="truncate max-w-[150px]">
+                              {link.retailer.name}
+                            </span>
                           </a>
                         ))}
                       </div>
@@ -263,8 +285,10 @@ export default async function BookPage({ params }: BookPageProps) {
                 </div>
               )}
 
-              {/* FALLBACK: No purchase options */}
-              {!hasDirectSale && !hasRetailerLinks && (
+              {/* ---------------------------------------- */}
+              {/* NO PURCHASE OPTIONS FALLBACK */}
+              {/* ---------------------------------------- */}
+              {!showDirectSale && !showRetailerSale && (
                 <div className="p-4 border border-amber-200 rounded-xl bg-amber-50">
                   <p className="text-sm text-amber-800">
                     Purchase options coming soon. Check back later!
