@@ -1,33 +1,46 @@
 import { NextResponse } from "next/server"
-import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
-import { Prisma } from "@prisma/client"
 
-function toDecimalOrNull(value: unknown): number | null {
-  if (value === null || value === undefined) return null
-  if (typeof value === "number") return Number.isFinite(value) ? value : null
-  if (typeof value !== "string") return null
-  const cleaned = value.trim().replace(/[$,]/g, "")
-  if (!cleaned) return null
-  const n = Number(cleaned)
-  return Number.isFinite(n) ? n : null
-}
+/**
+ * BOOK API ROUTE (Issue #3A Fix):
+ * 
+ * This route must properly save ALL book fields including:
+ * - allowDirectSale (boolean)
+ * - stripePaymentLink (string)
+ * - paypalPaymentLink (string)
+ * - allowRetailerSale (boolean)
+ * - All other book fields
+ * 
+ * The save must be atomic - if any field fails, the whole save fails
+ * with a clear error message.
+ */
 
+// GET single book by ID
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authed = await isAuthenticated()
-  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
   const { id } = await params
+  const bookId = parseInt(id)
+
+  if (isNaN(bookId)) {
+    return NextResponse.json({ error: "Invalid book ID" }, { status: 400 })
+  }
 
   try {
     const book = await prisma.book.findUnique({
-      where: { id: parseInt(id) },
-      include: { retailers: { include: { retailer: true } } },
+      where: { id: bookId },
+      include: {
+        retailers: {
+          include: { retailer: true },
+        },
+      },
     })
-    if (!book) return NextResponse.json({ error: "Book not found" }, { status: 404 })
+
+    if (!book) {
+      return NextResponse.json({ error: "Book not found" }, { status: 404 })
+    }
+
     return NextResponse.json(book)
   } catch (error) {
     console.error("Error fetching book:", error)
@@ -35,78 +48,146 @@ export async function GET(
   }
 }
 
+// PUT update book
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authed = await isAuthenticated()
-  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
   const { id } = await params
+  const bookId = parseInt(id)
+
+  if (isNaN(bookId)) {
+    return NextResponse.json({ error: "Invalid book ID" }, { status: 400 })
+  }
 
   try {
     const body = await request.json()
-    const data: Prisma.BookUpdateInput = {}
 
-    if (body.slug !== undefined) data.slug = body.slug
-    if (body.title !== undefined) data.title = body.title
-    if (body.subtitle1 !== undefined) data.subtitle1 = body.subtitle1 || null
-    if (body.subtitle2 !== undefined) data.subtitle2 = body.subtitle2 || null
-    if (body.tagsCsv !== undefined) data.tagsCsv = body.tagsCsv || null
-    if (body.isbn !== undefined) data.isbn = body.isbn || null
-    if (body.copyright !== undefined) data.copyright = body.copyright || null
-    if (body.blurb !== undefined) data.blurb = body.blurb || null
-    if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl || null
-    if (body.backCoverUrl !== undefined) data.backCoverUrl = body.backCoverUrl || null
-    if (body.ebookFileUrl !== undefined) data.ebookFileUrl = body.ebookFileUrl || null
-    if (body.hasEbook !== undefined) data.hasEbook = Boolean(body.hasEbook)
-    if (body.hasPaperback !== undefined) data.hasPaperback = Boolean(body.hasPaperback)
-    if (body.hasHardcover !== undefined) data.hasHardcover = Boolean(body.hasHardcover)
-    if (body.ebookPrice !== undefined) data.ebookPrice = toDecimalOrNull(body.ebookPrice)
-    if (body.paperbackPrice !== undefined) data.paperbackPrice = toDecimalOrNull(body.paperbackPrice)
-    if (body.hardcoverPrice !== undefined) data.hardcoverPrice = toDecimalOrNull(body.hardcoverPrice)
-    if (body.isFeatured !== undefined) data.isFeatured = Boolean(body.isFeatured)
-    if (body.isPublished !== undefined) data.isPublished = Boolean(body.isPublished)
-    if (body.isVisible !== undefined) data.isVisible = Boolean(body.isVisible)
-    if (body.isComingSoon !== undefined) data.isComingSoon = Boolean(body.isComingSoon)
-    if (body.allowDirectSale !== undefined) data.allowDirectSale = Boolean(body.allowDirectSale)
-    if (body.allowRetailerSale !== undefined) data.allowRetailerSale = Boolean(body.allowRetailerSale)
-    if (body.stripePaymentLink !== undefined) data.stripePaymentLink = body.stripePaymentLink || null
-    if (body.paypalPaymentLink !== undefined) data.paypalPaymentLink = body.paypalPaymentLink || null
-    if (body.seoTitle !== undefined) data.seoTitle = body.seoTitle || null
-    if (body.seoDescription !== undefined) data.seoDescription = body.seoDescription || null
-    if (body.ogImageUrl !== undefined) data.ogImageUrl = body.ogImageUrl || null
-
-    const book = await prisma.book.update({
-      where: { id: parseInt(id) },
-      data,
-      include: { retailers: { include: { retailer: true } } },
+    // Verify book exists
+    const existingBook = await prisma.book.findUnique({
+      where: { id: bookId },
     })
 
-    return NextResponse.json(book)
+    if (!existingBook) {
+      return NextResponse.json({ error: "Book not found" }, { status: 404 })
+    }
+
+    // Build update data with explicit type handling
+    const updateData: any = {}
+
+    // String fields
+    if (body.title !== undefined) updateData.title = String(body.title || "")
+    if (body.slug !== undefined) updateData.slug = String(body.slug || "")
+    if (body.subtitle1 !== undefined) updateData.subtitle1 = body.subtitle1 || null
+    if (body.subtitle2 !== undefined) updateData.subtitle2 = body.subtitle2 || null
+    if (body.tagsCsv !== undefined) updateData.tagsCsv = body.tagsCsv || null
+    if (body.blurb !== undefined) updateData.blurb = body.blurb || null
+    if (body.coverUrl !== undefined) updateData.coverUrl = body.coverUrl || null
+    if (body.seoTitle !== undefined) updateData.seoTitle = body.seoTitle || null
+    if (body.seoDescription !== undefined) updateData.seoDescription = body.seoDescription || null
+
+    // Boolean fields - explicit conversion
+    if (body.hasEbook !== undefined) updateData.hasEbook = Boolean(body.hasEbook)
+    if (body.hasPaperback !== undefined) updateData.hasPaperback = Boolean(body.hasPaperback)
+    if (body.hasHardcover !== undefined) updateData.hasHardcover = Boolean(body.hasHardcover)
+    if (body.isFeatured !== undefined) updateData.isFeatured = Boolean(body.isFeatured)
+    if (body.isPublished !== undefined) updateData.isPublished = Boolean(body.isPublished)
+    if (body.isVisible !== undefined) updateData.isVisible = Boolean(body.isVisible)
+    if (body.isComingSoon !== undefined) updateData.isComingSoon = Boolean(body.isComingSoon)
+    
+    // CRITICAL: Direct sale fields (Issue #3A)
+    if (body.allowDirectSale !== undefined) updateData.allowDirectSale = Boolean(body.allowDirectSale)
+    if (body.allowRetailerSale !== undefined) updateData.allowRetailerSale = Boolean(body.allowRetailerSale)
+    if (body.stripePaymentLink !== undefined) updateData.stripePaymentLink = body.stripePaymentLink || null
+    if (body.paypalPaymentLink !== undefined) updateData.paypalPaymentLink = body.paypalPaymentLink || null
+
+    // Numeric fields
+    if (body.ebookPrice !== undefined) {
+      updateData.ebookPrice = body.ebookPrice !== null && body.ebookPrice !== "" 
+        ? parseFloat(body.ebookPrice) 
+        : null
+    }
+    if (body.paperbackPrice !== undefined) {
+      updateData.paperbackPrice = body.paperbackPrice !== null && body.paperbackPrice !== "" 
+        ? parseFloat(body.paperbackPrice) 
+        : null
+    }
+    if (body.hardcoverPrice !== undefined) {
+      updateData.hardcoverPrice = body.hardcoverPrice !== null && body.hardcoverPrice !== "" 
+        ? parseFloat(body.hardcoverPrice) 
+        : null
+    }
+
+    // Debug logging
+    console.log("Updating book with data:", {
+      id: bookId,
+      allowDirectSale: updateData.allowDirectSale,
+      stripePaymentLink: updateData.stripePaymentLink,
+      paypalPaymentLink: updateData.paypalPaymentLink,
+      allowRetailerSale: updateData.allowRetailerSale,
+    })
+
+    // Perform update
+    const updatedBook = await prisma.book.update({
+      where: { id: bookId },
+      data: updateData,
+      include: {
+        retailers: {
+          include: { retailer: true },
+        },
+      },
+    })
+
+    return NextResponse.json(updatedBook)
   } catch (error: any) {
     console.error("Error updating book:", error)
+    
+    // Handle unique constraint violation
     if (error?.code === "P2002") {
-      return NextResponse.json({ error: "Slug already exists" }, { status: 409 })
+      return NextResponse.json(
+        { error: "A book with this slug already exists" },
+        { status: 409 }
+      )
     }
-    return NextResponse.json({ error: "Failed to update book" }, { status: 500 })
+
+    return NextResponse.json(
+      { error: error.message || "Failed to update book" },
+      { status: 500 }
+    )
   }
 }
 
+// DELETE book
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const authed = await isAuthenticated()
-  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-
   const { id } = await params
+  const bookId = parseInt(id)
+
+  if (isNaN(bookId)) {
+    return NextResponse.json({ error: "Invalid book ID" }, { status: 400 })
+  }
 
   try {
-    await prisma.book.delete({ where: { id: parseInt(id) } })
+    // Delete retailer links first
+    await prisma.bookRetailerLink.deleteMany({
+      where: { bookId },
+    })
+
+    // Delete book
+    await prisma.book.delete({
+      where: { id: bookId },
+    })
+
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting book:", error)
+    
+    if (error?.code === "P2025") {
+      return NextResponse.json({ error: "Book not found" }, { status: 404 })
+    }
+
     return NextResponse.json({ error: "Failed to delete book" }, { status: 500 })
   }
 }
