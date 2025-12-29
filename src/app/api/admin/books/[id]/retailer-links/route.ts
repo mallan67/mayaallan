@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
+/**
+ * RETAILER LINKS API (Issue #4 Fix):
+ * 
+ * This endpoint:
+ * 1. Accepts free-text retailer names from the admin form
+ * 2. Auto-creates Retailer records if they don't exist
+ * 3. Creates BookRetailerLink records with proper foreign keys
+ * 4. Handles the unique constraint (bookId, retailerId, formatType)
+ * 5. Returns properly formatted data for the frontend
+ * 
+ * PUT: Replace all links for a book
+ * GET: Get all links for a book
+ */
+
 interface RetailerLinkInput {
   id?: number
   formatType: string
@@ -8,14 +22,7 @@ interface RetailerLinkInput {
   url: string
 }
 
-/**
- * PUT /api/admin/books/[id]/retailer-links
- * 
- * Replaces all retailer links for a book.
- * - Accepts free-text retailer names
- * - Auto-creates Retailer records if they don't exist
- * - Creates BookRetailerLink records with proper foreign keys
- */
+// PUT - Replace all retailer links for a book
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -31,70 +38,67 @@ export async function PUT(
     const body = await request.json()
     const links: RetailerLinkInput[] = body.links || []
 
-    // Verify book exists
-    const book = await prisma.book.findUnique({
-      where: { id: bookId },
-    })
+    console.log(`Processing ${links.length} retailer links for book ${bookId}`)
 
+    // Verify book exists
+    const book = await prisma.book.findUnique({ where: { id: bookId } })
     if (!book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 
-    // Step 1: Delete ALL existing links for this book
-    // This is a "replace all" operation
-    await prisma.bookRetailerLink.deleteMany({
+    // Delete existing links
+    const deleted = await prisma.bookRetailerLink.deleteMany({
       where: { bookId },
     })
+    console.log(`Deleted ${deleted.count} existing links`)
 
-    // Step 2: Process each new link
-    const createdLinks = []
+    // Process each new link
+    const createdLinks: any[] = []
+    const errors: string[] = []
 
     for (const link of links) {
-      // Skip links without retailer name
+      // Skip empty retailer names
       if (!link.retailerName || link.retailerName.trim() === "") {
         continue
       }
 
       const retailerName = link.retailerName.trim()
-      
-      // Generate a slug from the retailer name
       const retailerSlug = retailerName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "")
 
-      // Step 2a: Find or create the Retailer
-      let retailer = await prisma.retailer.findFirst({
-        where: {
-          OR: [
-            { slug: retailerSlug },
-            { name: { equals: retailerName, mode: "insensitive" } },
-          ],
-        },
-      })
-
-      if (!retailer) {
-        // Create new retailer
-        retailer = await prisma.retailer.create({
-          data: {
-            name: retailerName,
-            slug: retailerSlug,
-            isActive: true,
-          },
-        })
-      } else if (!retailer.name || retailer.name.trim() === "") {
-        // Fix retailer with empty name
-        retailer = await prisma.retailer.update({
-          where: { id: retailer.id },
-          data: { 
-            name: retailerName,
-            slug: retailerSlug,
-          },
-        })
-      }
-
-      // Step 2b: Create the BookRetailerLink
       try {
+        // Find or create retailer
+        let retailer = await prisma.retailer.findFirst({
+          where: {
+            OR: [
+              { slug: retailerSlug },
+              { name: { equals: retailerName, mode: "insensitive" } },
+            ],
+          },
+        })
+
+        if (!retailer) {
+          // Create new retailer
+          retailer = await prisma.retailer.create({
+            data: {
+              name: retailerName,
+              slug: retailerSlug,
+              isActive: true,
+            },
+          })
+          console.log(`Created new retailer: ${retailerName} (id: ${retailer.id})`)
+        } else if (!retailer.name || retailer.name.trim() === "") {
+          // Fix retailer with empty name
+          retailer = await prisma.retailer.update({
+            where: { id: retailer.id },
+            data: { name: retailerName, slug: retailerSlug },
+          })
+          console.log(`Fixed retailer name: ${retailerName} (id: ${retailer.id})`)
+        }
+
+        // Create the book-retailer link
         const newLink = await prisma.bookRetailerLink.create({
           data: {
             bookId,
@@ -112,36 +116,37 @@ export async function PUT(
           retailerName: newLink.retailer.name,
           url: newLink.url,
         })
+
+        console.log(`Created link: ${retailerName} - ${link.formatType}`)
+
       } catch (linkError: any) {
-        // Handle unique constraint violation (same book+retailer+format)
+        // Handle unique constraint violation
         if (linkError?.code === "P2002") {
-          console.warn(`Duplicate link skipped: ${retailerName} - ${link.formatType}`)
-          continue
+          errors.push(`Duplicate: ${retailerName} - ${link.formatType}`)
+          console.warn(`Skipped duplicate: ${retailerName} - ${link.formatType}`)
+        } else {
+          throw linkError
         }
-        throw linkError
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
+      created: createdLinks.length,
       links: createdLinks,
-      message: `Saved ${createdLinks.length} retailer link(s)`
+      warnings: errors.length > 0 ? errors : undefined,
     })
 
   } catch (error: any) {
     console.error("Error saving retailer links:", error)
     return NextResponse.json(
-      { error: error.message || "Failed to save retailer links" }, 
+      { error: error.message || "Failed to save retailer links" },
       { status: 500 }
     )
   }
 }
 
-/**
- * GET /api/admin/books/[id]/retailer-links
- * 
- * Returns all retailer links for a book with retailer details
- */
+// GET - Get all retailer links for a book
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -163,15 +168,15 @@ export async function GET(
       ],
     })
 
-    // Transform to the format the frontend expects
-    const formattedLinks = links.map((link) => ({
+    // Format for frontend
+    const formatted = links.map((link) => ({
       id: link.id,
       formatType: link.formatType,
       retailerName: link.retailer?.name || "",
       url: link.url,
     }))
 
-    return NextResponse.json(formattedLinks)
+    return NextResponse.json(formatted)
 
   } catch (error) {
     console.error("Error fetching retailer links:", error)
