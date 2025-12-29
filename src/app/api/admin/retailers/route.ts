@@ -1,12 +1,8 @@
 import { NextResponse } from "next/server"
-import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 
+// GET all retailers
 export async function GET() {
-  if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
   try {
     const retailers = await prisma.retailer.findMany({
       orderBy: { name: "asc" },
@@ -18,11 +14,8 @@ export async function GET() {
   }
 }
 
+// POST create new retailer
 export async function POST(request: Request) {
-  if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
   try {
     const body = await request.json()
 
@@ -30,10 +23,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name and slug are required" }, { status: 400 })
     }
 
+    // Clean the slug
+    const cleanSlug = body.slug
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+
     const retailer = await prisma.retailer.create({
       data: {
-        name: body.name,
-        slug: body.slug,
+        name: body.name.trim(),
+        slug: cleanSlug,
         iconUrl: body.iconUrl || null,
         isActive: body.isActive !== false,
       },
@@ -43,7 +42,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("Error creating retailer:", error)
     if (error?.code === "P2002") {
-      return NextResponse.json({ error: "Retailer with this slug already exists" }, { status: 409 })
+      return NextResponse.json({ error: "A retailer with this slug already exists" }, { status: 409 })
     }
     return NextResponse.json({ error: "Failed to create retailer" }, { status: 500 })
   }
