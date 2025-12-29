@@ -1,157 +1,135 @@
-import Image from "next/image"
 import Link from "next/link"
+import Image from "next/image"
 import { prisma } from "@/lib/prisma"
-import type { Metadata } from "next"
-
-export const metadata: Metadata = {
-  title: "Books | Maya Allan",
-  description: "Browse books by Maya Allan",
-}
 
 export const dynamic = "force-dynamic"
 
 /**
- * BOOKS LISTING LOGIC (Issue #1 Fix):
+ * HOMEPAGE LOGIC (Issue #1 Fix):
  * 
- * The /books page should filter by BOTH isVisible AND isPublished.
+ * The homepage should NOT use isVisible at all.
+ * isVisible is ONLY for the /books listing page.
  * 
- * - isVisible = true means "show this book on the /books listing"
- * - isPublished = true means "book is live/can be viewed"
+ * Homepage selection:
+ * 1. First: Find a book where isFeatured=true AND isPublished=true
+ * 2. Fallback: Find the most recent book where isPublished=true
  * 
- * This is DIFFERENT from homepage which only uses isFeatured + isPublished.
+ * This means:
+ * - A book can appear on homepage even if isVisible=false
+ * - isVisible only controls the /books listing
+ * - isFeatured + isPublished control homepage appearance
  */
-export default async function BooksPage() {
-  const books = await prisma.book.findMany({
+export default async function HomePage() {
+  // Query 1: Get featured + published book (NO isVisible filter)
+  let featuredBook = await prisma.book.findFirst({
     where: {
-      isPublished: true,  // Book must be published
-      isVisible: true,    // Book must be marked visible for this listing
-    },
-    include: {
-      retailers: {
-        where: { isActive: true },
-        include: { retailer: true },
-      },
+      isFeatured: true,
+      isPublished: true,
+      // NOTE: We intentionally do NOT filter by isVisible here
     },
     orderBy: { createdAt: "desc" },
   })
 
-  if (books.length === 0) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-16 text-center">
-        <h1 className="font-serif text-3xl font-semibold mb-4">Books</h1>
-        <p className="text-slate-600">No books available yet. Check back soon!</p>
-      </div>
-    )
+  // Query 2: Fallback to latest published book (NO isVisible filter)
+  if (!featuredBook) {
+    featuredBook = await prisma.book.findFirst({
+      where: {
+        isPublished: true,
+        // NOTE: We intentionally do NOT filter by isVisible here
+      },
+      orderBy: { createdAt: "desc" },
+    })
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 md:py-16">
-      <h1 className="font-serif text-3xl md:text-4xl font-semibold text-center mb-10">
-        Books
-      </h1>
-
-      <div className="grid gap-10 md:gap-12">
-        {books.map((book) => {
-          // Get unique retailer names
-          const retailerNames = book.retailers
-            .filter((r) => r.url && r.url.trim() !== "" && r.retailer?.name)
-            .map((r) => r.retailer.name)
-            .filter((name, index, arr) => arr.indexOf(name) === index)
-
-          // Get lowest price
-          const prices = [
-            book.hasEbook && book.ebookPrice ? Number(book.ebookPrice) : null,
-            book.hasPaperback && book.paperbackPrice ? Number(book.paperbackPrice) : null,
-            book.hasHardcover && book.hardcoverPrice ? Number(book.hardcoverPrice) : null,
-          ].filter((p): p is number => p !== null && p > 0)
-
-          const lowestPrice = prices.length > 0 ? Math.min(...prices) : null
-
-          // Available formats
-          const formats = [
-            book.hasEbook && { label: "Ebook", price: book.ebookPrice },
-            book.hasPaperback && { label: "Paperback", price: book.paperbackPrice },
-            book.hasHardcover && { label: "Hardcover", price: book.hardcoverPrice },
-          ].filter(Boolean) as { label: string; price: any }[]
-
-          return (
-            <Link
-              key={book.id}
-              href={`/books/${book.slug}`}
-              className="group grid md:grid-cols-[260px_1fr] gap-6 md:gap-8 p-4 md:p-0 hover:bg-slate-50 md:hover:bg-transparent rounded-xl transition"
-            >
-              {/* Cover */}
-              <div className="relative w-full max-w-[220px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 rounded-lg overflow-hidden shadow-md group-hover:shadow-lg transition">
-                {book.coverUrl ? (
-                  <Image
-                    src={book.coverUrl}
-                    alt={book.title}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                    <span className="text-slate-400 text-sm">No cover</span>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="max-w-6xl mx-auto px-4 py-16 md:py-24">
+        {featuredBook ? (
+          <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+            {/* Book Cover */}
+            <div className="flex justify-center md:justify-end order-1 md:order-2">
+              {featuredBook.coverUrl ? (
+                <Link href={`/books/${featuredBook.slug}`}>
+                  <div className="relative w-64 md:w-80 aspect-[2/3] shadow-2xl rounded-lg overflow-hidden hover:shadow-3xl transition-shadow">
+                    <Image
+                      src={featuredBook.coverUrl}
+                      alt={featuredBook.title}
+                      fill
+                      className="object-cover"
+                      priority
+                    />
                   </div>
-                )}
+                </Link>
+              ) : (
+                <div className="w-64 md:w-80 aspect-[2/3] bg-slate-200 rounded-lg flex items-center justify-center">
+                  <span className="text-slate-400">No cover</span>
+                </div>
+              )}
+            </div>
+
+            {/* Book Info */}
+            <div className="order-2 md:order-1 text-center md:text-left">
+              <p className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-3">
+                {featuredBook.isComingSoon ? "Coming Soon" : "Featured Book"}
+              </p>
+              <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight">
+                {featuredBook.title}
+              </h1>
+              {featuredBook.subtitle1 && (
+                <p className="mt-4 text-lg md:text-xl text-slate-600">
+                  {featuredBook.subtitle1}
+                </p>
+              )}
+              {featuredBook.tagsCsv && (
+                <p className="mt-4 text-sm text-slate-500 italic">
+                  {featuredBook.tagsCsv.split(",").map((t) => t.trim()).join(" • ")}
+                </p>
+              )}
+              <div className="mt-8 flex flex-wrap gap-4 justify-center md:justify-start">
+                <Link
+                  href={`/books/${featuredBook.slug}`}
+                  className="inline-block px-8 py-3 text-sm font-semibold text-white bg-black rounded-full hover:bg-slate-800 transition"
+                >
+                  {featuredBook.isComingSoon ? "Learn More" : "View Book"}
+                </Link>
+                <Link
+                  href="/books"
+                  className="inline-block px-8 py-3 text-sm font-semibold text-slate-700 border border-slate-300 rounded-full hover:bg-slate-50 transition"
+                >
+                  All Books
+                </Link>
               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <h1 className="font-serif text-3xl md:text-4xl font-semibold">
+              Welcome to Maya Allan
+            </h1>
+            <p className="mt-4 text-slate-600">Books coming soon.</p>
+          </div>
+        )}
+      </section>
 
-              {/* Details */}
-              <div className="flex flex-col justify-center text-center md:text-left">
-                <h2 className="font-serif text-xl md:text-2xl font-semibold group-hover:text-blue-700 transition">
-                  {book.title}
-                </h2>
-
-                {book.subtitle1 && (
-                  <p className="mt-2 text-slate-600 text-sm md:text-base">
-                    {book.subtitle1}
-                  </p>
-                )}
-
-                {/* Formats */}
-                {formats.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2 justify-center md:justify-start">
-                    {formats.map((f) => (
-                      <span
-                        key={f.label}
-                        className="inline-block px-3 py-1 text-xs md:text-sm font-medium text-blue-700 bg-blue-50 rounded-full"
-                      >
-                        {f.label}
-                        {f.price && Number(f.price) > 0 && (
-                          <span className="ml-1 font-semibold">
-                            ${Number(f.price).toFixed(2)}
-                          </span>
-                        )}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Price */}
-                {lowestPrice && (
-                  <p className="mt-3 text-lg font-semibold text-slate-900">
-                    From ${lowestPrice.toFixed(2)}
-                  </p>
-                )}
-
-                {/* Retailers */}
-                {retailerNames.length > 0 && (
-                  <p className="mt-2 text-sm text-slate-500">
-                    Available at: {retailerNames.join(", ")}
-                  </p>
-                )}
-
-                {/* Coming Soon */}
-                {book.isComingSoon && (
-                  <span className="mt-3 inline-block px-4 py-1.5 text-xs font-semibold bg-amber-500 text-white rounded-full w-fit mx-auto md:mx-0">
-                    Coming Soon
-                  </span>
-                )}
-              </div>
-            </Link>
-          )
-        })}
-      </div>
+      {/* About Section */}
+      <section className="bg-slate-50 py-16">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h2 className="font-serif text-2xl md:text-3xl font-semibold mb-6">
+            About the Author
+          </h2>
+          <p className="text-slate-600 leading-relaxed">
+            Maya Allan is a writer dedicated to helping readers navigate life's most profound experiences 
+            with clarity, compassion, and practical wisdom.
+          </p>
+          <Link
+            href="/about"
+            className="inline-block mt-6 text-sm font-medium text-slate-700 hover:text-black transition"
+          >
+            Learn more →
+          </Link>
+        </div>
+      </section>
     </div>
   )
 }
