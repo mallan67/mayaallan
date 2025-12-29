@@ -1,55 +1,110 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
-// PUT update a retailer link
+interface LinkInput {
+  id?: number
+  formatType: string
+  retailerName: string
+  url: string
+}
+
+// PUT - Replace all retailer links for a book
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string; linkId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { linkId } = await params
+  const { id } = await params
+  const bookId = parseInt(id)
 
   try {
     const body = await request.json()
+    const links: LinkInput[] = body.links || []
 
-    const updateData: any = {}
-    if (body.url !== undefined) updateData.url = body.url
-    if (body.formatType !== undefined) updateData.formatType = body.formatType
-    if (body.isActive !== undefined) updateData.isActive = body.isActive
-
-    const link = await prisma.bookRetailerLink.update({
-      where: { id: parseInt(linkId) },
-      data: updateData,
-      include: { retailer: true },
+    // Delete existing links for this book
+    await prisma.bookRetailerLink.deleteMany({
+      where: { bookId },
     })
 
-    return NextResponse.json(link)
-  } catch (error: any) {
-    console.error("Error updating book retailer link:", error)
-    if (error?.code === "P2002") {
-      return NextResponse.json(
-        { error: "This format already exists for this retailer" },
-        { status: 409 }
-      )
+    // Process each new link
+    const createdLinks = []
+
+    for (const link of links) {
+      if (!link.retailerName || !link.retailerName.trim()) {
+        continue // Skip links without retailer name
+      }
+
+      const retailerName = link.retailerName.trim()
+      const retailerSlug = retailerName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+
+      // Find or create retailer
+      let retailer = await prisma.retailer.findFirst({
+        where: {
+          OR: [
+            { name: retailerName },
+            { slug: retailerSlug },
+          ],
+        },
+      })
+
+      if (!retailer) {
+        // Create new retailer
+        retailer = await prisma.retailer.create({
+          data: {
+            name: retailerName,
+            slug: retailerSlug,
+            isActive: true,
+          },
+        })
+      } else if (!retailer.name || retailer.name.trim() === "") {
+        // Update retailer if name is empty
+        retailer = await prisma.retailer.update({
+          where: { id: retailer.id },
+          data: { name: retailerName, slug: retailerSlug },
+        })
+      }
+
+      // Create the book-retailer link
+      const newLink = await prisma.bookRetailerLink.create({
+        data: {
+          bookId,
+          retailerId: retailer.id,
+          url: link.url || "",
+          formatType: link.formatType || "ebook",
+          isActive: true,
+        },
+        include: { retailer: true },
+      })
+
+      createdLinks.push(newLink)
     }
-    return NextResponse.json({ error: "Failed to update link" }, { status: 500 })
+
+    return NextResponse.json({ success: true, links: createdLinks })
+  } catch (error: any) {
+    console.error("Error saving retailer links:", error)
+    return NextResponse.json({ error: "Failed to save retailer links" }, { status: 500 })
   }
 }
 
-// DELETE a retailer link
-export async function DELETE(
+// GET - Get all retailer links for a book
+export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string; linkId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { linkId } = await params
+  const { id } = await params
 
   try {
-    await prisma.bookRetailerLink.delete({
-      where: { id: parseInt(linkId) },
+    const links = await prisma.bookRetailerLink.findMany({
+      where: { bookId: parseInt(id) },
+      include: { retailer: true },
+      orderBy: [{ formatType: "asc" }, { retailer: { name: "asc" } }],
     })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json(links)
   } catch (error) {
-    console.error("Error deleting book retailer link:", error)
-    return NextResponse.json({ error: "Failed to delete link" }, { status: 500 })
+    console.error("Error fetching retailer links:", error)
+    return NextResponse.json({ error: "Failed to fetch links" }, { status: 500 })
   }
 }
