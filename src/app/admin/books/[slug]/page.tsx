@@ -3,22 +3,14 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import ImageUpload from "@/components/ImageUpload"
+import Image from "next/image"
 
-interface Retailer {
-  id: number
-  name: string
-  slug: string
-  isActive: boolean
-}
-
-interface BookRetailerLink {
-  id: number
-  retailerId: number
-  url: string
+interface RetailerLink {
+  id?: number
   formatType: string
-  isActive: boolean
-  retailer: Retailer
+  retailerName: string
+  url: string
+  isNew?: boolean
 }
 
 interface Book {
@@ -28,12 +20,8 @@ interface Book {
   subtitle1: string | null
   subtitle2: string | null
   tagsCsv: string | null
-  isbn: string | null
-  copyright: string | null
   blurb: string | null
   coverUrl: string | null
-  backCoverUrl: string | null
-  ebookFileUrl: string | null
   hasEbook: boolean
   hasPaperback: boolean
   hasHardcover: boolean
@@ -50,8 +38,6 @@ interface Book {
   paypalPaymentLink: string | null
   seoTitle: string | null
   seoDescription: string | null
-  ogImageUrl: string | null
-  retailers: BookRetailerLink[]
 }
 
 const defaultBook: Partial<Book> = {
@@ -60,12 +46,8 @@ const defaultBook: Partial<Book> = {
   subtitle1: "",
   subtitle2: "",
   tagsCsv: "",
-  isbn: "",
-  copyright: "",
   blurb: "",
   coverUrl: null,
-  backCoverUrl: null,
-  ebookFileUrl: null,
   hasEbook: true,
   hasPaperback: false,
   hasHardcover: false,
@@ -82,15 +64,13 @@ const defaultBook: Partial<Book> = {
   paypalPaymentLink: "",
   seoTitle: "",
   seoDescription: "",
-  ogImageUrl: null,
-  retailers: [],
 }
 
 const FORMAT_OPTIONS = [
-  { key: "ebook", label: "Ebook" },
-  { key: "paperback", label: "Paperback" },
-  { key: "hardcover", label: "Hardcover" },
-  { key: "audiobook", label: "Audiobook" },
+  { value: "ebook", label: "Ebook" },
+  { value: "paperback", label: "Paperback" },
+  { value: "hardcover", label: "Hardcover" },
+  { value: "audiobook", label: "Audiobook" },
 ]
 
 export default function BookFormPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -98,14 +78,10 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
   const [bookSlug, setBookSlug] = useState<string | null>(null)
   const [isNew, setIsNew] = useState(false)
   const [book, setBook] = useState<Partial<Book>>(defaultBook)
+  const [retailerLinks, setRetailerLinks] = useState<RetailerLink[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ type: "", text: "" })
-  const [allRetailers, setAllRetailers] = useState<Retailer[]>([])
-
-  // For adding new retailer links
-  const [showAddLink, setShowAddLink] = useState<number | null>(null)
-  const [newLinkFormat, setNewLinkFormat] = useState("ebook")
 
   useEffect(() => {
     params.then((p) => {
@@ -116,12 +92,6 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
 
   useEffect(() => {
     if (bookSlug === null) return
-
-    // Fetch all retailers
-    fetch("/api/admin/retailers")
-      .then((res) => res.json())
-      .then((data) => setAllRetailers(Array.isArray(data) ? data.filter((r: Retailer) => r.isActive) : []))
-      .catch(() => {})
 
     if (bookSlug === "new") {
       setLoading(false)
@@ -136,6 +106,16 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
       })
       .then((data) => {
         setBook(data)
+        // Convert retailers data to our format
+        if (data.retailers && Array.isArray(data.retailers)) {
+          const links = data.retailers.map((r: any) => ({
+            id: r.id,
+            formatType: r.formatType || "ebook",
+            retailerName: r.retailer?.name || "",
+            url: r.url || "",
+          }))
+          setRetailerLinks(links)
+        }
         setLoading(false)
       })
       .catch(() => {
@@ -159,119 +139,71 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
     })
   }
 
+  // Retailer Links Management
+  const addRetailerLink = () => {
+    setRetailerLinks([
+      ...retailerLinks,
+      { formatType: "ebook", retailerName: "", url: "", isNew: true },
+    ])
+  }
+
+  const updateRetailerLink = (index: number, field: keyof RetailerLink, value: string) => {
+    const updated = [...retailerLinks]
+    updated[index] = { ...updated[index], [field]: value }
+    setRetailerLinks(updated)
+  }
+
+  const removeRetailerLink = (index: number) => {
+    setRetailerLinks(retailerLinks.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     setMessage({ type: "", text: "" })
 
     try {
-      const url = isNew ? "/api/admin/books" : `/api/admin/books/${book.id}`
-      const method = isNew ? "POST" : "PUT"
+      // Save book first
+      const bookUrl = isNew ? "/api/admin/books" : `/api/admin/books/${book.id}`
+      const bookMethod = isNew ? "POST" : "PUT"
 
-      const res = await fetch(url, {
-        method,
+      const bookRes = await fetch(bookUrl, {
+        method: bookMethod,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(book),
       })
 
-      if (res.ok) {
-        const savedBook = await res.json()
-        setBook(savedBook)
-        setMessage({ type: "success", text: isNew ? "Book created!" : "Book saved!" })
-
-        if (isNew) {
-          router.push(`/admin/books/${savedBook.slug}`)
-        }
-      } else {
-        const error = await res.json()
-        setMessage({ type: "error", text: error.error || "Failed to save" })
+      if (!bookRes.ok) {
+        const error = await bookRes.json()
+        throw new Error(error.error || "Failed to save book")
       }
-    } catch (err) {
+
+      const savedBook = await bookRes.json()
+
+      // Now save retailer links if allowRetailerSale is enabled
+      if (book.allowRetailerSale && retailerLinks.length > 0) {
+        const linksRes = await fetch(`/api/admin/books/${savedBook.id}/retailer-links`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ links: retailerLinks }),
+        })
+
+        if (!linksRes.ok) {
+          console.error("Failed to save retailer links")
+        }
+      }
+
+      setBook(savedBook)
+      setMessage({ type: "success", text: isNew ? "Book created!" : "Book saved!" })
+
+      if (isNew) {
+        router.push(`/admin/books/${savedBook.slug}`)
+      }
+    } catch (err: any) {
       console.error("Save error:", err)
-      setMessage({ type: "error", text: "Failed to save book" })
+      setMessage({ type: "error", text: err.message || "Failed to save book" })
     }
     setSaving(false)
-  }
-
-  // Retailer link management
-  const handleAddRetailerLink = async (retailerId: number, formatType: string) => {
-    if (!book.id) {
-      setMessage({ type: "error", text: "Save the book first before adding retailer links" })
-      return
-    }
-
-    // Check if this combination already exists
-    const exists = book.retailers?.some(
-      (r) => r.retailerId === retailerId && r.formatType === formatType
-    )
-    if (exists) {
-      setMessage({ type: "error", text: "This format already exists for this retailer" })
-      return
-    }
-
-    try {
-      const res = await fetch(`/api/admin/books/${book.id}/retailers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ retailerId, formatType, url: "", isActive: true }),
-      })
-
-      if (res.ok) {
-        const newLink = await res.json()
-        setBook({ ...book, retailers: [...(book.retailers || []), newLink] })
-        setShowAddLink(null)
-        setNewLinkFormat("ebook")
-      } else {
-        const error = await res.json()
-        setMessage({ type: "error", text: error.error || "Failed to add link" })
-      }
-    } catch (error) {
-      setMessage({ type: "error", text: "Failed to add retailer link" })
-    }
-  }
-
-  const handleUpdateRetailerLink = async (linkId: number, url: string) => {
-    if (!book.id) return
-
-    try {
-      await fetch(`/api/admin/books/${book.id}/retailers/${linkId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      })
-
-      setBook({
-        ...book,
-        retailers: book.retailers?.map((r) => (r.id === linkId ? { ...r, url } : r)),
-      })
-    } catch (error) {
-      console.error("Failed to update link:", error)
-    }
-  }
-
-  const handleDeleteRetailerLink = async (linkId: number) => {
-    if (!book.id) return
-
-    try {
-      await fetch(`/api/admin/books/${book.id}/retailers/${linkId}`, { method: "DELETE" })
-      setBook({
-        ...book,
-        retailers: book.retailers?.filter((r) => r.id !== linkId),
-      })
-    } catch (error) {
-      console.error("Failed to delete link:", error)
-    }
-  }
-
-  // Get existing formats for a retailer
-  const getRetailerLinks = (retailerId: number) => {
-    return book.retailers?.filter((r) => r.retailerId === retailerId) || []
-  }
-
-  // Get available formats for adding (ones not yet added)
-  const getAvailableFormats = (retailerId: number) => {
-    const existingFormats = getRetailerLinks(retailerId).map((l) => l.formatType)
-    return FORMAT_OPTIONS.filter((f) => !existingFormats.includes(f.key))
   }
 
   if (loading) {
@@ -358,18 +290,29 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
           </div>
         </section>
 
-        {/* Images */}
+        {/* Cover Image */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
-          <h2 className="font-semibold text-lg mb-4">Images</h2>
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Cover Image</label>
-              <ImageUpload
-                currentUrl={book.coverUrl}
-                onUpload={(url) => setBook({ ...book, coverUrl: url })}
-                onRemove={() => setBook({ ...book, coverUrl: null })}
-              />
-            </div>
+          <h2 className="font-semibold text-lg mb-4">Cover Image</h2>
+          <div>
+            <label className="block text-sm font-medium mb-1">Cover Image URL</label>
+            <input
+              type="url"
+              value={book.coverUrl || ""}
+              onChange={(e) => setBook({ ...book, coverUrl: e.target.value })}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2"
+              placeholder="https://..."
+            />
+            {book.coverUrl && (
+              <div className="mt-3">
+                <Image
+                  src={book.coverUrl}
+                  alt="Cover preview"
+                  width={120}
+                  height={180}
+                  className="border border-slate-200 rounded"
+                />
+              </div>
+            )}
           </div>
         </section>
 
@@ -431,8 +374,6 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
         {/* Formats & Pricing */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Formats & Pricing</h2>
-          <p className="text-sm text-slate-600 mb-4">Select available formats and set your prices.</p>
-
           <div className="space-y-4">
             {/* Ebook */}
             <div className={`p-4 border rounded-lg ${book.hasEbook ? "border-blue-300 bg-blue-50" : "border-slate-200"}`}>
@@ -569,116 +510,96 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
               />
               <div>
                 <span className="font-medium">🏪 Retailer Links</span>
-                <p className="text-xs text-slate-500">Link to Amazon, Lulu, etc.</p>
+                <p className="text-xs text-slate-500">Link to Amazon, Lulu, Barnes & Noble, etc.</p>
               </div>
             </label>
 
             {book.allowRetailerSale && (
-              <div className="mt-4 ml-8">
-                {allRetailers.length === 0 ? (
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-800">
-                      No retailers configured.{" "}
-                      <Link href="/admin/retailers" className="text-blue-600 hover:underline">
-                        Add retailers first →
-                      </Link>
-                    </p>
-                  </div>
-                ) : isNew ? (
-                  <p className="text-sm text-amber-600 p-3 bg-amber-50 rounded-lg">
-                    Save the book first, then add retailer links.
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {allRetailers.map((retailer) => {
-                      const links = getRetailerLinks(retailer.id)
-                      const availableFormats = getAvailableFormats(retailer.id)
-
-                      return (
-                        <div key={retailer.id} className="border border-slate-200 rounded-lg p-4 bg-white">
-                          <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold">{retailer.name}</h4>
-                            {availableFormats.length > 0 && (
-                              <div className="relative">
-                                {showAddLink === retailer.id ? (
-                                  <div className="flex items-center gap-2">
-                                    <select
-                                      value={newLinkFormat}
-                                      onChange={(e) => setNewLinkFormat(e.target.value)}
-                                      className="text-sm border border-slate-300 rounded px-2 py-1"
-                                    >
-                                      {availableFormats.map((f) => (
-                                        <option key={f.key} value={f.key}>
-                                          {f.label}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleAddRetailerLink(retailer.id, newLinkFormat)}
-                                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                                    >
-                                      Add
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setShowAddLink(null)}
-                                      className="text-slate-500 text-sm"
-                                    >
-                                      Cancel
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setShowAddLink(retailer.id)
-                                      setNewLinkFormat(availableFormats[0]?.key || "ebook")
-                                    }}
-                                    className="text-sm text-blue-600 hover:underline"
-                                  >
-                                    + Add Format
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {links.length === 0 ? (
-                            <p className="text-sm text-slate-400 italic">
-                              No links yet. Click "+ Add Format" to add one.
-                            </p>
-                          ) : (
-                            <div className="space-y-2">
-                              {links.map((link) => (
-                                <div key={link.id} className="flex items-center gap-2">
-                                  <span className="text-sm font-medium w-24 capitalize text-slate-600">
-                                    {link.formatType}:
-                                  </span>
-                                  <input
-                                    type="url"
-                                    value={link.url || ""}
-                                    onChange={(e) => handleUpdateRetailerLink(link.id, e.target.value)}
-                                    className="flex-1 border border-slate-300 rounded px-3 py-2 text-sm"
-                                    placeholder={`https://amazon.com/dp/... (${link.formatType})`}
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteRetailerLink(link.id)}
-                                    className="text-red-500 hover:text-red-700 px-2"
-                                    title="Remove"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+              <div className="mt-4 ml-0 md:ml-8">
+                {/* Retailer Links List */}
+                <div className="space-y-4">
+                  {retailerLinks.map((link, index) => (
+                    <div
+                      key={index}
+                      className="p-4 border border-slate-200 rounded-lg bg-white"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {/* Format Dropdown */}
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">
+                            Format
+                          </label>
+                          <select
+                            value={link.formatType}
+                            onChange={(e) => updateRetailerLink(index, "formatType", e.target.value)}
+                            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                          >
+                            {FORMAT_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
                         </div>
-                      )
-                    })}
-                  </div>
-                )}
+
+                        {/* Retailer Name */}
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">
+                            Retailer Name
+                          </label>
+                          <input
+                            type="text"
+                            value={link.retailerName}
+                            onChange={(e) => updateRetailerLink(index, "retailerName", e.target.value)}
+                            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                            placeholder="Amazon, Lulu, B&N..."
+                          />
+                        </div>
+
+                        {/* URL */}
+                        <div>
+                          <label className="block text-xs font-medium text-slate-600 mb-1">
+                            Purchase URL
+                          </label>
+                          <input
+                            type="url"
+                            value={link.url}
+                            onChange={(e) => updateRetailerLink(index, "url", e.target.value)}
+                            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                            placeholder="https://amazon.com/dp/..."
+                          />
+                        </div>
+                      </div>
+
+                      {/* Remove Button */}
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => removeRetailerLink(index)}
+                          className="text-sm text-red-600 hover:text-red-800"
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Empty State */}
+                  {retailerLinks.length === 0 && (
+                    <p className="text-sm text-slate-500 italic p-4 bg-white border border-dashed border-slate-300 rounded-lg text-center">
+                      No retailer links added yet. Click the button below to add one.
+                    </p>
+                  )}
+
+                  {/* Add Button */}
+                  <button
+                    type="button"
+                    onClick={addRetailerLink}
+                    className="w-full p-3 border-2 border-dashed border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:border-slate-400 hover:text-slate-800 hover:bg-slate-50 transition"
+                  >
+                    + Add Retailer Link
+                  </button>
+                </div>
               </div>
             )}
           </div>
