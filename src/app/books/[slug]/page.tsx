@@ -41,13 +41,6 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
   return {
     title: book.seoTitle || book.title,
     description: book.seoDescription || book.blurb || book.subtitle1 || `${book.title} by Maya Allan`,
-    openGraph: {
-      title: book.seoTitle || book.title,
-      description: book.seoDescription || book.blurb || book.subtitle1 || "",
-      url: `https://mayaallan.com/books/${book.slug}`,
-      images: book.ogImageUrl ? [{ url: book.ogImageUrl }] : book.coverUrl ? [{ url: book.coverUrl }] : [],
-      type: "book",
-    },
   }
 }
 
@@ -55,7 +48,6 @@ export default async function BookPage({ params }: BookPageProps) {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
 
-  // Try to find book by slug OR by title (fallback for bad data)
   const book = await prisma.book.findFirst({
     where: {
       OR: [
@@ -64,13 +56,11 @@ export default async function BookPage({ params }: BookPageProps) {
         { title: decodedSlug },
       ],
       isPublished: true,
-      isVisible: true,
     },
     include: {
       retailers: {
         where: {
           isActive: true,
-          url: { not: "" },
         },
         include: { retailer: true },
       },
@@ -83,13 +73,28 @@ export default async function BookPage({ params }: BookPageProps) {
 
   const bookUrl = `https://mayaallan.com/books/${book.slug}`
 
+  // Group retailer links by format (only those with URLs)
+  const retailersByFormat: Record<string, typeof book.retailers> = {}
+  book.retailers
+    .filter((link) => link.url && link.url.trim() !== "")
+    .forEach((link) => {
+      if (!retailersByFormat[link.formatType]) {
+        retailersByFormat[link.formatType] = []
+      }
+      retailersByFormat[link.formatType].push(link)
+    })
+
+  const hasRetailerLinks = Object.keys(retailersByFormat).length > 0
+
+  // Available formats with prices
   const formats = [
-    { key: "ebook", label: "Ebook", available: book.hasEbook, price: book.ebookPrice },
-    { key: "paperback", label: "Paperback", available: book.hasPaperback, price: book.paperbackPrice },
-    { key: "hardcover", label: "Hardcover", available: book.hasHardcover, price: book.hardcoverPrice },
+    { key: "ebook", label: "Ebook", icon: "📱", available: book.hasEbook, price: book.ebookPrice },
+    { key: "paperback", label: "Paperback", icon: "📖", available: book.hasPaperback, price: book.paperbackPrice },
+    { key: "hardcover", label: "Hardcover", icon: "📕", available: book.hasHardcover, price: book.hardcoverPrice },
   ].filter((f) => f.available)
 
-  const retailerLinks = book.retailers.filter((l) => (l.url ?? "").trim().length > 0)
+  // Check if direct sale is configured
+  const hasDirectSale = book.allowDirectSale && (book.stripePaymentLink || book.paypalPaymentLink)
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
@@ -135,95 +140,116 @@ export default async function BookPage({ params }: BookPageProps) {
           {book.tagsCsv && (
             <div className="mt-4 flex flex-wrap gap-2">
               {book.tagsCsv.split(",").map((tag, i) => (
-                <span key={i} className="px-3 py-1 bg-slate-100 text-slate-600 text-sm rounded-full">
-                  {tag.trim()}
+                <span key={i} className="text-slate-600 text-sm">
+                  {tag.trim()}{i < book.tagsCsv!.split(",").length - 1 ? " •" : ""}
                 </span>
               ))}
             </div>
           )}
 
-          {/* Formats & Pricing */}
+          {/* FORMATS & PRICING - Always show if formats exist */}
           {formats.length > 0 && !book.isComingSoon && (
-            <div className="mt-6 p-4 border border-slate-200 rounded-lg bg-slate-50">
-              <p className="text-sm font-medium mb-3">Available Formats</p>
-              <div className="flex flex-wrap gap-3">
+            <div className="mt-6 p-5 border border-slate-200 rounded-xl bg-slate-50">
+              <h3 className="text-sm font-semibold text-slate-600 mb-4">Available Formats</h3>
+              <div className="grid grid-cols-3 gap-4">
                 {formats.map((f) => (
                   <div
                     key={f.key}
-                    className="px-4 py-3 border border-slate-300 rounded-lg bg-white text-center min-w-[100px]"
+                    className="p-4 border border-slate-200 rounded-lg bg-white text-center"
                   >
-                    <div className="text-sm font-medium text-slate-600">{f.label}</div>
-                    {f.price && (
-                      <div className="text-xl font-bold text-slate-900 mt-1">
+                    <div className="text-sm font-medium text-slate-700">{f.label}</div>
+                    {f.price && Number(f.price) > 0 ? (
+                      <div className="text-2xl font-bold text-slate-900 mt-1">
                         ${Number(f.price).toFixed(2)}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Coming Soon */}
+          {/* Coming Soon Badge */}
           {book.isComingSoon && (
             <div className="mt-6">
-              <span className="inline-block px-6 py-3 text-sm font-semibold border border-amber-500 bg-amber-500 text-white rounded-full">
+              <span className="inline-block px-6 py-3 text-sm font-semibold bg-amber-500 text-white rounded-full">
                 Coming Soon
               </span>
             </div>
           )}
 
-          {/* Direct Sale Buttons */}
-          {!book.isComingSoon && book.allowDirectSale && (book.stripePaymentLink || book.paypalPaymentLink) && (
-            <div className="mt-6 space-y-3">
-              {book.stripePaymentLink && (
-                <a
-                  href={book.stripePaymentLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block px-6 py-3 text-sm font-semibold text-center border border-black bg-black text-white rounded-full hover:bg-slate-800 transition"
-                >
-                  Buy Now - Direct Purchase
-                </a>
+          {/* PURCHASE OPTIONS - Only show if NOT coming soon */}
+          {!book.isComingSoon && (
+            <div className="mt-6 space-y-4">
+              
+              {/* DIRECT SALE BUTTONS */}
+              {hasDirectSale && (
+                <div className="p-4 border border-green-200 rounded-lg bg-green-50">
+                  <h3 className="text-sm font-semibold text-green-800 mb-3">💳 Buy Direct from Author</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {book.stripePaymentLink && (
+                      <a
+                        href={book.stripePaymentLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-6 py-3 text-sm font-semibold text-center bg-black text-white rounded-full hover:bg-slate-800 transition"
+                      >
+                        Buy Now - Card
+                      </a>
+                    )}
+                    {book.paypalPaymentLink && (
+                      <a
+                        href={book.paypalPaymentLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-6 py-3 text-sm font-semibold text-center bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
+                      >
+                        Buy Now - PayPal
+                      </a>
+                    )}
+                  </div>
+                </div>
               )}
-              {book.paypalPaymentLink && (
-                <a
-                  href={book.paypalPaymentLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block px-6 py-3 text-sm font-semibold text-center border border-blue-600 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
-                >
-                  Buy with PayPal
-                </a>
-              )}
-            </div>
-          )}
 
-          {/* Retailer Links */}
-          {!book.isComingSoon && book.allowRetailerSale && retailerLinks.length > 0 && (
-            <div className="mt-6">
-              <p className="text-sm font-semibold text-slate-600 mb-3">
-                Also available at
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {retailerLinks.map((link) => (
-                  <a
-                    key={link.id}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition"
-                  >
-                    <span className="text-2xl">
-                      {retailerIcons[link.retailer.slug] || "🔗"}
-                    </span>
-                    <div>
-                      <span className="text-sm font-medium block">{link.retailer.name}</span>
-                      <span className="text-xs text-slate-500 capitalize">{link.formatType}</span>
+              {/* RETAILER LINKS */}
+              {book.allowRetailerSale && hasRetailerLinks && (
+                <div className="p-4 border border-slate-200 rounded-lg bg-slate-50">
+                  <h3 className="text-sm font-semibold text-slate-600 mb-4">🏪 Buy from Retailers</h3>
+                  
+                  {Object.entries(retailersByFormat).map(([formatType, links]) => (
+                    <div key={formatType} className="mb-4 last:mb-0">
+                      <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 capitalize">
+                        {formatType}
+                      </h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {links.map((link) => (
+                          <a
+                            key={link.id}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-3 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 hover:border-slate-300 transition"
+                          >
+                            <span className="text-xl">
+                              {retailerIcons[link.retailer.slug] || "🔗"}
+                            </span>
+                            <span className="text-sm font-medium">{link.retailer.name}</span>
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                  </a>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
+
+              {/* FALLBACK: No purchase options configured */}
+              {!hasDirectSale && !hasRetailerLinks && (
+                <div className="p-4 border border-amber-200 rounded-lg bg-amber-50">
+                  <p className="text-sm text-amber-800">
+                    Purchase options coming soon. Check back later!
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -247,44 +273,8 @@ export default async function BookPage({ params }: BookPageProps) {
               </div>
             </div>
           )}
-
-          {/* Book Details */}
-          {(book.isbn || book.copyright) && (
-            <div className="mt-8 pt-6 border-t border-slate-200">
-              <h2 className="font-serif text-xl font-semibold mb-4">Book Details</h2>
-              <dl className="grid grid-cols-2 gap-4 text-sm">
-                {book.isbn && (
-                  <>
-                    <dt className="text-slate-500">ISBN</dt>
-                    <dd className="text-slate-900">{book.isbn}</dd>
-                  </>
-                )}
-                {book.copyright && (
-                  <>
-                    <dt className="text-slate-500">Copyright</dt>
-                    <dd className="text-slate-900">{book.copyright}</dd>
-                  </>
-                )}
-              </dl>
-            </div>
-          )}
         </div>
       </div>
-
-      {/* Back Cover */}
-      {book.backCoverUrl && (
-        <div className="mt-12 pt-8 border-t border-slate-200">
-          <h2 className="font-serif text-xl font-semibold mb-4">Back Cover</h2>
-          <div className="relative w-full max-w-md aspect-[2/3] border border-slate-200 shadow-lg rounded-md overflow-hidden">
-            <Image
-              src={book.backCoverUrl}
-              alt={`${book.title} back cover`}
-              fill
-              className="object-contain bg-slate-50"
-            />
-          </div>
-        </div>
-      )}
     </div>
   )
 }
