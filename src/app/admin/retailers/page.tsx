@@ -18,6 +18,7 @@ export default function AdminRetailersPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [formData, setFormData] = useState({ name: "", slug: "", iconUrl: "", isActive: true })
   const [message, setMessage] = useState({ type: "", text: "" })
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     fetchRetailers()
@@ -51,6 +52,7 @@ export default function AdminRetailersPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSaving(true)
     setMessage({ type: "", text: "" })
 
     try {
@@ -75,6 +77,8 @@ export default function AdminRetailersPage() {
       }
     } catch (error) {
       setMessage({ type: "error", text: "Failed to save retailer" })
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -87,6 +91,7 @@ export default function AdminRetailersPage() {
     })
     setEditingId(retailer.id)
     setShowForm(true)
+    setMessage({ type: "", text: "" })
   }
 
   const handleDelete = async (id: number) => {
@@ -97,60 +102,86 @@ export default function AdminRetailersPage() {
       if (res.ok) {
         setRetailers(retailers.filter((r) => r.id !== id))
         setMessage({ type: "success", text: "Retailer deleted" })
+      } else {
+        setMessage({ type: "error", text: "Failed to delete" })
       }
     } catch (error) {
       setMessage({ type: "error", text: "Failed to delete" })
     }
   }
 
-  const handleToggleActive = async (retailer: Retailer) => {
+  const quickAddRetailer = async (name: string, slug: string) => {
+    setSaving(true)
     try {
-      const res = await fetch(`/api/admin/retailers/${retailer.id}`, {
-        method: "PATCH",
+      const res = await fetch("/api/admin/retailers", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !retailer.isActive }),
+        body: JSON.stringify({ name, slug, isActive: true }),
       })
       if (res.ok) {
-        setRetailers(retailers.map((r) => (r.id === retailer.id ? { ...r, isActive: !r.isActive } : r)))
+        fetchRetailers()
+        setMessage({ type: "success", text: `${name} added!` })
       }
     } catch (error) {
-      console.error("Failed to toggle:", error)
+      setMessage({ type: "error", text: "Failed to add" })
+    } finally {
+      setSaving(false)
     }
   }
 
   if (loading) {
-    return <div className="p-6 max-w-6xl mx-auto">Loading...</div>
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <p>Loading retailers...</p>
+      </div>
+    )
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold">Manage Retailers</h1>
-          <p className="text-sm text-slate-600 mt-1">Add retailers where your books are sold (Amazon, Lulu, etc.)</p>
+          <Link href="/admin" className="text-sm text-slate-500 hover:text-slate-700 mb-2 inline-block">
+            ← Back to Admin
+          </Link>
+          <h1 className="text-2xl font-bold">Manage Retailers</h1>
+          <p className="text-sm text-slate-600 mt-1">
+            Add retailers where your books are sold (Amazon, Lulu, Barnes & Noble, etc.)
+          </p>
         </div>
         <button
           onClick={() => {
             setShowForm(true)
             setEditingId(null)
             setFormData({ name: "", slug: "", iconUrl: "", isActive: true })
+            setMessage({ type: "", text: "" })
           }}
-          className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition"
+          className="px-4 py-2 bg-black text-white rounded-lg hover:bg-slate-800 transition"
         >
-          Add Retailer
+          + Add Retailer
         </button>
       </div>
 
+      {/* Message */}
       {message.text && (
-        <div className={`p-3 rounded mb-6 ${message.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+        <div
+          className={`p-4 rounded-lg mb-6 ${
+            message.type === "success"
+              ? "bg-green-50 text-green-800 border border-green-200"
+              : "bg-red-50 text-red-800 border border-red-200"
+          }`}
+        >
           {message.text}
         </div>
       )}
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="border border-slate-200 rounded-lg p-6 mb-6 bg-slate-50">
-          <h2 className="font-semibold text-lg mb-4">{editingId ? "Edit Retailer" : "Add New Retailer"}</h2>
+        <div className="border border-slate-200 rounded-xl p-6 mb-6 bg-slate-50">
+          <h2 className="font-semibold text-lg mb-4">
+            {editingId ? "Edit Retailer" : "Add New Retailer"}
+          </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -174,20 +205,11 @@ export default function AdminRetailersPage() {
                   placeholder="amazon"
                   required
                 />
-                <p className="text-xs text-slate-500 mt-1">Used for icons (amazon, lulu, google-books, etc.)</p>
+                <p className="text-xs text-slate-500 mt-1">Used for icons: amazon, lulu, barnes-noble, kobo, apple</p>
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Icon URL (optional)</label>
-              <input
-                type="url"
-                value={formData.iconUrl}
-                onChange={(e) => setFormData({ ...formData, iconUrl: e.target.value })}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2"
-                placeholder="https://..."
-              />
-            </div>
-            <label className="flex items-center gap-2">
+            
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.isActive}
@@ -196,12 +218,14 @@ export default function AdminRetailersPage() {
               />
               <span className="text-sm">Active (show on website)</span>
             </label>
-            <div className="flex gap-3">
+
+            <div className="flex gap-3 pt-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80"
+                disabled={saving}
+                className="px-5 py-2 bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50"
               >
-                {editingId ? "Update Retailer" : "Add Retailer"}
+                {saving ? "Saving..." : editingId ? "Update Retailer" : "Add Retailer"}
               </button>
               <button
                 type="button"
@@ -209,7 +233,7 @@ export default function AdminRetailersPage() {
                   setShowForm(false)
                   setEditingId(null)
                 }}
-                className="px-4 py-2 text-slate-600 hover:text-slate-800"
+                className="px-5 py-2 text-slate-600 hover:text-slate-800"
               >
                 Cancel
               </button>
@@ -218,59 +242,65 @@ export default function AdminRetailersPage() {
         </div>
       )}
 
-      {/* Common Retailers Quick Add */}
-      {!showForm && retailers.length === 0 && (
-        <div className="border border-slate-200 rounded-lg p-6 mb-6 bg-blue-50">
+      {/* Quick Add Common Retailers */}
+      {!showForm && retailers.length < 5 && (
+        <div className="border border-blue-200 rounded-xl p-5 mb-6 bg-blue-50">
           <h3 className="font-semibold mb-3">Quick Add Common Retailers</h3>
           <div className="flex flex-wrap gap-2">
             {[
               { name: "Amazon", slug: "amazon" },
               { name: "Lulu", slug: "lulu" },
-              { name: "Google Books", slug: "google-books" },
               { name: "Barnes & Noble", slug: "barnes-noble" },
               { name: "Kobo", slug: "kobo" },
               { name: "Apple Books", slug: "apple" },
-            ].map((r) => (
-              <button
-                key={r.slug}
-                onClick={() => {
-                  setFormData({ name: r.name, slug: r.slug, iconUrl: "", isActive: true })
-                  setShowForm(true)
-                }}
-                className="px-3 py-1 bg-white border border-slate-300 rounded-lg text-sm hover:bg-slate-50"
-              >
-                + {r.name}
-              </button>
-            ))}
+              { name: "Google Books", slug: "google-books" },
+            ]
+              .filter((r) => !retailers.some((existing) => existing.slug === r.slug))
+              .map((r) => (
+                <button
+                  key={r.slug}
+                  onClick={() => quickAddRetailer(r.name, r.slug)}
+                  disabled={saving}
+                  className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm hover:bg-slate-50 disabled:opacity-50"
+                >
+                  + {r.name}
+                </button>
+              ))}
           </div>
         </div>
       )}
 
       {/* Retailers List */}
-      {retailers.length === 0 && !showForm ? (
-        <div className="border border-slate-200 rounded-lg p-8 text-center">
-          <p className="text-slate-600">No retailers yet. Add retailers to link them to your books.</p>
+      {retailers.length === 0 ? (
+        <div className="border border-slate-200 rounded-xl p-10 text-center bg-white">
+          <p className="text-slate-500 mb-2">No retailers added yet.</p>
+          <p className="text-sm text-slate-400">Use the quick add buttons above or click "Add Retailer"</p>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {retailers.map((retailer) => (
             <div
               key={retailer.id}
-              className={`border rounded-lg p-4 ${retailer.isActive ? "border-slate-200" : "border-slate-200 bg-slate-50 opacity-60"}`}
+              className={`border rounded-xl p-5 bg-white ${
+                retailer.isActive ? "border-slate-200" : "border-slate-200 opacity-60"
+              }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-lg font-semibold">{retailer.name}</h2>
-                <button
-                  onClick={() => handleToggleActive(retailer)}
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <h2 className="text-lg font-semibold">{retailer.name}</h2>
+                  <p className="text-sm text-slate-500">/{retailer.slug}</p>
+                </div>
+                <span
                   className={`px-2 py-1 text-xs rounded-full ${
-                    retailer.isActive ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-600"
+                    retailer.isActive
+                      ? "bg-green-100 text-green-700"
+                      : "bg-slate-100 text-slate-500"
                   }`}
                 >
                   {retailer.isActive ? "Active" : "Inactive"}
-                </button>
+                </span>
               </div>
-              <p className="text-sm text-slate-500 mb-3">/{retailer.slug}</p>
-              <div className="flex gap-2">
+              <div className="flex gap-3 mt-4 pt-3 border-t border-slate-100">
                 <button
                   onClick={() => handleEdit(retailer)}
                   className="text-sm text-blue-600 hover:underline"
@@ -290,13 +320,15 @@ export default function AdminRetailersPage() {
       )}
 
       {/* Instructions */}
-      <div className="mt-8 p-4 bg-slate-50 border border-slate-200 rounded-lg">
-        <h3 className="font-semibold mb-2">How to use retailers:</h3>
-        <ol className="text-sm text-slate-600 space-y-1 list-decimal list-inside">
+      <div className="mt-8 p-5 bg-slate-50 border border-slate-200 rounded-xl">
+        <h3 className="font-semibold mb-3">How to link books to retailers:</h3>
+        <ol className="text-sm text-slate-600 space-y-2 list-decimal list-inside">
           <li>Add your retailers here (Amazon, Lulu, etc.)</li>
-          <li>Go to edit a book</li>
-          <li>In "Sales Channels", check "Retailer Links"</li>
-          <li>Select which retailers sell that book and add the purchase URL</li>
+          <li>Go to <Link href="/admin/books" className="text-blue-600 hover:underline">Admin → Books</Link></li>
+          <li>Edit a book</li>
+          <li>In the "Sales Channels" section, check "Retailer Links"</li>
+          <li>Add links for each format (Ebook, Paperback, Hardcover)</li>
+          <li>Save the book</li>
         </ol>
       </div>
     </div>
