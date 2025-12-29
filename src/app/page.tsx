@@ -14,31 +14,30 @@ export const metadata: Metadata = {
  * HOMEPAGE LOGIC:
  * 
  * Featured book selection:
- * 1. First: Find a book where isFeatured=true AND isPublished=true
- * 2. Fallback: Find the most recent book where isPublished=true
+ * 1. First: Find a book where isFeatured=true AND isPublished=true AND isVisible=true
+ * 2. Fallback: Find the most recent book where isPublished=true AND isVisible=true
  * 
- * IMPORTANT: We do NOT use isVisible here!
- * - isVisible is ONLY for the /books listing page
- * - A book can be featured on homepage even if isVisible=false
- * - This allows "exclusive" homepage features
+ * IMPORTANT: We now require isVisible here:
+ * - isVisible controls which books appear site-wide (homepage and /books listing)
+ * - This ensures "Show on Books Page" only displays content intended to be public
  */
 export default async function HomePage() {
-  // Query 1: Get featured + published book
+  // Query 1: Get featured + published + visible book
   let featuredBook = await prisma.book.findFirst({
     where: {
       isFeatured: true,
       isPublished: true,
-      // NOTE: We intentionally do NOT filter by isVisible
+      isVisible: true,
     },
     orderBy: { createdAt: "desc" },
   })
 
-  // Query 2: Fallback to latest published book if no featured book
+  // Query 2: Fallback to latest published + visible book if no featured book
   if (!featuredBook) {
     featuredBook = await prisma.book.findFirst({
       where: {
         isPublished: true,
-        // NOTE: We intentionally do NOT filter by isVisible
+        isVisible: true,
       },
       orderBy: { createdAt: "desc" },
     })
