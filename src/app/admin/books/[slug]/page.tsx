@@ -10,11 +10,11 @@ interface RetailerLink {
   formatType: string
   retailerName: string
   url: string
-  isNew?: boolean
+  isDeleted?: boolean
 }
 
 interface Book {
-  id: number
+  id?: number
   slug: string
   title: string
   subtitle1: string | null
@@ -83,6 +83,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ type: "", text: "" })
 
+  // Resolve params
   useEffect(() => {
     params.then((p) => {
       setBookSlug(p.slug)
@@ -90,6 +91,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
     })
   }, [params])
 
+  // Fetch book data
   useEffect(() => {
     if (bookSlug === null) return
 
@@ -98,17 +100,17 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
       return
     }
 
-    // Fetch book data
-    fetch(`/api/admin/books/by-slug/${bookSlug}`)
-      .then((res) => {
+    const fetchBook = async () => {
+      try {
+        const res = await fetch(`/api/admin/books/by-slug/${bookSlug}`)
         if (!res.ok) throw new Error("Not found")
-        return res.json()
-      })
-      .then((data) => {
+        
+        const data = await res.json()
         setBook(data)
-        // Convert retailers data to our format
+
+        // Convert retailers data to our local format
         if (data.retailers && Array.isArray(data.retailers)) {
-          const links = data.retailers.map((r: any) => ({
+          const links: RetailerLink[] = data.retailers.map((r: any) => ({
             id: r.id,
             formatType: r.formatType || "ebook",
             retailerName: r.retailer?.name || "",
@@ -116,14 +118,17 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
           }))
           setRetailerLinks(links)
         }
-        setLoading(false)
-      })
-      .catch(() => {
+      } catch (error) {
         setMessage({ type: "error", text: "Book not found" })
+      } finally {
         setLoading(false)
-      })
+      }
+    }
+
+    fetchBook()
   }, [bookSlug])
 
+  // Generate URL-safe slug from title
   const generateSlug = (title: string) => {
     return title
       .toLowerCase()
@@ -131,6 +136,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
       .replace(/^-|-$/g, "")
   }
 
+  // Handle title change (auto-generate slug for new books)
   const handleTitleChange = (title: string) => {
     setBook({
       ...book,
@@ -139,11 +145,13 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
     })
   }
 
-  // Retailer Links Management
+  // ============================================
+  // RETAILER LINK MANAGEMENT
+  // ============================================
   const addRetailerLink = () => {
     setRetailerLinks([
       ...retailerLinks,
-      { formatType: "ebook", retailerName: "", url: "", isNew: true },
+      { formatType: "ebook", retailerName: "", url: "" },
     ])
   }
 
@@ -154,23 +162,41 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
   }
 
   const removeRetailerLink = (index: number) => {
-    setRetailerLinks(retailerLinks.filter((_, i) => i !== index))
+    const updated = [...retailerLinks]
+    // Mark for deletion if it has an ID (exists in DB)
+    if (updated[index].id) {
+      updated[index].isDeleted = true
+    } else {
+      updated.splice(index, 1)
+    }
+    setRetailerLinks(updated)
   }
 
+  // ============================================
+  // SAVE HANDLER
+  // ============================================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
     setMessage({ type: "", text: "" })
 
     try {
-      // Save book first
+      // Step 1: Save the book
+      const bookPayload = {
+        ...book,
+        // Ensure numeric fields are numbers
+        ebookPrice: book.ebookPrice ? Number(book.ebookPrice) : null,
+        paperbackPrice: book.paperbackPrice ? Number(book.paperbackPrice) : null,
+        hardcoverPrice: book.hardcoverPrice ? Number(book.hardcoverPrice) : null,
+      }
+
       const bookUrl = isNew ? "/api/admin/books" : `/api/admin/books/${book.id}`
       const bookMethod = isNew ? "POST" : "PUT"
 
       const bookRes = await fetch(bookUrl, {
         method: bookMethod,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(book),
+        body: JSON.stringify(bookPayload),
       })
 
       if (!bookRes.ok) {
@@ -179,37 +205,57 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
       }
 
       const savedBook = await bookRes.json()
+      const bookId = savedBook.id
 
-      // Now save retailer links if allowRetailerSale is enabled
-      if (book.allowRetailerSale && retailerLinks.length > 0) {
-        const linksRes = await fetch(`/api/admin/books/${savedBook.id}/retailer-links`, {
+      // Step 2: Save retailer links (only if we have a book ID and retailer sale is enabled)
+      if (bookId && book.allowRetailerSale) {
+        // Filter out deleted and empty links
+        const validLinks = retailerLinks.filter(
+          (link) => !link.isDeleted && link.retailerName && link.retailerName.trim() !== ""
+        )
+
+        const linksRes = await fetch(`/api/admin/books/${bookId}/retailer-links`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ links: retailerLinks }),
+          body: JSON.stringify({ links: validLinks }),
         })
 
         if (!linksRes.ok) {
-          console.error("Failed to save retailer links")
+          console.error("Warning: Failed to save some retailer links")
+          // Don't throw - book was saved successfully
         }
       }
 
+      // Update local state
       setBook(savedBook)
       setMessage({ type: "success", text: isNew ? "Book created!" : "Book saved!" })
 
+      // Redirect if new book
       if (isNew) {
         router.push(`/admin/books/${savedBook.slug}`)
       }
     } catch (err: any) {
       console.error("Save error:", err)
       setMessage({ type: "error", text: err.message || "Failed to save book" })
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
+  // ============================================
+  // LOADING STATE
+  // ============================================
   if (loading) {
-    return <div className="max-w-4xl mx-auto px-4 py-10">Loading...</div>
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-10">
+        <p>Loading...</p>
+      </div>
+    )
   }
 
+  // ============================================
+  // RENDER FORM
+  // ============================================
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
       <Link href="/admin/books" className="text-sm text-slate-500 hover:text-slate-700 mb-4 inline-block">
@@ -220,6 +266,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
         {isNew ? "Add New Book" : `Edit: ${book.title}`}
       </h1>
 
+      {/* Status Message */}
       {message.text && (
         <div
           className={`p-4 rounded-lg mb-6 ${
@@ -233,7 +280,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Basic Information */}
+        {/* ============================================ */}
+        {/* BASIC INFORMATION */}
+        {/* ============================================ */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Basic Information</h2>
           <div className="space-y-4">
@@ -290,7 +339,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
           </div>
         </section>
 
-        {/* Cover Image */}
+        {/* ============================================ */}
+        {/* COVER IMAGE */}
+        {/* ============================================ */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Cover Image</h2>
           <div>
@@ -298,7 +349,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
             <input
               type="url"
               value={book.coverUrl || ""}
-              onChange={(e) => setBook({ ...book, coverUrl: e.target.value })}
+              onChange={(e) => setBook({ ...book, coverUrl: e.target.value || null })}
               className="w-full border border-slate-300 rounded-lg px-3 py-2"
               placeholder="https://..."
             />
@@ -316,7 +367,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
           </div>
         </section>
 
-        {/* Publishing Status */}
+        {/* ============================================ */}
+        {/* PUBLISHING STATUS */}
+        {/* ============================================ */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Publishing Status</h2>
           <div className="space-y-3">
@@ -329,7 +382,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
               />
               <div>
                 <span className="font-medium">✅ Published</span>
-                <p className="text-xs text-slate-500">Book is live and can be viewed</p>
+                <p className="text-xs text-slate-500">Book is live and can be viewed on the detail page</p>
               </div>
             </label>
             <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
@@ -341,7 +394,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
               />
               <div>
                 <span className="font-medium">📚 Show on Books Page</span>
-                <p className="text-xs text-slate-500">Display on /books listing</p>
+                <p className="text-xs text-slate-500">Display in the /books listing (requires Published)</p>
               </div>
             </label>
             <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
@@ -353,7 +406,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
               />
               <div>
                 <span className="font-medium">⭐ Featured on Homepage</span>
-                <p className="text-xs text-slate-500">Show in hero section</p>
+                <p className="text-xs text-slate-500">Show in homepage hero section (requires Published)</p>
               </div>
             </label>
             <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
@@ -365,13 +418,15 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
               />
               <div>
                 <span className="font-medium">🔜 Coming Soon</span>
-                <p className="text-xs text-slate-500">Hide purchase buttons</p>
+                <p className="text-xs text-slate-500">Hide all purchase buttons</p>
               </div>
             </label>
           </div>
         </section>
 
-        {/* Formats & Pricing */}
+        {/* ============================================ */}
+        {/* FORMATS & PRICING */}
+        {/* ============================================ */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Formats & Pricing</h2>
           <div className="space-y-4">
@@ -392,8 +447,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                   <input
                     type="number"
                     step="0.01"
-                    value={book.ebookPrice || ""}
-                    onChange={(e) => setBook({ ...book, ebookPrice: parseFloat(e.target.value) || null })}
+                    min="0"
+                    value={book.ebookPrice ?? ""}
+                    onChange={(e) => setBook({ ...book, ebookPrice: e.target.value ? parseFloat(e.target.value) : null })}
                     className="w-32 border border-slate-300 rounded px-3 py-2"
                     placeholder="9.99"
                   />
@@ -418,8 +474,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                   <input
                     type="number"
                     step="0.01"
-                    value={book.paperbackPrice || ""}
-                    onChange={(e) => setBook({ ...book, paperbackPrice: parseFloat(e.target.value) || null })}
+                    min="0"
+                    value={book.paperbackPrice ?? ""}
+                    onChange={(e) => setBook({ ...book, paperbackPrice: e.target.value ? parseFloat(e.target.value) : null })}
                     className="w-32 border border-slate-300 rounded px-3 py-2"
                     placeholder="19.99"
                   />
@@ -444,8 +501,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                   <input
                     type="number"
                     step="0.01"
-                    value={book.hardcoverPrice || ""}
-                    onChange={(e) => setBook({ ...book, hardcoverPrice: parseFloat(e.target.value) || null })}
+                    min="0"
+                    value={book.hardcoverPrice ?? ""}
+                    onChange={(e) => setBook({ ...book, hardcoverPrice: e.target.value ? parseFloat(e.target.value) : null })}
                     className="w-32 border border-slate-300 rounded px-3 py-2"
                     placeholder="29.99"
                   />
@@ -455,7 +513,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
           </div>
         </section>
 
-        {/* Sales Channels */}
+        {/* ============================================ */}
+        {/* SALES CHANNELS */}
+        {/* ============================================ */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Sales Channels</h2>
 
@@ -470,7 +530,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
               />
               <div>
                 <span className="font-medium">💳 Direct Sale</span>
-                <p className="text-xs text-slate-500">Sell through Stripe/PayPal</p>
+                <p className="text-xs text-slate-500">Sell directly through Stripe/PayPal</p>
               </div>
             </label>
             {book.allowDirectSale && (
@@ -480,7 +540,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                   <input
                     type="url"
                     value={book.stripePaymentLink || ""}
-                    onChange={(e) => setBook({ ...book, stripePaymentLink: e.target.value })}
+                    onChange={(e) => setBook({ ...book, stripePaymentLink: e.target.value || null })}
                     className="w-full border border-slate-300 rounded-lg px-3 py-2"
                     placeholder="https://buy.stripe.com/..."
                   />
@@ -490,7 +550,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                   <input
                     type="url"
                     value={book.paypalPaymentLink || ""}
-                    onChange={(e) => setBook({ ...book, paypalPaymentLink: e.target.value })}
+                    onChange={(e) => setBook({ ...book, paypalPaymentLink: e.target.value || null })}
                     className="w-full border border-slate-300 rounded-lg px-3 py-2"
                     placeholder="https://paypal.me/..."
                   />
@@ -515,77 +575,80 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
             </label>
 
             {book.allowRetailerSale && (
-              <div className="mt-4 ml-0 md:ml-8">
+              <div className="mt-4">
                 {/* Retailer Links List */}
-                <div className="space-y-4">
-                  {retailerLinks.map((link, index) => (
-                    <div
-                      key={index}
-                      className="p-4 border border-slate-200 rounded-lg bg-white"
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        {/* Format Dropdown */}
-                        <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">
-                            Format
-                          </label>
-                          <select
-                            value={link.formatType}
-                            onChange={(e) => updateRetailerLink(index, "formatType", e.target.value)}
-                            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                          >
-                            {FORMAT_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                <div className="space-y-3">
+                  {retailerLinks
+                    .filter((link) => !link.isDeleted)
+                    .map((link, index) => (
+                      <div
+                        key={index}
+                        className="p-4 border border-slate-200 rounded-lg bg-white"
+                      >
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                          {/* Format Dropdown */}
+                          <div className="md:col-span-3">
+                            <label className="block text-xs font-medium text-slate-600 mb-1">
+                              Format
+                            </label>
+                            <select
+                              value={link.formatType}
+                              onChange={(e) => updateRetailerLink(index, "formatType", e.target.value)}
+                              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                            >
+                              {FORMAT_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
 
-                        {/* Retailer Name */}
-                        <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">
-                            Retailer Name
-                          </label>
-                          <input
-                            type="text"
-                            value={link.retailerName}
-                            onChange={(e) => updateRetailerLink(index, "retailerName", e.target.value)}
-                            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                            placeholder="Amazon, Lulu, B&N..."
-                          />
-                        </div>
+                          {/* Retailer Name */}
+                          <div className="md:col-span-3">
+                            <label className="block text-xs font-medium text-slate-600 mb-1">
+                              Retailer Name
+                            </label>
+                            <input
+                              type="text"
+                              value={link.retailerName}
+                              onChange={(e) => updateRetailerLink(index, "retailerName", e.target.value)}
+                              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                              placeholder="Amazon, Lulu, B&N..."
+                            />
+                          </div>
 
-                        {/* URL */}
-                        <div>
-                          <label className="block text-xs font-medium text-slate-600 mb-1">
-                            Purchase URL
-                          </label>
-                          <input
-                            type="url"
-                            value={link.url}
-                            onChange={(e) => updateRetailerLink(index, "url", e.target.value)}
-                            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
-                            placeholder="https://amazon.com/dp/..."
-                          />
+                          {/* URL */}
+                          <div className="md:col-span-5">
+                            <label className="block text-xs font-medium text-slate-600 mb-1">
+                              Purchase URL
+                            </label>
+                            <input
+                              type="url"
+                              value={link.url}
+                              onChange={(e) => updateRetailerLink(index, "url", e.target.value)}
+                              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                              placeholder="https://amazon.com/dp/..."
+                            />
+                          </div>
+
+                          {/* Remove Button */}
+                          <div className="md:col-span-1 flex items-end">
+                            <button
+                              type="button"
+                              onClick={() => removeRetailerLink(index)}
+                              className="w-full px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg text-sm"
+                              title="Remove"
+                            >
+                              ✕
+                            </button>
+                          </div>
                         </div>
                       </div>
-
-                      {/* Remove Button */}
-                      <div className="mt-3 flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => removeRetailerLink(index)}
-                          className="text-sm text-red-600 hover:text-red-800"
-                        >
-                          ✕ Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
 
                   {/* Empty State */}
-                  {retailerLinks.length === 0 && (
+                  {retailerLinks.filter((l) => !l.isDeleted).length === 0 && (
                     <p className="text-sm text-slate-500 italic p-4 bg-white border border-dashed border-slate-300 rounded-lg text-center">
                       No retailer links added yet. Click the button below to add one.
                     </p>
@@ -605,7 +668,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
           </div>
         </section>
 
-        {/* SEO */}
+        {/* ============================================ */}
+        {/* SEO & METADATA */}
+        {/* ============================================ */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">SEO & Metadata</h2>
           <div className="space-y-4">
@@ -614,7 +679,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
               <input
                 type="text"
                 value={book.seoTitle || ""}
-                onChange={(e) => setBook({ ...book, seoTitle: e.target.value })}
+                onChange={(e) => setBook({ ...book, seoTitle: e.target.value || null })}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2"
                 placeholder={book.title || "Book title for search engines"}
               />
@@ -623,7 +688,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
               <label className="block text-sm font-medium mb-1">SEO Description</label>
               <textarea
                 value={book.seoDescription || ""}
-                onChange={(e) => setBook({ ...book, seoDescription: e.target.value })}
+                onChange={(e) => setBook({ ...book, seoDescription: e.target.value || null })}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 h-24"
                 placeholder="Brief description for search results..."
               />
@@ -631,7 +696,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
           </div>
         </section>
 
-        {/* Save Button */}
+        {/* ============================================ */}
+        {/* SAVE BUTTON */}
+        {/* ============================================ */}
         <div className="flex gap-4 sticky bottom-4 bg-white p-4 border border-slate-200 rounded-xl shadow-lg">
           <button
             type="submit"
