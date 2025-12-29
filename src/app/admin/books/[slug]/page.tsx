@@ -9,11 +9,10 @@ interface Retailer {
   id: number
   name: string
   slug: string
-  iconUrl: string | null
   isActive: boolean
 }
 
-interface BookRetailer {
+interface BookRetailerLink {
   id: number
   retailerId: number
   url: string
@@ -52,7 +51,7 @@ interface Book {
   seoTitle: string | null
   seoDescription: string | null
   ogImageUrl: string | null
-  retailers: BookRetailer[]
+  retailers: BookRetailerLink[]
 }
 
 const defaultBook: Partial<Book> = {
@@ -87,6 +86,13 @@ const defaultBook: Partial<Book> = {
   retailers: [],
 }
 
+const FORMAT_OPTIONS = [
+  { key: "ebook", label: "Ebook" },
+  { key: "paperback", label: "Paperback" },
+  { key: "hardcover", label: "Hardcover" },
+  { key: "audiobook", label: "Audiobook" },
+]
+
 export default function BookFormPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()
   const [bookSlug, setBookSlug] = useState<string | null>(null)
@@ -96,6 +102,10 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ type: "", text: "" })
   const [allRetailers, setAllRetailers] = useState<Retailer[]>([])
+
+  // For adding new retailer links
+  const [showAddLink, setShowAddLink] = useState<number | null>(null)
+  const [newLinkFormat, setNewLinkFormat] = useState("ebook")
 
   useEffect(() => {
     params.then((p) => {
@@ -107,9 +117,10 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
   useEffect(() => {
     if (bookSlug === null) return
 
+    // Fetch all retailers
     fetch("/api/admin/retailers")
       .then((res) => res.json())
-      .then((data) => setAllRetailers(Array.isArray(data) ? data : []))
+      .then((data) => setAllRetailers(Array.isArray(data) ? data.filter((r: Retailer) => r.isActive) : []))
       .catch(() => {})
 
     if (bookSlug === "new") {
@@ -117,6 +128,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
       return
     }
 
+    // Fetch book data
     fetch(`/api/admin/books/by-slug/${bookSlug}`)
       .then((res) => {
         if (!res.ok) throw new Error("Not found")
@@ -153,11 +165,8 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
     setMessage({ type: "", text: "" })
 
     try {
-      // KEY FIX: Use book.id for updates, not slug!
       const url = isNew ? "/api/admin/books" : `/api/admin/books/${book.id}`
       const method = isNew ? "POST" : "PUT"
-
-      console.log("Saving to:", url, "Method:", method)
 
       const res = await fetch(url, {
         method,
@@ -169,7 +178,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
         const savedBook = await res.json()
         setBook(savedBook)
         setMessage({ type: "success", text: isNew ? "Book created!" : "Book saved!" })
-        
+
         if (isNew) {
           router.push(`/admin/books/${savedBook.slug}`)
         }
@@ -184,44 +193,85 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
     setSaving(false)
   }
 
-  const handleRetailerToggle = async (retailerId: number, checked: boolean) => {
-    if (isNew || !book.id) {
-      setMessage({ type: "error", text: "Save the book first" })
+  // Retailer link management
+  const handleAddRetailerLink = async (retailerId: number, formatType: string) => {
+    if (!book.id) {
+      setMessage({ type: "error", text: "Save the book first before adding retailer links" })
       return
     }
 
-    if (checked) {
+    // Check if this combination already exists
+    const exists = book.retailers?.some(
+      (r) => r.retailerId === retailerId && r.formatType === formatType
+    )
+    if (exists) {
+      setMessage({ type: "error", text: "This format already exists for this retailer" })
+      return
+    }
+
+    try {
       const res = await fetch(`/api/admin/books/${book.id}/retailers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ retailerId, url: "", formatType: "ebook" }),
+        body: JSON.stringify({ retailerId, formatType, url: "", isActive: true }),
       })
+
       if (res.ok) {
-        const link = await res.json()
-        setBook({ ...book, retailers: [...(book.retailers || []), link] })
+        const newLink = await res.json()
+        setBook({ ...book, retailers: [...(book.retailers || []), newLink] })
+        setShowAddLink(null)
+        setNewLinkFormat("ebook")
+      } else {
+        const error = await res.json()
+        setMessage({ type: "error", text: error.error || "Failed to add link" })
       }
-    } else {
-      const link = book.retailers?.find((r) => r.retailerId === retailerId)
-      if (link) {
-        await fetch(`/api/admin/books/${book.id}/retailers/${link.id}`, { method: "DELETE" })
-        setBook({ ...book, retailers: book.retailers?.filter((r) => r.id !== link.id) })
-      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Failed to add retailer link" })
     }
   }
 
-  const handleRetailerUpdate = async (linkId: number, field: string, value: string) => {
+  const handleUpdateRetailerLink = async (linkId: number, url: string) => {
     if (!book.id) return
-    const res = await fetch(`/api/admin/books/${book.id}/retailers/${linkId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ [field]: value }),
-    })
-    if (res.ok) {
+
+    try {
+      await fetch(`/api/admin/books/${book.id}/retailers/${linkId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      })
+
       setBook({
         ...book,
-        retailers: book.retailers?.map((r) => (r.id === linkId ? { ...r, [field]: value } : r)),
+        retailers: book.retailers?.map((r) => (r.id === linkId ? { ...r, url } : r)),
       })
+    } catch (error) {
+      console.error("Failed to update link:", error)
     }
+  }
+
+  const handleDeleteRetailerLink = async (linkId: number) => {
+    if (!book.id) return
+
+    try {
+      await fetch(`/api/admin/books/${book.id}/retailers/${linkId}`, { method: "DELETE" })
+      setBook({
+        ...book,
+        retailers: book.retailers?.filter((r) => r.id !== linkId),
+      })
+    } catch (error) {
+      console.error("Failed to delete link:", error)
+    }
+  }
+
+  // Get existing formats for a retailer
+  const getRetailerLinks = (retailerId: number) => {
+    return book.retailers?.filter((r) => r.retailerId === retailerId) || []
+  }
+
+  // Get available formats for adding (ones not yet added)
+  const getAvailableFormats = (retailerId: number) => {
+    const existingFormats = getRetailerLinks(retailerId).map((l) => l.formatType)
+    return FORMAT_OPTIONS.filter((f) => !existingFormats.includes(f.key))
   }
 
   if (loading) {
@@ -239,14 +289,20 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
       </h1>
 
       {message.text && (
-        <div className={`p-3 rounded mb-6 ${message.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+        <div
+          className={`p-4 rounded-lg mb-6 ${
+            message.type === "success"
+              ? "bg-green-50 text-green-800 border border-green-200"
+              : "bg-red-50 text-red-800 border border-red-200"
+          }`}
+        >
           {message.text}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* 1. Basic Information */}
-        <section className="border border-slate-200 rounded-lg p-6">
+        {/* Basic Information */}
+        <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Basic Information</h2>
           <div className="space-y-4">
             <div>
@@ -268,10 +324,12 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                 className="w-full border border-slate-300 rounded-lg px-3 py-2"
                 required
               />
-              <p className="text-xs text-slate-500 mt-1">Used in URL: /books/{book.slug || "your-slug"}</p>
+              <p className="text-xs text-slate-500 mt-1">
+                URL: /books/{book.slug || "your-book-slug"}
+              </p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Subtitle 1</label>
+              <label className="block text-sm font-medium mb-1">Subtitle</label>
               <input
                 type="text"
                 value={book.subtitle1 || ""}
@@ -280,16 +338,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Subtitle 2</label>
-              <input
-                type="text"
-                value={book.subtitle2 || ""}
-                onChange={(e) => setBook({ ...book, subtitle2: e.target.value })}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Short Blurb</label>
+              <label className="block text-sm font-medium mb-1">Blurb / Description</label>
               <textarea
                 value={book.blurb || ""}
                 onChange={(e) => setBook({ ...book, blurb: e.target.value })}
@@ -309,35 +358,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
           </div>
         </section>
 
-        {/* 2. Metadata */}
-        <section className="border border-slate-200 rounded-lg p-6">
-          <h2 className="font-semibold text-lg mb-4">Metadata</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">ISBN</label>
-              <input
-                type="text"
-                value={book.isbn || ""}
-                onChange={(e) => setBook({ ...book, isbn: e.target.value })}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Copyright</label>
-              <input
-                type="text"
-                value={book.copyright || ""}
-                onChange={(e) => setBook({ ...book, copyright: e.target.value })}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2"
-                placeholder="2025 Maya Allan"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* 3. Images & Files */}
-        <section className="border border-slate-200 rounded-lg p-6">
-          <h2 className="font-semibold text-lg mb-4">Images & Files</h2>
+        {/* Images */}
+        <section className="border border-slate-200 rounded-xl p-6 bg-white">
+          <h2 className="font-semibold text-lg mb-4">Images</h2>
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2">Cover Image</label>
@@ -347,42 +370,13 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                 onRemove={() => setBook({ ...book, coverUrl: null })}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Back Cover Image (optional)</label>
-              <ImageUpload
-                currentUrl={book.backCoverUrl}
-                onUpload={(url) => setBook({ ...book, backCoverUrl: url })}
-                onRemove={() => setBook({ ...book, backCoverUrl: null })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Ebook File (PDF/EPUB)</label>
-              <ImageUpload
-                currentUrl={book.ebookFileUrl}
-                onUpload={(url) => setBook({ ...book, ebookFileUrl: url })}
-                onRemove={() => setBook({ ...book, ebookFileUrl: null })}
-                accept=".pdf,.epub"
-              />
-            </div>
           </div>
         </section>
 
-        {/* 4. Publishing Status */}
-        <section className="border border-slate-200 rounded-lg p-6">
+        {/* Publishing Status */}
+        <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Publishing Status</h2>
           <div className="space-y-3">
-            <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={book.isFeatured || false}
-                onChange={(e) => setBook({ ...book, isFeatured: e.target.checked })}
-                className="w-5 h-5"
-              />
-              <div>
-                <span className="font-medium">Featured on Homepage</span>
-                <p className="text-xs text-slate-500">Display this book prominently on the homepage</p>
-              </div>
-            </label>
             <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
               <input
                 type="checkbox"
@@ -391,8 +385,8 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                 className="w-5 h-5"
               />
               <div>
-                <span className="font-medium">Published</span>
-                <p className="text-xs text-slate-500">Book is published and available</p>
+                <span className="font-medium">✅ Published</span>
+                <p className="text-xs text-slate-500">Book is live and can be viewed</p>
               </div>
             </label>
             <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
@@ -403,8 +397,20 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                 className="w-5 h-5"
               />
               <div>
-                <span className="font-medium">Visible on Site</span>
-                <p className="text-xs text-slate-500">Show this book on the public website</p>
+                <span className="font-medium">📚 Show on Books Page</span>
+                <p className="text-xs text-slate-500">Display on /books listing</p>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={book.isFeatured || false}
+                onChange={(e) => setBook({ ...book, isFeatured: e.target.checked })}
+                className="w-5 h-5"
+              />
+              <div>
+                <span className="font-medium">⭐ Featured on Homepage</span>
+                <p className="text-xs text-slate-500">Show in hero section</p>
               </div>
             </label>
             <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
@@ -415,18 +421,18 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                 className="w-5 h-5"
               />
               <div>
-                <span className="font-medium">Coming Soon</span>
-                <p className="text-xs text-slate-500">Display as coming soon (no purchase options)</p>
+                <span className="font-medium">🔜 Coming Soon</span>
+                <p className="text-xs text-slate-500">Hide purchase buttons</p>
               </div>
             </label>
           </div>
         </section>
 
-        {/* 5. Book Formats & Pricing */}
-        <section className="border border-slate-200 rounded-lg p-6">
-          <h2 className="font-semibold text-lg mb-4">Book Formats & Pricing</h2>
-          <p className="text-sm text-slate-600 mb-4">Select which formats are available and set prices for each</p>
-          
+        {/* Formats & Pricing */}
+        <section className="border border-slate-200 rounded-xl p-6 bg-white">
+          <h2 className="font-semibold text-lg mb-4">Formats & Pricing</h2>
+          <p className="text-sm text-slate-600 mb-4">Select available formats and set your prices.</p>
+
           <div className="space-y-4">
             {/* Ebook */}
             <div className={`p-4 border rounded-lg ${book.hasEbook ? "border-blue-300 bg-blue-50" : "border-slate-200"}`}>
@@ -437,7 +443,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                   onChange={(e) => setBook({ ...book, hasEbook: e.target.checked })}
                   className="w-5 h-5"
                 />
-                <span className="font-medium">Ebook</span>
+                <span className="font-medium">📱 Ebook</span>
               </label>
               {book.hasEbook && (
                 <div className="mt-3 ml-8">
@@ -447,7 +453,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                     step="0.01"
                     value={book.ebookPrice || ""}
                     onChange={(e) => setBook({ ...book, ebookPrice: parseFloat(e.target.value) || null })}
-                    className="w-32 border border-slate-300 rounded px-3 py-1"
+                    className="w-32 border border-slate-300 rounded px-3 py-2"
                     placeholder="9.99"
                   />
                 </div>
@@ -455,7 +461,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
             </div>
 
             {/* Paperback */}
-            <div className={`p-4 border rounded-lg ${book.hasPaperback ? "border-blue-300 bg-blue-50" : "border-slate-200"}`}>
+            <div className={`p-4 border rounded-lg ${book.hasPaperback ? "border-green-300 bg-green-50" : "border-slate-200"}`}>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -463,7 +469,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                   onChange={(e) => setBook({ ...book, hasPaperback: e.target.checked })}
                   className="w-5 h-5"
                 />
-                <span className="font-medium">Paperback</span>
+                <span className="font-medium">📖 Paperback</span>
               </label>
               {book.hasPaperback && (
                 <div className="mt-3 ml-8">
@@ -473,15 +479,15 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                     step="0.01"
                     value={book.paperbackPrice || ""}
                     onChange={(e) => setBook({ ...book, paperbackPrice: parseFloat(e.target.value) || null })}
-                    className="w-32 border border-slate-300 rounded px-3 py-1"
-                    placeholder="21.99"
+                    className="w-32 border border-slate-300 rounded px-3 py-2"
+                    placeholder="19.99"
                   />
                 </div>
               )}
             </div>
 
             {/* Hardcover */}
-            <div className={`p-4 border rounded-lg ${book.hasHardcover ? "border-blue-300 bg-blue-50" : "border-slate-200"}`}>
+            <div className={`p-4 border rounded-lg ${book.hasHardcover ? "border-purple-300 bg-purple-50" : "border-slate-200"}`}>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -489,7 +495,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                   onChange={(e) => setBook({ ...book, hasHardcover: e.target.checked })}
                   className="w-5 h-5"
                 />
-                <span className="font-medium">Hardcover</span>
+                <span className="font-medium">📕 Hardcover</span>
               </label>
               {book.hasHardcover && (
                 <div className="mt-3 ml-8">
@@ -499,8 +505,8 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                     step="0.01"
                     value={book.hardcoverPrice || ""}
                     onChange={(e) => setBook({ ...book, hardcoverPrice: parseFloat(e.target.value) || null })}
-                    className="w-32 border border-slate-300 rounded px-3 py-1"
-                    placeholder="33.99"
+                    className="w-32 border border-slate-300 rounded px-3 py-2"
+                    placeholder="29.99"
                   />
                 </div>
               )}
@@ -508,10 +514,9 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
           </div>
         </section>
 
-        {/* 6. Sales Channels */}
-        <section className="border border-slate-200 rounded-lg p-6">
+        {/* Sales Channels */}
+        <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Sales Channels</h2>
-          <p className="text-sm text-slate-600 mb-4">Choose how customers can purchase this book</p>
 
           {/* Direct Sale */}
           <div className={`p-4 border rounded-lg mb-4 ${book.allowDirectSale ? "border-green-300 bg-green-50" : "border-slate-200"}`}>
@@ -523,8 +528,8 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                 className="w-5 h-5"
               />
               <div>
-                <span className="font-medium">Direct Sale</span>
-                <p className="text-xs text-slate-500">Sell directly through your website (ebooks delivered after payment)</p>
+                <span className="font-medium">💳 Direct Sale</span>
+                <p className="text-xs text-slate-500">Sell through Stripe/PayPal</p>
               </div>
             </label>
             {book.allowDirectSale && (
@@ -553,7 +558,7 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
             )}
           </div>
 
-          {/* Retailer Sale */}
+          {/* Retailer Links */}
           <div className={`p-4 border rounded-lg ${book.allowRetailerSale ? "border-green-300 bg-green-50" : "border-slate-200"}`}>
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -563,59 +568,110 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                 className="w-5 h-5"
               />
               <div>
-                <span className="font-medium">Retailer Links</span>
-                <p className="text-xs text-slate-500">Link to external retailers (Amazon, Barnes & Noble, etc.)</p>
+                <span className="font-medium">🏪 Retailer Links</span>
+                <p className="text-xs text-slate-500">Link to Amazon, Lulu, etc.</p>
               </div>
             </label>
+
             {book.allowRetailerSale && (
               <div className="mt-4 ml-8">
                 {allRetailers.length === 0 ? (
-                  <p className="text-sm text-slate-500">
-                    No retailers configured. <Link href="/admin/retailers" className="text-blue-600 hover:underline">Add retailers first</Link>
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm text-amber-800">
+                      No retailers configured.{" "}
+                      <Link href="/admin/retailers" className="text-blue-600 hover:underline">
+                        Add retailers first →
+                      </Link>
+                    </p>
+                  </div>
+                ) : isNew ? (
+                  <p className="text-sm text-amber-600 p-3 bg-amber-50 rounded-lg">
+                    Save the book first, then add retailer links.
                   </p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {allRetailers.map((retailer) => {
-                      const link = book.retailers?.find((r) => r.retailerId === retailer.id)
-                      const isLinked = !!link
-                      
+                      const links = getRetailerLinks(retailer.id)
+                      const availableFormats = getAvailableFormats(retailer.id)
+
                       return (
-                        <div key={retailer.id} className={`p-3 border rounded-lg ${isLinked ? "border-blue-300 bg-white" : "border-slate-200"}`}>
-                          <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={isLinked}
-                              onChange={(e) => handleRetailerToggle(retailer.id, e.target.checked)}
-                              className="w-4 h-4"
-                              disabled={isNew}
-                            />
-                            <span className="font-medium">{retailer.name}</span>
-                          </label>
-                          {isLinked && link && (
-                            <div className="mt-2 ml-7 grid grid-cols-2 gap-2">
-                              <div>
-                                <label className="block text-xs mb-1">Purchase URL</label>
-                                <input
-                                  type="url"
-                                  value={link.url}
-                                  onChange={(e) => handleRetailerUpdate(link.id, "url", e.target.value)}
-                                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                  placeholder="https://amazon.com/..."
-                                />
+                        <div key={retailer.id} className="border border-slate-200 rounded-lg p-4 bg-white">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold">{retailer.name}</h4>
+                            {availableFormats.length > 0 && (
+                              <div className="relative">
+                                {showAddLink === retailer.id ? (
+                                  <div className="flex items-center gap-2">
+                                    <select
+                                      value={newLinkFormat}
+                                      onChange={(e) => setNewLinkFormat(e.target.value)}
+                                      className="text-sm border border-slate-300 rounded px-2 py-1"
+                                    >
+                                      {availableFormats.map((f) => (
+                                        <option key={f.key} value={f.key}>
+                                          {f.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAddRetailerLink(retailer.id, newLinkFormat)}
+                                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                                    >
+                                      Add
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowAddLink(null)}
+                                      className="text-slate-500 text-sm"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setShowAddLink(retailer.id)
+                                      setNewLinkFormat(availableFormats[0]?.key || "ebook")
+                                    }}
+                                    className="text-sm text-blue-600 hover:underline"
+                                  >
+                                    + Add Format
+                                  </button>
+                                )}
                               </div>
-                              <div>
-                                <label className="block text-xs mb-1">Format</label>
-                                <select
-                                  value={link.formatType}
-                                  onChange={(e) => handleRetailerUpdate(link.id, "formatType", e.target.value)}
-                                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm"
-                                >
-                                  <option value="ebook">Ebook</option>
-                                  <option value="paperback">Paperback</option>
-                                  <option value="hardcover">Hardcover</option>
-                                  <option value="audiobook">Audiobook</option>
-                                </select>
-                              </div>
+                            )}
+                          </div>
+
+                          {links.length === 0 ? (
+                            <p className="text-sm text-slate-400 italic">
+                              No links yet. Click "+ Add Format" to add one.
+                            </p>
+                          ) : (
+                            <div className="space-y-2">
+                              {links.map((link) => (
+                                <div key={link.id} className="flex items-center gap-2">
+                                  <span className="text-sm font-medium w-24 capitalize text-slate-600">
+                                    {link.formatType}:
+                                  </span>
+                                  <input
+                                    type="url"
+                                    value={link.url || ""}
+                                    onChange={(e) => handleUpdateRetailerLink(link.id, e.target.value)}
+                                    className="flex-1 border border-slate-300 rounded px-3 py-2 text-sm"
+                                    placeholder={`https://amazon.com/dp/... (${link.formatType})`}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteRetailerLink(link.id)}
+                                    className="text-red-500 hover:text-red-700 px-2"
+                                    title="Remove"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>
@@ -623,16 +679,13 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                     })}
                   </div>
                 )}
-                {isNew && (
-                  <p className="text-xs text-amber-600 mt-2">Save the book first to add retailer links</p>
-                )}
               </div>
             )}
           </div>
         </section>
 
-        {/* 7. SEO & Metadata */}
-        <section className="border border-slate-200 rounded-lg p-6">
+        {/* SEO */}
+        <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">SEO & Metadata</h2>
           <div className="space-y-4">
             <div>
@@ -654,23 +707,15 @@ export default function BookFormPage({ params }: { params: Promise<{ slug: strin
                 placeholder="Brief description for search results..."
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">OG Image (Social Sharing)</label>
-              <ImageUpload
-                currentUrl={book.ogImageUrl}
-                onUpload={(url) => setBook({ ...book, ogImageUrl: url })}
-                onRemove={() => setBook({ ...book, ogImageUrl: null })}
-              />
-            </div>
           </div>
         </section>
 
-        {/* Submit */}
-        <div className="flex gap-4 sticky bottom-4 bg-white p-4 border border-slate-200 rounded-lg shadow-lg">
+        {/* Save Button */}
+        <div className="flex gap-4 sticky bottom-4 bg-white p-4 border border-slate-200 rounded-xl shadow-lg">
           <button
             type="submit"
             disabled={saving}
-            className="px-8 py-3 text-sm font-medium text-white bg-black rounded-lg hover:bg-black/80 disabled:opacity-50"
+            className="px-8 py-3 text-sm font-semibold text-white bg-black rounded-lg hover:bg-slate-800 disabled:opacity-50"
           >
             {saving ? "Saving..." : isNew ? "Create Book" : "Save Changes"}
           </button>
