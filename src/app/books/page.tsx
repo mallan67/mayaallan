@@ -1,150 +1,154 @@
-import { prisma } from "@/lib/prisma"
 import Image from "next/image"
 import Link from "next/link"
+import { prisma } from "@/lib/prisma"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Books | Maya Allan",
+  description: "Browse books by Maya Allan",
+}
 
 export const dynamic = "force-dynamic"
 
-async function getBooks() {
-  try {
-    const books = await prisma.book.findMany({
-      where: {
-        isVisible: true,
-        isPublished: true,
-      },
-      include: {
-        retailers: {
-          where: { isActive: true },
-          include: { retailer: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    })
-    return books
-  } catch (error) {
-    console.error("Error fetching books:", error)
-    return []
-  }
-}
-
 export default async function BooksPage() {
-  const books = await getBooks()
+  // BOOKS LISTING LOGIC:
+  // Show books that are:
+  // - isPublished = true (book is live/published)
+  // - isVisible = true (author wants it shown on the /books page)
+  // 
+  // This is different from homepage which uses isFeatured + isPublished
+  
+  const books = await prisma.book.findMany({
+    where: {
+      isPublished: true,
+      isVisible: true,
+    },
+    include: {
+      retailers: {
+        where: { isActive: true },
+        include: { retailer: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  if (books.length === 0) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-16 text-center">
+        <h1 className="font-serif text-3xl font-semibold mb-4">Books</h1>
+        <p className="text-slate-600">No books available yet. Check back soon!</p>
+      </div>
+    )
+  }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <section className="bg-white border-b border-slate-200 py-12">
-        <div className="max-w-6xl mx-auto px-4">
-          <h1 className="font-serif text-4xl font-bold text-slate-900 text-center">
-            Books
-          </h1>
-          <p className="text-slate-600 text-center mt-4">
-            Explore my published works
-          </p>
-        </div>
-      </section>
+    <div className="max-w-6xl mx-auto px-4 py-10 md:py-16">
+      <h1 className="font-serif text-3xl md:text-4xl font-semibold text-center mb-10">
+        Books
+      </h1>
 
-      {/* Books Grid */}
-      <section className="py-12">
-        <div className="max-w-6xl mx-auto px-4">
-          {books.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-slate-600 mb-4">No books available yet.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {books.map((book) => {
-                // Get lowest price for display
-                const prices = [
-                  book.hasEbook && book.ebookPrice ? Number(book.ebookPrice) : null,
-                  book.hasPaperback && book.paperbackPrice ? Number(book.paperbackPrice) : null,
-                  book.hasHardcover && book.hardcoverPrice ? Number(book.hardcoverPrice) : null,
-                ].filter((p): p is number => p !== null)
-                
-                const lowestPrice = prices.length > 0 ? Math.min(...prices) : null
+      <div className="grid gap-10 md:gap-12">
+        {books.map((book) => {
+          // Get unique retailer names for display
+          const retailerNames = book.retailers
+            .filter((r) => r.url && r.url.trim() !== "" && r.retailer?.name)
+            .map((r) => r.retailer.name)
+            .filter((name, index, arr) => arr.indexOf(name) === index)
 
-                return (
-                  <Link
-                    key={book.id}
-                    href={`/books/${book.slug}`}
-                    className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden"
-                  >
-                    {/* Cover */}
-                    <div className="aspect-[2/3] relative bg-slate-100">
-                      {book.coverUrl ? (
-                        <Image
-                          src={book.coverUrl}
-                          alt={book.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                          No cover
-                        </div>
-                      )}
-                      
-                      {/* Coming Soon Badge */}
-                      {book.isComingSoon && (
-                        <div className="absolute top-4 right-4 px-3 py-1 bg-amber-500 text-white text-xs font-medium rounded-full">
-                          Coming Soon
-                        </div>
-                      )}
-                    </div>
+          // Calculate lowest price for "From $X.XX" display
+          const prices = [
+            book.hasEbook && book.ebookPrice ? Number(book.ebookPrice) : null,
+            book.hasPaperback && book.paperbackPrice ? Number(book.paperbackPrice) : null,
+            book.hasHardcover && book.hardcoverPrice ? Number(book.hardcoverPrice) : null,
+          ].filter((p): p is number => p !== null && p > 0)
 
-                    {/* Info */}
-                    <div className="p-5">
-                      <h2 className="font-serif text-xl font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
-                        {book.title}
-                      </h2>
-                      
-                      {book.subtitle1 && (
-                        <p className="text-slate-600 text-sm mt-1 line-clamp-2">
-                          {book.subtitle1}
-                        </p>
-                      )}
+          const lowestPrice = prices.length > 0 ? Math.min(...prices) : null
 
-                      {/* Formats */}
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {book.hasEbook && (
-                          <span className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded">
-                            Ebook {book.ebookPrice && `$${Number(book.ebookPrice).toFixed(2)}`}
+          // Available formats for badges
+          const formats = [
+            book.hasEbook && { label: "Ebook", price: book.ebookPrice },
+            book.hasPaperback && { label: "Paperback", price: book.paperbackPrice },
+            book.hasHardcover && { label: "Hardcover", price: book.hardcoverPrice },
+          ].filter(Boolean) as { label: string; price: any }[]
+
+          return (
+            <Link
+              key={book.id}
+              href={`/books/${book.slug}`}
+              className="group grid md:grid-cols-[260px_1fr] gap-6 md:gap-8 p-4 md:p-0 hover:bg-slate-50 md:hover:bg-transparent rounded-xl transition"
+            >
+              {/* Cover */}
+              <div className="relative w-full max-w-[220px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 rounded-lg overflow-hidden shadow-md group-hover:shadow-lg transition">
+                {book.coverUrl ? (
+                  <Image
+                    src={book.coverUrl}
+                    alt={book.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                    <span className="text-slate-400 text-sm">No cover</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Details */}
+              <div className="flex flex-col justify-center text-center md:text-left">
+                <h2 className="font-serif text-xl md:text-2xl font-semibold group-hover:text-blue-700 transition">
+                  {book.title}
+                </h2>
+
+                {book.subtitle1 && (
+                  <p className="mt-2 text-slate-600 text-sm md:text-base">
+                    {book.subtitle1}
+                  </p>
+                )}
+
+                {/* Format badges with prices */}
+                {formats.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2 justify-center md:justify-start">
+                    {formats.map((f) => (
+                      <span
+                        key={f.label}
+                        className="inline-block px-3 py-1 text-xs md:text-sm font-medium text-blue-700 bg-blue-50 rounded-full"
+                      >
+                        {f.label}
+                        {f.price && Number(f.price) > 0 && (
+                          <span className="ml-1 font-semibold">
+                            ${Number(f.price).toFixed(2)}
                           </span>
                         )}
-                        {book.hasPaperback && (
-                          <span className="text-xs px-2 py-1 bg-green-50 text-green-600 rounded">
-                            Paperback {book.paperbackPrice && `$${Number(book.paperbackPrice).toFixed(2)}`}
-                          </span>
-                        )}
-                        {book.hasHardcover && (
-                          <span className="text-xs px-2 py-1 bg-purple-50 text-purple-600 rounded">
-                            Hardcover {book.hardcoverPrice && `$${Number(book.hardcoverPrice).toFixed(2)}`}
-                          </span>
-                        )}
-                      </div>
+                      </span>
+                    ))}
+                  </div>
+                )}
 
-                      {/* Price */}
-                      {!book.isComingSoon && lowestPrice && (
-                        <p className="text-slate-900 font-medium mt-3">
-                          From ${lowestPrice.toFixed(2)}
-                        </p>
-                      )}
+                {/* Price summary */}
+                {lowestPrice && (
+                  <p className="mt-3 text-lg font-semibold text-slate-900">
+                    From ${lowestPrice.toFixed(2)}
+                  </p>
+                )}
 
-                      {/* Retailers */}
-                      {book.retailers && book.retailers.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-slate-100">
-                          <p className="text-xs text-slate-500">
-                            Available at: {book.retailers.map(r => r.retailer.name).join(", ")}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </section>
-    </main>
+                {/* Retailers */}
+                {retailerNames.length > 0 && (
+                  <p className="mt-2 text-sm text-slate-500">
+                    Available at: {retailerNames.join(", ")}
+                  </p>
+                )}
+
+                {/* Coming Soon badge */}
+                {book.isComingSoon && (
+                  <span className="mt-3 inline-block px-4 py-1.5 text-xs font-semibold bg-amber-500 text-white rounded-full w-fit mx-auto md:mx-0">
+                    Coming Soon
+                  </span>
+                )}
+              </div>
+            </Link>
+          )
+        })}
+      </div>
+    </div>
   )
 }
