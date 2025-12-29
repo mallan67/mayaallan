@@ -10,18 +10,21 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
+/**
+ * BOOKS LISTING LOGIC (Issue #1 Fix):
+ * 
+ * The /books page should filter by BOTH isVisible AND isPublished.
+ * 
+ * - isVisible = true means "show this book on the /books listing"
+ * - isPublished = true means "book is live/can be viewed"
+ * 
+ * This is DIFFERENT from homepage which only uses isFeatured + isPublished.
+ */
 export default async function BooksPage() {
-  // BOOKS LISTING LOGIC:
-  // Show books that are:
-  // - isPublished = true (book is live/published)
-  // - isVisible = true (author wants it shown on the /books page)
-  // 
-  // This is different from homepage which uses isFeatured + isPublished
-  
   const books = await prisma.book.findMany({
     where: {
-      isPublished: true,
-      isVisible: true,
+      isPublished: true,  // Book must be published
+      isVisible: true,    // Book must be marked visible for this listing
     },
     include: {
       retailers: {
@@ -49,13 +52,13 @@ export default async function BooksPage() {
 
       <div className="grid gap-10 md:gap-12">
         {books.map((book) => {
-          // Get unique retailer names for display
+          // Get unique retailer names
           const retailerNames = book.retailers
             .filter((r) => r.url && r.url.trim() !== "" && r.retailer?.name)
             .map((r) => r.retailer.name)
             .filter((name, index, arr) => arr.indexOf(name) === index)
 
-          // Calculate lowest price for "From $X.XX" display
+          // Get lowest price
           const prices = [
             book.hasEbook && book.ebookPrice ? Number(book.ebookPrice) : null,
             book.hasPaperback && book.paperbackPrice ? Number(book.paperbackPrice) : null,
@@ -64,7 +67,7 @@ export default async function BooksPage() {
 
           const lowestPrice = prices.length > 0 ? Math.min(...prices) : null
 
-          // Available formats for badges
+          // Available formats
           const formats = [
             book.hasEbook && { label: "Ebook", price: book.ebookPrice },
             book.hasPaperback && { label: "Paperback", price: book.paperbackPrice },
@@ -105,7 +108,7 @@ export default async function BooksPage() {
                   </p>
                 )}
 
-                {/* Format badges with prices */}
+                {/* Formats */}
                 {formats.length > 0 && (
                   <div className="mt-4 flex flex-wrap gap-2 justify-center md:justify-start">
                     {formats.map((f) => (
@@ -124,7 +127,7 @@ export default async function BooksPage() {
                   </div>
                 )}
 
-                {/* Price summary */}
+                {/* Price */}
                 {lowestPrice && (
                   <p className="mt-3 text-lg font-semibold text-slate-900">
                     From ${lowestPrice.toFixed(2)}
@@ -138,7 +141,7 @@ export default async function BooksPage() {
                   </p>
                 )}
 
-                {/* Coming Soon badge */}
+                {/* Coming Soon */}
                 {book.isComingSoon && (
                   <span className="mt-3 inline-block px-4 py-1.5 text-xs font-semibold bg-amber-500 text-white rounded-full w-fit mx-auto md:mx-0">
                     Coming Soon
