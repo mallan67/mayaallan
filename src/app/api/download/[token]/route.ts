@@ -3,14 +3,17 @@ import { prisma } from "@/lib/prisma"
 import { generateSignedUrl } from "@/lib/s3"
 
 /**
- * DOWNLOAD ROUTE — atomic conditional increment via updateMany
+ * DOWNLOAD ROUTE — atomic conditional increment via updateMany + S3 presign
  *
  * This implementation:
  * 1. Loads the token + book + order to validate
  * 2. Executes a single conditional UPDATE (updateMany) that increments
  *    downloadCount only when downloadCount < maxDownloads (atomic)
  * 3. If the update affected 0 rows, the limit was reached
- * 4. Redirects to the ebook URL (or presigned URL in production)
+ * 4. Generates a presigned URL for private S3 files (or falls back to the raw URL)
+ * 5. Redirects the client to the final URL
+ *
+ * File: src/app/api/download/[token]/route.ts
  */
 
 export async function GET(
@@ -66,8 +69,18 @@ export async function GET(
       return NextResponse.json({ error: "Download limit reached" }, { status: 403 })
     }
 
-    // 3) Success → redirect to ebook URL (replace with presign in prod)
-    return NextResponse.redirect(dt.book.ebookFileUrl)
+    // 3) Generate signed URL for private storage (or fall back to the raw URL)
+    let dest = dt.book.ebookFileUrl
+    try {
+      // 300 seconds = 5 minutes - adjust as needed
+      dest = await generateSignedUrl(dt.book.ebookFileUrl, 300)
+    } catch (err) {
+      // If presign fails, fall back to the raw URL (useful for public URLs or dev)
+      console.warn("Presign failed; falling back to raw URL:", err)
+    }
+
+    // 4) Redirect to final URL
+    return NextResponse.redirect(dest)
   } catch (err: any) {
     console.error("Download error:", err)
     return NextResponse.json({ error: "Download failed" }, { status: 500 })
