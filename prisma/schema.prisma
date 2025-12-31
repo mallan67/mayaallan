@@ -180,5 +180,11 @@ model SiteSettings {
   socialYoutube    String?
   socialTiktok     String?
   footerText       String?
+
+  // Nullable featured book for homepage; nullable so existing rows remain valid
+  featuredBookId   Int?
+  featuredBook     Book?    @relation(fields: [featuredBookId], references: [id])
+
   updatedAt        DateTime @updatedAt
 }
+
