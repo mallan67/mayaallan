@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { generateSignedUrl } from "@/lib/s3"
 
 /**
  * DOWNLOAD ROUTE — atomic conditional increment via updateMany
