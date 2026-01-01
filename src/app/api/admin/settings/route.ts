@@ -25,15 +25,15 @@ export async function PATCH(request: Request) {
 
   try {
     const data = await request.json()
-    
+
     const existing = await prisma.siteSettings.findFirst()
-    
+
     let settings
     if (existing) {
       settings = await prisma.siteSettings.update({
         where: { id: existing.id },
         data: {
-          siteName: data.siteName || null,
+          siteName: data.siteName || "Maya Allan",
           tagline: data.tagline || null,
           contactEmail: data.contactEmail || null,
           socialTwitter: data.socialTwitter || null,
@@ -41,12 +41,17 @@ export async function PATCH(request: Request) {
           socialFacebook: data.socialFacebook || null,
           socialYoutube: data.socialYoutube || null,
           socialTiktok: data.socialTiktok || null,
+          footerText: data.footerText || null,
+          authorName: data.authorName || null,
+          authorBio: data.authorBio || null,
+          authorPhotoUrl: data.authorPhotoUrl || null,
+          defaultOgImageUrl: data.defaultOgImageUrl || null,
         },
       })
     } else {
       settings = await prisma.siteSettings.create({
         data: {
-          siteName: data.siteName || null,
+          siteName: data.siteName || "Maya Allan",
           tagline: data.tagline || null,
           contactEmail: data.contactEmail || null,
           socialTwitter: data.socialTwitter || null,
@@ -54,6 +59,11 @@ export async function PATCH(request: Request) {
           socialFacebook: data.socialFacebook || null,
           socialYoutube: data.socialYoutube || null,
           socialTiktok: data.socialTiktok || null,
+          footerText: data.footerText || null,
+          authorName: data.authorName || null,
+          authorBio: data.authorBio || null,
+          authorPhotoUrl: data.authorPhotoUrl || null,
+          defaultOgImageUrl: data.defaultOgImageUrl || null,
         },
       })
     }

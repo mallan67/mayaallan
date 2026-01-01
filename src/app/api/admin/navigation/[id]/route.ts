@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { deleteNavigationItem } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -11,14 +11,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   try {
     const { id } = await params
     const navId = Number.parseInt(id)
-    const success = await deleteNavigationItem(navId)
 
-    if (!success) {
-      return NextResponse.json({ error: "Navigation item not found" }, { status: 404 })
-    }
+    await prisma.navigationItem.delete({
+      where: { id: navId },
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error("Failed to delete navigation item:", error)
     return NextResponse.json({ error: "Failed to delete navigation item" }, { status: 500 })
   }
 }

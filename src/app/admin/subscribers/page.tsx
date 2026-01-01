@@ -1,7 +1,11 @@
-import { getAllEmailSubscribers } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
+
+export const dynamic = "force-dynamic"
 
 export default async function AdminSubscribersPage() {
-  const subscribers = await getAllEmailSubscribers()
+  const subscribers = await prisma.emailSubscriber.findMany({
+    orderBy: { createdAt: "desc" },
+  })
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -11,14 +15,12 @@ export default async function AdminSubscribersPage() {
           <p className="text-sm text-slate-600 mt-1">{subscribers.length} total subscribers</p>
         </div>
         {subscribers.length > 0 && (
-          <form action="/api/admin/crm/subscribers" method="POST">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition text-sm"
-            >
-              Export CSV
-            </button>
-          </form>
+          <a
+            href="/api/admin/crm/subscribers"
+            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80 transition text-sm inline-block"
+          >
+            Export CSV
+          </a>
         )}
       </div>
 

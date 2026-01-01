@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { ShareButtons } from "@/components/share-buttons"
+import { PaymentButtons } from "@/components/PaymentButtons"
 import type { Metadata } from "next"
 
 interface BookPageProps {
@@ -219,33 +220,7 @@ export default async function BookPage({ params }: BookPageProps) {
               {/* DIRECT SALE SECTION */}
               {/* ---------------------------------------- */}
               {showDirectSale && (
-                <div className="p-4 border border-green-200 rounded-xl bg-green-50">
-                  <h3 className="text-sm font-semibold text-green-800 mb-3">
-                    💳 Buy Direct from Author
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {hasStripeLink && (
-                      <a
-                        href={book.stripePaymentLink!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block px-5 py-2.5 text-sm font-semibold text-center bg-black text-white rounded-full hover:bg-slate-800 transition"
-                      >
-                        Buy Now - Card
-                      </a>
-                    )}
-                    {hasPayPalLink && (
-                      <a
-                        href={book.paypalPaymentLink!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block px-5 py-2.5 text-sm font-semibold text-center bg-blue-600 text-white rounded-full hover:bg-blue-700 transition"
-                      >
-                        Buy Now - PayPal
-                      </a>
-                    )}
-                  </div>
-                </div>
+                <PaymentButtons bookId={book.id} hasStripe={!!hasStripeLink} hasPayPal={!!hasPayPalLink} />
               )}
 
               {/* ---------------------------------------- */}

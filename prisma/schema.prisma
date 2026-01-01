@@ -180,5 +180,9 @@ model SiteSettings {
   socialYoutube    String?
   socialTiktok     String?
   footerText       String?
+  authorName       String?
+  authorBio        String?
+  authorPhotoUrl   String?
+  defaultOgImageUrl String?
   updatedAt        DateTime @updatedAt
 }

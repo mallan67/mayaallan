@@ -1,6 +1,25 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { getAllNavigationItems, updateNavigationItem, createNavigationItem, type NavigationItem } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
+
+type NavigationItemUI = {
+  id: number
+  label: string
+  href: string
+  order: number
+  isVisible: boolean
+}
+
+// Map Prisma fields to UI fields
+function mapToUI(item: any): NavigationItemUI {
+  return {
+    id: item.id,
+    label: item.label,
+    href: item.href,
+    order: item.sortOrder,
+    isVisible: item.isActive,
+  }
+}
 
 export async function GET() {
   const session = await getSession()
@@ -8,8 +27,11 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const items = await getAllNavigationItems()
-  return NextResponse.json(items)
+  const items = await prisma.navigationItem.findMany({
+    orderBy: { sortOrder: "asc" },
+  })
+
+  return NextResponse.json(items.map(mapToUI))
 }
 
 export async function POST(request: Request) {
@@ -26,15 +48,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Label and href are required" }, { status: 400 })
     }
 
-    const newItem = await createNavigationItem({
-      label,
-      href,
-      order: order || 999,
-      isVisible: isVisible !== false,
+    const newItem = await prisma.navigationItem.create({
+      data: {
+        label,
+        href,
+        sortOrder: order || 999,
+        isActive: isVisible !== false,
+      },
     })
 
-    return NextResponse.json(newItem)
+    return NextResponse.json(mapToUI(newItem))
   } catch (error) {
+    console.error("Failed to create navigation item:", error)
     return NextResponse.json({ error: "Failed to create navigation item" }, { status: 500 })
   }
 }
@@ -47,7 +72,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json()
-    const { items } = body as { items: NavigationItem[] }
+    const { items } = body as { items: NavigationItemUI[] }
 
     if (!Array.isArray(items)) {
       return NextResponse.json({ error: "Items array required" }, { status: 400 })
@@ -56,17 +81,21 @@ export async function PATCH(request: Request) {
     // Update all items
     const updated = await Promise.all(
       items.map((item) =>
-        updateNavigationItem(item.id, {
-          label: item.label,
-          href: item.href,
-          order: item.order,
-          isVisible: item.isVisible,
+        prisma.navigationItem.update({
+          where: { id: item.id },
+          data: {
+            label: item.label,
+            href: item.href,
+            sortOrder: item.order,
+            isActive: item.isVisible,
+          },
         }),
       ),
     )
 
-    return NextResponse.json(updated.filter(Boolean))
+    return NextResponse.json(updated.map(mapToUI))
   } catch (error) {
+    console.error("Failed to update navigation items:", error)
     return NextResponse.json({ error: "Failed to update navigation items" }, { status: 500 })
   }
 }

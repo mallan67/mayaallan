@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
+import { NewsletterSection } from "@/components/NewsletterSection"
 
 export const dynamic = "force-dynamic"
 
@@ -132,31 +133,9 @@ export default async function HomePage() {
       </section>
 
       {/* ============================================ */}
-      {/* NEWSLETTER SECTION (left as-is) */}
+      {/* NEWSLETTER SECTION */}
       {/* ============================================ */}
-      <section className="py-16">
-        <div className="max-w-xl mx-auto px-4 text-center">
-          <h2 className="font-serif text-2xl font-semibold mb-4">
-            Stay Connected
-          </h2>
-          <p className="text-slate-600 mb-6">
-            Join the newsletter for updates on new releases, events, and insights.
-          </p>
-          <form className="flex flex-col sm:flex-row gap-3 justify-center">
-            <input
-              type="email"
-              placeholder="Your email"
-              className="px-4 py-3 border border-slate-300 rounded-full text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-slate-400"
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 text-sm font-semibold text-white bg-black rounded-full hover:bg-slate-800 transition"
-            >
-              Subscribe
-            </button>
-          </form>
-        </div>
-      </section>
+      <NewsletterSection />
     </div>
   )
 }

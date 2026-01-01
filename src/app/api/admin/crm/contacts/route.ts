@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getAllContactSubmissions } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
 
 export async function GET(request: Request) {
   if (!(await isAuthenticated())) {
@@ -11,22 +11,23 @@ export async function GET(request: Request) {
   const page = parseInt(searchParams.get("page") || "1")
   const limit = parseInt(searchParams.get("limit") || "20")
 
-  const contacts = await getAllContactSubmissions()
-  
-  // Simple pagination
-  const start = (page - 1) * limit
-  const paginatedContacts = contacts.slice(start, start + limit)
-  
+  const [contacts, total] = await Promise.all([
+    prisma.contactSubmission.findMany({
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.contactSubmission.count(),
+  ])
+
   return NextResponse.json({
-    data: paginatedContacts,
-    total: contacts.length,
+    data: contacts,
+    total,
     page,
     limit,
   })
 }
 
-// Note: updateContact and deleteContact not available in mock-data
-// These endpoints return not implemented for now
 export async function PATCH() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -34,9 +35,26 @@ export async function PATCH() {
   return NextResponse.json({ error: "Not implemented" }, { status: 501 })
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
-  return NextResponse.json({ error: "Not implemented" }, { status: 501 })
+
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing id parameter" }, { status: 400 })
+    }
+
+    await prisma.contactSubmission.delete({
+      where: { id: parseInt(id) },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Delete contact error:", error)
+    return NextResponse.json({ error: "Failed to delete contact" }, { status: 500 })
+  }
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createEmailSubscriber } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const subscribeSchema = z.object({
@@ -12,13 +12,22 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { email, source } = subscribeSchema.parse(body)
 
-    await createEmailSubscriber(email, source)
+    // Use upsert to avoid duplicate email errors
+    await prisma.emailSubscriber.upsert({
+      where: { email },
+      update: {},
+      create: {
+        email,
+        source: source || null,
+      },
+    })
 
     return NextResponse.json({ success: true, message: "Subscribed successfully" })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid email address" }, { status: 400 })
     }
+    console.error("Subscription error:", error)
     return NextResponse.json({ error: "Subscription failed" }, { status: 500 })
   }
 }

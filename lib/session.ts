@@ -6,8 +6,13 @@ export type AdminSession = IronSession<{
   isLoggedIn?: boolean
 }>
 
+const sessionSecret = process.env.SESSION_SECRET
+if (!sessionSecret) {
+  throw new Error("SESSION_SECRET environment variable is required")
+}
+
 export const sessionOptions = {
-  password: process.env.SESSION_SECRET || "complex_password_at_least_32_characters_long_for_demo",
+  password: sessionSecret,
   cookieName: "mayaallan_admin_session",
   cookieOptions: {
     secure: process.env.NODE_ENV === "production",

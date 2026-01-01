@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { unsealData } from "iron-session"
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Skip login page and API routes
@@ -9,13 +10,41 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check for admin session cookie
-  const sessionCookie = request.cookies.get("mayaallan_admin_session")
+  // Protect admin routes
+  if (pathname.startsWith("/admin")) {
+    const sessionCookie = request.cookies.get("mayaallan_admin_session")
 
-  // If no session and trying to access admin, redirect to login
-  if (pathname.startsWith("/admin") && !sessionCookie) {
-    const loginUrl = new URL("/admin/login", request.url)
-    return NextResponse.redirect(loginUrl)
+    // Require SESSION_SECRET
+    const sessionSecret = process.env.SESSION_SECRET
+    if (!sessionSecret) {
+      console.error("SESSION_SECRET environment variable is not set")
+      const loginUrl = new URL("/admin/login", request.url)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // Verify session exists and is valid
+    if (!sessionCookie?.value) {
+      const loginUrl = new URL("/admin/login", request.url)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    try {
+      // Decrypt and verify the session
+      const session = await unsealData(sessionCookie.value, {
+        password: sessionSecret,
+      }) as { adminId?: string; isLoggedIn?: boolean }
+
+      // Verify the session has valid authentication
+      if (!session.isLoggedIn || !session.adminId) {
+        const loginUrl = new URL("/admin/login", request.url)
+        return NextResponse.redirect(loginUrl)
+      }
+    } catch (error) {
+      // Invalid or expired session
+      console.error("Session verification failed:", error)
+      const loginUrl = new URL("/admin/login", request.url)
+      return NextResponse.redirect(loginUrl)
+    }
   }
 
   return NextResponse.next()

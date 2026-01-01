@@ -1,21 +1,24 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getAllEmailSubscribers } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
 
 export async function GET(request: Request) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const subscribers = await getAllEmailSubscribers()
+  const subscribers = await prisma.emailSubscriber.findMany({
+    orderBy: { createdAt: "desc" },
+  })
 
-  const headers = ["email", "status"]
-  const rows = subscribers.map((s: any) => [
+  const headers = ["email", "source", "created_at"]
+  const rows = subscribers.map((s) => [
     s.email,
-    s.status || "active",
+    s.source || "",
+    s.createdAt.toISOString(),
   ])
 
-  const csv = [headers.join(","), ...rows.map((r: any) => r.join(","))].join("\n")
+  const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n")
 
   return new NextResponse(csv, {
     status: 200,

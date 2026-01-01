@@ -1,7 +1,11 @@
-import { getAllContactSubmissions } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
+
+export const dynamic = "force-dynamic"
 
 export default async function AdminContactPage() {
-  const submissions = await getAllContactSubmissions()
+  const submissions = await prisma.contactSubmission.findMany({
+    orderBy: { createdAt: "desc" },
+  })
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
