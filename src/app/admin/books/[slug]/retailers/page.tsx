@@ -4,27 +4,41 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import type { Book, Retailer, BookRetailerLink } from "@/lib/mock-data"
 
-export default function AdminBookRetailersPage({ params }: { params: Promise<{ id: string }> }) {
+export default function AdminBookRetailersPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()
   const [book, setBook] = useState<Book | null>(null)
   const [retailers, setRetailers] = useState<Retailer[]>([])
   const [bookRetailerLinks, setBookRetailerLinks] = useState<BookRetailerLink[]>([])
   const [loading, setLoading] = useState(true)
-  const [bookId, setBookId] = useState<string>("")
+  const [bookId, setBookId] = useState<number | null>(null)
 
   useEffect(() => {
-    params.then(({ id }) => {
-      setBookId(id)
-      Promise.all([
-        fetch(`/api/admin/books/${id}`).then((r) => r.json()),
-        fetch("/api/admin/retailers").then((r) => r.json()),
-        fetch(`/api/admin/books/${id}/retailers`).then((r) => r.json()),
-      ]).then(([bookData, retailersData, linksData]) => {
-        setBook(bookData)
-        setRetailers(retailersData)
-        setBookRetailerLinks(linksData)
-        setLoading(false)
-      })
+    params.then(({ slug }) => {
+      // First fetch the book by slug to get its numeric ID
+      fetch(`/api/admin/books/by-slug/${slug}`)
+        .then((r) => {
+          if (!r.ok) throw new Error("Book not found")
+          return r.json()
+        })
+        .then((bookData) => {
+          setBook(bookData)
+          setBookId(bookData.id)
+
+          // Now fetch retailers and links using the numeric ID
+          return Promise.all([
+            fetch("/api/admin/retailers").then((r) => r.json()),
+            fetch(`/api/admin/books/${bookData.id}/retailers`).then((r) => r.json()),
+          ])
+        })
+        .then(([retailersData, linksData]) => {
+          setRetailers(retailersData)
+          setBookRetailerLinks(linksData)
+          setLoading(false)
+        })
+        .catch((err) => {
+          console.error("Error loading book retailers:", err)
+          setLoading(false)
+        })
     })
   }, [params])
 

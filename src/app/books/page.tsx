@@ -11,14 +11,14 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 /**
- * BOOKS LISTING LOGIC (Issue #1 Fix):
- * 
- * The /books page should filter by BOTH isVisible AND isPublished.
- * 
- * - isVisible = true means "show this book on the /books listing"
- * - isPublished = true means "book is live/can be viewed"
- * 
- * This is DIFFERENT from homepage which only uses isFeatured + isPublished.
+ * BOOKS LISTING LOGIC:
+ *
+ * The /books page filters by BOTH isVisible AND isPublished.
+ *
+ * - isVisible = true: Show in /books listing AND allow homepage featuring
+ * - isPublished = true: Book is live and can be viewed
+ *
+ * Homepage uses: isFeatured + isPublished + isVisible (same isVisible flag)
  */
 export default async function BooksPage() {
   const books = await prisma.book.findMany({

@@ -83,6 +83,7 @@ export async function PUT(
     if (body.tagsCsv !== undefined) updateData.tagsCsv = body.tagsCsv || null
     if (body.blurb !== undefined) updateData.blurb = body.blurb || null
     if (body.coverUrl !== undefined) updateData.coverUrl = body.coverUrl || null
+    if (body.ebookFileUrl !== undefined) updateData.ebookFileUrl = body.ebookFileUrl || null
     if (body.seoTitle !== undefined) updateData.seoTitle = body.seoTitle || null
     if (body.seoDescription !== undefined) updateData.seoDescription = body.seoDescription || null
 

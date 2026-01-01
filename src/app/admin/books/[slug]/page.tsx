@@ -33,6 +33,7 @@ interface Book {
   tagsCsv: string | null
   blurb: string | null
   coverUrl: string | null
+  ebookFileUrl: string | null
   hasEbook: boolean
   hasPaperback: boolean
   hasHardcover: boolean
@@ -59,6 +60,7 @@ const defaultBook: Book = {
   tagsCsv: null,
   blurb: null,
   coverUrl: null,
+  ebookFileUrl: null,
   hasEbook: true,
   hasPaperback: false,
   hasHardcover: false,
@@ -377,6 +379,24 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
           </div>
         </section>
 
+        {/* EBOOK FILE */}
+        <section className="border border-slate-200 rounded-xl p-6 bg-white">
+          <h2 className="font-semibold text-lg mb-4">Ebook File</h2>
+          <div>
+            <label className="block text-sm font-medium mb-1">Ebook File URL</label>
+            <input
+              type="url"
+              value={book.ebookFileUrl || ""}
+              onChange={(e) => setBook({ ...book, ebookFileUrl: e.target.value || null })}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2"
+              placeholder="https://..."
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              PDF/EPUB file for direct sale fulfillment. Customers receive secure download link after payment.
+            </p>
+          </div>
+        </section>
+
         {/* PUBLISHING STATUS */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Publishing Status</h2>
@@ -401,8 +421,8 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
                 className="w-5 h-5"
               />
               <div>
-                <span className="font-medium">📚 Show on Books Page</span>
-                <p className="text-xs text-slate-500">Display in /books listing (separate from homepage)</p>
+                <span className="font-medium">👁️ Visible in Listings</span>
+                <p className="text-xs text-slate-500">Show in /books page AND enable homepage featuring (also requires Published + Featured checkboxes)</p>
               </div>
             </label>
             <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
@@ -414,7 +434,7 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
               />
               <div>
                 <span className="font-medium">⭐ Featured on Homepage</span>
-                <p className="text-xs text-slate-500">Show in homepage hero (requires Published)</p>
+                <p className="text-xs text-slate-500">Show in homepage hero (requires Published + Visible in Listings)</p>
               </div>
             </label>
             <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
@@ -539,6 +559,13 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
             </label>
             {book.allowDirectSale && (
               <div className="mt-4 ml-8 space-y-3">
+                {!book.stripePaymentLink && !book.paypalPaymentLink && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-800">
+                      ⚠️ <strong>Required:</strong> Add at least one payment link below for "Buy Now" buttons to appear on the book page.
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium mb-1">Stripe Payment Link</label>
                   <input

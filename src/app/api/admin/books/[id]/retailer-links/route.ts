@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server"
+import { isAuthenticated } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 
 /**
  * RETAILER LINKS API (Issue #4 Fix):
- * 
+ *
  * This endpoint:
  * 1. Accepts free-text retailer names from the admin form
  * 2. Auto-creates Retailer records if they don't exist
  * 3. Creates BookRetailerLink records with proper foreign keys
  * 4. Handles the unique constraint (bookId, retailerId, formatType)
  * 5. Returns properly formatted data for the frontend
- * 
+ *
  * PUT: Replace all links for a book
  * GET: Get all links for a book
  */
@@ -27,6 +28,11 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authed = await isAuthenticated()
+  if (!authed) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const { id } = await params
   const bookId = parseInt(id)
 
@@ -151,6 +157,11 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authed = await isAuthenticated()
+  if (!authed) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const { id } = await params
   const bookId = parseInt(id)
 
