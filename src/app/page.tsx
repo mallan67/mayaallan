@@ -14,20 +14,20 @@ export const metadata: Metadata = {
  * HOMEPAGE LOGIC (strict):
  *
  * Featured book selection:
- *  - Only display a book when `isFeatured === true` AND `isPublished === true`.
- *  - Do NOT check `isVisible`. This ensures "Show on Books Page" (isVisible)
- *    ONLY affects the /books listing and not the homepage.
+ *  - Only display a book when `isFeatured === true` AND `isPublished === true` AND `isVisible === true`.
+ *  - The `isVisible` flag controls visibility on BOTH the books page and homepage.
  *
  * IMPORTANT:
  *  - If no book is featured, render nothing (blank hero) — per owner's requirement.
  *
  */
 export default async function HomePage() {
-  // Query: Get featured + published book (do NOT require isVisible)
+  // Query: Get featured + published + visible book
   const featuredBook = await prisma.book.findFirst({
     where: {
       isFeatured: true,
       isPublished: true,
+      isVisible: true,
     },
     orderBy: { createdAt: "desc" },
   })

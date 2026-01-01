@@ -42,8 +42,8 @@ if (!webhookSecret) {
 
 // Use the Stripe client matching your installed types
 const stripe = new Stripe(stripeSecretKey || "", {
-  // Upgraded API version (matches installed @stripe types)
-  apiVersion: "2025-12-15.clover",
+  // Standard Stripe API version (using type assertion for stable version)
+  apiVersion: "2024-12-18.acacia" as any,
 })
 
 export async function POST(request: Request) {
