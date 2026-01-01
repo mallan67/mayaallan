@@ -51,36 +51,58 @@ export default function AdminBooksPage() {
     }
   }
 
-  const handleBulkAction = async (action: "publish" | "unpublish" | "delete") => {
+  // Bulk action handler — split publish vs visibility
+  const handleBulkAction = async (action: "publish" | "unpublish" | "delete" | "show" | "hide") => {
     if (action === "delete" && !confirm(`Delete ${selectedIds.length} books?`)) return
+    if (selectedIds.length === 0) return
 
-    for (const id of selectedIds) {
-      if (action === "delete") {
-        await fetch(`/api/admin/books/${id}`, { method: "DELETE" })
-      } else {
-        await fetch(`/api/admin/books/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            isPublished: action === "publish",
-            isVisible: action === "publish",
-          }),
-        })
+    try {
+      for (const id of selectedIds) {
+        if (action === "delete") {
+          await fetch(`/api/admin/books/${id}`, { method: "DELETE" })
+        } else if (action === "publish" || action === "unpublish") {
+          await fetch(`/api/admin/books/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              // Publish/unpublish should only change isPublished.
+              isPublished: action === "publish",
+            }),
+          })
+        } else if (action === "show" || action === "hide") {
+          await fetch(`/api/admin/books/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              // Show/hide should only change isVisible.
+              isVisible: action === "show",
+            }),
+          })
+        }
       }
-    }
 
-    if (action === "delete") {
-      setBooks(books.filter((b) => !selectedIds.includes(b.id)))
-    } else {
-      setBooks(
-        books.map((b) =>
-          selectedIds.includes(b.id)
-            ? { ...b, isPublished: action === "publish", isVisible: action === "publish" }
-            : b,
-        ),
-      )
+      // Update local UI state
+      if (action === "delete") {
+        setBooks(books.filter((b) => !selectedIds.includes(b.id)))
+      } else if (action === "publish" || action === "unpublish") {
+        setBooks(
+          books.map((b) =>
+            selectedIds.includes(b.id) ? { ...b, isPublished: action === "publish" } : b
+          )
+        )
+      } else if (action === "show" || action === "hide") {
+        setBooks(
+          books.map((b) =>
+            selectedIds.includes(b.id) ? { ...b, isVisible: action === "show" } : b
+          )
+        )
+      }
+    } catch (err) {
+      console.error("Bulk action error:", err)
+      alert("Bulk action failed — check console for details.")
+    } finally {
+      setSelectedIds([])
     }
-    setSelectedIds([])
   }
 
   const handleDelete = async (id: number) => {
@@ -112,15 +134,39 @@ export default function AdminBooksPage() {
       {selectedIds.length > 0 && (
         <div className="bg-slate-100 p-3 rounded-lg mb-4 flex items-center gap-4">
           <span className="text-sm font-medium">{selectedIds.length} selected</span>
-          <button onClick={() => handleBulkAction("publish")} className="text-sm text-green-600 hover:underline">
+
+          {/* Publish / Unpublish */}
+          <button
+            onClick={() => handleBulkAction("publish")}
+            className="text-sm text-green-600 hover:underline"
+          >
             Publish All
           </button>
-          <button onClick={() => handleBulkAction("unpublish")} className="text-sm text-yellow-600 hover:underline">
+          <button
+            onClick={() => handleBulkAction("unpublish")}
+            className="text-sm text-yellow-600 hover:underline"
+          >
             Unpublish All
           </button>
+
+          {/* Show / Hide visibility on Books listing */}
+          <button
+            onClick={() => handleBulkAction("show")}
+            className="text-sm text-blue-600 hover:underline"
+          >
+            Show All (Books page)
+          </button>
+          <button
+            onClick={() => handleBulkAction("hide")}
+            className="text-sm text-slate-600 hover:underline"
+          >
+            Hide All (Books page)
+          </button>
+
           <button onClick={() => handleBulkAction("delete")} className="text-sm text-red-600 hover:underline">
             Delete All
           </button>
+
           <button onClick={() => setSelectedIds([])} className="text-sm text-slate-600 hover:underline ml-auto">
             Clear
           </button>
