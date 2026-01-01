@@ -40,11 +40,16 @@ if (!webhookSecret) {
   console.error("Missing STRIPE_WEBHOOK_SECRET environment variable")
 }
 
-// Use the Stripe client matching your installed types
-const stripe = new Stripe(stripeSecretKey || "", {
-  // Standard Stripe API version (using type assertion for stable version)
-  apiVersion: "2024-12-18.acacia" as any,
-})
+// Helper function to get Stripe client (lazy initialization)
+function getStripeClient(): Stripe {
+  if (!stripeSecretKey) {
+    throw new Error("STRIPE_SECRET_KEY is not configured")
+  }
+  return new Stripe(stripeSecretKey, {
+    // Standard Stripe API version (using type assertion for stable version)
+    apiVersion: "2024-12-18.acacia" as any,
+  })
+}
 
 export async function POST(request: Request) {
   // Ensure webhook secret is configured
@@ -52,6 +57,14 @@ export async function POST(request: Request) {
     console.error("Stripe webhook secret is not configured")
     return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 })
   }
+
+  // Ensure Stripe key is configured
+  if (!stripeSecretKey) {
+    console.error("Stripe secret key is not configured")
+    return NextResponse.json({ error: "Stripe secret key not configured" }, { status: 500 })
+  }
+
+  const stripe = getStripeClient()
 
   const rawBody = await request.text()
   const headersList = await headers()
