@@ -8,3 +8,4 @@ dist/
 *.bak
 .vercel
 .env*.local
+tsconfig.tsbuildinfo
