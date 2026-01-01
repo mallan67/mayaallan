@@ -5,8 +5,6 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "drizzle:generate": "drizzle-kit generate",
-    "drizzle:migrate": "drizzle-kit migrate",
     "lint": "next lint",
     "start": "next start",
     "postinstall": "prisma generate"
@@ -64,7 +62,6 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "^1.1.1",
-    "drizzle-orm": "^0.44.0",
     "embla-carousel-react": "^8.6.0",
     "expo-sqlite": "latest",
     "gel": "latest",
@@ -99,7 +96,6 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.20",
-    "drizzle-kit": "^0.31.0",
     "postcss": "^8.4.49",
     "prisma": "5.22.0",
     "tailwindcss": "^3.4.17",
