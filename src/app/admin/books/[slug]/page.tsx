@@ -6,14 +6,11 @@ import Link from "next/link"
 import Image from "next/image"
 
 /**
- * ADMIN BOOK FORM (Issues #3A & #4 Fix):
- * 
- * This form:
- * 1. Saves ALL book fields properly (Issue #3A)
- * 2. Handles retailer links with free-text names (Issue #4)
- * 3. Calls the correct API endpoints
- * 4. Shows clear error messages if save fails
- * 5. Does NOT swallow errors
+ * ADMIN BOOK FORM
+ *
+ * Fixes included:
+ * - Adds missing required field: backCoverUrl (build error fix)
+ * - Correct params typing/usage for Next.js client component (runtime correctness)
  */
 
 interface RetailerLink {
@@ -61,6 +58,7 @@ const defaultBook: Book = {
   tagsCsv: null,
   blurb: null,
   coverUrl: null,
+  backCoverUrl: null, // ✅ REQUIRED (fixes build error)
   ebookFileUrl: null,
   hasEbook: true,
   hasPaperback: false,
@@ -87,7 +85,7 @@ const FORMAT_OPTIONS = [
   { value: "audiobook", label: "Audiobook" },
 ]
 
-export default function AdminBookForm({ params }: { params: Promise<{ slug: string }> }) {
+export default function AdminBookForm({ params }: { params: { slug: string } }) {
   const router = useRouter()
   const [slug, setSlug] = useState<string | null>(null)
   const [isNew, setIsNew] = useState(false)
@@ -97,18 +95,20 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
-  // Resolve params
+  // ✅ Resolve params properly (client params are NOT a Promise)
   useEffect(() => {
-    params.then((p) => {
-      setSlug(p.slug)
-      setIsNew(p.slug === "new")
-    })
-  }, [params])
+    const s = params?.slug
+    setSlug(s)
+    setIsNew(s === "new")
+  }, [params?.slug])
 
   // Fetch book data
   useEffect(() => {
     if (slug === null) return
+
     if (slug === "new") {
+      setBook(defaultBook)
+      setRetailerLinks([])
       setLoading(false)
       return
     }
@@ -120,7 +120,13 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
           throw new Error("Book not found")
         }
         const data = await res.json()
-        setBook(data)
+
+        // Ensure required field exists even if older rows are missing it
+        setBook({
+          ...defaultBook,
+          ...data,
+          backCoverUrl: data.backCoverUrl ?? null,
+        })
 
         // Convert retailers to local format
         if (data.retailers && Array.isArray(data.retailers)) {
@@ -132,6 +138,8 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
               url: r.url || "",
             }))
           )
+        } else {
+          setRetailerLinks([])
         }
       } catch (err: any) {
         setMessage({ type: "error", text: err.message || "Failed to load book" })
@@ -159,10 +167,7 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
 
   // Retailer link handlers
   const addRetailerLink = () => {
-    setRetailerLinks([
-      ...retailerLinks,
-      { formatType: "ebook", retailerName: "", url: "" },
-    ])
+    setRetailerLinks([...retailerLinks, { formatType: "ebook", retailerName: "", url: "" }])
   }
 
   const updateRetailerLink = (index: number, field: keyof RetailerLink, value: string) => {
@@ -188,9 +193,6 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
     setMessage(null)
 
     try {
-      // ============================================
-      // STEP 1: Save the book
-      // ============================================
       const bookPayload = {
         ...book,
         ebookPrice: book.ebookPrice !== null ? Number(book.ebookPrice) : null,
@@ -210,7 +212,7 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
       })
 
       if (!bookRes.ok) {
-        const error = await bookRes.json()
+        const error = await bookRes.json().catch(() => ({}))
         throw new Error(error.error || `Failed to save book (${bookRes.status})`)
       }
 
@@ -219,9 +221,7 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
 
       console.log("Book saved:", savedBook)
 
-      // ============================================
-      // STEP 2: Save retailer links (if enabled)
-      // ============================================
+      // Save retailer links (if enabled)
       if (book.allowRetailerSale && bookId) {
         const validLinks = retailerLinks.filter(
           (link) => !link.toDelete && link.retailerName && link.retailerName.trim() !== ""
@@ -236,12 +236,11 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
         })
 
         if (!linksRes.ok) {
-          const error = await linksRes.json()
-          // Don't throw - book was saved. Just warn.
+          const error = await linksRes.json().catch(() => ({}))
           console.error("Failed to save retailer links:", error)
-          setMessage({ 
-            type: "error", 
-            text: `Book saved, but retailer links failed: ${error.error || "Unknown error"}` 
+          setMessage({
+            type: "error",
+            text: `Book saved, but retailer links failed: ${error.error || "Unknown error"}`,
           })
           setSaving(false)
           return
@@ -251,16 +250,17 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
         console.log("Retailer links saved:", linksResult)
       }
 
-      // ============================================
-      // SUCCESS
-      // ============================================
-      setBook(savedBook)
+      setBook({
+        ...defaultBook,
+        ...savedBook,
+        backCoverUrl: savedBook.backCoverUrl ?? null,
+      })
+
       setMessage({ type: "success", text: isNew ? "Book created!" : "Book saved successfully!" })
 
       if (isNew) {
         router.push(`/admin/books/${savedBook.slug}`)
       }
-
     } catch (err: any) {
       console.error("Save error:", err)
       setMessage({ type: "error", text: err.message || "Failed to save" })
@@ -269,7 +269,6 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
     }
   }
 
-  // Loading state
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-10">
@@ -278,12 +277,14 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
     )
   }
 
-  // Active retailer links (not marked for deletion)
   const activeLinks = retailerLinks.filter((l) => !l.toDelete)
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
-      <Link href="/admin/books" className="text-sm text-slate-500 hover:text-slate-700 mb-4 inline-block">
+      <Link
+        href="/admin/books"
+        className="text-sm text-slate-500 hover:text-slate-700 mb-4 inline-block"
+      >
         ← Back to Books
       </Link>
 
@@ -291,7 +292,6 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
         {isNew ? "Add New Book" : `Edit: ${book.title}`}
       </h1>
 
-      {/* Message */}
       {message && (
         <div
           className={`p-4 rounded-lg mb-6 ${
@@ -374,7 +374,13 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
             />
             {book.coverUrl && (
               <div className="mt-3">
-                <Image src={book.coverUrl} alt="Cover" width={120} height={180} className="border rounded" />
+                <Image
+                  src={book.coverUrl}
+                  alt="Cover"
+                  width={120}
+                  height={180}
+                  className="border rounded"
+                />
               </div>
             )}
           </div>
@@ -423,7 +429,9 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
               />
               <div>
                 <span className="font-medium">👁️ Visible in Listings</span>
-                <p className="text-xs text-slate-500">Show in /books page AND enable homepage featuring (also requires Published + Featured checkboxes)</p>
+                <p className="text-xs text-slate-500">
+                  Show in /books page AND enable homepage featuring (also requires Published + Featured checkboxes)
+                </p>
               </div>
             </label>
             <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
@@ -476,7 +484,9 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
                     step="0.01"
                     min="0"
                     value={book.ebookPrice ?? ""}
-                    onChange={(e) => setBook({ ...book, ebookPrice: e.target.value ? parseFloat(e.target.value) : null })}
+                    onChange={(e) =>
+                      setBook({ ...book, ebookPrice: e.target.value ? parseFloat(e.target.value) : null })
+                    }
                     className="w-32 border rounded px-3 py-2"
                     placeholder="9.99"
                   />
@@ -503,7 +513,9 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
                     step="0.01"
                     min="0"
                     value={book.paperbackPrice ?? ""}
-                    onChange={(e) => setBook({ ...book, paperbackPrice: e.target.value ? parseFloat(e.target.value) : null })}
+                    onChange={(e) =>
+                      setBook({ ...book, paperbackPrice: e.target.value ? parseFloat(e.target.value) : null })
+                    }
                     className="w-32 border rounded px-3 py-2"
                     placeholder="19.99"
                   />
@@ -530,7 +542,9 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
                     step="0.01"
                     min="0"
                     value={book.hardcoverPrice ?? ""}
-                    onChange={(e) => setBook({ ...book, hardcoverPrice: e.target.value ? parseFloat(e.target.value) : null })}
+                    onChange={(e) =>
+                      setBook({ ...book, hardcoverPrice: e.target.value ? parseFloat(e.target.value) : null })
+                    }
                     className="w-32 border rounded px-3 py-2"
                     placeholder="29.99"
                   />
@@ -563,7 +577,8 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
                 {!book.stripePaymentLink && !book.paypalPaymentLink && (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="text-xs text-amber-800">
-                      ⚠️ <strong>Required:</strong> Add at least one payment link below for "Buy Now" buttons to appear on the book page.
+                      ⚠️ <strong>Required:</strong> Add at least one payment link below for "Buy Now" buttons to appear
+                      on the book page.
                     </p>
                   </div>
                 )}
@@ -609,8 +624,7 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
             {book.allowRetailerSale && (
               <div className="mt-4">
                 <div className="space-y-3">
-                  {activeLinks.map((link, index) => {
-                    // Find actual index in full array
+                  {activeLinks.map((link) => {
                     const actualIndex = retailerLinks.findIndex((l) => l === link)
                     return (
                       <div key={actualIndex} className="p-4 border border-slate-200 rounded-lg bg-white">
@@ -623,7 +637,9 @@ export default function AdminBookForm({ params }: { params: Promise<{ slug: stri
                               className="w-full border rounded-lg px-3 py-2 text-sm"
                             >
                               {FORMAT_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
                               ))}
                             </select>
                           </div>
