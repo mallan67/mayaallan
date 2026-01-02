@@ -15,14 +15,14 @@ function toDecimalOrNull(value: unknown): number | null {
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: { slug: string } }
 ) {
   const authed = await isAuthenticated()
   if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { slug } = await params
+  const slug = params.slug
 
   try {
     const book = await prisma.book.findUnique({
@@ -47,17 +47,16 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ slug: string }> }
+  { params }: { params: { slug: string } }
 ) {
   const authed = await isAuthenticated()
   if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { slug } = await params
+  const slug = params.slug
 
   try {
-    // First find the book by slug to get its ID
     const existingBook = await prisma.book.findUnique({ where: { slug } })
     if (!existingBook) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
@@ -77,20 +76,26 @@ export async function PUT(
     if (body.coverUrl !== undefined) data.coverUrl = body.coverUrl || null
     if (body.backCoverUrl !== undefined) data.backCoverUrl = body.backCoverUrl || null
     if (body.ebookFileUrl !== undefined) data.ebookFileUrl = body.ebookFileUrl || null
+
     if (body.hasEbook !== undefined) data.hasEbook = Boolean(body.hasEbook)
     if (body.hasPaperback !== undefined) data.hasPaperback = Boolean(body.hasPaperback)
     if (body.hasHardcover !== undefined) data.hasHardcover = Boolean(body.hasHardcover)
+
     if (body.ebookPrice !== undefined) data.ebookPrice = toDecimalOrNull(body.ebookPrice)
     if (body.paperbackPrice !== undefined) data.paperbackPrice = toDecimalOrNull(body.paperbackPrice)
     if (body.hardcoverPrice !== undefined) data.hardcoverPrice = toDecimalOrNull(body.hardcoverPrice)
+
     if (body.isFeatured !== undefined) data.isFeatured = Boolean(body.isFeatured)
     if (body.isPublished !== undefined) data.isPublished = Boolean(body.isPublished)
     if (body.isVisible !== undefined) data.isVisible = Boolean(body.isVisible)
     if (body.isComingSoon !== undefined) data.isComingSoon = Boolean(body.isComingSoon)
+
     if (body.allowDirectSale !== undefined) data.allowDirectSale = Boolean(body.allowDirectSale)
     if (body.allowRetailerSale !== undefined) data.allowRetailerSale = Boolean(body.allowRetailerSale)
+
     if (body.stripePaymentLink !== undefined) data.stripePaymentLink = body.stripePaymentLink || null
     if (body.paypalPaymentLink !== undefined) data.paypalPaymentLink = body.paypalPaymentLink || null
+
     if (body.seoTitle !== undefined) data.seoTitle = body.seoTitle || null
     if (body.seoDescription !== undefined) data.seoDescription = body.seoDescription || null
     if (body.ogImageUrl !== undefined) data.ogImageUrl = body.ogImageUrl || null
