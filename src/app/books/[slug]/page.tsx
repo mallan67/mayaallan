@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { ShareButtons } from "@/components/share-buttons"
 import { PaymentButtons } from "@/components/PaymentButtons"
+import { RetailerIcon } from "@/lib/retailer-icons"
 import type { Metadata } from "next"
 
 interface BookPageProps {
@@ -11,22 +12,6 @@ interface BookPageProps {
 }
 
 export const dynamic = "force-dynamic"
-
-// Retailer icon mapping
-function getRetailerIcon(name: string): string {
-  if (!name) return "🔗"
-  const lowerName = name.toLowerCase()
-  
-  if (lowerName.includes("amazon") || lowerName.includes("kindle")) return "🛒"
-  if (lowerName.includes("lulu")) return "📕"
-  if (lowerName.includes("barnes") || lowerName.includes("noble") || lowerName.includes("b&n")) return "📚"
-  if (lowerName.includes("kobo")) return "📱"
-  if (lowerName.includes("apple")) return "🍎"
-  if (lowerName.includes("google")) return "📖"
-  if (lowerName.includes("audible")) return "🎧"
-  
-  return "🔗"
-}
 
 export async function generateMetadata({ params }: BookPageProps): Promise<Metadata> {
   const { slug } = await params
@@ -127,71 +112,90 @@ export default async function BookPage({ params }: BookPageProps) {
   // RENDER
   // ============================================
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
-      <Link href="/books" className="text-sm text-slate-500 hover:text-slate-700">
+    <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+      <Link href="/books" className="text-sm text-slate-500 hover:text-slate-700 transition-colors inline-flex items-center gap-1">
         ← Back to Books
       </Link>
 
-      <div className="grid md:grid-cols-[280px_1fr] lg:grid-cols-[320px_1fr] gap-6 md:gap-10 mt-6">
+      {/* Hero Section */}
+      <div className="mt-8 grid md:grid-cols-[340px_1fr] lg:grid-cols-[400px_1fr] gap-8 md:gap-16">
         {/* Cover Image */}
         <div>
           {book.coverUrl ? (
-            <div className="relative w-full max-w-[260px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 shadow-lg rounded-md overflow-hidden md:sticky md:top-6">
+            <div className="relative w-full max-w-[320px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 shadow-2xl rounded-xl overflow-hidden md:sticky md:top-6">
               <Image
                 src={book.coverUrl}
                 alt={book.title}
                 fill
-                className="object-contain bg-slate-50"
+                className="object-cover"
                 priority
               />
             </div>
           ) : (
-            <div className="w-full max-w-[260px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 shadow-lg rounded-md flex items-center justify-center bg-slate-50">
+            <div className="w-full max-w-[320px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 shadow-2xl rounded-xl flex items-center justify-center bg-slate-50">
               <span className="text-slate-400">No cover image</span>
             </div>
           )}
         </div>
 
         {/* Book Details */}
-        <div className="min-w-0">
-          {/* Title & Author */}
-          <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight">
-            {book.title}
-          </h1>
-          <p className="mt-2 text-slate-600">by Maya Allan</p>
+        <div className="min-w-0 space-y-6">
+          {/* Title Section */}
+          <div>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-slate-900">
+              {book.title}
+            </h1>
+            <p className="mt-3 text-lg text-slate-600">by Maya Allan</p>
 
-          {/* Subtitles */}
-          {book.subtitle1 && (
-            <p className="mt-3 text-base md:text-lg text-slate-700">{book.subtitle1}</p>
-          )}
-          {book.subtitle2 && (
-            <p className="mt-2 text-sm md:text-base text-slate-600 italic">{book.subtitle2}</p>
-          )}
+            {book.subtitle1 && (
+              <p className="mt-4 text-xl md:text-2xl text-slate-700 font-medium leading-snug">
+                {book.subtitle1}
+              </p>
+            )}
+            {book.subtitle2 && (
+              <p className="mt-3 text-base md:text-lg text-slate-600 italic">
+                {book.subtitle2}
+              </p>
+            )}
 
-          {/* Tags */}
-          {book.tagsCsv && (
-            <p className="mt-4 text-slate-600 text-sm italic">
-              {book.tagsCsv.split(",").map((t) => t.trim()).join(" • ")}
-            </p>
+            {book.tagsCsv && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {book.tagsCsv.split(",").map((tag, i) => (
+                  <span key={i} className="px-3 py-1 text-xs font-medium text-slate-600 bg-slate-100 rounded-full">
+                    {tag.trim()}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* About the Book (moved up) */}
+          {book.blurb && (
+            <div className="py-6 border-y border-slate-200">
+              <h2 className="font-serif text-xl font-semibold mb-3 text-slate-900">About This Book</h2>
+              <div className="text-base leading-relaxed text-slate-700 whitespace-pre-wrap">
+                {book.blurb}
+              </div>
+            </div>
           )}
 
           {/* ============================================ */}
           {/* FORMATS & PRICING SECTION */}
           {/* ============================================ */}
           {formats.length > 0 && !book.isComingSoon && (
-            <div className="mt-6 p-4 border border-slate-200 rounded-xl bg-slate-50">
-              <h3 className="text-sm font-semibold text-slate-600 mb-3">Available Formats</h3>
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <div className="p-6 border-2 border-slate-200 rounded-2xl bg-gradient-to-br from-slate-50 to-white">
+              <h3 className="text-base font-bold text-slate-900 mb-4">Available Formats</h3>
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
                 {formats.map((f) => (
                   <div
                     key={f.key}
-                    className="p-2 sm:p-3 border border-slate-200 rounded-lg bg-white text-center"
+                    className="p-4 border-2 border-slate-200 rounded-xl bg-white text-center hover:border-blue-300 transition-colors"
                   >
-                    <div className="text-xs sm:text-sm font-medium text-slate-700 truncate">
+                    <div className="text-sm font-semibold text-slate-700">
                       {f.label}
                     </div>
                     {f.price && Number(f.price) > 0 && (
-                      <div className="text-base sm:text-xl md:text-2xl font-bold text-slate-900 mt-0.5 sm:mt-1">
+                      <div className="text-2xl md:text-3xl font-bold text-slate-900 mt-2">
                         ${Number(f.price).toFixed(2)}
                       </div>
                     )}
@@ -203,8 +207,8 @@ export default async function BookPage({ params }: BookPageProps) {
 
           {/* Coming Soon Badge */}
           {book.isComingSoon && (
-            <div className="mt-6">
-              <span className="inline-block px-6 py-3 text-sm font-semibold bg-amber-500 text-white rounded-full">
+            <div className="flex justify-center md:justify-start">
+              <span className="inline-block px-8 py-4 text-base font-bold bg-amber-500 text-white rounded-full shadow-lg">
                 Coming Soon
               </span>
             </div>
@@ -214,42 +218,43 @@ export default async function BookPage({ params }: BookPageProps) {
           {/* PURCHASE OPTIONS - Only if NOT coming soon */}
           {/* ============================================ */}
           {!book.isComingSoon && (
-            <div className="mt-6 space-y-4">
-              
+            <div className="space-y-6">
+
               {/* ---------------------------------------- */}
               {/* DIRECT SALE SECTION */}
               {/* ---------------------------------------- */}
               {showDirectSale && (
-                <PaymentButtons bookId={book.id} hasStripe={!!hasStripeLink} hasPayPal={!!hasPayPalLink} />
+                <div className="p-6 border-2 border-blue-200 rounded-2xl bg-gradient-to-br from-blue-50 to-white">
+                  <h3 className="text-base font-bold text-slate-900 mb-4">Buy Direct</h3>
+                  <PaymentButtons bookId={book.id} hasStripe={!!hasStripeLink} hasPayPal={!!hasPayPalLink} />
+                </div>
               )}
 
               {/* ---------------------------------------- */}
               {/* RETAILER LINKS SECTION */}
               {/* ---------------------------------------- */}
               {showRetailerSale && (
-                <div className="p-4 border border-slate-200 rounded-xl bg-slate-50">
-                  <h3 className="text-sm font-semibold text-slate-600 mb-4">
-                    🏪 Buy from Retailers
+                <div className="p-6 border-2 border-slate-200 rounded-2xl bg-gradient-to-br from-slate-50 to-white">
+                  <h3 className="text-base font-bold text-slate-900 mb-4">
+                    Buy from Retailers
                   </h3>
-                  
+
                   {Object.entries(retailersByFormat).map(([formatType, links]) => (
-                    <div key={formatType} className="mb-4 last:mb-0">
-                      <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 capitalize">
+                    <div key={formatType} className="mb-5 last:mb-0">
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 capitalize">
                         {formatType}
                       </h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {links.map((link) => (
                           <a
                             key={link.id}
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-200 rounded-lg bg-white hover:bg-slate-100 hover:border-slate-300 transition text-sm font-medium"
+                            className="inline-flex items-center gap-3 px-5 py-3 border-2 border-slate-200 rounded-xl bg-white hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all text-sm font-semibold group"
                           >
-                            <span className="text-lg">
-                              {getRetailerIcon(link.retailer.name)}
-                            </span>
-                            <span className="truncate max-w-[150px]">
+                            <RetailerIcon name={link.retailer.name} className="w-5 h-5 text-slate-600 group-hover:text-slate-900 transition-colors" />
+                            <span className="truncate">
                               {link.retailer.name}
                             </span>
                           </a>
@@ -264,8 +269,8 @@ export default async function BookPage({ params }: BookPageProps) {
               {/* NO PURCHASE OPTIONS FALLBACK */}
               {/* ---------------------------------------- */}
               {!showDirectSale && !showRetailerSale && (
-                <div className="p-4 border border-amber-200 rounded-xl bg-amber-50">
-                  <p className="text-sm text-amber-800">
+                <div className="p-6 border-2 border-amber-200 rounded-2xl bg-amber-50">
+                  <p className="text-sm font-medium text-amber-900">
                     Purchase options coming soon. Check back later!
                   </p>
                 </div>
@@ -274,8 +279,8 @@ export default async function BookPage({ params }: BookPageProps) {
           )}
 
           {/* Share Buttons */}
-          <div className="mt-8 pt-6 border-t border-slate-200">
-            <p className="text-sm font-medium text-slate-600 mb-3">Share this book</p>
+          <div className="pt-6 border-t border-slate-200">
+            <p className="text-sm font-semibold text-slate-600 mb-3">Share this book</p>
             <ShareButtons
               url={bookUrl}
               title={book.title}
@@ -283,16 +288,6 @@ export default async function BookPage({ params }: BookPageProps) {
               hashtags={book.tagsCsv?.split(",").map((t) => t.trim())}
             />
           </div>
-
-          {/* About the Book */}
-          {book.blurb && (
-            <div className="mt-8 pt-6 border-t border-slate-200">
-              <h2 className="font-serif text-xl font-semibold mb-4">About This Book</h2>
-              <div className="text-sm md:text-base leading-relaxed text-slate-700 whitespace-pre-wrap">
-                {book.blurb}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
+import { RetailerIcon } from "@/lib/retailer-icons"
 
 export const metadata: Metadata = {
   title: "Books | Maya Allan",
@@ -50,13 +51,17 @@ export default async function BooksPage() {
         Books
       </h1>
 
-      <div className="grid gap-10 md:gap-12">
+      <div className="grid gap-12 md:gap-16">
         {books.map((book) => {
-          // Get unique retailer names
-          const retailerNames = book.retailers
+          // Get unique retailers with their info
+          const uniqueRetailers = book.retailers
             .filter((r) => r.url && r.url.trim() !== "" && r.retailer?.name)
-            .map((r) => r.retailer.name)
-            .filter((name, index, arr) => arr.indexOf(name) === index)
+            .reduce((acc, r) => {
+              if (!acc.find((item) => item.name === r.retailer.name)) {
+                acc.push({ name: r.retailer.name, id: r.retailer.id.toString() })
+              }
+              return acc
+            }, [] as { name: string; id: string }[])
 
           // Get lowest price
           const prices = [
@@ -78,10 +83,10 @@ export default async function BooksPage() {
             <Link
               key={book.id}
               href={`/books/${book.slug}`}
-              className="group grid md:grid-cols-[260px_1fr] gap-6 md:gap-8 p-4 md:p-0 hover:bg-slate-50 md:hover:bg-transparent rounded-xl transition"
+              className="group grid md:grid-cols-[300px_1fr] gap-8 md:gap-12 p-6 md:p-8 hover:bg-slate-50 rounded-2xl transition-all duration-300"
             >
               {/* Cover */}
-              <div className="relative w-full max-w-[220px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 rounded-lg overflow-hidden shadow-md group-hover:shadow-lg transition">
+              <div className="relative w-full max-w-[280px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 rounded-xl overflow-hidden shadow-lg group-hover:shadow-2xl group-hover:scale-105 transition-all duration-300">
                 {book.coverUrl ? (
                   <Image
                     src={book.coverUrl}
@@ -97,55 +102,78 @@ export default async function BooksPage() {
               </div>
 
               {/* Details */}
-              <div className="flex flex-col justify-center text-center md:text-left">
-                <h2 className="font-serif text-xl md:text-2xl font-semibold group-hover:text-blue-700 transition">
-                  {book.title}
-                </h2>
+              <div className="flex flex-col justify-center text-center md:text-left space-y-4">
+                <div>
+                  <h2 className="font-serif text-2xl md:text-3xl font-semibold group-hover:text-blue-700 transition-colors">
+                    {book.title}
+                  </h2>
 
-                {book.subtitle1 && (
-                  <p className="mt-2 text-slate-600 text-sm md:text-base">
-                    {book.subtitle1}
-                  </p>
-                )}
+                  {book.subtitle1 && (
+                    <p className="mt-3 text-slate-700 text-base md:text-lg font-medium">
+                      {book.subtitle1}
+                    </p>
+                  )}
 
-                {/* Formats */}
+                  {book.subtitle2 && (
+                    <p className="mt-2 text-slate-600 text-sm md:text-base italic">
+                      {book.subtitle2}
+                    </p>
+                  )}
+                </div>
+
+                {/* Formats & Price */}
                 {formats.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2 justify-center md:justify-start">
-                    {formats.map((f) => (
-                      <span
-                        key={f.label}
-                        className="inline-block px-3 py-1 text-xs md:text-sm font-medium text-blue-700 bg-blue-50 rounded-full"
-                      >
-                        {f.label}
-                        {f.price && Number(f.price) > 0 && (
-                          <span className="ml-1 font-semibold">
-                            ${Number(f.price).toFixed(2)}
-                          </span>
-                        )}
-                      </span>
-                    ))}
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                      {formats.map((f) => (
+                        <span
+                          key={f.label}
+                          className="inline-block px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg border border-blue-100"
+                        >
+                          {f.label}
+                        </span>
+                      ))}
+                    </div>
+                    {lowestPrice && (
+                      <p className="text-xl md:text-2xl font-bold text-slate-900">
+                        From ${lowestPrice.toFixed(2)}
+                      </p>
+                    )}
                   </div>
                 )}
 
-                {/* Price */}
-                {lowestPrice && (
-                  <p className="mt-3 text-lg font-semibold text-slate-900">
-                    From ${lowestPrice.toFixed(2)}
-                  </p>
-                )}
-
-                {/* Retailers */}
-                {retailerNames.length > 0 && (
-                  <p className="mt-2 text-sm text-slate-500">
-                    Available at: {retailerNames.join(", ")}
-                  </p>
+                {/* Retailers with Icons */}
+                {uniqueRetailers.length > 0 && (
+                  <div className="pt-2">
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">
+                      Available at
+                    </p>
+                    <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                      {uniqueRetailers.slice(0, 5).map((retailer) => (
+                        <div
+                          key={retailer.id}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700"
+                        >
+                          <RetailerIcon name={retailer.name} className="w-4 h-4" />
+                          <span>{retailer.name}</span>
+                        </div>
+                      ))}
+                      {uniqueRetailers.length > 5 && (
+                        <span className="inline-flex items-center px-3 py-1.5 text-sm text-slate-500">
+                          +{uniqueRetailers.length - 5} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {/* Coming Soon */}
                 {book.isComingSoon && (
-                  <span className="mt-3 inline-block px-4 py-1.5 text-xs font-semibold bg-amber-500 text-white rounded-full w-fit mx-auto md:mx-0">
-                    Coming Soon
-                  </span>
+                  <div>
+                    <span className="inline-block px-5 py-2 text-sm font-semibold bg-amber-500 text-white rounded-full shadow-sm">
+                      Coming Soon
+                    </span>
+                  </div>
                 )}
               </div>
             </Link>

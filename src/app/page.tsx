@@ -45,6 +45,19 @@ export default async function HomePage() {
     )
   }
 
+  // Extract blurb preview (first 2-3 sentences or first 200 chars)
+  const getBlurbPreview = (blurb: string | null) => {
+    if (!blurb) return null
+    const sentences = blurb.split(/[.!?]\s+/)
+    const preview = sentences.slice(0, 2).join(". ")
+    if (preview.length > 250) {
+      return preview.substring(0, 250) + "..."
+    }
+    return preview + (sentences.length > 2 ? "..." : ".")
+  }
+
+  const blurbPreview = getBlurbPreview(featuredBook.blurb)
+
   return (
     <div className="min-h-screen">
       {/* ============================================ */}
@@ -56,7 +69,7 @@ export default async function HomePage() {
           <div className="flex justify-center md:justify-end order-1 md:order-2">
             {featuredBook.coverUrl ? (
               <Link href={`/books/${featuredBook.slug}`}>
-                <div className="relative w-64 md:w-80 aspect-[2/3] shadow-2xl rounded-lg overflow-hidden hover:shadow-3xl transition-shadow">
+                <div className="relative w-72 md:w-96 aspect-[2/3] shadow-2xl rounded-lg overflow-hidden hover:shadow-3xl hover:scale-105 transition-all duration-300">
                   <Image
                     src={featuredBook.coverUrl}
                     alt={featuredBook.title}
@@ -67,41 +80,57 @@ export default async function HomePage() {
                 </div>
               </Link>
             ) : (
-              <div className="w-64 md:w-80 aspect-[2/3] bg-slate-200 rounded-lg flex items-center justify-center">
+              <div className="w-72 md:w-96 aspect-[2/3] bg-slate-200 rounded-lg flex items-center justify-center">
                 <span className="text-slate-400">No cover</span>
               </div>
             )}
           </div>
 
           {/* Book Info */}
-          <div className="order-2 md:order-1 text-center md:text-left">
-            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-3">
+          <div className="order-2 md:order-1 text-center md:text-left space-y-4">
+            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">
               {featuredBook.isFeatured ? "Featured Book" : "Latest Book"}
               {featuredBook.isComingSoon && " • Coming Soon"}
             </p>
+
             <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight">
               {featuredBook.title}
             </h1>
+
             {featuredBook.subtitle1 && (
-              <p className="mt-4 text-lg md:text-xl text-slate-600">
+              <p className="text-lg md:text-xl text-slate-700 font-medium">
                 {featuredBook.subtitle1}
               </p>
             )}
+
+            {featuredBook.subtitle2 && (
+              <p className="text-base md:text-lg text-slate-600 italic">
+                {featuredBook.subtitle2}
+              </p>
+            )}
+
+            {blurbPreview && (
+              <p className="text-sm md:text-base text-slate-600 leading-relaxed">
+                {blurbPreview}
+              </p>
+            )}
+
             {featuredBook.tagsCsv && (
-              <p className="mt-4 text-sm text-slate-500 italic">
+              <p className="text-sm text-slate-500 italic">
                 {featuredBook.tagsCsv.split(",").map((t) => t.trim()).join(" • ")}
               </p>
             )}
-            <div className="mt-8 flex flex-wrap gap-4 justify-center md:justify-start">
+
+            <div className="pt-4 flex flex-wrap gap-4 justify-center md:justify-start">
               <Link
                 href={`/books/${featuredBook.slug}`}
-                className="inline-block px-8 py-3 text-sm font-semibold text-white bg-black rounded-full hover:bg-slate-800 transition"
+                className="inline-block px-8 py-3.5 text-sm font-semibold text-white bg-black rounded-full hover:bg-slate-800 shadow-md hover:shadow-lg transition-all"
               >
                 {featuredBook.isComingSoon ? "Learn More" : "View Book"}
               </Link>
               <Link
                 href="/books"
-                className="inline-block px-8 py-3 text-sm font-semibold text-slate-700 border border-slate-300 rounded-full hover:bg-slate-50 transition"
+                className="inline-block px-8 py-3.5 text-sm font-semibold text-slate-700 border-2 border-slate-300 rounded-full hover:bg-slate-50 hover:border-slate-400 transition-all"
               >
                 All Books
               </Link>
