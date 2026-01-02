@@ -45,18 +45,19 @@ export async function POST(request: Request) {
 
     const maxSize = 50 * 1024 * 1024 // 50MB
     if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: "File too large. Max 50MB" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "File too large. Max 50MB" }, { status: 400 })
     }
 
     const timestamp = Date.now()
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
     const filename = `uploads/${timestamp}-${safeName}`
 
+    // ✅ Make ebooks private, keep other media public
+    const isEbook = file.type === "application/pdf" || file.type === "application/epub+zip"
+    const access: "public" | "private" = isEbook ? "private" : "public"
+
     const blob = await put(filename, file, {
-      access: "public",
+      access,
       addRandomSuffix: false,
     })
 
@@ -65,6 +66,7 @@ export async function POST(request: Request) {
       filename: blob.pathname,
       size: file.size,
       type: file.type,
+      access,
     })
   } catch (error) {
     console.error("Upload error:", error)
@@ -79,10 +81,7 @@ export async function DELETE(request: Request) {
 
   try {
     const { url } = await request.json()
-
-    if (!url) {
-      return NextResponse.json({ error: "No URL provided" }, { status: 400 })
-    }
+    if (!url) return NextResponse.json({ error: "No URL provided" }, { status: 400 })
 
     await del(url)
     return NextResponse.json({ success: true })
