@@ -37,9 +37,9 @@ export function NewsletterSection() {
   return (
     <section className="py-16">
       <div className="max-w-xl mx-auto px-4 text-center">
-        <h2 className="font-serif text-2xl font-semibold mb-4">Stay Connected</h2>
+        <h2 className="font-serif text-2xl font-semibold mb-4">Stay Updated</h2>
         <p className="text-slate-600 mb-6">
-          Join the newsletter for updates on new releases, events, and insights.
+          Get new release announcements, integration notes & event invites. 1–2 emails per month. No spam – ever.
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 justify-center">
           <input
@@ -59,6 +59,7 @@ export function NewsletterSection() {
             {isLoading ? "Subscribing..." : "Subscribe"}
           </button>
         </form>
+        <p className="mt-3 text-xs text-slate-500">We respect your inbox</p>
         {message && (
           <p
             className={`mt-4 text-sm ${

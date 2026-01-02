@@ -11,28 +11,33 @@ interface BookPageProps {
   params: Promise<{ slug: string }>
 }
 
-export const dynamic = "force-dynamic"
+export const revalidate = 300 // 5 minutes
 
 export async function generateMetadata({ params }: BookPageProps): Promise<Metadata> {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
-  
-  const book = await prisma.book.findFirst({
-    where: {
-      OR: [
-        { slug: decodedSlug },
-        { slug: slug },
-      ]
+
+  try {
+    const book = await prisma.book.findFirst({
+      where: {
+        OR: [
+          { slug: decodedSlug },
+          { slug: slug },
+        ]
+      }
+    })
+
+    if (!book) {
+      return { title: "Book Not Found" }
     }
-  })
 
-  if (!book) {
+    return {
+      title: book.seoTitle || book.title,
+      description: book.seoDescription || book.blurb || book.subtitle1 || `${book.title} by Maya Allan`,
+    }
+  } catch (error) {
+    console.warn("Book metadata fetch failed:", error)
     return { title: "Book Not Found" }
-  }
-
-  return {
-    title: book.seoTitle || book.title,
-    description: book.seoDescription || book.blurb || book.subtitle1 || `${book.title} by Maya Allan`,
   }
 }
 
@@ -40,22 +45,28 @@ export default async function BookPage({ params }: BookPageProps) {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
 
-  // Find the book - must be published to view
-  const book = await prisma.book.findFirst({
-    where: {
-      OR: [
-        { slug: decodedSlug },
-        { slug: slug },
-      ],
-      isPublished: true,
-    },
-    include: {
-      retailers: {
-        where: { isActive: true },
-        include: { retailer: true },
+  let book = null
+
+  try {
+    // Find the book - must be published to view
+    book = await prisma.book.findFirst({
+      where: {
+        OR: [
+          { slug: decodedSlug },
+          { slug: slug },
+        ],
+        isPublished: true,
       },
-    },
-  })
+      include: {
+        retailers: {
+          where: { isActive: true },
+          include: { retailer: true },
+        },
+      },
+    })
+  } catch (error) {
+    console.warn("Book fetch failed:", error)
+  }
 
   if (!book) {
     notFound()

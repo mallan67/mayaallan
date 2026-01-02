@@ -18,7 +18,7 @@ export default function LegalPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 md:py-12 space-y-6 text-sm text-slate-700">
       <h1 className="font-serif text-2xl md:text-3xl font-semibold mb-2">Legal &amp; Disclaimer</h1>
-      <section>
+      <section id="terms">
         <h2 className="font-serif font-semibold mb-2">Informational &amp; Educational Only</h2>
         <p>
           All content on this site and in associated publications is for informational and educational purposes only. It
@@ -35,7 +35,7 @@ export default function LegalPage() {
           This site does not encourage or facilitate illegal activity in any form.
         </p>
       </section>
-      <section>
+      <section id="privacy">
         <h2 className="font-serif font-semibold mb-2">Privacy</h2>
         <p>
           A future privacy policy will explain how basic analytics and contact information are handled. Any email

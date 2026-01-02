@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { getPublishedBooks, getVisibleEvents, getVisibleMedia } from "@/lib/mock-data"
+import { prisma } from "@/lib/prisma"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://mayaallan.com"
@@ -57,32 +57,69 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Dynamic book pages
-  const books = await getPublishedBooks()
-  const bookPages: MetadataRoute.Sitemap = books.map((book) => ({
-    url: `${baseUrl}/books/${book.slug}`,
-    lastModified: book.updatedAt ? new Date(book.updatedAt) : currentDate,
-    changeFrequency: "monthly" as const,
-    priority: 0.8,
-  }))
+  let bookPages: MetadataRoute.Sitemap = []
+  let eventPages: MetadataRoute.Sitemap = []
+  let mediaPages: MetadataRoute.Sitemap = []
 
-  // Dynamic event pages
-  const events = await getVisibleEvents()
-  const eventPages: MetadataRoute.Sitemap = events.map((event) => ({
-    url: `${baseUrl}/events/${event.slug}`,
-    lastModified: event.updatedAt ? new Date(event.updatedAt) : currentDate,
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }))
+  try {
+    // Dynamic book pages - fetch published and visible books from Prisma
+    const books = await prisma.book.findMany({
+      where: {
+        isPublished: true,
+        isVisible: true,
+      },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+    })
 
-  // Dynamic media pages
-  const media = await getVisibleMedia()
-  const mediaPages: MetadataRoute.Sitemap = media.map((item) => ({
-    url: `${baseUrl}/media/${item.slug}`,
-    lastModified: item.updatedAt ? new Date(item.updatedAt) : currentDate,
-    changeFrequency: "monthly" as const,
-    priority: 0.6,
-  }))
+    bookPages = books.map((book) => ({
+      url: `${baseUrl}/books/${book.slug}`,
+      lastModified: book.updatedAt || currentDate,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    }))
+
+    // Dynamic event pages - fetch visible events from Prisma
+    const events = await prisma.event.findMany({
+      where: {
+        isVisible: true,
+      },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+    })
+
+    eventPages = events.map((event) => ({
+      url: `${baseUrl}/events/${event.slug}`,
+      lastModified: event.updatedAt || currentDate,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }))
+
+    // Dynamic media pages - fetch visible media from Prisma
+    const media = await prisma.mediaItem.findMany({
+      where: {
+        isVisible: true,
+      },
+      select: {
+        slug: true,
+        updatedAt: true,
+      },
+    })
+
+    mediaPages = media.map((item) => ({
+      url: `${baseUrl}/media/${item.slug}`,
+      lastModified: item.updatedAt || currentDate,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }))
+  } catch (error) {
+    // During build or if DB unavailable, just use static pages
+    console.warn("Sitemap dynamic content fetch failed:", error)
+  }
 
   return [...staticPages, ...bookPages, ...eventPages, ...mediaPages]
 }

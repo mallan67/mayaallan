@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: "Browse books by Maya Allan",
 }
 
-export const dynamic = "force-dynamic"
+export const revalidate = 300 // 5 minutes
 
 /**
  * BOOKS LISTING LOGIC:
@@ -22,19 +22,26 @@ export const dynamic = "force-dynamic"
  * Homepage uses: isFeatured + isPublished + isVisible (same isVisible flag)
  */
 export default async function BooksPage() {
-  const books = await prisma.book.findMany({
-    where: {
-      isPublished: true,  // Book must be published
-      isVisible: true,    // Book must be marked visible for this listing
-    },
-    include: {
-      retailers: {
-        where: { isActive: true },
-        include: { retailer: true },
+  let books: any[] = []
+
+  try {
+    books = await prisma.book.findMany({
+      where: {
+        isPublished: true,  // Book must be published
+        isVisible: true,    // Book must be marked visible for this listing
       },
-    },
-    orderBy: { createdAt: "desc" },
-  })
+      include: {
+        retailers: {
+          where: { isActive: true },
+          include: { retailer: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    })
+  } catch (error) {
+    // During build or if DB unavailable, show empty state
+    console.warn("Books fetch failed:", error)
+  }
 
   if (books.length === 0) {
     return (
@@ -55,9 +62,9 @@ export default async function BooksPage() {
         {books.map((book) => {
           // Get unique retailers with their info
           const uniqueRetailers = book.retailers
-            .filter((r) => r.url && r.url.trim() !== "" && r.retailer?.name)
-            .reduce((acc, r) => {
-              if (!acc.find((item) => item.name === r.retailer.name)) {
+            .filter((r: any) => r.url && r.url.trim() !== "" && r.retailer?.name)
+            .reduce((acc: any[], r: any) => {
+              if (!acc.find((item: any) => item.name === r.retailer.name)) {
                 acc.push({ name: r.retailer.name, id: r.retailer.id.toString() })
               }
               return acc
@@ -149,7 +156,7 @@ export default async function BooksPage() {
                       Available at
                     </p>
                     <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                      {uniqueRetailers.slice(0, 5).map((retailer) => (
+                      {uniqueRetailers.slice(0, 5).map((retailer: any) => (
                         <div
                           key={retailer.id}
                           className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700"

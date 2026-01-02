@@ -44,8 +44,85 @@ export default async function MediaPage() {
                   {item.kind}
                 </span>
               </div>
+
+              {item.coverUrl && (
+                <div className="relative w-full h-48 mb-3 rounded-lg overflow-hidden bg-slate-100">
+                  <img src={item.coverUrl} alt={item.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+
               <h2 className="font-serif text-lg font-semibold mb-2">{item.title}</h2>
               {item.description && <p className="text-sm text-slate-700 mb-4">{item.description}</p>}
+
+              {/* Audio Player */}
+              {item.kind === "audio" && item.fileUrl && (
+                <div className="mb-4">
+                  <audio controls className="w-full">
+                    <source src={item.fileUrl} />
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              )}
+
+              {/* Video Player */}
+              {item.kind === "video" && item.fileUrl && (
+                <div className="mb-4">
+                  <video controls className="w-full rounded-lg bg-black">
+                    <source src={item.fileUrl} />
+                    Your browser does not support the video element.
+                  </video>
+                </div>
+              )}
+
+              {/* Image Display */}
+              {item.kind === "image" && item.fileUrl && !item.coverUrl && (
+                <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden bg-slate-100">
+                  <img src={item.fileUrl} alt={item.title} className="w-full h-full object-contain" />
+                </div>
+              )}
+
+              {/* External URL Embeds */}
+              {!item.fileUrl && item.externalUrl && (
+                <div className="mb-4">
+                  {/* YouTube embed */}
+                  {(item.externalUrl.includes("youtube.com") || item.externalUrl.includes("youtu.be")) && (
+                    <div className="aspect-video">
+                      <iframe
+                        src={item.externalUrl.replace("watch?v=", "embed/").replace("youtu.be/", "youtube.com/embed/")}
+                        className="w-full h-full rounded-lg"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+
+                  {/* Vimeo embed */}
+                  {item.externalUrl.includes("vimeo.com") && (
+                    <div className="aspect-video">
+                      <iframe
+                        src={item.externalUrl.replace("vimeo.com/", "player.vimeo.com/video/")}
+                        className="w-full h-full rounded-lg"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  )}
+
+                  {/* SoundCloud or other external links */}
+                  {!item.externalUrl.includes("youtube") &&
+                    !item.externalUrl.includes("youtu.be") &&
+                    !item.externalUrl.includes("vimeo") && (
+                      <a
+                        href={item.externalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block px-4 py-2 text-sm font-semibold text-white bg-black rounded-lg hover:bg-black/80 transition"
+                      >
+                        Listen/View on External Platform →
+                      </a>
+                    )}
+                </div>
+              )}
 
               <div className="mb-3 pt-3 border-t border-slate-100">
                 <ShareButtons
@@ -55,17 +132,6 @@ export default async function MediaPage() {
                   className="justify-center md:justify-start"
                 />
               </div>
-
-              {item.externalUrl && (
-                <a
-                  href={item.externalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-semibold text-black hover:underline"
-                >
-                  View →
-                </a>
-              )}
             </div>
           ))}
         </div>

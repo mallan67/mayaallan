@@ -33,6 +33,7 @@ interface Book {
   tagsCsv: string | null
   blurb: string | null
   coverUrl: string | null
+  backCoverUrl: string | null
   ebookFileUrl: string | null
   hasEbook: boolean
   hasPaperback: boolean

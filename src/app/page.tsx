@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 import { NewsletterSection } from "@/components/NewsletterSection"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 300 // 5 minutes
 
 export const metadata: Metadata = {
   title: "Maya Allan | Author",
@@ -23,24 +23,55 @@ export const metadata: Metadata = {
  *
  */
 export default async function HomePage() {
-  // Query: Get featured + published + visible book
-  const featuredBook = await prisma.book.findFirst({
-    where: {
-      isFeatured: true,
-      isPublished: true,
-      isVisible: true,
-    },
-    orderBy: { createdAt: "desc" },
-  })
+  let featuredBook = null
 
-  // If no featured book, render a minimal / blank body (owner requested blank)
+  try {
+    // Query: Get featured + published + visible book
+    featuredBook = await prisma.book.findFirst({
+      where: {
+        isFeatured: true,
+        isPublished: true,
+        isVisible: true,
+      },
+      orderBy: { createdAt: "desc" },
+    })
+  } catch (error) {
+    // During build or if DB unavailable, show default hero
+    console.warn("Featured book fetch failed:", error)
+  }
+
+  // If no featured book, render default hero
   if (!featuredBook) {
     return (
       <div className="min-h-screen">
-        {/* Intentionally blank hero: no featured book selected */}
-        <section className="max-w-6xl mx-auto px-4 py-24">
-          {/* Render nothing, but keep the page shell (header/footer handle nav) */}
+        {/* Default Hero Section */}
+        <section className="max-w-4xl mx-auto px-4 py-24 md:py-32">
+          <div className="text-center space-y-6">
+            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight">
+              Maya Allan – Author & Guide
+            </h1>
+            <p className="text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto">
+              Integration guides for transformative experiences. Workshops, talks, and books to support your journey with clarity and compassion.
+            </p>
+            <div className="pt-6 flex flex-wrap gap-4 justify-center">
+              <Link
+                href="/books"
+                className="inline-block px-8 py-3.5 text-sm font-semibold text-white bg-black rounded-full hover:bg-slate-800 shadow-md hover:shadow-lg transition-all"
+              >
+                Explore Books
+              </Link>
+              <Link
+                href="/events"
+                className="inline-block px-8 py-3.5 text-sm font-semibold text-slate-700 border-2 border-slate-300 rounded-full hover:bg-slate-50 hover:border-slate-400 transition-all"
+              >
+                Upcoming Events
+              </Link>
+            </div>
+          </div>
         </section>
+
+        {/* Newsletter Section */}
+        <NewsletterSection />
       </div>
     )
   }

@@ -15,13 +15,13 @@ export function Footer() {
           {/* Footer Links */}
           <nav className="flex items-center gap-6">
             <Link
-              href="/legal/privacy"
+              href="/legal#privacy"
               className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
             >
               Privacy
             </Link>
             <Link
-              href="/legal/terms"
+              href="/legal#terms"
               className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
             >
               Terms

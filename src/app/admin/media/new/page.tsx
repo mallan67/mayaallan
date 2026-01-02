@@ -4,14 +4,17 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import ImageUpload from "@/components/ImageUpload"
+import MediaUpload from "@/components/MediaUpload"
 
 export default function AdminNewMediaPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
-  
+
+  const [kind, setKind] = useState<"audio" | "video" | "image">("audio")
   const [coverUrl, setCoverUrl] = useState<string>("")
   const [fileUrl, setFileUrl] = useState<string>("")
+  const [externalUrl, setExternalUrl] = useState<string>("")
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -24,13 +27,14 @@ export default function AdminNewMediaPage() {
         slug: formData.get("slug") as string,
         title: formData.get("title") as string,
         description: (formData.get("description") as string) || null,
-        mediaType: formData.get("mediaType") as string,
+        type: kind,
         coverUrl: coverUrl || null,
         fileUrl: fileUrl || null,
-        externalUrl: (formData.get("externalUrl") as string) || null,
+        externalUrl: externalUrl || null,
         duration: (formData.get("duration") as string) || null,
         publishedAt: (formData.get("publishedAt") as string) || null,
         isVisible: false,
+        isPublished: false,
       }
 
       const response = await fetch("/api/admin/media", {
@@ -76,13 +80,15 @@ export default function AdminNewMediaPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Media Type *</label>
-              <select name="mediaType" required className="w-full px-3 py-2 border border-slate-300 rounded-lg">
-                <option value="">Select type...</option>
-                <option value="podcast">Podcast</option>
-                <option value="video">Video</option>
-                <option value="interview">Interview</option>
-                <option value="article">Article</option>
+              <select
+                value={kind}
+                onChange={(e) => setKind(e.target.value as "audio" | "video" | "image")}
+                required
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+              >
                 <option value="audio">Audio</option>
+                <option value="video">Video</option>
+                <option value="image">Image</option>
               </select>
             </div>
             <div>
@@ -101,16 +107,23 @@ export default function AdminNewMediaPage() {
         </div>
 
         <div className="border border-slate-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Files & Links</h2>
-          <div className="space-y-6">
-            <ImageUpload label="Cover Image / Thumbnail" currentUrl={coverUrl} onUpload={setCoverUrl} accept="image/*" />
-            <ImageUpload label="Media File (Audio/Video)" currentUrl={fileUrl} onUpload={setFileUrl} accept="audio/*,video/*,.mp3,.mp4,.wav,.webm" />
-            <div>
-              <label className="block text-sm font-medium mb-1">External URL (YouTube, Spotify, etc.)</label>
-              <input type="url" name="externalUrl" placeholder="https://..." className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              <p className="text-xs text-slate-500 mt-1">Use this for embedded content from external platforms</p>
-            </div>
-          </div>
+          <h2 className="text-lg font-semibold mb-4">Cover Image</h2>
+          <ImageUpload label="Cover Image / Thumbnail" currentUrl={coverUrl} onUpload={setCoverUrl} accept="image/*" />
+        </div>
+
+        <div className="border border-slate-200 rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">Media File or Link</h2>
+          <MediaUpload
+            kind={kind}
+            currentFileUrl={fileUrl}
+            currentExternalUrl={externalUrl}
+            onFileUpload={setFileUrl}
+            onExternalUrlChange={setExternalUrl}
+            onRemove={() => {
+              setFileUrl("")
+              setExternalUrl("")
+            }}
+          />
         </div>
 
         {message && (

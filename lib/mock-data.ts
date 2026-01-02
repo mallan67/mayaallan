@@ -45,18 +45,20 @@ export interface Book {
 
 export interface MediaItem {
   id: number
-  kind: "audio" | "video"
+  kind: "audio" | "video" | "image"
   slug: string
   title: string
   description?: string | null
   coverUrl?: string | null
   fileUrl?: string | null
   externalUrl?: string | null
+  duration?: string | null
   isbn?: string | null
   isPublished: boolean
   isVisible: boolean
   seoTitle?: string | null
   seoDescription?: string | null
+  publishedAt?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -274,6 +276,10 @@ export async function getAllMedia(): Promise<MediaItem[]> {
 
 export async function getVisibleMedia(): Promise<MediaItem[]> {
   return mockMedia.filter((item) => item.isPublished && item.isVisible)
+}
+
+export async function getMediaById(id: number): Promise<MediaItem | null> {
+  return mockMedia.find((item) => item.id === id) || null
 }
 
 export async function getAllEvents(): Promise<Event[]> {

@@ -1,33 +1,34 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getAllMedia, updateMedia, deleteMedia } from "@/lib/mock-data"
+import { getMediaById, updateMedia, deleteMedia } from "@/lib/mock-data"
 import { z } from "zod"
 
-const UpdateMediaSchema = z.object({
-  type: z.string().optional(),
-  url: z.string().optional(),
-  title: z.string().optional(),
-  description: z.string().optional(),
-  altText: z.string().optional(),
-  coverImage: z.string().optional(),
-  isbn: z.string().optional(),
-  published: z.boolean().optional(),
-  visible: z.boolean().optional(),
-  sortOrder: z.number().optional(),
+const MediaUpdateSchema = z.object({
+  slug: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
+  kind: z.enum(["audio", "video", "image"]).optional(),
+  description: z.string().optional().nullable(),
+  fileUrl: z.string().optional().nullable(),
+  externalUrl: z.string().optional().nullable(),
+  coverUrl: z.string().optional().nullable(),
+  duration: z.string().optional().nullable(),
+  publishedAt: z.string().optional().nullable(),
+  isPublished: z.boolean().optional(),
+  isVisible: z.boolean().optional(),
 })
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { id } = await params
-  const allMedia = await getAllMedia()
-  const media = allMedia.find((m: any) => m.id === Number(id))
+  const { id: idParam } = await params
+  const id = parseInt(idParam)
+  if (isNaN(id)) {
+    return NextResponse.json({ error: "Invalid ID" }, { status: 400 })
+  }
 
+  const media = await getMediaById(id)
   if (!media) {
     return NextResponse.json({ error: "Media not found" }, { status: 404 })
   }
@@ -35,22 +36,22 @@ export async function GET(
   return NextResponse.json(media)
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { id } = await params
+  const { id: idParam } = await params
+  const id = parseInt(idParam)
+  if (isNaN(id)) {
+    return NextResponse.json({ error: "Invalid ID" }, { status: 400 })
+  }
 
   try {
     const body = await request.json()
-    const data = UpdateMediaSchema.parse(body)
+    const data = MediaUpdateSchema.parse(body)
 
-    const media = await updateMedia(Number(id), data)
-
+    const media = await updateMedia(id, data)
     if (!media) {
       return NextResponse.json({ error: "Media not found" }, { status: 404 })
     }
@@ -68,20 +69,21 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { id } = await params
-  const success = await deleteMedia(Number(id))
+  const { id: idParam } = await params
+  const id = parseInt(idParam)
+  if (isNaN(id)) {
+    return NextResponse.json({ error: "Invalid ID" }, { status: 400 })
+  }
 
+  const success = await deleteMedia(id)
   if (!success) {
     return NextResponse.json({ error: "Media not found" }, { status: 404 })
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ success: true })
 }
