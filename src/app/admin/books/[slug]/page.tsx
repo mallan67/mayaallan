@@ -4,7 +4,6 @@ import ImageUpload from "@/components/ImageUpload"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import Image from "next/image"
 
 /**
  * ADMIN BOOK FORM
@@ -12,6 +11,7 @@ import Image from "next/image"
  * Fixes included:
  * - Adds missing required field: backCoverUrl (build error fix)
  * - Correct params typing/usage for Next.js client component (runtime correctness)
+ * - Adds upload UI for front cover, back cover, and ebook file using ImageUpload
  */
 
 interface RetailerLink {
@@ -329,7 +329,9 @@ export default function AdminBookForm({ params }: { params: { slug: string } }) 
                 className="w-full border border-slate-300 rounded-lg px-3 py-2"
                 required
               />
-              <p className="text-xs text-slate-500 mt-1">URL: /books/{book.slug || "your-book-slug"}</p>
+              <p className="text-xs text-slate-500 mt-1">
+                URL: /books/{book.slug || "your-book-slug"}
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Subtitle</label>
@@ -361,45 +363,43 @@ export default function AdminBookForm({ params }: { params: { slug: string } }) 
           </div>
         </section>
 
-        {/* COVER */}
+        {/* IMAGES */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
-          <h2 className="font-semibold text-lg mb-4">Cover Image</h2>
-          <div>
-            <label className="block text-sm font-medium mb-1">Cover Image URL</label>
-            <input
-              type="url"
-              value={book.coverUrl || ""}
-              onChange={(e) => setBook({ ...book, coverUrl: e.target.value || null })}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2"
-              placeholder="https://..."
+          <h2 className="font-semibold text-lg mb-4">Images</h2>
+
+          <div className="space-y-6">
+            <ImageUpload
+              label="Front Cover"
+              currentUrl={book.coverUrl}
+              accept="image/*"
+              onUpload={(url) => setBook({ ...book, coverUrl: url })}
+              onRemove={() => setBook({ ...book, coverUrl: null })}
             />
-            {book.coverUrl && (
-              <div className="mt-3">
-                <Image
-                  src={book.coverUrl}
-                  alt="Cover"
-                  width={120}
-                  height={180}
-                  className="border rounded"
-                />
-              </div>
-            )}
+
+            <ImageUpload
+              label="Back Cover (optional)"
+              currentUrl={book.backCoverUrl}
+              accept="image/*"
+              onUpload={(url) => setBook({ ...book, backCoverUrl: url })}
+              onRemove={() => setBook({ ...book, backCoverUrl: null })}
+            />
           </div>
         </section>
 
         {/* EBOOK FILE */}
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Ebook File</h2>
-          <div>
-            <label className="block text-sm font-medium mb-1">Ebook File URL</label>
-            <input
-              type="url"
-              value={book.ebookFileUrl || ""}
-              onChange={(e) => setBook({ ...book, ebookFileUrl: e.target.value || null })}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2"
-              placeholder="https://..."
+
+          <div className="space-y-3">
+            <ImageUpload
+              label="Ebook File (PDF/EPUB)"
+              currentUrl={book.ebookFileUrl}
+              accept=".pdf,.epub,application/pdf,application/epub+zip"
+              onUpload={(url) => setBook({ ...book, ebookFileUrl: url })}
+              onRemove={() => setBook({ ...book, ebookFileUrl: null })}
             />
-            <p className="text-xs text-slate-500 mt-1">
+
+            <p className="text-xs text-slate-500">
               PDF/EPUB file for direct sale fulfillment. Customers receive secure download link after payment.
             </p>
           </div>
@@ -444,7 +444,9 @@ export default function AdminBookForm({ params }: { params: { slug: string } }) 
               />
               <div>
                 <span className="font-medium">⭐ Featured on Homepage</span>
-                <p className="text-xs text-slate-500">Show in homepage hero (requires Published + Visible in Listings)</p>
+                <p className="text-xs text-slate-500">
+                  Show in homepage hero (requires Published + Visible in Listings)
+                </p>
               </div>
             </label>
             <label className="flex items-center gap-3 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
@@ -515,7 +517,10 @@ export default function AdminBookForm({ params }: { params: { slug: string } }) 
                     min="0"
                     value={book.paperbackPrice ?? ""}
                     onChange={(e) =>
-                      setBook({ ...book, paperbackPrice: e.target.value ? parseFloat(e.target.value) : null })
+                      setBook({
+                        ...book,
+                        paperbackPrice: e.target.value ? parseFloat(e.target.value) : null,
+                      })
                     }
                     className="w-32 border rounded px-3 py-2"
                     placeholder="19.99"
@@ -544,7 +549,10 @@ export default function AdminBookForm({ params }: { params: { slug: string } }) 
                     min="0"
                     value={book.hardcoverPrice ?? ""}
                     onChange={(e) =>
-                      setBook({ ...book, hardcoverPrice: e.target.value ? parseFloat(e.target.value) : null })
+                      setBook({
+                        ...book,
+                        hardcoverPrice: e.target.value ? parseFloat(e.target.value) : null,
+                      })
                     }
                     className="w-32 border rounded px-3 py-2"
                     placeholder="29.99"
