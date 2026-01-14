@@ -1,6 +1,5 @@
 import Image from "next/image"
 import Link from "next/link"
-import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 import { NewsletterSection } from "@/components/NewsletterSection"
 
