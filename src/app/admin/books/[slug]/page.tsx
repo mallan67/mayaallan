@@ -1,5 +1,6 @@
 "use client"
 
+import ImageUpload from "@/components/ImageUpload"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
