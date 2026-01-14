@@ -61,4 +61,3 @@ This package contains all the fixes for the Maya Allan admin dashboard authentic
 2. **Missing "New" Pages** - Added UI pages for creating new books, media, and events. All items are created as drafts (unpublished) by default.
 
 3. **API Authentication** - All admin API routes now consistently use `isAuthenticated()` from `@/lib/session`.
-Test line from local
