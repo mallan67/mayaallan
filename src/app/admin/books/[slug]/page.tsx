@@ -1,7 +1,7 @@
 "use client"
 
 import ImageUpload from "@/components/ImageUpload"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
@@ -24,20 +24,24 @@ interface Book {
   coverUrl: string | null
   backCoverUrl: string | null
   ebookFileUrl: string | null
+
   hasEbook: boolean
   hasPaperback: boolean
   hasHardcover: boolean
   ebookPrice: number | null
   paperbackPrice: number | null
   hardcoverPrice: number | null
+
   isFeatured: boolean
   isPublished: boolean
   isVisible: boolean
   isComingSoon: boolean
+
   allowDirectSale: boolean
   allowRetailerSale: boolean
   stripePaymentLink: string | null
   paypalPaymentLink: string | null
+
   seoTitle: string | null
   seoDescription: string | null
 }
@@ -52,32 +56,46 @@ const defaultBook: Book = {
   coverUrl: null,
   backCoverUrl: null,
   ebookFileUrl: null,
+
   hasEbook: true,
   hasPaperback: false,
   hasHardcover: false,
   ebookPrice: null,
   paperbackPrice: null,
   hardcoverPrice: null,
+
   isFeatured: false,
   isPublished: false,
   isVisible: false,
   isComingSoon: false,
+
   allowDirectSale: false,
   allowRetailerSale: false,
   stripePaymentLink: null,
   paypalPaymentLink: null,
+
   seoTitle: null,
   seoDescription: null,
 }
+
+const FORMAT_OPTIONS = [
+  { value: "ebook", label: "Ebook" },
+  { value: "paperback", label: "Paperback" },
+  { value: "hardcover", label: "Hardcover" },
+  { value: "audiobook", label: "Audiobook" },
+]
 
 export default function AdminBookForm({ params }: { params: { slug: string } }) {
   const router = useRouter()
   const [slug, setSlug] = useState<string | null>(null)
   const [isNew, setIsNew] = useState(false)
+
   const [book, setBook] = useState<Book>(defaultBook)
+  const [retailerLinks, setRetailerLinks] = useState<RetailerLink[]>([])
+
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   useEffect(() => {
     const s = params?.slug
@@ -86,37 +104,49 @@ export default function AdminBookForm({ params }: { params: { slug: string } }) 
   }, [params?.slug])
 
   useEffect(() => {
-    if (!slug) return
+    if (slug === null) return
 
     if (slug === "new") {
       setBook(defaultBook)
+      setRetailerLinks([])
       setLoading(false)
       return
     }
 
-    fetch(`/api/admin/books/by-slug/${slug}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to load book")
-        return res.json()
-      })
-      .then((data) => {
+    const fetchBook = async () => {
+      try {
+        const res = await fetch(`/api/admin/books/by-slug/${slug}`)
+        if (!res.ok) throw new Error("Book not found")
+        const data = await res.json()
+
         setBook({
           ...defaultBook,
           ...data,
           backCoverUrl: data.backCoverUrl ?? null,
         })
-      })
-      .catch((err) => setMessage(err?.message || "Failed to load book"))
-      .finally(() => setLoading(false))
+
+        if (Array.isArray(data.retailers)) {
+          setRetailerLinks(
+            data.retailers.map((r: any) => ({
+              id: r.id,
+              formatType: r.formatType || "ebook",
+              retailerName: r.retailer?.name || "",
+              url: r.url || "",
+            }))
+          )
+        }
+      } catch (err: any) {
+        setMessage({ type: "error", text: err.message })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBook()
   }, [slug])
 
-  if (loading) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-10">
-        <p>Loading…</p>
-      </div>
-    )
-  }
+  const generateSlug = (title: string) =>
+    title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -130,96 +160,83 @@ export default function AdminBookForm({ params }: { params: { slug: string } }) 
         body: JSON.stringify(book),
       })
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err?.error || "Failed to save book")
-      }
+      if (!res.ok) throw new Error("Save failed")
 
       const saved = await res.json()
-      setBook({ ...defaultBook, ...saved, backCoverUrl: saved.backCoverUrl ?? null })
 
       if (isNew) {
         router.push(`/admin/books/${saved.slug}`)
-        return
+      } else {
+        setMessage({ type: "success", text: "Saved successfully" })
       }
-
-      setMessage("Saved successfully ✅")
     } catch (err: any) {
-      setMessage(err?.message || "Failed to save book")
+      setMessage({ type: "error", text: err.message })
     } finally {
       setSaving(false)
     }
   }
 
+  if (loading) return <div className="p-10">Loading…</div>
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
-      <Link href="/admin/books" className="text-sm text-slate-500 hover:text-slate-700">
-        ← Back
+      <Link href="/admin/books" className="text-sm text-slate-500">
+        ← Back to Books
       </Link>
 
-      <h1 className="text-2xl font-serif my-6">{isNew ? "New Book" : `Edit: ${book.title}`}</h1>
+      <h1 className="font-serif text-2xl my-6">
+        {isNew ? "Add New Book" : `Edit: ${book.title}`}
+      </h1>
 
       {message && (
-        <div className="p-3 mb-6 rounded border bg-slate-50 text-slate-700 text-sm">{message}</div>
+        <div className={`mb-6 p-4 rounded ${message.type === "error" ? "bg-red-50" : "bg-green-50"}`}>
+          {message.text}
+        </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
+
         {/* IMAGES */}
-        <section className="border border-slate-200 rounded-xl p-6 bg-white">
+        <section className="border rounded-xl p-6 bg-white">
           <h2 className="font-semibold mb-4">Images</h2>
 
-          <div className="space-y-6">
-            <ImageUpload
-              label="Front Cover"
-              currentUrl={book.coverUrl}
-              accept="image/*"
-              onUpload={(url) => setBook({ ...book, coverUrl: url })}
-              onRemove={() => setBook({ ...book, coverUrl: null })}
-            />
+          <ImageUpload
+            label="Front Cover"
+            currentUrl={book.coverUrl}
+            accept="image/*"
+            onUpload={(url) => setBook({ ...book, coverUrl: url })}
+            onRemove={() => setBook({ ...book, coverUrl: null })}
+          />
 
-            <ImageUpload
-              label="Back Cover (optional)"
-              currentUrl={book.backCoverUrl}
-              accept="image/*"
-              onUpload={(url) => setBook({ ...book, backCoverUrl: url })}
-              onRemove={() => setBook({ ...book, backCoverUrl: null })}
-            />
-          </div>
+          <ImageUpload
+            label="Back Cover"
+            currentUrl={book.backCoverUrl}
+            accept="image/*"
+            onUpload={(url) => setBook({ ...book, backCoverUrl: url })}
+            onRemove={() => setBook({ ...book, backCoverUrl: null })}
+          />
         </section>
 
-        {/* EBOOK FILE */}
-        <section className="border border-slate-200 rounded-xl p-6 bg-white">
+        {/* EBOOK */}
+        <section className="border rounded-xl p-6 bg-white">
           <h2 className="font-semibold mb-4">Ebook File</h2>
 
           <ImageUpload
             label="PDF / EPUB"
             currentUrl={book.ebookFileUrl}
-            accept=".pdf,.epub,application/pdf,application/epub+zip"
+            accept=".pdf,.epub"
             onUpload={(url) => setBook({ ...book, ebookFileUrl: url })}
             onRemove={() => setBook({ ...book, ebookFileUrl: null })}
           />
-
-          <p className="text-xs text-slate-500 mt-2">
-            Upload the PDF/EPUB used for direct-sale fulfillment.
-          </p>
         </section>
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-3 bg-black text-white rounded-lg disabled:opacity-50"
-          >
-            {saving ? "Saving…" : isNew ? "Create Book" : "Save Changes"}
-          </button>
-
-          <Link
-            href="/admin/books"
-            className="px-6 py-3 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
-          >
-            Cancel
-          </Link>
-        </div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="px-6 py-3 bg-black text-white rounded"
+        >
+          {saving ? "Saving…" : isNew ? "Create Book" : "Save Changes"}
+        </button>
       </form>
     </div>
   )
