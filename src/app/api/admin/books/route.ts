@@ -90,12 +90,37 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const authed = await isAuthenticated()
+  // Step 1: Check authentication
+  let authed: boolean
+  try {
+    authed = await isAuthenticated()
+  } catch (authError: any) {
+    console.error("Auth check failed:", authError)
+    return NextResponse.json({ error: "Auth check failed", details: authError?.message }, { status: 500 })
+  }
+
   if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+  // Step 2: Parse request body
+  let body: any
   try {
-    const body = await request.json()
+    body = await request.json()
     console.log("Creating book with payload:", { title: body.title, slug: body.slug })
+  } catch (parseError: any) {
+    console.error("Body parse failed:", parseError)
+    return NextResponse.json({ error: "Invalid JSON body", details: parseError?.message }, { status: 400 })
+  }
+
+  // Step 3: Insert into database
+  try {
+    // Verify Supabase is configured
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("Missing Supabase env vars:", {
+        hasUrl: !!process.env.SUPABASE_URL,
+        hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      })
+      return NextResponse.json({ error: "Server config error: Missing database credentials" }, { status: 500 })
+    }
 
     const data = {
       slug: body.slug || "",
