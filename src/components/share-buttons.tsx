@@ -50,6 +50,7 @@ const SnapchatIcon = ({ className }: { className?: string }) => (
 
 export function ShareButtons({ url, title, description, hashtags, className = "" }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
+  const [instagramCopied, setInstagramCopied] = useState(false)
 
   const encodedUrl = encodeURIComponent(url)
   const encodedTitle = encodeURIComponent(title)
@@ -74,6 +75,16 @@ export function ShareButtons({ url, title, description, hashtags, className = ""
       await navigator.clipboard.writeText(url)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error("Failed to copy:", err)
+    }
+  }
+
+  const copyForInstagram = async () => {
+    try {
+      await navigator.clipboard.writeText(`${title}\n\n${url}`)
+      setInstagramCopied(true)
+      setTimeout(() => setInstagramCopied(false), 3000)
     } catch (err) {
       console.error("Failed to copy:", err)
     }
@@ -178,6 +189,21 @@ export function ShareButtons({ url, title, description, hashtags, className = ""
           <TikTokIcon className="w-5 h-5 text-slate-600 group-hover:text-black" />
         </a>
 
+        {/* Instagram */}
+        <button
+          onClick={copyForInstagram}
+          className="p-2 rounded-full hover:bg-pink-50 transition relative group"
+          aria-label="Share on Instagram"
+          title="Copy for Instagram"
+        >
+          <InstagramIcon className="w-5 h-5 text-slate-600 group-hover:text-pink-600" />
+          {instagramCopied && (
+            <span className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+              Copied! Paste on Instagram
+            </span>
+          )}
+        </button>
+
         {/* Email */}
         <a
           href={shareLinks.email}
@@ -204,10 +230,6 @@ export function ShareButtons({ url, title, description, hashtags, className = ""
         </button>
       </div>
 
-      {/* Note about mobile-only platforms */}
-      <p className="text-xs text-slate-400 mt-2">
-        Instagram & Snapchat sharing available in their mobile apps
-      </p>
     </div>
   )
 }
