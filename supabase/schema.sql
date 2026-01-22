@@ -146,20 +146,24 @@ CREATE TABLE IF NOT EXISTS public.events (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Media items table
+-- Media items table (audio, video, image)
 CREATE TABLE IF NOT EXISTS public.media_items (
   id BIGSERIAL PRIMARY KEY,
   title TEXT NOT NULL,
   slug TEXT UNIQUE NOT NULL,
+  kind TEXT NOT NULL DEFAULT 'audio', -- audio, video, image
   description TEXT,
-  media_type TEXT, -- interview, podcast, article, video
-  source_name TEXT,
-  source_url TEXT,
-  thumbnail_url TEXT,
-  published_date DATE,
-  is_featured BOOLEAN DEFAULT false,
+  cover_url TEXT,
+  file_url TEXT,
+  external_url TEXT,
+  duration TEXT,
+  is_published BOOLEAN DEFAULT false,
   is_visible BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  seo_title TEXT,
+  seo_description TEXT,
+  published_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Create indexes for common queries
