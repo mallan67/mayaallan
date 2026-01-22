@@ -5,6 +5,8 @@ import { unsealData } from "iron-session"
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  console.log("Middleware running for path:", pathname)
+
   // Skip login page and API routes
   if (pathname === "/admin/login" || pathname.startsWith("/api/")) {
     return NextResponse.next()
@@ -13,11 +15,12 @@ export async function middleware(request: NextRequest) {
   // Protect admin routes
   if (pathname.startsWith("/admin")) {
     const sessionCookie = request.cookies.get("mayaallan_admin_session")
+    console.log("Admin route accessed, session cookie exists:", !!sessionCookie?.value)
 
     // Require SESSION_SECRET
     const sessionSecret = process.env.SESSION_SECRET
     if (!sessionSecret) {
-      console.error("SESSION_SECRET environment variable is not set")
+      console.error("SESSION_SECRET environment variable is not set - redirecting to login")
       const loginUrl = new URL("/admin/login", request.url)
       return NextResponse.redirect(loginUrl)
     }
