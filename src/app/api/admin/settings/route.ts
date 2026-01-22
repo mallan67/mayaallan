@@ -19,26 +19,8 @@ export async function GET() {
       throw error
     }
 
-    // Map snake_case to camelCase
-    const mapped = settings ? {
-      id: settings.id,
-      siteName: settings.site_name,
-      tagline: settings.tagline,
-      footerText: settings.footer_text,
-      contactEmail: settings.contact_email,
-      socialX: settings.social_x,
-      socialInstagram: settings.social_instagram,
-      socialFacebook: settings.social_facebook,
-      socialYoutube: settings.social_youtube,
-      socialTiktok: settings.social_tiktok,
-      authorName: settings.author_name,
-      authorBio: settings.author_bio,
-      authorPhotoUrl: settings.author_photo_url,
-      defaultOgImageUrl: settings.default_og_image_url,
-      siteIconUrl: settings.site_icon_url,
-    } : {}
-
-    return NextResponse.json(mapped)
+    // SiteSettings table uses camelCase columns
+    return NextResponse.json(settings || {})
   } catch (error) {
     console.error("Error fetching settings:", error)
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 })
@@ -61,21 +43,23 @@ export async function PATCH(request: Request) {
       .limit(1)
       .single()
 
-    const settingsData = {
-      site_name: data.siteName || "Maya Allan",
+    // SiteSettings table uses camelCase columns
+    const settingsData: any = {
+      siteName: data.siteName || "Maya Allan",
       tagline: data.tagline || null,
-      contact_email: data.contactEmail || null,
-      social_x: data.socialX || null,
-      social_instagram: data.socialInstagram || null,
-      social_facebook: data.socialFacebook || null,
-      social_youtube: data.socialYoutube || null,
-      social_tiktok: data.socialTiktok || null,
-      footer_text: data.footerText || null,
-      author_name: data.authorName || null,
-      author_bio: data.authorBio || null,
-      author_photo_url: data.authorPhotoUrl || null,
-      default_og_image_url: data.defaultOgImageUrl || null,
-      site_icon_url: data.siteIconUrl || null,
+      contactEmail: data.contactEmail || null,
+      socialX: data.socialX || null,
+      socialInstagram: data.socialInstagram || null,
+      socialFacebook: data.socialFacebook || null,
+      socialYoutube: data.socialYoutube || null,
+      socialTiktok: data.socialTiktok || null,
+      footerText: data.footerText || null,
+      authorName: data.authorName || null,
+      authorBio: data.authorBio || null,
+      authorPhotoUrl: data.authorPhotoUrl || null,
+      defaultOgImageUrl: data.defaultOgImageUrl || null,
+      siteIconUrl: data.siteIconUrl || null,
+      updatedAt: new Date().toISOString(),
     }
 
     let settings

@@ -46,7 +46,7 @@ export const supabaseAdmin = new Proxy({} as SupabaseClient, {
 export const Tables = {
   books: "books",
   navigationItems: "navigation_items",
-  siteSettings: "site_settings",
+  siteSettings: "SiteSettings",
   retailers: "retailers",
   bookRetailerLinks: "book_retailer_links",
   emailSubscribers: "email_subscribers",
