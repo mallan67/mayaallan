@@ -65,6 +65,7 @@ export async function PUT(
 
   try {
     const body = await request.json()
+    console.log("Media PUT request - ID:", id, "Body:", JSON.stringify(body))
 
     // Verify media exists
     const { data: existingMedia, error: fetchError } = await supabaseAdmin
@@ -73,7 +74,12 @@ export async function PUT(
       .eq("id", id)
       .single()
 
-    if (fetchError || !existingMedia) {
+    if (fetchError) {
+      console.error("Error finding media:", fetchError)
+      return NextResponse.json({ error: `Media not found: ${fetchError.message}` }, { status: 404 })
+    }
+
+    if (!existingMedia) {
       return NextResponse.json({ error: "Media not found" }, { status: 404 })
     }
 
@@ -102,16 +108,20 @@ export async function PUT(
       .single()
 
     if (updateError) {
+      console.error("Error updating media:", updateError)
       if (updateError.code === "23505") {
         return NextResponse.json(
           { error: "A media item with this slug already exists" },
           { status: 409 }
         )
       }
-      console.error("Error updating media:", updateError)
-      throw updateError
+      return NextResponse.json(
+        { error: `Failed to update: ${updateError.message}` },
+        { status: 500 }
+      )
     }
 
+    console.log("Media updated successfully:", media)
     return NextResponse.json(media)
   } catch (error: any) {
     console.error("Error updating media:", error)
