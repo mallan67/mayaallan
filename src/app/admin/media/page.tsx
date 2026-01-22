@@ -8,15 +8,25 @@ async function getMediaItems() {
     const { data, error } = await supabaseAdmin
       .from(Tables.mediaItems)
       .select("*")
-      .order("createdAt", { ascending: false })
+      .order("created_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching media:", error)
       return []
     }
 
-    // Table uses camelCase columns, return as-is
-    return data || []
+    // Map snake_case to camelCase
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      slug: item.slug,
+      title: item.title,
+      kind: item.kind || "audio",
+      description: item.description,
+      coverUrl: item.cover_url,
+      isPublished: item.is_published ?? item.is_visible ?? false,
+      isVisible: item.is_visible ?? false,
+      createdAt: item.created_at,
+    }))
   } catch (error) {
     console.error("Failed to fetch media:", error)
     return []

@@ -24,17 +24,28 @@ async function getVisibleMedia() {
     const { data, error } = await supabaseAdmin
       .from(Tables.mediaItems)
       .select("*")
-      .eq("isPublished", true)
-      .eq("isVisible", true)
-      .order("createdAt", { ascending: false })
+      .eq("is_visible", true)
+      .order("created_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching media:", error)
       return []
     }
 
-    // Table uses camelCase columns, return as-is
-    return data || []
+    // Map snake_case to camelCase
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      slug: item.slug,
+      title: item.title,
+      kind: item.kind || "audio",
+      description: item.description,
+      coverUrl: item.cover_url,
+      fileUrl: item.file_url,
+      externalUrl: item.external_url,
+      duration: item.duration,
+      isPublished: item.is_published ?? item.is_visible ?? false,
+      isVisible: item.is_visible ?? false,
+    }))
   } catch (error) {
     console.error("Failed to fetch media:", error)
     return []
