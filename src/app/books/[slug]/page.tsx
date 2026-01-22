@@ -35,31 +35,42 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
     const imageUrl = book.og_image_url || book.cover_url
     const bookUrl = `https://www.mayaallan.com/books/${slug}`
 
+    const fullTitle = `${book.title}${subtitles ? ` - ${subtitles}` : ""}`
+
     return {
       title,
       description,
+      authors: [{ name: "Maya Allan" }],
       openGraph: {
-        title: `${book.title}${subtitles ? ` - ${subtitles}` : ""}`,
+        title: fullTitle,
         description,
         url: bookUrl,
         siteName: "Maya Allan",
         type: "book",
+        locale: "en_US",
         ...(imageUrl && {
           images: [
             {
               url: imageUrl,
-              width: 600,
-              height: 900,
-              alt: book.title,
+              width: 1200,
+              height: 630,
+              alt: fullTitle,
+              type: "image/jpeg",
             },
           ],
         }),
       },
       twitter: {
-        card: imageUrl ? "summary_large_image" : "summary",
-        title: `${book.title}${subtitles ? ` - ${subtitles}` : ""}`,
+        card: "summary_large_image",
+        site: "@mayaallan",
+        creator: "@mayaallan",
+        title: fullTitle,
         description,
         ...(imageUrl && { images: [imageUrl] }),
+      },
+      other: {
+        "pinterest:description": description,
+        ...(imageUrl && { "pinterest:image": imageUrl }),
       },
     }
   } catch (error) {
