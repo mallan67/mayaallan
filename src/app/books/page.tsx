@@ -205,7 +205,7 @@ export default async function BooksPage() {
                       Available at
                     </p>
                     <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                      {uniqueRetailers.slice(0, 5).map((retailer: any) => (
+                      {uniqueRetailers.map((retailer: any) => (
                         <div
                           key={retailer.id}
                           className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700"
@@ -214,11 +214,6 @@ export default async function BooksPage() {
                           <span>{retailer.name}</span>
                         </div>
                       ))}
-                      {uniqueRetailers.length > 5 && (
-                        <span className="inline-flex items-center px-3 py-1.5 text-sm text-slate-500">
-                          +{uniqueRetailers.length - 5} more
-                        </span>
-                      )}
                     </div>
                   </div>
                 )}
