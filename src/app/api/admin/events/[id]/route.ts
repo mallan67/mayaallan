@@ -5,7 +5,7 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 /**
  * EVENT API ROUTES (by ID)
  *
- * Uses Supabase events table with snake_case columns.
+ * Uses Supabase Event table with camelCase columns.
  */
 
 // GET single event by ID
@@ -35,27 +35,7 @@ export async function GET(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    // Map snake_case to camelCase
-    const mappedEvent = {
-      id: event.id,
-      slug: event.slug,
-      title: event.title,
-      description: event.description,
-      startsAt: event.starts_at,
-      endsAt: event.ends_at,
-      locationText: event.location_text,
-      locationUrl: event.location_url,
-      eventImageUrl: event.event_image_url || event.og_image_url,
-      isPublished: event.is_published ?? false,
-      isVisible: event.is_visible ?? false,
-      keepVisibleAfterEnd: event.keep_visible_after_end ?? false,
-      seoTitle: event.seo_title,
-      seoDescription: event.seo_description,
-      ogImageUrl: event.og_image_url,
-      createdAt: event.created_at,
-    }
-
-    return NextResponse.json(mappedEvent)
+    return NextResponse.json(event)
   } catch (error) {
     console.error("Error fetching event:", error)
     return NextResponse.json({ error: "Failed to fetch event" }, { status: 500 })
@@ -94,23 +74,22 @@ export async function PUT(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    // Build update data with snake_case columns
+    // Build update data with camelCase columns (matching Event table)
     const updateData: any = {}
 
     if (body.title !== undefined) updateData.title = body.title
     if (body.slug !== undefined) updateData.slug = body.slug
     if (body.description !== undefined) updateData.description = body.description || null
-    if (body.startsAt !== undefined) updateData.starts_at = body.startsAt
-    if (body.endsAt !== undefined) updateData.ends_at = body.endsAt || null
-    if (body.locationText !== undefined) updateData.location_text = body.locationText || null
-    if (body.locationUrl !== undefined) updateData.location_url = body.locationUrl || null
-    if (body.eventImageUrl !== undefined) updateData.event_image_url = body.eventImageUrl || null
-    if (body.isPublished !== undefined) updateData.is_published = Boolean(body.isPublished)
-    if (body.isVisible !== undefined) updateData.is_visible = Boolean(body.isVisible)
-    if (body.keepVisibleAfterEnd !== undefined) updateData.keep_visible_after_end = Boolean(body.keepVisibleAfterEnd)
-    if (body.seoTitle !== undefined) updateData.seo_title = body.seoTitle || null
-    if (body.seoDescription !== undefined) updateData.seo_description = body.seoDescription || null
-    if (body.ogImageUrl !== undefined) updateData.og_image_url = body.ogImageUrl || null
+    if (body.startsAt !== undefined) updateData.startsAt = body.startsAt
+    if (body.endsAt !== undefined) updateData.endsAt = body.endsAt || null
+    if (body.locationText !== undefined) updateData.locationText = body.locationText || null
+    if (body.locationUrl !== undefined) updateData.locationUrl = body.locationUrl || null
+    if (body.eventImageUrl !== undefined) updateData.eventImageUrl = body.eventImageUrl || null
+    if (body.isPublished !== undefined) updateData.isPublished = Boolean(body.isPublished)
+    if (body.isVisible !== undefined) updateData.isVisible = Boolean(body.isVisible)
+    if (body.keepVisibleAfterEnd !== undefined) updateData.keepVisibleAfterEnd = Boolean(body.keepVisibleAfterEnd)
+    if (body.seoTitle !== undefined) updateData.seoTitle = body.seoTitle || null
+    if (body.seoDescription !== undefined) updateData.seoDescription = body.seoDescription || null
 
     console.log("Update data:", updateData)
 
@@ -132,25 +111,8 @@ export async function PUT(
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
-    // Map response back to camelCase
-    const mappedEvent = {
-      id: event.id,
-      slug: event.slug,
-      title: event.title,
-      description: event.description,
-      startsAt: event.starts_at,
-      endsAt: event.ends_at,
-      locationText: event.location_text,
-      locationUrl: event.location_url,
-      eventImageUrl: event.event_image_url,
-      isPublished: event.is_published,
-      isVisible: event.is_visible,
-      keepVisibleAfterEnd: event.keep_visible_after_end,
-      createdAt: event.created_at,
-    }
-
     console.log("Event updated successfully")
-    return NextResponse.json(mappedEvent)
+    return NextResponse.json(event)
   } catch (error: any) {
     console.error("Error updating event:", error)
     return NextResponse.json({ error: error.message || "Failed to update event" }, { status: 500 })

@@ -53,6 +53,6 @@ export const Tables = {
   contactSubmissions: "contact_submissions",
   orders: "orders",
   downloadTokens: "download_tokens",
-  events: "events",
+  events: "Event",  // PascalCase table with camelCase columns
   mediaItems: "media_items",
 } as const

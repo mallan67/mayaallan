@@ -1,8 +1,29 @@
 import Link from "next/link"
-import { getAllEvents } from "@/lib/mock-data"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+
+export const dynamic = "force-dynamic"
+
+async function getEvents() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from(Tables.events)
+      .select("*")
+      .order("startsAt", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching events:", error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error("Failed to fetch events:", error)
+    return []
+  }
+}
 
 export default async function AdminEventsPage() {
-  const events = await getAllEvents()
+  const events = await getEvents()
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -22,7 +43,7 @@ export default async function AdminEventsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {events.map((event) => (
+          {events.map((event: any) => (
             <Link
               key={event.id}
               href={`/admin/events/${event.id}`}
@@ -33,8 +54,8 @@ export default async function AdminEventsPage() {
                   <h2 className="text-lg font-semibold mb-1">{event.title}</h2>
                   {event.description && <p className="text-sm text-slate-600 mb-2 line-clamp-2">{event.description}</p>}
                   <div className="flex items-center gap-4 text-sm text-slate-600 mb-3">
-                    <span>📅 {new Date(event.startsAt).toLocaleDateString()}</span>
-                    {event.locationText && <span>📍 {event.locationText}</span>}
+                    <span>{new Date(event.startsAt).toLocaleDateString()}</span>
+                    {event.locationText && <span>{event.locationText}</span>}
                   </div>
                   <div className="flex items-center gap-3">
                     <span
