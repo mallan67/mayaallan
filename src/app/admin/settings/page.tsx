@@ -9,7 +9,7 @@ type SiteSettings = {
   tagline?: string | null
   footerText?: string | null
   contactEmail?: string | null
-  socialTwitter?: string | null
+  socialX?: string | null
   socialInstagram?: string | null
   socialFacebook?: string | null
   socialYoutube?: string | null
@@ -60,7 +60,7 @@ export default function AdminSettingsPage() {
         tagline: String(form.get("tagline") || ""),
         footerText: String(form.get("footerText") || ""),
         contactEmail: String(form.get("contactEmail") || ""),
-        socialTwitter: String(form.get("socialTwitter") || ""),
+        socialX: String(form.get("socialX") || ""),
         socialInstagram: String(form.get("socialInstagram") || ""),
         socialFacebook: String(form.get("socialFacebook") || ""),
         socialYoutube: String(form.get("socialYoutube") || ""),
@@ -211,7 +211,7 @@ export default function AdminSettingsPage() {
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">X (Twitter)</label>
-              <input name="socialTwitter" defaultValue={settings.socialTwitter || ""} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              <input name="socialX" defaultValue={settings.socialX || ""} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Instagram</label>
