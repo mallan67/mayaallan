@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.books (
   title TEXT NOT NULL,
   subtitle1 TEXT,
   subtitle2 TEXT,
+  subtitle3 TEXT,
   tags_csv TEXT,
   isbn TEXT,
   copyright TEXT,

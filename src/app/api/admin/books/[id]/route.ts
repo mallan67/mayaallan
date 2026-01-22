@@ -55,6 +55,7 @@ export async function GET(
       title: book.title,
       subtitle1: book.subtitle1,
       subtitle2: book.subtitle2,
+      subtitle3: book.subtitle3,
       tagsCsv: book.tags_csv,
       isbn: book.isbn,
       copyright: book.copyright,
@@ -143,6 +144,7 @@ export async function PUT(
     if (body.slug !== undefined) updateData.slug = String(body.slug || "")
     if (body.subtitle1 !== undefined) updateData.subtitle1 = body.subtitle1 || null
     if (body.subtitle2 !== undefined) updateData.subtitle2 = body.subtitle2 || null
+    if (body.subtitle3 !== undefined) updateData.subtitle3 = body.subtitle3 || null
     if (body.tagsCsv !== undefined) updateData.tags_csv = body.tagsCsv || null
     if (body.blurb !== undefined) updateData.blurb = body.blurb || null
     if (body.coverUrl !== undefined) updateData.cover_url = body.coverUrl || null
@@ -223,6 +225,7 @@ export async function PUT(
       title: updatedBook.title,
       subtitle1: updatedBook.subtitle1,
       subtitle2: updatedBook.subtitle2,
+      subtitle3: updatedBook.subtitle3,
       tagsCsv: updatedBook.tags_csv,
       isbn: updatedBook.isbn,
       copyright: updatedBook.copyright,

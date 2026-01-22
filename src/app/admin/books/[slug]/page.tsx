@@ -36,6 +36,7 @@ interface Book {
   title: string
   subtitle1: string | null
   subtitle2: string | null
+  subtitle3: string | null
   tagsCsv: string | null
   blurb: string | null
   coverUrl: string | null
@@ -68,6 +69,7 @@ const defaultBook: Book = {
   slug: "",
   subtitle1: null,
   subtitle2: null,
+  subtitle3: null,
   tagsCsv: null,
   blurb: null,
   coverUrl: null,
@@ -332,11 +334,31 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Subtitle</label>
+              <label className="block text-sm font-medium mb-1">Subtitle 1</label>
               <input
                 type="text"
                 value={book.subtitle1 || ""}
                 onChange={(e) => setBook({ ...book, subtitle1: e.target.value || null })}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Subtitle 2</label>
+              <input
+                type="text"
+                value={book.subtitle2 || ""}
+                onChange={(e) => setBook({ ...book, subtitle2: e.target.value || null })}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Subtitle 3</label>
+              <input
+                type="text"
+                value={book.subtitle3 || ""}
+                onChange={(e) => setBook({ ...book, subtitle3: e.target.value || null })}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2"
               />
             </div>

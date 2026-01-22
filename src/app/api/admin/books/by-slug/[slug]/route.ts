@@ -42,6 +42,7 @@ export async function GET(
       title: book.title,
       subtitle1: book.subtitle1,
       subtitle2: book.subtitle2,
+      subtitle3: book.subtitle3,
       tagsCsv: book.tags_csv,
       isbn: book.isbn,
       copyright: book.copyright,
