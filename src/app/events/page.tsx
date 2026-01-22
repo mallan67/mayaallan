@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
 }
 
-export const revalidate = 300 // 5 minutes
+export const revalidate = 60 // 1 minute
 
 async function getVisibleEvents() {
   try {
@@ -28,10 +28,11 @@ async function getVisibleEvents() {
       .order("startsAt", { ascending: true })
 
     if (error) {
-      console.error("Error fetching events:", error)
+      console.error("Error fetching visible events:", error)
       return []
     }
 
+    console.log("Visible events found:", data?.length || 0)
     return data || []
   } catch (error) {
     console.error("Failed to fetch events:", error)
