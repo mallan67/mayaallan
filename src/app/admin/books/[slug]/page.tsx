@@ -1,7 +1,7 @@
 "use client"
 
 import ImageUpload from "@/components/ImageUpload"
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -102,8 +102,11 @@ const FORMAT_OPTIONS = [
   { value: "audiobook", label: "Audiobook" },
 ]
 
-export default function AdminBookForm({ params }: { params: { slug: string } }) {
+export default function AdminBookForm({ params }: { params: { slug: string } | Promise<{ slug: string }> }) {
   const router = useRouter()
+
+  // Handle both Promise params (Next.js 15+) and plain object params (from new/page.tsx)
+  const resolvedParams = params instanceof Promise ? use(params) : params
 
   const [slug, setSlug] = useState<string | null>(null)
   const [isNew, setIsNew] = useState(false)
@@ -116,10 +119,10 @@ export default function AdminBookForm({ params }: { params: { slug: string } }) 
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   useEffect(() => {
-    const s = params?.slug
+    const s = resolvedParams?.slug
     setSlug(s)
     setIsNew(s === "new")
-  }, [params?.slug])
+  }, [resolvedParams?.slug])
 
   useEffect(() => {
     if (slug === null) return
