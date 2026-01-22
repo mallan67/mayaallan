@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 /**
@@ -20,6 +21,9 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authed = await isAuthenticated()
+  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
   const { id } = await params
   const bookId = parseInt(id)
 
@@ -107,6 +111,9 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authed = await isAuthenticated()
+  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
   const { id } = await params
   const bookId = parseInt(id)
 
@@ -139,6 +146,7 @@ export async function PUT(
     if (body.tagsCsv !== undefined) updateData.tags_csv = body.tagsCsv || null
     if (body.blurb !== undefined) updateData.blurb = body.blurb || null
     if (body.coverUrl !== undefined) updateData.cover_url = body.coverUrl || null
+    if (body.backCoverUrl !== undefined) updateData.back_cover_url = body.backCoverUrl || null
     if (body.ebookFileUrl !== undefined) updateData.ebook_file_url = body.ebookFileUrl || null
     if (body.seoTitle !== undefined) updateData.seo_title = body.seoTitle || null
     if (body.seoDescription !== undefined) updateData.seo_description = body.seoDescription || null
@@ -275,6 +283,9 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authed = await isAuthenticated()
+  if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
   const { id } = await params
   const bookId = parseInt(id)
 

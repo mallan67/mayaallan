@@ -119,10 +119,10 @@ export default async function BookPage({ params }: BookPageProps) {
   // ============================================
   // Show direct sale section if:
   // 1. allowDirectSale is TRUE
-  // 2. AND at least one payment link exists (Stripe or PayPal)
-  const hasStripeLink = book.stripePaymentLink && book.stripePaymentLink.trim() !== ""
-  const hasPayPalLink = book.paypalPaymentLink && book.paypalPaymentLink.trim() !== ""
-  const showDirectSale = book.allowDirectSale === true && (hasStripeLink || hasPayPalLink)
+  // 2. AND book has an ebook price
+  // The checkout API will create Stripe/PayPal sessions dynamically
+  // External payment links are legacy - we now use proper checkout with webhooks
+  const showDirectSale = book.allowDirectSale === true && book.hasEbook && book.ebookPrice && Number(book.ebookPrice) > 0
 
   // ============================================
   // RETAILER LINKS LOGIC
@@ -277,7 +277,7 @@ export default async function BookPage({ params }: BookPageProps) {
               {showDirectSale && (
                 <div className="p-6 border-2 border-blue-200 rounded-2xl bg-gradient-to-br from-blue-50 to-white">
                   <h3 className="text-base font-bold text-slate-900 mb-4">Buy Direct</h3>
-                  <PaymentButtons bookId={book.id} hasStripe={!!hasStripeLink} hasPayPal={!!hasPayPalLink} />
+                  <PaymentButtons bookId={book.id} hasStripe={true} hasPayPal={true} />
                 </div>
               )}
 
