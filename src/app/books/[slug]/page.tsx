@@ -32,18 +32,29 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
     const title = book.seo_title || book.title
     const subtitles = [book.subtitle1, book.subtitle2, book.subtitle3].filter(Boolean).join(" | ")
     const description = book.seo_description || book.blurb || subtitles || `${book.title} by Maya Allan`
-    const imageUrl = book.og_image_url || book.cover_url
+    const rawImageUrl = book.og_image_url || book.cover_url
     const bookUrl = `https://www.mayaallan.com/books/${slug}`
 
+    // Ensure image URL is absolute
+    const imageUrl = rawImageUrl && !rawImageUrl.startsWith("http")
+      ? `https://www.mayaallan.com${rawImageUrl}`
+      : rawImageUrl
+
     const fullTitle = `${book.title}${subtitles ? ` - ${subtitles}` : ""}`
+
+    // Truncate description for social (recommended max ~200 chars)
+    const socialDescription = description.length > 200
+      ? description.substring(0, 197) + "..."
+      : description
 
     return {
       title,
       description,
       authors: [{ name: "Maya Allan" }],
+      metadataBase: new URL("https://www.mayaallan.com"),
       openGraph: {
         title: fullTitle,
-        description,
+        description: socialDescription,
         url: bookUrl,
         siteName: "Maya Allan",
         type: "book",
@@ -52,10 +63,10 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
           images: [
             {
               url: imageUrl,
+              secureUrl: imageUrl,
               width: 1200,
               height: 630,
               alt: fullTitle,
-              type: "image/jpeg",
             },
           ],
         }),
@@ -65,11 +76,15 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
         site: "@mayaallan",
         creator: "@mayaallan",
         title: fullTitle,
-        description,
+        description: socialDescription,
         ...(imageUrl && { images: [imageUrl] }),
       },
       other: {
-        "pinterest:description": description,
+        // LinkedIn specific
+        "og:image:width": "1200",
+        "og:image:height": "630",
+        // Pinterest
+        "pinterest:description": socialDescription,
         ...(imageUrl && { "pinterest:image": imageUrl }),
       },
     }
