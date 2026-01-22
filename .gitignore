@@ -11,3 +11,5 @@ dist/
 tsconfig.tsbuildinfo
 nul
 .claude/
+!.env.example
+
