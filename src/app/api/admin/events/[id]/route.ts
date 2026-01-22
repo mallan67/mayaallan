@@ -75,7 +75,9 @@ export async function PUT(
     }
 
     // Build update data with camelCase columns (matching Event table)
-    const updateData: any = {}
+    const updateData: any = {
+      updatedAt: new Date().toISOString(),
+    }
 
     if (body.title !== undefined) updateData.title = body.title
     if (body.slug !== undefined) updateData.slug = body.slug

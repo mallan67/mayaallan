@@ -50,6 +50,7 @@ export async function POST(request: Request) {
     }
 
     // Event table uses camelCase columns
+    const now = new Date().toISOString()
     const insertData: any = {
       title: body.title,
       slug: body.slug,
@@ -64,6 +65,8 @@ export async function POST(request: Request) {
       keepVisibleAfterEnd: body.keepVisibleAfterEnd ?? false,
       seoTitle: body.seoTitle || null,
       seoDescription: body.seoDescription || null,
+      createdAt: now,
+      updatedAt: now,
     }
 
     console.log("Creating event with data:", insertData)
