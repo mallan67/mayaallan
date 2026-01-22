@@ -210,7 +210,7 @@ export default function AdminSettingsPage() {
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Twitter/X</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">X (Twitter)</label>
               <input name="socialTwitter" defaultValue={settings.socialTwitter || ""} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             </div>
             <div>
