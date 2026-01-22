@@ -59,44 +59,49 @@ export default async function EventsPage() {
           No events are currently scheduled. Check back soon for upcoming talks, readings, and workshops.
         </p>
       ) : (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {events.map((event: any) => (
-            <div key={event.id} className="border border-slate-200 rounded-lg p-6 hover:shadow-md transition">
-              {event.eventImageUrl && (
-                <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden bg-slate-100">
-                  <img src={event.eventImageUrl} alt={event.title} className="w-full h-full object-cover" />
+            <div key={event.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition">
+              <div className="flex gap-4">
+                {event.eventImageUrl && (
+                  <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-slate-100">
+                    <img src={event.eventImageUrl} alt={event.title} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-serif text-base font-semibold mb-1 line-clamp-2">{event.title}</h2>
+                  <div className="text-xs text-slate-600">
+                    {new Date(event.startsAt).toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </div>
                 </div>
-              )}
-              <h2 className="font-serif text-xl font-semibold mb-2">{event.title}</h2>
-              <div className="text-sm text-slate-600 mb-3">
-                {new Date(event.startsAt).toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
               </div>
-              {event.locationText && <div className="text-sm text-slate-700 mb-3">{event.locationText}</div>}
-              {event.description && <p className="text-sm text-slate-700 mb-4">{event.description}</p>}
+
+              {event.locationText && <div className="text-xs text-slate-600 mt-2">{event.locationText}</div>}
+              {event.description && <p className="text-xs text-slate-700 mt-2 line-clamp-2">{event.description}</p>}
 
               {event.locationUrl && (
                 <a
                   href={event.locationUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block px-4 py-2 text-sm font-semibold text-white bg-black rounded-lg hover:bg-black/80 transition mb-4"
+                  className="inline-block px-3 py-1.5 text-xs font-semibold text-white bg-black rounded-lg hover:bg-black/80 transition mt-3"
                 >
-                  View Location / Register
+                  Register
                 </a>
               )}
 
-              <div className="pt-3 border-t border-slate-100">
+              <div className="pt-2 mt-2 border-t border-slate-100">
                 <ShareButtons
                   url={`https://mayaallan.com/events/${event.slug}`}
                   title={event.title}
                   description={event.description || `Join Maya Allan for ${event.title}`}
+                  className="justify-start"
                 />
               </div>
             </div>
