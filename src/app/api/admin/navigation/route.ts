@@ -27,6 +27,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  console.log("Fetching navigation items from table:", Tables.navigationItems)
+
   const { data: items, error } = await supabaseAdmin
     .from(Tables.navigationItems)
     .select("*")
@@ -36,6 +38,8 @@ export async function GET() {
     console.error("Failed to fetch navigation items:", error)
     return NextResponse.json({ error: "Failed to fetch navigation items" }, { status: 500 })
   }
+
+  console.log("Navigation items found:", items?.length || 0, items)
 
   return NextResponse.json((items || []).map(mapToUI))
 }

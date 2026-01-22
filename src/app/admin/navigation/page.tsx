@@ -89,6 +89,12 @@ export default function AdminNavigationPage() {
         <p className="text-sm text-slate-600 mt-1">Control which tabs appear in your site header and their names</p>
       </div>
 
+      {items.length === 0 ? (
+        <div className="bg-white border border-slate-200 rounded-lg p-8 text-center">
+          <p className="text-slate-600 mb-4">No navigation items found. Add some items to get started.</p>
+          <p className="text-xs text-slate-500">Run the SQL in Supabase to add default items, or the table may be empty.</p>
+        </div>
+      ) : (
       <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
         <div className="divide-y divide-slate-200">
           {items.map((item, index) => (
@@ -144,6 +150,7 @@ export default function AdminNavigationPage() {
           ))}
         </div>
       </div>
+      )}
 
       {message && (
         <div
