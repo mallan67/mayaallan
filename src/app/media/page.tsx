@@ -24,28 +24,17 @@ async function getVisibleMedia() {
     const { data, error } = await supabaseAdmin
       .from(Tables.mediaItems)
       .select("*")
-      .eq("is_published", true)
-      .eq("is_visible", true)
-      .order("created_at", { ascending: false })
+      .eq("isPublished", true)
+      .eq("isVisible", true)
+      .order("createdAt", { ascending: false })
 
     if (error) {
       console.error("Error fetching media:", error)
       return []
     }
 
-    return (data || []).map((item: any) => ({
-      id: item.id,
-      slug: item.slug,
-      title: item.title,
-      kind: item.kind,
-      description: item.description,
-      coverUrl: item.cover_url,
-      fileUrl: item.file_url,
-      externalUrl: item.external_url,
-      duration: item.duration,
-      isPublished: item.is_published,
-      isVisible: item.is_visible,
-    }))
+    // Table uses camelCase columns, return as-is
+    return data || []
   } catch (error) {
     console.error("Failed to fetch media:", error)
     return []
@@ -72,7 +61,7 @@ export default async function MediaPage() {
         </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mediaItems.map((item) => (
+          {mediaItems.map((item: any) => (
             <div key={item.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-xs font-semibold uppercase tracking-wider px-2 py-1 bg-slate-100 rounded">

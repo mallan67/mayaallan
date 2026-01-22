@@ -8,6 +8,8 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
  * GET - Fetch single media item
  * PUT - Update media item
  * DELETE - Delete media item
+ *
+ * Note: Table uses camelCase columns (coverUrl, fileUrl, etc.)
  */
 
 // GET single media item by ID
@@ -37,27 +39,8 @@ export async function GET(
       return NextResponse.json({ error: "Media not found" }, { status: 404 })
     }
 
-    // Map to camelCase for frontend
-    const mappedMedia = {
-      id: media.id,
-      slug: media.slug,
-      title: media.title,
-      kind: media.kind,
-      description: media.description,
-      coverUrl: media.cover_url,
-      fileUrl: media.file_url,
-      externalUrl: media.external_url,
-      duration: media.duration,
-      isPublished: media.is_published,
-      isVisible: media.is_visible,
-      seoTitle: media.seo_title,
-      seoDescription: media.seo_description,
-      publishedAt: media.published_at,
-      createdAt: media.created_at,
-      updatedAt: media.updated_at,
-    }
-
-    return NextResponse.json(mappedMedia)
+    // Columns are already camelCase, return as-is
+    return NextResponse.json(media)
   } catch (error) {
     console.error("Error fetching media:", error)
     return NextResponse.json({ error: "Failed to fetch media" }, { status: 500 })
@@ -94,28 +77,22 @@ export async function PUT(
       return NextResponse.json({ error: "Media not found" }, { status: 404 })
     }
 
-    // Build update data (only include provided fields)
-    const updateData: any = {
-      updated_at: new Date().toISOString(),
-    }
+    // Build update data (camelCase columns)
+    const updateData: any = {}
 
     if (body.title !== undefined) updateData.title = body.title
     if (body.slug !== undefined) updateData.slug = body.slug
     if (body.kind !== undefined) updateData.kind = body.kind
     if (body.description !== undefined) updateData.description = body.description || null
-    if (body.coverUrl !== undefined) updateData.cover_url = body.coverUrl || null
-    if (body.fileUrl !== undefined) updateData.file_url = body.fileUrl || null
-    if (body.externalUrl !== undefined) updateData.external_url = body.externalUrl || null
+    if (body.coverUrl !== undefined) updateData.coverUrl = body.coverUrl || null
+    if (body.fileUrl !== undefined) updateData.fileUrl = body.fileUrl || null
+    if (body.externalUrl !== undefined) updateData.externalUrl = body.externalUrl || null
     if (body.duration !== undefined) updateData.duration = body.duration || null
-    if (body.isPublished !== undefined) updateData.is_published = Boolean(body.isPublished)
-    if (body.isVisible !== undefined) updateData.is_visible = Boolean(body.isVisible)
-    if (body.seoTitle !== undefined) updateData.seo_title = body.seoTitle || null
-    if (body.seoDescription !== undefined) updateData.seo_description = body.seoDescription || null
-    if (body.publishedAt !== undefined) updateData.published_at = body.publishedAt || null
-
-    // Debug logging
-    console.log("Media update - coverUrl received:", body.coverUrl)
-    console.log("Media update - cover_url to save:", updateData.cover_url)
+    if (body.isPublished !== undefined) updateData.isPublished = Boolean(body.isPublished)
+    if (body.isVisible !== undefined) updateData.isVisible = Boolean(body.isVisible)
+    if (body.seoTitle !== undefined) updateData.seoTitle = body.seoTitle || null
+    if (body.seoDescription !== undefined) updateData.seoDescription = body.seoDescription || null
+    if (body.publishedAt !== undefined) updateData.publishedAt = body.publishedAt || null
 
     const { data: media, error: updateError } = await supabaseAdmin
       .from(Tables.mediaItems)
@@ -135,27 +112,7 @@ export async function PUT(
       throw updateError
     }
 
-    // Map to camelCase for frontend
-    const mappedMedia = {
-      id: media.id,
-      slug: media.slug,
-      title: media.title,
-      kind: media.kind,
-      description: media.description,
-      coverUrl: media.cover_url,
-      fileUrl: media.file_url,
-      externalUrl: media.external_url,
-      duration: media.duration,
-      isPublished: media.is_published,
-      isVisible: media.is_visible,
-      seoTitle: media.seo_title,
-      seoDescription: media.seo_description,
-      publishedAt: media.published_at,
-      createdAt: media.created_at,
-      updatedAt: media.updated_at,
-    }
-
-    return NextResponse.json(mappedMedia)
+    return NextResponse.json(media)
   } catch (error: any) {
     console.error("Error updating media:", error)
     return NextResponse.json(

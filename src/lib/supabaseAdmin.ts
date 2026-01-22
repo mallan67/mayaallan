@@ -54,5 +54,5 @@ export const Tables = {
   orders: "orders",
   downloadTokens: "download_tokens",
   events: "events",
-  mediaItems: "media_items",
+  mediaItems: "MediaItem",
 } as const

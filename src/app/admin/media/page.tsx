@@ -8,27 +8,15 @@ async function getMediaItems() {
     const { data, error } = await supabaseAdmin
       .from(Tables.mediaItems)
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("createdAt", { ascending: false })
 
     if (error) {
       console.error("Error fetching media:", error)
       return []
     }
 
-    return (data || []).map((item: any) => ({
-      id: item.id,
-      slug: item.slug,
-      title: item.title,
-      kind: item.kind,
-      description: item.description,
-      coverUrl: item.cover_url,
-      fileUrl: item.file_url,
-      externalUrl: item.external_url,
-      duration: item.duration,
-      isPublished: item.is_published,
-      isVisible: item.is_visible,
-      createdAt: item.created_at,
-    }))
+    // Table uses camelCase columns, return as-is
+    return data || []
   } catch (error) {
     console.error("Failed to fetch media:", error)
     return []
@@ -53,7 +41,7 @@ export default async function AdminMediaPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {media.map((item) => (
+          {media.map((item: any) => (
             <Link
               key={item.id}
               href={`/admin/media/${item.id}`}
