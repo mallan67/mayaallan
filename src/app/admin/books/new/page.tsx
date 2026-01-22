@@ -47,7 +47,7 @@ export default function AdminNewBookPage() {
 
       if (response.ok) {
         const book = await response.json()
-        router.push(`/admin/books/${book.id}`)
+        router.push(`/admin/books/${book.slug}`)
       } else {
         const err = await response.json()
         setMessage(err.error || "Failed to create book")
