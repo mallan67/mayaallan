@@ -1,3 +1,4 @@
+cat > tsconfig.json <<'JSON'
 {
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -17,10 +18,7 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/hooks/*": ["./src/hooks/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
@@ -32,3 +30,4 @@
   ],
   "exclude": ["node_modules", "prisma"]
 }
+JSON
