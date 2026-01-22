@@ -297,17 +297,17 @@ export default async function BookPage({ params }: BookPageProps) {
           {formats.length > 0 && !book.isComingSoon && (
             <div className="p-6 border-2 border-slate-200 rounded-2xl bg-gradient-to-br from-slate-50 to-white">
               <h3 className="text-base font-bold text-slate-900 mb-4">Available Formats</h3>
-              <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 {formats.map((f) => (
                   <div
                     key={f.key}
-                    className="p-4 border-2 border-slate-200 rounded-xl bg-white text-center hover:border-blue-300 transition-colors"
+                    className="p-2 sm:p-4 border-2 border-slate-200 rounded-xl bg-white text-center hover:border-blue-300 transition-colors"
                   >
-                    <div className="text-sm font-semibold text-slate-700">
+                    <div className="text-xs sm:text-sm font-semibold text-slate-700">
                       {f.label}
                     </div>
                     {f.price && Number(f.price) > 0 && (
-                      <div className="text-2xl md:text-3xl font-bold text-slate-900 mt-2">
+                      <div className="text-base sm:text-2xl md:text-3xl font-bold text-slate-900 mt-1 sm:mt-2">
                         ${Number(f.price).toFixed(2)}
                       </div>
                     )}
