@@ -95,6 +95,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
+    console.log("Creating book with payload:", { title: body.title, slug: body.slug })
 
     const data = {
       slug: body.slug || "",
@@ -135,10 +136,16 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
+      console.error("Supabase insert error:", { code: error.code, message: error.message, details: error.details, hint: error.hint })
       if (error.code === "23505") {
         return NextResponse.json({ error: "Slug already exists" }, { status: 409 })
       }
-      throw error
+      return NextResponse.json({
+        error: error.message || "Database insert failed",
+        details: error.details || null,
+        hint: error.hint || null,
+        code: error.code
+      }, { status: 500 })
     }
 
     // Map to camelCase for frontend compatibility
@@ -180,6 +187,13 @@ export async function POST(request: Request) {
     return NextResponse.json(mappedBook, { status: 201 })
   } catch (error: any) {
     console.error("Error creating book:", error)
-    return NextResponse.json({ error: "Failed to create book" }, { status: 500 })
+    // Return more detailed error info for debugging
+    const errorMessage = error?.message || error?.code || "Failed to create book"
+    const errorDetails = error?.details || error?.hint || null
+    return NextResponse.json({
+      error: errorMessage,
+      details: errorDetails,
+      code: error?.code
+    }, { status: 500 })
   }
 }
