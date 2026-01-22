@@ -46,6 +46,10 @@ export default async function BooksPage() {
       .eq("is_visible", true)
       .order("created_at", { ascending: false })
 
+    if (error) {
+      console.error("Books page query error:", error.message, error.code, error.details)
+    }
+    console.log("Books page: Found", booksData?.length || 0, "books matching criteria")
     if (!error && booksData) {
       books = booksData.map((book) => ({
         id: book.id,

@@ -37,7 +37,11 @@ export default async function HomePage() {
       .limit(1)
       .single()
 
+    if (error) {
+      console.error("Homepage featured book query error:", error.message, error.code, error.details)
+    }
     if (!error && data) {
+      console.log("Homepage found featured book:", data.title, data.slug)
       featuredBook = {
         id: data.id,
         slug: data.slug,
@@ -50,10 +54,12 @@ export default async function HomePage() {
         isFeatured: data.is_featured,
         isComingSoon: data.is_coming_soon,
       }
+    } else if (!data) {
+      console.log("Homepage: No featured book found matching criteria (is_featured=true, is_published=true, is_visible=true)")
     }
-  } catch (error) {
+  } catch (error: any) {
     // During build or if DB unavailable, show default hero
-    console.warn("Featured book fetch failed:", error)
+    console.error("Homepage featured book fetch failed:", error?.message || error)
   }
 
   // If no featured book, render default hero
