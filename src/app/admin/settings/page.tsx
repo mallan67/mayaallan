@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
+import ImageUpload from "@/components/ImageUpload"
 
 type SiteSettings = {
   id: number
@@ -17,12 +18,16 @@ type SiteSettings = {
   authorBio?: string | null
   authorPhotoUrl?: string | null
   defaultOgImageUrl?: string | null
+  siteIconUrl?: string | null
 }
 
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SiteSettings | null>(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string>("")
+  const [authorPhotoUrl, setAuthorPhotoUrl] = useState<string>("")
+  const [siteIconUrl, setSiteIconUrl] = useState<string>("")
+  const [defaultOgImageUrl, setDefaultOgImageUrl] = useState<string>("")
 
   useEffect(() => {
     ;(async () => {
@@ -31,6 +36,9 @@ export default function AdminSettingsPage() {
         if (!res.ok) throw new Error("load failed")
         const data = (await res.json()) as SiteSettings
         setSettings(data)
+        setAuthorPhotoUrl(data.authorPhotoUrl || "")
+        setSiteIconUrl(data.siteIconUrl || "")
+        setDefaultOgImageUrl(data.defaultOgImageUrl || "")
       } catch {
         setMessage("Failed to load settings")
       }
@@ -59,8 +67,9 @@ export default function AdminSettingsPage() {
         socialTiktok: String(form.get("socialTiktok") || ""),
         authorName: String(form.get("authorName") || ""),
         authorBio: String(form.get("authorBio") || ""),
-        authorPhotoUrl: String(form.get("authorPhotoUrl") || ""),
-        defaultOgImageUrl: String(form.get("defaultOgImageUrl") || ""),
+        authorPhotoUrl: authorPhotoUrl || "",
+        defaultOgImageUrl: defaultOgImageUrl || "",
+        siteIconUrl: siteIconUrl || "",
       }
 
       const res = await fetch("/api/admin/settings", {
@@ -160,23 +169,39 @@ export default function AdminSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Author Photo URL</label>
-            <input
-              name="authorPhotoUrl"
-              defaultValue={settings.authorPhotoUrl || ""}
-              placeholder="https://..."
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+            <ImageUpload
+              label="Author Photo"
+              currentUrl={authorPhotoUrl}
+              onUpload={setAuthorPhotoUrl}
+              onRemove={() => setAuthorPhotoUrl("")}
+              accept="image/*"
             />
+          </div>
+        </div>
+
+        <div className="border border-slate-200 rounded-lg p-6 space-y-4">
+          <h2 className="text-lg font-semibold">Site Images</h2>
+
+          <div>
+            <ImageUpload
+              label="Site Icon (Favicon)"
+              currentUrl={siteIconUrl}
+              onUpload={setSiteIconUrl}
+              onRemove={() => setSiteIconUrl("")}
+              accept="image/*"
+            />
+            <p className="text-xs text-slate-500 mt-1">Recommended: Square image, 512x512px or larger</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Default OG Image URL</label>
-            <input
-              name="defaultOgImageUrl"
-              defaultValue={settings.defaultOgImageUrl || ""}
-              placeholder="https://..."
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+            <ImageUpload
+              label="Default Social Share Image (OG Image)"
+              currentUrl={defaultOgImageUrl}
+              onUpload={setDefaultOgImageUrl}
+              onRemove={() => setDefaultOgImageUrl("")}
+              accept="image/*"
             />
+            <p className="text-xs text-slate-500 mt-1">Shown when sharing pages on social media. Recommended: 1200x630px</p>
           </div>
         </div>
 

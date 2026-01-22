@@ -19,7 +19,26 @@ export async function GET() {
       throw error
     }
 
-    return NextResponse.json(settings || {})
+    // Map snake_case to camelCase
+    const mapped = settings ? {
+      id: settings.id,
+      siteName: settings.site_name,
+      tagline: settings.tagline,
+      footerText: settings.footer_text,
+      contactEmail: settings.contact_email,
+      socialTwitter: settings.social_twitter,
+      socialInstagram: settings.social_instagram,
+      socialFacebook: settings.social_facebook,
+      socialYoutube: settings.social_youtube,
+      socialTiktok: settings.social_tiktok,
+      authorName: settings.author_name,
+      authorBio: settings.author_bio,
+      authorPhotoUrl: settings.author_photo_url,
+      defaultOgImageUrl: settings.default_og_image_url,
+      siteIconUrl: settings.site_icon_url,
+    } : {}
+
+    return NextResponse.json(mapped)
   } catch (error) {
     console.error("Error fetching settings:", error)
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 })
@@ -56,6 +75,7 @@ export async function PATCH(request: Request) {
       author_bio: data.authorBio || null,
       author_photo_url: data.authorPhotoUrl || null,
       default_og_image_url: data.defaultOgImageUrl || null,
+      site_icon_url: data.siteIconUrl || null,
     }
 
     let settings
