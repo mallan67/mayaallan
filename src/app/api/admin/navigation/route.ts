@@ -17,7 +17,7 @@ function mapToUI(item: any): NavigationItemUI {
     label: item.label,
     href: item.href,
     order: item.sort_order,
-    isVisible: item.is_active,
+    isVisible: item.is_visible ?? true,
   }
 }
 
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         label,
         href,
         sort_order: order || 999,
-        is_active: isVisible !== false,
+        is_visible: isVisible !== false,
       })
       .select()
       .single()
@@ -97,7 +97,7 @@ export async function PATCH(request: Request) {
             label: item.label,
             href: item.href,
             sort_order: item.order,
-            is_active: item.isVisible,
+            is_visible: item.isVisible,
           })
           .eq("id", item.id)
           .select()
