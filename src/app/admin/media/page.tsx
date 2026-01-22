@@ -1,8 +1,42 @@
 import Link from "next/link"
-import { getAllMedia } from "@/lib/mock-data"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+
+export const dynamic = "force-dynamic"
+
+async function getMediaItems() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from(Tables.mediaItems)
+      .select("*")
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching media:", error)
+      return []
+    }
+
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      slug: item.slug,
+      title: item.title,
+      kind: item.kind,
+      description: item.description,
+      coverUrl: item.cover_url,
+      fileUrl: item.file_url,
+      externalUrl: item.external_url,
+      duration: item.duration,
+      isPublished: item.is_published,
+      isVisible: item.is_visible,
+      createdAt: item.created_at,
+    }))
+  } catch (error) {
+    console.error("Failed to fetch media:", error)
+    return []
+  }
+}
 
 export default async function AdminMediaPage() {
-  const media = await getAllMedia()
+  const media = await getMediaItems()
 
   return (
     <div className="p-6 max-w-6xl mx-auto">

@@ -1,4 +1,4 @@
-import { getVisibleMedia } from "@/lib/mock-data"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { ShareButtons } from "@/components/share-buttons"
 import type { Metadata } from "next"
 
@@ -15,6 +15,41 @@ export const metadata: Metadata = {
     title: "Media - Maya Allan",
     description: "Music, guided audios, videos, and PDF guides.",
   },
+}
+
+export const revalidate = 300 // 5 minutes
+
+async function getVisibleMedia() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from(Tables.mediaItems)
+      .select("*")
+      .eq("is_published", true)
+      .eq("is_visible", true)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching media:", error)
+      return []
+    }
+
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      slug: item.slug,
+      title: item.title,
+      kind: item.kind,
+      description: item.description,
+      coverUrl: item.cover_url,
+      fileUrl: item.file_url,
+      externalUrl: item.external_url,
+      duration: item.duration,
+      isPublished: item.is_published,
+      isVisible: item.is_visible,
+    }))
+  } catch (error) {
+    console.error("Failed to fetch media:", error)
+    return []
+  }
 }
 
 export default async function MediaPage() {
