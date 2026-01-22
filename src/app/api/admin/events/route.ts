@@ -1,33 +1,58 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { getAllEvents, createEvent } from "@/lib/mock-data"
-import { z } from "zod"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
-const EventSchema = z.object({
-  slug: z.string().min(1),
-  title: z.string().min(1),
-  description: z.string().optional().nullable(),
-  startsAt: z.string(),
-  endsAt: z.string().optional().nullable(),
-  locationText: z.string().optional().nullable(),
-  locationUrl: z.string().optional().nullable(),
-  isPublished: z.boolean().default(false),
-  isVisible: z.boolean().default(false),
-  keepVisibleAfterEnd: z.boolean().default(false),
-  seoTitle: z.string().optional().nullable(),
-  seoDescription: z.string().optional().nullable(),
-  ogImageUrl: z.string().optional().nullable(),
-})
+/**
+ * EVENTS API ROUTES
+ *
+ * Uses Supabase events table with snake_case columns.
+ */
 
+// GET all events
 export async function GET() {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const events = await getAllEvents()
-  return NextResponse.json(events)
+  try {
+    const { data: events, error } = await supabaseAdmin
+      .from(Tables.events)
+      .select("*")
+      .order("starts_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching events:", error)
+      throw error
+    }
+
+    // Map snake_case to camelCase for frontend
+    const mappedEvents = (events || []).map((item: any) => ({
+      id: item.id,
+      slug: item.slug,
+      title: item.title,
+      description: item.description,
+      startsAt: item.starts_at,
+      endsAt: item.ends_at,
+      locationText: item.location_text,
+      locationUrl: item.location_url,
+      eventImageUrl: item.event_image_url || item.og_image_url,
+      isPublished: item.is_published ?? false,
+      isVisible: item.is_visible ?? false,
+      keepVisibleAfterEnd: item.keep_visible_after_end ?? false,
+      seoTitle: item.seo_title,
+      seoDescription: item.seo_description,
+      ogImageUrl: item.og_image_url,
+      createdAt: item.created_at,
+    }))
+
+    return NextResponse.json(mappedEvents)
+  } catch (error) {
+    console.error("Error fetching events:", error)
+    return NextResponse.json({ error: "Failed to fetch events" }, { status: 500 })
+  }
 }
 
+// POST create new event
 export async function POST(request: Request) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -35,13 +60,73 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const data = EventSchema.parse(body)
-    const event = await createEvent(data)
-    return NextResponse.json(event, { status: 201 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Validation failed", details: error.issues }, { status: 400 })
+
+    if (!body.title || !body.slug) {
+      return NextResponse.json({ error: "Title and slug are required" }, { status: 400 })
     }
-    return NextResponse.json({ error: "Failed to create event" }, { status: 500 })
+
+    if (!body.startsAt) {
+      return NextResponse.json({ error: "Start date/time is required" }, { status: 400 })
+    }
+
+    // Map camelCase to snake_case for database
+    const insertData: any = {
+      title: body.title,
+      slug: body.slug,
+      description: body.description || null,
+      starts_at: body.startsAt,
+      ends_at: body.endsAt || null,
+      location_text: body.locationText || null,
+      location_url: body.locationUrl || null,
+      event_image_url: body.eventImageUrl || null,
+      is_published: body.isPublished ?? false,
+      is_visible: body.isVisible ?? false,
+      keep_visible_after_end: body.keepVisibleAfterEnd ?? false,
+      seo_title: body.seoTitle || null,
+      seo_description: body.seoDescription || null,
+      og_image_url: body.ogImageUrl || body.eventImageUrl || null,
+    }
+
+    console.log("Creating event with data:", insertData)
+
+    const { data: event, error } = await supabaseAdmin
+      .from(Tables.events)
+      .insert(insertData)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error creating event:", error)
+      if (error.code === "23505") {
+        return NextResponse.json(
+          { error: "An event with this slug already exists" },
+          { status: 409 }
+        )
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Map response back to camelCase
+    const mappedEvent = {
+      id: event.id,
+      slug: event.slug,
+      title: event.title,
+      description: event.description,
+      startsAt: event.starts_at,
+      endsAt: event.ends_at,
+      locationText: event.location_text,
+      locationUrl: event.location_url,
+      eventImageUrl: event.event_image_url,
+      isPublished: event.is_published,
+      isVisible: event.is_visible,
+      keepVisibleAfterEnd: event.keep_visible_after_end,
+      createdAt: event.created_at,
+    }
+
+    console.log("Event created successfully:", mappedEvent)
+    return NextResponse.json(mappedEvent, { status: 201 })
+  } catch (error: any) {
+    console.error("Error creating event:", error)
+    return NextResponse.json({ error: error.message || "Failed to create event" }, { status: 500 })
   }
 }
