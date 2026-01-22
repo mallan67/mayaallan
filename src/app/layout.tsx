@@ -29,6 +29,11 @@ export const metadata: Metadata = {
     template: "%s | Maya Allan",
   },
   description: "Official website of Maya Allan - Author, Speaker, and Wellness Advocate",
+  icons: {
+    icon: "/api/favicon",
+    shortcut: "/api/favicon",
+    apple: "/api/favicon",
+  },
 }
 
 export default function RootLayout({
