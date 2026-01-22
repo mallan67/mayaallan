@@ -68,6 +68,18 @@ export default function AdminEditMediaPage() {
 
     try {
       const formData = new FormData(e.currentTarget)
+
+      // Get checkbox values - when checked, formData returns the value; when unchecked, returns null
+      const isVisibleChecked = formData.get("isVisible") === "true"
+      const isPublishedChecked = formData.get("isPublished") === "true"
+
+      console.log("Form checkbox values:", {
+        isVisibleRaw: formData.get("isVisible"),
+        isPublishedRaw: formData.get("isPublished"),
+        isVisibleChecked,
+        isPublishedChecked,
+      })
+
       const data = {
         slug: formData.get("slug") as string,
         title: formData.get("title") as string,
@@ -78,9 +90,11 @@ export default function AdminEditMediaPage() {
         externalUrl: externalUrl || null,
         duration: (formData.get("duration") as string) || null,
         publishedAt: (formData.get("publishedAt") as string) || null,
-        isVisible: formData.get("isVisible") === "true",
-        isPublished: formData.get("isPublished") === "true",
+        isVisible: isVisibleChecked,
+        isPublished: isPublishedChecked,
       }
+
+      console.log("Sending data to API:", data)
 
       const response = await fetch(`/api/admin/media/${id}`, {
         method: "PUT",
@@ -90,6 +104,7 @@ export default function AdminEditMediaPage() {
 
       if (response.ok) {
         const updated = await response.json()
+        console.log("API returned updated media:", updated)
         setMedia(updated)
         setMessage("Media updated successfully!")
         setTimeout(() => setMessage(""), 3000)
