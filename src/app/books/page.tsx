@@ -57,6 +57,7 @@ export default async function BooksPage() {
         title: book.title,
         subtitle1: book.subtitle1,
         subtitle2: book.subtitle2,
+        subtitle3: book.subtitle3,
         coverUrl: book.cover_url,
         hasEbook: book.has_ebook,
         hasPaperback: book.has_paperback,
@@ -166,6 +167,12 @@ export default async function BooksPage() {
                   {book.subtitle2 && (
                     <p className="mt-2 text-slate-600 text-sm md:text-base italic">
                       {book.subtitle2}
+                    </p>
+                  )}
+
+                  {book.subtitle3 && (
+                    <p className="mt-2 text-slate-500 text-sm md:text-base">
+                      {book.subtitle3}
                     </p>
                   )}
                 </div>

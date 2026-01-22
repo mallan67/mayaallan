@@ -48,6 +48,7 @@ export default async function HomePage() {
         title: data.title,
         subtitle1: data.subtitle1,
         subtitle2: data.subtitle2,
+        subtitle3: data.subtitle3,
         blurb: data.blurb,
         tagsCsv: data.tags_csv,
         coverUrl: data.cover_url,
@@ -159,6 +160,12 @@ export default async function HomePage() {
             {featuredBook.subtitle2 && (
               <p className="text-base md:text-lg text-slate-600 italic">
                 {featuredBook.subtitle2}
+              </p>
+            )}
+
+            {featuredBook.subtitle3 && (
+              <p className="text-base md:text-lg text-slate-500">
+                {featuredBook.subtitle3}
               </p>
             )}
 

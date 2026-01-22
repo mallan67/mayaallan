@@ -75,6 +75,7 @@ export default async function BookPage({ params }: BookPageProps) {
         title: data.title,
         subtitle1: data.subtitle1,
         subtitle2: data.subtitle2,
+        subtitle3: data.subtitle3,
         blurb: data.blurb,
         tagsCsv: data.tags_csv,
         coverUrl: data.cover_url,
@@ -206,6 +207,11 @@ export default async function BookPage({ params }: BookPageProps) {
             {book.subtitle2 && (
               <p className="mt-3 text-base md:text-lg text-slate-600 italic">
                 {book.subtitle2}
+              </p>
+            )}
+            {book.subtitle3 && (
+              <p className="mt-3 text-base md:text-lg text-slate-500">
+                {book.subtitle3}
               </p>
             )}
 
