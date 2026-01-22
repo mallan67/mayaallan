@@ -140,7 +140,43 @@ export async function POST(request: Request) {
       throw error
     }
 
-    return NextResponse.json(book, { status: 201 })
+    // Map to camelCase for frontend compatibility
+    const mappedBook = {
+      id: book.id,
+      slug: book.slug,
+      title: book.title,
+      subtitle1: book.subtitle1,
+      subtitle2: book.subtitle2,
+      tagsCsv: book.tags_csv,
+      isbn: book.isbn,
+      copyright: book.copyright,
+      blurb: book.blurb,
+      coverUrl: book.cover_url,
+      backCoverUrl: book.back_cover_url,
+      ebookFileUrl: book.ebook_file_url,
+      hasEbook: book.has_ebook,
+      hasPaperback: book.has_paperback,
+      hasHardcover: book.has_hardcover,
+      ebookPrice: book.ebook_price,
+      paperbackPrice: book.paperback_price,
+      hardcoverPrice: book.hardcover_price,
+      isFeatured: book.is_featured,
+      isPublished: book.is_published,
+      isVisible: book.is_visible,
+      isComingSoon: book.is_coming_soon,
+      allowDirectSale: book.allow_direct_sale,
+      allowRetailerSale: book.allow_retailer_sale,
+      stripePaymentLink: book.stripe_payment_link,
+      paypalPaymentLink: book.paypal_payment_link,
+      seoTitle: book.seo_title,
+      seoDescription: book.seo_description,
+      ogImageUrl: book.og_image_url,
+      publishedAt: book.published_at,
+      createdAt: book.created_at,
+      updatedAt: book.updated_at,
+    }
+
+    return NextResponse.json(mappedBook, { status: 201 })
   } catch (error: any) {
     console.error("Error creating book:", error)
     return NextResponse.json({ error: "Failed to create book" }, { status: 500 })

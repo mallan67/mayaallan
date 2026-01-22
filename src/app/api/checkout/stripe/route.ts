@@ -4,12 +4,21 @@ import { z } from "zod"
 
 const checkoutSchema = z.object({
   bookId: z.number().int().positive(),
+  email: z.string().email().optional(),
 })
 
 export async function POST(request: Request) {
+  // Check for required environment variable
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error("Missing STRIPE_SECRET_KEY environment variable")
+    return NextResponse.json({
+      error: "Payment system not configured. Please contact support."
+    }, { status: 503 })
+  }
+
   try {
     const body = await request.json()
-    const { bookId } = checkoutSchema.parse(body)
+    const { bookId, email } = checkoutSchema.parse(body)
 
     // Get book from database
     const { data: book, error } = await supabaseAdmin
@@ -26,11 +35,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Book not available for direct sale" }, { status: 400 })
     }
 
+    if (!book.ebook_file_url) {
+      return NextResponse.json({ error: "Ebook file not configured. Please contact support." }, { status: 400 })
+    }
+
     // Initialize Stripe (lazy load to avoid build-time issues)
     const Stripe = (await import("stripe")).default
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2025-12-15.clover",
     })
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
 
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -50,12 +65,16 @@ export async function POST(request: Request) {
         },
       ],
       mode: "payment",
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/books/${book.slug}?payment=success`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/books/${book.slug}?payment=cancelled`,
+      // After successful payment, redirect to a thank-you page
+      // The download link will be sent via email after webhook confirms payment
+      success_url: `${siteUrl}/books/${book.slug}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/books/${book.slug}?payment=cancelled`,
       metadata: {
         bookId: String(bookId),
+        bookSlug: book.slug,
+        bookTitle: book.title,
       },
-      customer_email: undefined, // Let Stripe collect email
+      customer_email: email || undefined, // Pre-fill if provided
     })
 
     return NextResponse.json({ url: session.url })

@@ -26,6 +26,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Book not available for direct sale" }, { status: 400 })
     }
 
+    if (!book.ebook_file_url) {
+      return NextResponse.json({ error: "Ebook file not configured. Please contact support." }, { status: 400 })
+    }
+
     // For PayPal, we need to create an order via the PayPal API
     // This requires the PayPal SDK
     const paypalClientId = process.env.PAYPAL_CLIENT_ID

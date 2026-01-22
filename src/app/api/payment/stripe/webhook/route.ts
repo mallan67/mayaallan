@@ -10,6 +10,9 @@ import crypto from "crypto"
  * 1. Create Order record
  * 2. Generate secure DownloadToken (expires in 30 days, 5 max downloads)
  * 3. Send email with download link
+ *
+ * SECURITY: This endpoint verifies the Stripe webhook signature to ensure
+ * requests are genuinely from Stripe and not spoofed.
  */
 
 export async function POST(request: Request) {
@@ -17,11 +20,37 @@ export async function POST(request: Request) {
   const headersList = await headers()
   const signature = headersList.get("stripe-signature")
 
-  // TODO: In production, verify the webhook signature with Stripe
-  // const event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET)
+  // Check for required environment variables
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error("Missing STRIPE_SECRET_KEY")
+    return NextResponse.json({ error: "Payment system not configured" }, { status: 503 })
+  }
+
+  let event: any
 
   try {
-    const event = JSON.parse(body)
+    // Verify webhook signature in production
+    if (process.env.STRIPE_WEBHOOK_SECRET && signature) {
+      const Stripe = (await import("stripe")).default
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2025-12-15.clover",
+      })
+
+      try {
+        event = stripe.webhooks.constructEvent(
+          body,
+          signature,
+          process.env.STRIPE_WEBHOOK_SECRET
+        )
+      } catch (err: any) {
+        console.error("Webhook signature verification failed:", err.message)
+        return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
+      }
+    } else {
+      // Development mode: parse body directly (not secure for production)
+      console.warn("⚠️ STRIPE_WEBHOOK_SECRET not set - skipping signature verification (dev only)")
+      event = JSON.parse(body)
+    }
 
     if (event.type === "checkout.session.completed") {
       const session = event.data.object

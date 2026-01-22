@@ -64,29 +64,37 @@ export function PaymentButtons({ bookId, hasStripe, hasPayPal }: PaymentButtonsP
   }
 
   return (
-    <div className="p-4 border border-green-200 rounded-xl bg-green-50">
-      <h3 className="text-sm font-semibold text-green-800 mb-3">💳 Buy Direct from Author</h3>
+    <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
         {hasStripe && (
           <button
             onClick={handleStripeCheckout}
             disabled={loadingStripe || loadingPayPal}
-            className="inline-block px-5 py-2.5 text-sm font-semibold text-center bg-black text-white rounded-full hover:bg-slate-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-center bg-black text-white rounded-xl hover:bg-slate-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
           >
-            {loadingStripe ? "Loading..." : "Buy Now - Card"}
+            <span>💳</span>
+            {loadingStripe ? "Processing..." : "Pay with Card"}
           </button>
         )}
         {hasPayPal && (
           <button
             onClick={handlePayPalCheckout}
             disabled={loadingStripe || loadingPayPal}
-            className="inline-block px-5 py-2.5 text-sm font-semibold text-center bg-blue-600 text-white rounded-full hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
           >
-            {loadingPayPal ? "Loading..." : "Buy Now - PayPal"}
+            <span>🅿️</span>
+            {loadingPayPal ? "Processing..." : "Pay with PayPal"}
           </button>
         )}
       </div>
-      {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+      <p className="text-xs text-slate-500">
+        Secure payment. Download link sent to your email after purchase.
+      </p>
     </div>
   )
 }

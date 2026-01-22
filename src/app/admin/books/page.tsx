@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 
 interface Book {
@@ -21,15 +22,26 @@ interface Book {
 }
 
 export default function AdminBooksPage() {
+  const router = useRouter()
   const [books, setBooks] = useState<Book[]>([])
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState(false)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
 
   useEffect(() => {
     fetch("/api/admin/books")
-      .then((res) => res.json())
-      .then((data) => {
-        setBooks(Array.isArray(data) ? data : [])
+      .then(async (res) => {
+        if (res.status === 401) {
+          setAuthError(true)
+          setLoading(false)
+          return
+        }
+        const data = await res.json()
+        if (data.error === "Unauthorized") {
+          setAuthError(true)
+        } else {
+          setBooks(Array.isArray(data) ? data : [])
+        }
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -115,6 +127,23 @@ export default function AdminBooksPage() {
     return (
       <div className="max-w-5xl mx-auto px-4 py-10">
         <p>Loading...</p>
+      </div>
+    )
+  }
+
+  if (authError) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-10">
+        <div className="text-center py-12 border border-red-200 bg-red-50 rounded-lg">
+          <h2 className="text-xl font-semibold text-red-800 mb-2">Authentication Required</h2>
+          <p className="text-red-600 mb-4">Please log in to manage books.</p>
+          <button
+            onClick={() => router.push("/admin/login")}
+            className="px-6 py-2 bg-black text-white rounded-lg hover:bg-black/80"
+          >
+            Go to Login
+          </button>
+        </div>
       </div>
     )
   }
