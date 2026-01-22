@@ -215,6 +215,12 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
         hardcoverPrice: book.hardcoverPrice !== null ? Number(book.hardcoverPrice) : null,
       }
 
+      // Debug: Log what we're sending
+      console.log("=== BOOK SAVE DEBUG ===")
+      console.log("Current book state coverUrl:", book.coverUrl)
+      console.log("Payload coverUrl:", payload.coverUrl)
+      console.log("Full payload:", JSON.stringify(payload, null, 2))
+
       const bookUrl = isNew ? "/api/admin/books" : `/api/admin/books/${book.id}`
       const bookMethod = isNew ? "POST" : "PUT"
 
@@ -230,6 +236,8 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
       }
 
       const savedBook = await bookRes.json()
+      console.log("=== API RESPONSE DEBUG ===")
+      console.log("Saved book response coverUrl:", savedBook.coverUrl)
       const bookId = savedBook.id
 
       // Save retailer links if enabled
@@ -395,8 +403,12 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
                 label="Front Cover"
                 currentUrl={book.coverUrl}
                 accept="image/*"
-                onUpload={(url) => setBook({ ...book, coverUrl: url })}
-                onRemove={() => setBook({ ...book, coverUrl: null })}
+                onUpload={(url) => {
+                  console.log("=== IMAGE UPLOAD DEBUG ===")
+                  console.log("Cover image uploaded, URL:", url)
+                  setBook((prev) => ({ ...prev, coverUrl: url }))
+                }}
+                onRemove={() => setBook((prev) => ({ ...prev, coverUrl: null }))}
               />
               {book.coverUrl && (
                 <div className="mt-3">
@@ -410,8 +422,8 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
                 label="Back Cover (optional)"
                 currentUrl={book.backCoverUrl}
                 accept="image/*"
-                onUpload={(url) => setBook({ ...book, backCoverUrl: url })}
-                onRemove={() => setBook({ ...book, backCoverUrl: null })}
+                onUpload={(url) => setBook((prev) => ({ ...prev, backCoverUrl: url }))}
+                onRemove={() => setBook((prev) => ({ ...prev, backCoverUrl: null }))}
               />
               {book.backCoverUrl && (
                 <div className="mt-3">
@@ -430,8 +442,8 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
             label="PDF / EPUB"
             currentUrl={book.ebookFileUrl}
             accept=".pdf,.epub"
-            onUpload={(url) => setBook({ ...book, ebookFileUrl: url })}
-            onRemove={() => setBook({ ...book, ebookFileUrl: null })}
+            onUpload={(url) => setBook((prev) => ({ ...prev, ebookFileUrl: url }))}
+            onRemove={() => setBook((prev) => ({ ...prev, ebookFileUrl: null }))}
           />
 
           <p className="text-xs text-slate-500 mt-2">
