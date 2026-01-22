@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 /**
  * DOWNLOAD PAGE (Issue #3B Fix):
- * 
+ *
  * User-friendly download page that:
  * 1. Shows book info and download status
  * 2. Displays remaining downloads
@@ -19,20 +19,22 @@ interface DownloadPageProps {
 export default async function DownloadPage({ params }: DownloadPageProps) {
   const { token } = await params
 
-  const downloadToken = await prisma.downloadToken.findUnique({
-    where: { token },
-    include: {
-      book: true,
-      order: true,
-    },
-  })
+  const { data: downloadToken, error } = await supabaseAdmin
+    .from(Tables.downloadTokens)
+    .select(`
+      *,
+      book:books (*),
+      order:orders (*)
+    `)
+    .eq("token", token)
+    .single()
 
-  if (!downloadToken) {
+  if (error || !downloadToken) {
     notFound()
   }
 
-  const isExpired = new Date() > downloadToken.expiresAt
-  const downloadsRemaining = downloadToken.maxDownloads - downloadToken.downloadCount
+  const isExpired = new Date() > new Date(downloadToken.expires_at)
+  const downloadsRemaining = downloadToken.max_downloads - downloadToken.download_count
   const canDownload = !isExpired && downloadsRemaining > 0 && downloadToken.order.status === "completed"
 
   return (
@@ -56,8 +58,8 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
               <span className="text-sm text-slate-600">Order Status</span>
               <span className={`text-sm font-medium ${
-                downloadToken.order.status === "completed" 
-                  ? "text-green-600" 
+                downloadToken.order.status === "completed"
+                  ? "text-green-600"
                   : "text-amber-600"
               }`}>
                 {downloadToken.order.status === "completed" ? "✓ Paid" : "Pending"}
@@ -70,7 +72,7 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
               <span className={`text-sm font-medium ${
                 downloadsRemaining > 0 ? "text-slate-900" : "text-red-600"
               }`}>
-                {downloadsRemaining} of {downloadToken.maxDownloads}
+                {downloadsRemaining} of {downloadToken.max_downloads}
               </span>
             </div>
 
@@ -80,9 +82,9 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
               <span className={`text-sm font-medium ${
                 isExpired ? "text-red-600" : "text-slate-900"
               }`}>
-                {isExpired 
-                  ? "Expired" 
-                  : downloadToken.expiresAt.toLocaleDateString()
+                {isExpired
+                  ? "Expired"
+                  : new Date(downloadToken.expires_at).toLocaleDateString()
                 }
               </span>
             </div>
@@ -94,7 +96,7 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
               href={`/api/download/${token}`}
               className="block w-full py-4 px-6 text-center text-white bg-black rounded-xl font-semibold hover:bg-slate-800 transition"
             >
-              ⬇️ Download Ebook
+              Download Ebook
             </a>
           ) : (
             <div className="text-center">
@@ -121,8 +123,8 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
 
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-slate-200 text-center">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="text-sm text-slate-500 hover:text-slate-700"
             >
               ← Back to Home

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 type NavigationItemUI = {
   id: number
@@ -10,14 +10,14 @@ type NavigationItemUI = {
   isVisible: boolean
 }
 
-// Map Prisma fields to UI fields
+// Map Supabase fields to UI fields
 function mapToUI(item: any): NavigationItemUI {
   return {
     id: item.id,
     label: item.label,
     href: item.href,
-    order: item.sortOrder,
-    isVisible: item.isActive,
+    order: item.sort_order,
+    isVisible: item.is_active,
   }
 }
 
@@ -27,11 +27,17 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const items = await prisma.navigationItem.findMany({
-    orderBy: { sortOrder: "asc" },
-  })
+  const { data: items, error } = await supabaseAdmin
+    .from(Tables.navigationItems)
+    .select("*")
+    .order("sort_order", { ascending: true })
 
-  return NextResponse.json(items.map(mapToUI))
+  if (error) {
+    console.error("Failed to fetch navigation items:", error)
+    return NextResponse.json({ error: "Failed to fetch navigation items" }, { status: 500 })
+  }
+
+  return NextResponse.json((items || []).map(mapToUI))
 }
 
 export async function POST(request: Request) {
@@ -48,14 +54,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Label and href are required" }, { status: 400 })
     }
 
-    const newItem = await prisma.navigationItem.create({
-      data: {
+    const { data: newItem, error } = await supabaseAdmin
+      .from(Tables.navigationItems)
+      .insert({
         label,
         href,
-        sortOrder: order || 999,
-        isActive: isVisible !== false,
-      },
-    })
+        sort_order: order || 999,
+        is_active: isVisible !== false,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
 
     return NextResponse.json(mapToUI(newItem))
   } catch (error) {
@@ -80,17 +90,22 @@ export async function PATCH(request: Request) {
 
     // Update all items
     const updated = await Promise.all(
-      items.map((item) =>
-        prisma.navigationItem.update({
-          where: { id: item.id },
-          data: {
+      items.map(async (item) => {
+        const { data, error } = await supabaseAdmin
+          .from(Tables.navigationItems)
+          .update({
             label: item.label,
             href: item.href,
-            sortOrder: item.order,
-            isActive: item.isVisible,
-          },
-        }),
-      ),
+            sort_order: item.order,
+            is_active: item.isVisible,
+          })
+          .eq("id", item.id)
+          .select()
+          .single()
+
+        if (error) throw error
+        return data
+      }),
     )
 
     return NextResponse.json(updated.map(mapToUI))

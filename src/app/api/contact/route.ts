@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { z } from "zod"
 
 const ContactSchema = z.object({
@@ -14,14 +14,16 @@ export async function POST(request: Request) {
     const body = await request.json()
     const data = ContactSchema.parse(body)
 
-    await prisma.contactSubmission.create({
-      data: {
+    const { error } = await supabaseAdmin
+      .from(Tables.contactSubmissions)
+      .insert({
         name: data.name || null,
         email: data.email,
         message: data.message,
         source: data.source || null,
-      },
-    })
+      })
+
+    if (error) throw error
 
     return NextResponse.json({ success: true, message: "Message sent successfully" })
   } catch (error) {

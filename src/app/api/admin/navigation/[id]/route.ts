@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/session"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getSession()
@@ -12,9 +12,12 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id } = await params
     const navId = Number.parseInt(id)
 
-    await prisma.navigationItem.delete({
-      where: { id: navId },
-    })
+    const { error } = await supabaseAdmin
+      .from(Tables.navigationItems)
+      .delete()
+      .eq("id", navId)
+
+    if (error) throw error
 
     return NextResponse.json({ success: true })
   } catch (error) {

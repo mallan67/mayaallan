@@ -1,11 +1,11 @@
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { prisma } from "@/lib/prisma"
 import { ShareButtons } from "@/components/share-buttons"
 import { PaymentButtons } from "@/components/PaymentButtons"
 import { RetailerIcon } from "@/lib/retailer-icons"
 import type { Metadata } from "next"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 interface BookPageProps {
   params: Promise<{ slug: string }>
@@ -18,22 +18,20 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
   const decodedSlug = decodeURIComponent(slug)
 
   try {
-    const book = await prisma.book.findFirst({
-      where: {
-        OR: [
-          { slug: decodedSlug },
-          { slug: slug },
-        ]
-      }
-    })
+    const { data: book, error } = await supabaseAdmin
+      .from(Tables.books)
+      .select("title, seo_title, seo_description, blurb, subtitle1")
+      .or(`slug.eq.${decodedSlug},slug.eq.${slug}`)
+      .limit(1)
+      .single()
 
-    if (!book) {
+    if (error || !book) {
       return { title: "Book Not Found" }
     }
 
     return {
-      title: book.seoTitle || book.title,
-      description: book.seoDescription || book.blurb || book.subtitle1 || `${book.title} by Maya Allan`,
+      title: book.seo_title || book.title,
+      description: book.seo_description || book.blurb || book.subtitle1 || `${book.title} by Maya Allan`,
     }
   } catch (error) {
     console.warn("Book metadata fetch failed:", error)
@@ -49,21 +47,63 @@ export default async function BookPage({ params }: BookPageProps) {
 
   try {
     // Find the book - must be published to view
-    book = await prisma.book.findFirst({
-      where: {
-        OR: [
-          { slug: decodedSlug },
-          { slug: slug },
-        ],
-        isPublished: true,
-      },
-      include: {
-        retailers: {
-          where: { isActive: true },
-          include: { retailer: true },
-        },
-      },
-    })
+    const { data, error } = await supabaseAdmin
+      .from(Tables.books)
+      .select(`
+        *,
+        book_retailer_links!left (
+          id,
+          url,
+          format_type,
+          is_active,
+          retailer:retailers (
+            id,
+            name,
+            slug
+          )
+        )
+      `)
+      .or(`slug.eq.${decodedSlug},slug.eq.${slug}`)
+      .eq("is_published", true)
+      .limit(1)
+      .single()
+
+    if (!error && data) {
+      book = {
+        id: data.id,
+        slug: data.slug,
+        title: data.title,
+        subtitle1: data.subtitle1,
+        subtitle2: data.subtitle2,
+        blurb: data.blurb,
+        tagsCsv: data.tags_csv,
+        coverUrl: data.cover_url,
+        hasEbook: data.has_ebook,
+        hasPaperback: data.has_paperback,
+        hasHardcover: data.has_hardcover,
+        ebookPrice: data.ebook_price,
+        paperbackPrice: data.paperback_price,
+        hardcoverPrice: data.hardcover_price,
+        isComingSoon: data.is_coming_soon,
+        allowDirectSale: data.allow_direct_sale,
+        allowRetailerSale: data.allow_retailer_sale,
+        stripePaymentLink: data.stripe_payment_link,
+        paypalPaymentLink: data.paypal_payment_link,
+        retailers: (data.book_retailer_links || [])
+          .filter((link: any) => link.is_active)
+          .map((link: any) => ({
+            id: link.id,
+            url: link.url,
+            formatType: link.format_type,
+            isActive: link.is_active,
+            retailer: link.retailer ? {
+              id: link.retailer.id,
+              name: link.retailer.name,
+              slug: link.retailer.slug,
+            } : null,
+          })),
+      }
+    }
   } catch (error) {
     console.warn("Book fetch failed:", error)
   }
@@ -92,14 +132,14 @@ export default async function BookPage({ params }: BookPageProps) {
   // 1. A non-empty URL
   // 2. A retailer with a non-empty name
   const retailersByFormat: Record<string, typeof book.retailers> = {}
-  
+
   book.retailers
-    .filter((link) => {
+    .filter((link: any) => {
       const hasUrl = link.url && link.url.trim() !== ""
       const hasRetailerName = link.retailer && link.retailer.name && link.retailer.name.trim() !== ""
       return hasUrl && hasRetailerName
     })
-    .forEach((link) => {
+    .forEach((link: any) => {
       const format = link.formatType || "ebook"
       if (!retailersByFormat[format]) {
         retailersByFormat[format] = []
@@ -171,7 +211,7 @@ export default async function BookPage({ params }: BookPageProps) {
 
             {book.tagsCsv && (
               <div className="mt-4 flex flex-wrap gap-2">
-                {book.tagsCsv.split(",").map((tag, i) => (
+                {book.tagsCsv.split(",").map((tag: string, i: number) => (
                   <span key={i} className="px-3 py-1 text-xs font-medium text-slate-600 bg-slate-100 rounded-full">
                     {tag.trim()}
                   </span>
@@ -256,7 +296,7 @@ export default async function BookPage({ params }: BookPageProps) {
                         {formatType}
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {links.map((link) => (
+                        {(links as any[]).map((link: any) => (
                           <a
                             key={link.id}
                             href={link.url}
@@ -296,7 +336,7 @@ export default async function BookPage({ params }: BookPageProps) {
               url={bookUrl}
               title={book.title}
               description={book.blurb ?? book.subtitle1 ?? undefined}
-              hashtags={book.tagsCsv?.split(",").map((t) => t.trim())}
+              hashtags={book.tagsCsv?.split(",").map((t: string) => t.trim())}
             />
           </div>
         </div>

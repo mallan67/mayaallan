@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { HeaderClient } from "./header-client"
 
 // Fallback navigation items for build time or when DB is unavailable
@@ -16,17 +16,14 @@ export async function Header() {
 
   try {
     // Fetch active navigation items from database
-    const dbNavItems = await prisma.navigationItem.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
-      select: {
-        label: true,
-        href: true,
-      },
-    })
+    const { data: dbNavItems, error } = await supabaseAdmin
+      .from(Tables.navigationItems)
+      .select("label, href")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
 
     // Only use DB items if we got results
-    if (dbNavItems.length > 0) {
+    if (!error && dbNavItems && dbNavItems.length > 0) {
       navItems = dbNavItems
     }
   } catch (error) {

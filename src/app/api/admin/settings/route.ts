@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 export async function GET() {
   const authed = await isAuthenticated()
@@ -9,7 +9,16 @@ export async function GET() {
   }
 
   try {
-    const settings = await prisma.siteSettings.findFirst()
+    const { data: settings, error } = await supabaseAdmin
+      .from(Tables.siteSettings)
+      .select("*")
+      .limit(1)
+      .single()
+
+    if (error && error.code !== "PGRST116") {
+      throw error
+    }
+
     return NextResponse.json(settings || {})
   } catch (error) {
     console.error("Error fetching settings:", error)
@@ -26,46 +35,49 @@ export async function PATCH(request: Request) {
   try {
     const data = await request.json()
 
-    const existing = await prisma.siteSettings.findFirst()
+    // Check if settings exist
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from(Tables.siteSettings)
+      .select("id")
+      .limit(1)
+      .single()
+
+    const settingsData = {
+      site_name: data.siteName || "Maya Allan",
+      tagline: data.tagline || null,
+      contact_email: data.contactEmail || null,
+      social_twitter: data.socialTwitter || null,
+      social_instagram: data.socialInstagram || null,
+      social_facebook: data.socialFacebook || null,
+      social_youtube: data.socialYoutube || null,
+      social_tiktok: data.socialTiktok || null,
+      footer_text: data.footerText || null,
+      author_name: data.authorName || null,
+      author_bio: data.authorBio || null,
+      author_photo_url: data.authorPhotoUrl || null,
+      default_og_image_url: data.defaultOgImageUrl || null,
+    }
 
     let settings
-    if (existing) {
-      settings = await prisma.siteSettings.update({
-        where: { id: existing.id },
-        data: {
-          siteName: data.siteName || "Maya Allan",
-          tagline: data.tagline || null,
-          contactEmail: data.contactEmail || null,
-          socialTwitter: data.socialTwitter || null,
-          socialInstagram: data.socialInstagram || null,
-          socialFacebook: data.socialFacebook || null,
-          socialYoutube: data.socialYoutube || null,
-          socialTiktok: data.socialTiktok || null,
-          footerText: data.footerText || null,
-          authorName: data.authorName || null,
-          authorBio: data.authorBio || null,
-          authorPhotoUrl: data.authorPhotoUrl || null,
-          defaultOgImageUrl: data.defaultOgImageUrl || null,
-        },
-      })
+    if (existing && !fetchError) {
+      const { data: updated, error } = await supabaseAdmin
+        .from(Tables.siteSettings)
+        .update(settingsData)
+        .eq("id", existing.id)
+        .select()
+        .single()
+
+      if (error) throw error
+      settings = updated
     } else {
-      settings = await prisma.siteSettings.create({
-        data: {
-          siteName: data.siteName || "Maya Allan",
-          tagline: data.tagline || null,
-          contactEmail: data.contactEmail || null,
-          socialTwitter: data.socialTwitter || null,
-          socialInstagram: data.socialInstagram || null,
-          socialFacebook: data.socialFacebook || null,
-          socialYoutube: data.socialYoutube || null,
-          socialTiktok: data.socialTiktok || null,
-          footerText: data.footerText || null,
-          authorName: data.authorName || null,
-          authorBio: data.authorBio || null,
-          authorPhotoUrl: data.authorPhotoUrl || null,
-          defaultOgImageUrl: data.defaultOgImageUrl || null,
-        },
-      })
+      const { data: created, error } = await supabaseAdmin
+        .from(Tables.siteSettings)
+        .insert(settingsData)
+        .select()
+        .single()
+
+      if (error) throw error
+      settings = created
     }
 
     return NextResponse.json(settings)

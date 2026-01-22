@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { z } from "zod"
 
 const checkoutSchema = z.object({
@@ -12,15 +12,17 @@ export async function POST(request: Request) {
     const { bookId } = checkoutSchema.parse(body)
 
     // Get book from database
-    const book = await prisma.book.findUnique({
-      where: { id: bookId },
-    })
+    const { data: book, error } = await supabaseAdmin
+      .from(Tables.books)
+      .select("*")
+      .eq("id", bookId)
+      .single()
 
-    if (!book) {
+    if (error || !book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 
-    if (!book.allowDirectSale || !book.ebookPrice) {
+    if (!book.allow_direct_sale || !book.ebook_price) {
       return NextResponse.json({ error: "Book not available for direct sale" }, { status: 400 })
     }
 
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
               custom_id: String(bookId), // Pass bookId in custom_id
               amount: {
                 currency_code: "USD",
-                value: Number(book.ebookPrice).toFixed(2),
+                value: Number(book.ebook_price).toFixed(2),
               },
             },
           ],

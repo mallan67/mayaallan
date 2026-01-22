@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import Stripe from "stripe"
 
 /**
@@ -136,9 +136,11 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     }
 
     // Idempotency: check if order already exists by stripeSessionId
-    const existingOrder = await prisma.order.findUnique({
-      where: { stripeSessionId: session.id },
-    })
+    const { data: existingOrder } = await supabaseAdmin
+      .from(Tables.orders)
+      .select("id")
+      .eq("stripe_session_id", session.id)
+      .single()
 
     if (existingOrder) {
       console.log("Order already processed:", existingOrder.id)
@@ -146,8 +148,13 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     }
 
     // Resolve book
-    const book = await prisma.book.findUnique({ where: { id: bookId } })
-    if (!book) {
+    const { data: book, error: bookError } = await supabaseAdmin
+      .from(Tables.books)
+      .select("*")
+      .eq("id", bookId)
+      .single()
+
+    if (bookError || !book) {
       console.error("Book not found for checkout:", bookId)
       return
     }
@@ -158,38 +165,51 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
     const currency = (session.currency as string | undefined) || "usd"
 
     // Create order
-    const order = await prisma.order.create({
-      data: {
+    const { data: order, error: orderError } = await supabaseAdmin
+      .from(Tables.orders)
+      .insert({
         email,
-        customerName: session.customer_details?.name || null,
-        stripeSessionId: session.id,
-        stripePaymentId,
-        bookId,
-        formatType,
+        customer_name: session.customer_details?.name || null,
+        stripe_session_id: session.id,
+        stripe_payment_id: stripePaymentId,
+        book_id: bookId,
+        format_type: formatType,
         amount,
         currency,
         status: "completed",
-        completedAt: new Date(),
-      },
-    })
+        completed_at: new Date().toISOString(),
+      })
+      .select()
+      .single()
+
+    if (orderError || !order) {
+      console.error("Failed to create order:", orderError)
+      return
+    }
 
     console.log("Order created:", order.id)
 
     // Create download token for ebooks
-    if (formatType === "ebook" && book.ebookFileUrl) {
+    if (formatType === "ebook" && book.ebook_file_url) {
       const expiresAt = new Date()
       expiresAt.setDate(expiresAt.getDate() + 30) // valid for 30 days
 
-      const downloadToken = await prisma.downloadToken.create({
-        data: {
-          orderId: order.id,
-          bookId,
-          maxDownloads: 5,
-          expiresAt,
-        },
-      })
+      const { data: downloadToken, error: tokenError } = await supabaseAdmin
+        .from(Tables.downloadTokens)
+        .insert({
+          order_id: order.id,
+          book_id: bookId,
+          max_downloads: 5,
+          expires_at: expiresAt.toISOString(),
+        })
+        .select()
+        .single()
 
-      console.log("Download token created:", downloadToken.token)
+      if (tokenError) {
+        console.error("Failed to create download token:", tokenError)
+      } else {
+        console.log("Download token created:", downloadToken.token)
+      }
 
       // TODO: Send email with the download link:
       // const downloadUrl = `https://www.mayaallan.com/download/${downloadToken.token}`

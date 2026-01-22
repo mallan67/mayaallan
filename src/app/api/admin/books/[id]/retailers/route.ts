@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 /**
  * BOOK RETAILERS API (Admin)
@@ -28,26 +28,41 @@ export async function GET(
   }
 
   try {
-    const links = await prisma.bookRetailerLink.findMany({
-      where: { bookId },
-      include: {
-        retailer: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            iconUrl: true,
-            isActive: true,
-          },
-        },
-      },
-      orderBy: [
-        { retailer: { name: "asc" } },
-        { formatType: "asc" },
-      ],
-    })
+    const { data: links, error } = await supabaseAdmin
+      .from(Tables.bookRetailerLinks)
+      .select(`
+        *,
+        retailer:retailers (
+          id,
+          name,
+          slug,
+          icon_url,
+          is_active
+        )
+      `)
+      .eq("book_id", bookId)
+      .order("format_type", { ascending: true })
 
-    return NextResponse.json(links)
+    if (error) throw error
+
+    // Map to camelCase
+    const mapped = (links || []).map((link) => ({
+      id: link.id,
+      bookId: link.book_id,
+      retailerId: link.retailer_id,
+      url: link.url,
+      formatType: link.format_type,
+      isActive: link.is_active,
+      retailer: link.retailer ? {
+        id: link.retailer.id,
+        name: link.retailer.name,
+        slug: link.retailer.slug,
+        iconUrl: link.retailer.icon_url,
+        isActive: link.retailer.is_active,
+      } : null,
+    }))
+
+    return NextResponse.json(mapped)
   } catch (error) {
     console.error("Error fetching book retailer links:", error)
     return NextResponse.json(
@@ -86,16 +101,24 @@ export async function POST(
     }
 
     // Verify book exists
-    const book = await prisma.book.findUnique({ where: { id: bookId } })
-    if (!book) {
+    const { data: book, error: bookError } = await supabaseAdmin
+      .from(Tables.books)
+      .select("id")
+      .eq("id", bookId)
+      .single()
+
+    if (bookError || !book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 
     // Verify retailer exists
-    const retailer = await prisma.retailer.findUnique({
-      where: { id: parseInt(retailerId) },
-    })
-    if (!retailer) {
+    const { data: retailer, error: retailerError } = await supabaseAdmin
+      .from(Tables.retailers)
+      .select("id")
+      .eq("id", parseInt(retailerId))
+      .single()
+
+    if (retailerError || !retailer) {
       return NextResponse.json(
         { error: "Retailer not found" },
         { status: 404 }
@@ -103,38 +126,57 @@ export async function POST(
     }
 
     // Create the link
-    const link = await prisma.bookRetailerLink.create({
-      data: {
-        bookId,
-        retailerId: parseInt(retailerId),
+    const { data: link, error } = await supabaseAdmin
+      .from(Tables.bookRetailerLinks)
+      .insert({
+        book_id: bookId,
+        retailer_id: parseInt(retailerId),
         url: url || "",
-        formatType: formatType || "ebook",
-        isActive: isActive !== undefined ? Boolean(isActive) : true,
-      },
-      include: {
-        retailer: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            iconUrl: true,
-            isActive: true,
-          },
-        },
-      },
-    })
+        format_type: formatType || "ebook",
+        is_active: isActive !== undefined ? Boolean(isActive) : true,
+      })
+      .select(`
+        *,
+        retailer:retailers (
+          id,
+          name,
+          slug,
+          icon_url,
+          is_active
+        )
+      `)
+      .single()
 
-    return NextResponse.json(link, { status: 201 })
+    if (error) {
+      if (error.code === "23505") {
+        return NextResponse.json(
+          { error: "A link for this retailer and format already exists" },
+          { status: 409 }
+        )
+      }
+      throw error
+    }
+
+    // Map to camelCase
+    const mapped = {
+      id: link.id,
+      bookId: link.book_id,
+      retailerId: link.retailer_id,
+      url: link.url,
+      formatType: link.format_type,
+      isActive: link.is_active,
+      retailer: link.retailer ? {
+        id: link.retailer.id,
+        name: link.retailer.name,
+        slug: link.retailer.slug,
+        iconUrl: link.retailer.icon_url,
+        isActive: link.retailer.is_active,
+      } : null,
+    }
+
+    return NextResponse.json(mapped, { status: 201 })
   } catch (error: any) {
     console.error("Error creating retailer link:", error)
-
-    // Handle unique constraint violation
-    if (error?.code === "P2002") {
-      return NextResponse.json(
-        { error: "A link for this retailer and format already exists" },
-        { status: 409 }
-      )
-    }
 
     return NextResponse.json(
       { error: "Failed to create retailer link" },
@@ -172,21 +214,15 @@ export async function PUT(
     }
 
     // Find the existing link(s) for this retailer
-    // If formatType is provided, we'll try to find that specific link
-    // Otherwise, find any link for this retailer
-    const whereClause: any = {
-      bookId,
-      retailerId: parseInt(retailerId),
-    }
+    const { data: existingLinks, error: findError } = await supabaseAdmin
+      .from(Tables.bookRetailerLinks)
+      .select(`*, retailer:retailers (*)`)
+      .eq("book_id", bookId)
+      .eq("retailer_id", parseInt(retailerId))
 
-    // If formatType is provided and we're updating it, we need to find the current link
-    // The UI might be changing the formatType, so we find by retailerId first
-    const existingLinks = await prisma.bookRetailerLink.findMany({
-      where: whereClause,
-      include: { retailer: true },
-    })
+    if (findError) throw findError
 
-    if (existingLinks.length === 0) {
+    if (!existingLinks || existingLinks.length === 0) {
       return NextResponse.json(
         { error: "Retailer link not found" },
         { status: 404 }
@@ -198,7 +234,7 @@ export async function PUT(
     let linkToUpdate = existingLinks[0]
     if (existingLinks.length > 1 && formatType) {
       const matchingLink = existingLinks.find(
-        (link) => link.formatType === formatType
+        (link) => link.format_type === formatType
       )
       if (matchingLink) {
         linkToUpdate = matchingLink
@@ -208,54 +244,75 @@ export async function PUT(
     // Build update data
     const updateData: any = {}
     if (url !== undefined) updateData.url = url
-    if (formatType !== undefined && formatType !== linkToUpdate.formatType) {
+    if (formatType !== undefined && formatType !== linkToUpdate.format_type) {
       // Check if changing formatType would violate unique constraint
-      const conflictCheck = await prisma.bookRetailerLink.findFirst({
-        where: {
-          bookId,
-          retailerId: parseInt(retailerId),
-          formatType: formatType,
-          id: { not: linkToUpdate.id },
-        },
-      })
+      const { data: conflictCheck } = await supabaseAdmin
+        .from(Tables.bookRetailerLinks)
+        .select("id")
+        .eq("book_id", bookId)
+        .eq("retailer_id", parseInt(retailerId))
+        .eq("format_type", formatType)
+        .neq("id", linkToUpdate.id)
+        .limit(1)
+        .single()
+
       if (conflictCheck) {
         return NextResponse.json(
           { error: "A link for this retailer and format already exists" },
           { status: 409 }
         )
       }
-      updateData.formatType = formatType
+      updateData.format_type = formatType
     }
-    if (isActive !== undefined) updateData.isActive = Boolean(isActive)
+    if (isActive !== undefined) updateData.is_active = Boolean(isActive)
 
     // Update the link
-    const updatedLink = await prisma.bookRetailerLink.update({
-      where: { id: linkToUpdate.id },
-      data: updateData,
-      include: {
-        retailer: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            iconUrl: true,
-            isActive: true,
-          },
-        },
-      },
-    })
+    const { data: updatedLink, error: updateError } = await supabaseAdmin
+      .from(Tables.bookRetailerLinks)
+      .update(updateData)
+      .eq("id", linkToUpdate.id)
+      .select(`
+        *,
+        retailer:retailers (
+          id,
+          name,
+          slug,
+          icon_url,
+          is_active
+        )
+      `)
+      .single()
 
-    return NextResponse.json(updatedLink)
+    if (updateError) {
+      if (updateError.code === "23505") {
+        return NextResponse.json(
+          { error: "A link for this retailer and format already exists" },
+          { status: 409 }
+        )
+      }
+      throw updateError
+    }
+
+    // Map to camelCase
+    const mapped = {
+      id: updatedLink.id,
+      bookId: updatedLink.book_id,
+      retailerId: updatedLink.retailer_id,
+      url: updatedLink.url,
+      formatType: updatedLink.format_type,
+      isActive: updatedLink.is_active,
+      retailer: updatedLink.retailer ? {
+        id: updatedLink.retailer.id,
+        name: updatedLink.retailer.name,
+        slug: updatedLink.retailer.slug,
+        iconUrl: updatedLink.retailer.icon_url,
+        isActive: updatedLink.retailer.is_active,
+      } : null,
+    }
+
+    return NextResponse.json(mapped)
   } catch (error: any) {
     console.error("Error updating retailer link:", error)
-
-    // Handle unique constraint violation
-    if (error?.code === "P2002") {
-      return NextResponse.json(
-        { error: "A link for this retailer and format already exists" },
-        { status: 409 }
-      )
-    }
 
     return NextResponse.json(
       { error: "Failed to update retailer link" },
@@ -293,28 +350,31 @@ export async function DELETE(
     }
 
     // Find the link to delete
-    const whereClause: any = {
-      bookId,
-      retailerId: parseInt(retailerId),
-    }
+    let query = supabaseAdmin
+      .from(Tables.bookRetailerLinks)
+      .select("id")
+      .eq("book_id", bookId)
+      .eq("retailer_id", parseInt(retailerId))
+
     if (formatType) {
-      whereClause.formatType = formatType
+      query = query.eq("format_type", formatType)
     }
 
-    const link = await prisma.bookRetailerLink.findFirst({
-      where: whereClause,
-    })
+    const { data: link, error: findError } = await query.limit(1).single()
 
-    if (!link) {
+    if (findError || !link) {
       return NextResponse.json(
         { error: "Retailer link not found" },
         { status: 404 }
       )
     }
 
-    await prisma.bookRetailerLink.delete({
-      where: { id: link.id },
-    })
+    const { error: deleteError } = await supabaseAdmin
+      .from(Tables.bookRetailerLinks)
+      .delete()
+      .eq("id", link.id)
+
+    if (deleteError) throw deleteError
 
     return NextResponse.json({ success: true })
   } catch (error) {
