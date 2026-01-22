@@ -1,63 +1,109 @@
-# Admin Dashboard Fix
+# mayaallan.com
 
-This package contains all the fixes for the Maya Allan admin dashboard authentication and missing pages.
+Official Maya Allan author site + internal Admin CMS (books, media, events, navigation).
 
-## Files Included
+This repo is strict on purpose. If you ignore the structure rules, you will break routing, imports, or admin flows.
 
-### Core Fixes
-- `lib/session.ts` - Fixed session handling with `isAuthenticated()` helper
+---
 
-### New Pages (Add New functionality)
-- `src/app/admin/books/new/page.tsx` - Create new books
-- `src/app/admin/media/new/page.tsx` - Create new media (audio/video)
-- `src/app/admin/events/new/page.tsx` - Create new events
+## Architecture (Authoritative)
 
-### Fixed API Routes (all use isAuthenticated())
-- `src/app/api/admin/login/route.ts` - Sets both adminId and isLoggedIn
-- `src/app/api/admin/books/route.ts` - GET/POST books
-- `src/app/api/admin/books/[id]/route.ts` - GET/PATCH/DELETE single book
-- `src/app/api/admin/books/[id]/retailers/route.ts` - Manage book retailers
-- `src/app/api/admin/media/route.ts` - GET/POST media
-- `src/app/api/admin/media/[id]/route.ts` - GET/PATCH/DELETE single media
-- `src/app/api/admin/events/route.ts` - GET/POST events
-- `src/app/api/admin/events/[id]/route.ts` - GET/PATCH/DELETE single event
-- `src/app/api/admin/retailers/route.ts` - GET/POST retailers
-- `src/app/api/admin/retailers/[id]/route.ts` - GET/PATCH/DELETE single retailer
-- `src/app/api/admin/settings/route.ts` - GET/PATCH settings
-- `src/app/api/admin/crm/contacts/route.ts` - Manage contact submissions
-- `src/app/api/admin/crm/subscribers/route.ts` - Manage newsletter subscribers
+- **Next.js** App Router
+- **Database:** Supabase (Postgres) — single source of truth
+- **File storage:** Vercel Blob
+- **Payments:** Stripe + PayPal **URLs only** (payment links)
+- **Auth:** iron-session (admin cookies)
 
-## Deployment Instructions
+> Prisma is NOT part of the runtime architecture. Any Prisma usage must be removed or rewritten to Supabase.
 
-1. **Extract files** - Unzip and copy all files to your project root, preserving directory structure
+---
 
-2. **Set environment variables** (in Vercel or .env.local):
-   ```
-   ADMIN_EMAIL=admin@mayaallan.com
-   ADMIN_PASSWORD=your-secure-password
-   SESSION_SECRET=at-least-32-characters-long-random-string
-   ```
+## The “Do Not Screw the Repo” Rules
 
-3. **Test locally**:
-   ```bash
-   npm run dev
-   ```
-   - Go to /admin/login
-   - Login with your credentials
-   - Verify you can access /admin/books, /admin/media, /admin/events
-   - Test "Add New" buttons work
+These rules exist because mixing folder roots and import styles causes silent breakage.
 
-4. **Deploy to Vercel**:
-   ```bash
-   git add .
-   git commit -m "Fix admin auth and add new item pages"
-   git push
-   ```
+1) **All runtime code lives under `src/` only**
+   - If it’s imported by the app, it must be in `src/`.
 
-## What Was Fixed
+2) **No duplicate code roots**
+   - After migration there must NOT be both:
+     - `lib/` and `src/lib/`
+     - `components/` and `src/components/`
 
-1. **Session Inconsistency** - The login was setting `session.adminId` but API routes were checking `session.user`. Now all routes use the `isAuthenticated()` helper which checks both `adminId` and `isLoggedIn`.
+3) **Imports must use the alias**
+   - Use `@/…` imports everywhere.
+   - Do NOT use deep relative imports like `../../lib/...` across folders.
 
-2. **Missing "New" Pages** - Added UI pages for creating new books, media, and events. All items are created as drafts (unpublished) by default.
+4) **Alias is the contract**
+   - `@/*` must always point to the single code root (`./src/*`).
+   - This is what makes refactors safe.
 
-3. **API Authentication** - All admin API routes now consistently use `isAuthenticated()` from `@/lib/session`.
+5) **Build gate**
+   - Every structural change must pass:
+     - `npm run build`
+     - `npm run lint` (if configured)
+
+---
+
+## Folder Structure (What Goes Where)
+
+### `src/` — the ONLY code root
+Everything below is runtime code and can be imported by the app:
+
+- `src/app/`
+  - All Next.js routes (public + admin)
+  - All API routes
+  - Pages/layouts/templates
+  - Examples:
+    - `src/app/page.tsx`
+    - `src/app/admin/books/page.tsx`
+    - `src/app/api/admin/books/route.ts`
+    - `src/app/api/upload/route.ts`
+
+- `src/lib/`
+  - Server utilities + shared logic
+  - Session/auth helpers
+  - Supabase server/admin clients
+  - Validation helpers (Zod)
+  - Examples:
+    - `src/lib/session.ts`
+    - `src/lib/supabaseAdmin.ts`
+    - `src/lib/validators/*.ts`
+
+- `src/components/`
+  - Reusable UI components
+  - UI primitives, admin UI, shared UI
+  - Recommended structure:
+    - `src/components/ui/*`
+    - `src/components/admin/*`
+    - `src/components/shared/*`
+
+- `src/hooks/` (optional)
+  - Shared React hooks only when needed
+  - Example:
+    - `src/hooks/useDebounce.ts`
+
+### Repo Root (must stay at root)
+These are not part of the runtime import tree:
+
+- `public/`
+  - Static assets served by Next.js
+  - DO NOT move under `src/`
+
+- `scripts/`
+  - CLI scripts (seeding, checks, test utilities)
+  - Must use Supabase (service role) if touching the DB
+  - Must NOT use Prisma
+
+- Root config files
+  - `middleware.ts`
+  - `tsconfig.json`
+  - `next.config.*`
+  - `.env*`
+
+---
+
+## TypeScript Alias (Required)
+
+Single alias contract:
+
