@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
   try {
     const { data: book, error } = await supabaseAdmin
       .from(Tables.books)
-      .select("title, seo_title, seo_description, blurb, subtitle1")
+      .select("title, seo_title, seo_description, blurb, subtitle1, subtitle2, subtitle3, cover_url, og_image_url")
       .or(`slug.eq.${decodedSlug},slug.eq.${slug}`)
       .limit(1)
       .single()
@@ -29,9 +29,38 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
       return { title: "Book Not Found" }
     }
 
+    const title = book.seo_title || book.title
+    const subtitles = [book.subtitle1, book.subtitle2, book.subtitle3].filter(Boolean).join(" | ")
+    const description = book.seo_description || book.blurb || subtitles || `${book.title} by Maya Allan`
+    const imageUrl = book.og_image_url || book.cover_url
+    const bookUrl = `https://www.mayaallan.com/books/${slug}`
+
     return {
-      title: book.seo_title || book.title,
-      description: book.seo_description || book.blurb || book.subtitle1 || `${book.title} by Maya Allan`,
+      title,
+      description,
+      openGraph: {
+        title: `${book.title}${subtitles ? ` - ${subtitles}` : ""}`,
+        description,
+        url: bookUrl,
+        siteName: "Maya Allan",
+        type: "book",
+        ...(imageUrl && {
+          images: [
+            {
+              url: imageUrl,
+              width: 600,
+              height: 900,
+              alt: book.title,
+            },
+          ],
+        }),
+      },
+      twitter: {
+        card: imageUrl ? "summary_large_image" : "summary",
+        title: `${book.title}${subtitles ? ` - ${subtitles}` : ""}`,
+        description,
+        ...(imageUrl && { images: [imageUrl] }),
+      },
     }
   } catch (error) {
     console.warn("Book metadata fetch failed:", error)
