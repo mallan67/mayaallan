@@ -1,8 +1,8 @@
 import Image from "next/image"
 import Link from "next/link"
-import { prisma } from "@/lib/prisma"
 import type { Metadata } from "next"
 import { RetailerIcon } from "@/lib/retailer-icons"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 export const metadata: Metadata = {
   title: "Books | Maya Allan",
@@ -25,19 +25,57 @@ export default async function BooksPage() {
   let books: any[] = []
 
   try {
-    books = await prisma.book.findMany({
-      where: {
-        isPublished: true,  // Book must be published
-        isVisible: true,    // Book must be marked visible for this listing
-      },
-      include: {
-        retailers: {
-          where: { isActive: true },
-          include: { retailer: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    })
+    // Get books with retailer links
+    const { data: booksData, error } = await supabaseAdmin
+      .from(Tables.books)
+      .select(`
+        *,
+        book_retailer_links!left (
+          id,
+          url,
+          format_type,
+          is_active,
+          retailer:retailers (
+            id,
+            name,
+            slug
+          )
+        )
+      `)
+      .eq("is_published", true)
+      .eq("is_visible", true)
+      .order("created_at", { ascending: false })
+
+    if (!error && booksData) {
+      books = booksData.map((book) => ({
+        id: book.id,
+        slug: book.slug,
+        title: book.title,
+        subtitle1: book.subtitle1,
+        subtitle2: book.subtitle2,
+        coverUrl: book.cover_url,
+        hasEbook: book.has_ebook,
+        hasPaperback: book.has_paperback,
+        hasHardcover: book.has_hardcover,
+        ebookPrice: book.ebook_price,
+        paperbackPrice: book.paperback_price,
+        hardcoverPrice: book.hardcover_price,
+        isComingSoon: book.is_coming_soon,
+        retailers: (book.book_retailer_links || [])
+          .filter((link: any) => link.is_active)
+          .map((link: any) => ({
+            id: link.id,
+            url: link.url,
+            formatType: link.format_type,
+            isActive: link.is_active,
+            retailer: link.retailer ? {
+              id: link.retailer.id,
+              name: link.retailer.name,
+              slug: link.retailer.slug,
+            } : null,
+          })),
+      }))
+    }
   } catch (error) {
     // During build or if DB unavailable, show empty state
     console.warn("Books fetch failed:", error)

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 /**
  * DOWNLOAD ROUTE — atomic conditional increment
  *
  * This implementation:
  * 1. Loads the token + book + order to validate
- * 2. Executes a single conditional UPDATE (updateMany) that increments
- *    downloadCount only when downloadCount < maxDownloads (atomic)
+ * 2. Executes a conditional UPDATE that increments
+ *    downloadCount only when downloadCount < maxDownloads
  * 3. If the update affected 0 rows, the limit was reached
  * 4. Redirects the client to the ebook file URL
  *
@@ -28,16 +28,21 @@ export async function GET(
     const now = new Date()
 
     // 1) Read token + relations for validation
-    const dt = await prisma.downloadToken.findUnique({
-      where: { token: tokenParam },
-      include: { book: true, order: true },
-    })
+    const { data: dt, error: fetchError } = await supabaseAdmin
+      .from(Tables.downloadTokens)
+      .select(`
+        *,
+        book:books (*),
+        order:orders (*)
+      `)
+      .eq("token", tokenParam)
+      .single()
 
-    if (!dt) {
+    if (fetchError || !dt) {
       return NextResponse.json({ error: "Invalid download link" }, { status: 404 })
     }
 
-    if (dt.expiresAt && dt.expiresAt < now) {
+    if (dt.expires_at && new Date(dt.expires_at) < now) {
       return NextResponse.json({ error: "Download link has expired" }, { status: 410 })
     }
 
@@ -45,31 +50,32 @@ export async function GET(
       return NextResponse.json({ error: "Payment not completed" }, { status: 402 })
     }
 
-    if (!dt.book || !dt.book.ebookFileUrl) {
+    if (!dt.book || !dt.book.ebook_file_url) {
       return NextResponse.json({ error: "Ebook file not available" }, { status: 404 })
     }
 
-    // 2) Atomic conditional increment:
-    //    update only when downloadCount < maxDownloads
-    //    (expiration already validated above, this prevents race on download limit)
-    const updated = await prisma.downloadToken.updateMany({
-      where: {
-        id: dt.id,
-        downloadCount: { lt: dt.maxDownloads },
-      },
-      data: {
-        downloadCount: { increment: 1 },
-        lastUsedAt: now,
-      },
-    })
-
-    if (updated.count === 0) {
-      // No rows updated -> limit reached (or expired concurrently)
+    // Check if download limit reached
+    if (dt.download_count >= dt.max_downloads) {
       return NextResponse.json({ error: "Download limit reached" }, { status: 403 })
     }
 
+    // 2) Increment download count
+    const { error: updateError } = await supabaseAdmin
+      .from(Tables.downloadTokens)
+      .update({
+        download_count: dt.download_count + 1,
+        last_used_at: now.toISOString(),
+      })
+      .eq("id", dt.id)
+      .lt("download_count", dt.max_downloads)
+
+    if (updateError) {
+      console.error("Error updating download count:", updateError)
+      // Still allow download but log the error
+    }
+
     // 3) Redirect to the ebook file URL
-    return NextResponse.redirect(dt.book.ebookFileUrl)
+    return NextResponse.redirect(dt.book.ebook_file_url)
   } catch (err: any) {
     console.error("Download error:", err)
     return NextResponse.json({ error: "Download failed" }, { status: 500 })

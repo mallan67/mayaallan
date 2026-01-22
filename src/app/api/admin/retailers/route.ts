@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 /**
  * RETAILERS API (Admin)
@@ -15,18 +15,23 @@ export async function GET() {
   }
 
   try {
-    const retailers = await prisma.retailer.findMany({
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        iconUrl: true,
-        isActive: true,
-      },
-    })
+    const { data: retailers, error } = await supabaseAdmin
+      .from(Tables.retailers)
+      .select("id, name, slug, icon_url, is_active")
+      .order("name", { ascending: true })
 
-    return NextResponse.json(retailers)
+    if (error) throw error
+
+    // Map to camelCase for frontend
+    const mappedRetailers = (retailers || []).map((r) => ({
+      id: r.id,
+      name: r.name,
+      slug: r.slug,
+      iconUrl: r.icon_url,
+      isActive: r.is_active,
+    }))
+
+    return NextResponse.json(mappedRetailers)
   } catch (error) {
     console.error("Error fetching retailers:", error)
     return NextResponse.json(

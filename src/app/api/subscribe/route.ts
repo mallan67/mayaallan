@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { z } from "zod"
 
 const subscribeSchema = z.object({
@@ -13,14 +13,14 @@ export async function POST(request: Request) {
     const { email, source } = subscribeSchema.parse(body)
 
     // Use upsert to avoid duplicate email errors
-    await prisma.emailSubscriber.upsert({
-      where: { email },
-      update: {},
-      create: {
-        email,
-        source: source || null,
-      },
-    })
+    const { error } = await supabaseAdmin
+      .from(Tables.emailSubscribers)
+      .upsert(
+        { email, source: source || null },
+        { onConflict: "email", ignoreDuplicates: true }
+      )
+
+    if (error) throw error
 
     return NextResponse.json({ success: true, message: "Subscribed successfully" })
   } catch (error) {

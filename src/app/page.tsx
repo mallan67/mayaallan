@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { NewsletterSection } from "@/components/NewsletterSection"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 export const revalidate = 300 // 5 minutes
 
@@ -26,14 +27,30 @@ export default async function HomePage() {
 
   try {
     // Query: Get featured + published + visible book
-    featuredBook = await prisma.book.findFirst({
-      where: {
-        isFeatured: true,
-        isPublished: true,
-        isVisible: true,
-      },
-      orderBy: { createdAt: "desc" },
-    })
+    const { data, error } = await supabaseAdmin
+      .from(Tables.books)
+      .select("*")
+      .eq("is_featured", true)
+      .eq("is_published", true)
+      .eq("is_visible", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single()
+
+    if (!error && data) {
+      featuredBook = {
+        id: data.id,
+        slug: data.slug,
+        title: data.title,
+        subtitle1: data.subtitle1,
+        subtitle2: data.subtitle2,
+        blurb: data.blurb,
+        tagsCsv: data.tags_csv,
+        coverUrl: data.cover_url,
+        isFeatured: data.is_featured,
+        isComingSoon: data.is_coming_soon,
+      }
+    }
   } catch (error) {
     // During build or if DB unavailable, show default hero
     console.warn("Featured book fetch failed:", error)
@@ -147,7 +164,7 @@ export default async function HomePage() {
 
             {featuredBook.tagsCsv && (
               <p className="text-sm text-slate-500 italic">
-                {featuredBook.tagsCsv.split(",").map((t) => t.trim()).join(" • ")}
+                {featuredBook.tagsCsv.split(",").map((t: string) => t.trim()).join(" • ")}
               </p>
             )}
 

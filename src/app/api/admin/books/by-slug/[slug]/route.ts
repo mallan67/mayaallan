@@ -1,133 +1,94 @@
-"use client"
+import { NextResponse } from "next/server"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { isAuthenticated } from "@/lib/session"
 
-import ImageUpload from "@/components/ImageUpload"
-import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+/**
+ * GET book by slug
+ * Returns book with retailer links for admin editing
+ */
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const authed = await isAuthenticated()
+  if (!authed) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
 
-interface RetailerLink {
-  id?: number
-  formatType: string
-  retailerName: string
-  url: string
-  toDelete?: boolean
-}
+  const { slug } = await params
+  const decodedSlug = decodeURIComponent(slug)
 
-interface Book {
-  id?: number
-  slug: string
-  title: string
-  subtitle1: string | null
-  subtitle2: string | null
-  tagsCsv: string | null
-  blurb: string | null
-  coverUrl: string | null
-  backCoverUrl: string | null
-  ebookFileUrl: string | null
+  try {
+    const { data: book, error } = await supabaseAdmin
+      .from(Tables.books)
+      .select(`
+        *,
+        book_retailer_links (
+          *,
+          retailer:retailers (*)
+        )
+      `)
+      .or(`slug.eq.${decodedSlug},slug.eq.${slug}`)
+      .single()
 
-  hasEbook: boolean
-  hasPaperback: boolean
-  hasHardcover: boolean
-  ebookPrice: number | null
-  paperbackPrice: number | null
-  hardcoverPrice: number | null
-
-  isFeatured: boolean
-  isPublished: boolean
-  isVisible: boolean
-  isComingSoon: boolean
-
-  allowDirectSale: boolean
-  allowRetailerSale: boolean
-  stripePaymentLink: string | null
-  paypalPaymentLink: string | null
-
-  seoTitle: string | null
-  seoDescription: string | null
-}
-
-const defaultBook: Book = {
-  title: "",
-  slug: "",
-  subtitle1: null,
-  subtitle2: null,
-  tagsCsv: null,
-  blurb: null,
-  coverUrl: null,
-  backCoverUrl: null,
-  ebookFileUrl: null,
-
-  hasEbook: true,
-  hasPaperback: false,
-  hasHardcover: false,
-  ebookPrice: null,
-  paperbackPrice: null,
-  hardcoverPrice: null,
-
-  isFeatured: false,
-  isPublished: false,
-  isVisible: false,
-  isComingSoon: false,
-
-  allowDirectSale: false,
-  allowRetailerSale: false,
-  stripePaymentLink: null,
-  paypalPaymentLink: null,
-
-  seoTitle: null,
-  seoDescription: null,
-}
-
-const FORMAT_OPTIONS = [
-  { value: "ebook", label: "Ebook" },
-  { value: "paperback", label: "Paperback" },
-  { value: "hardcover", label: "Hardcover" },
-  { value: "audiobook", label: "Audiobook" },
-]
-
-export default function AdminBookForm({ params }: { params: { slug: string } }) {
-  const router = useRouter()
-  const [slug, setSlug] = useState<string | null>(null)
-  const [isNew, setIsNew] = useState(false)
-
-  const [book, setBook] = useState<Book>(defaultBook)
-  const [retailerLinks, setRetailerLinks] = useState<RetailerLink[]>([])
-
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
-
-  useEffect(() => {
-    const s = params?.slug
-    setSlug(s)
-    setIsNew(s === "new")
-  }, [params?.slug])
-
-  useEffect(() => {
-    if (slug === null) return
-
-    if (slug === "new") {
-      setBook(defaultBook)
-      setRetailerLinks([])
-      setLoading(false)
-      return
+    if (error || !book) {
+      return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 
-    const fetchBook = async () => {
-      try {
-        const res = await fetch(`/api/admin/books/by-slug/${slug}`)
-        if (!res.ok) throw new Error("Book not found")
-        const data = await res.json()
+    // Map to camelCase for frontend
+    const mappedBook = {
+      id: book.id,
+      slug: book.slug,
+      title: book.title,
+      subtitle1: book.subtitle1,
+      subtitle2: book.subtitle2,
+      tagsCsv: book.tags_csv,
+      isbn: book.isbn,
+      copyright: book.copyright,
+      blurb: book.blurb,
+      coverUrl: book.cover_url,
+      backCoverUrl: book.back_cover_url,
+      ebookFileUrl: book.ebook_file_url,
+      hasEbook: book.has_ebook,
+      hasPaperback: book.has_paperback,
+      hasHardcover: book.has_hardcover,
+      ebookPrice: book.ebook_price,
+      paperbackPrice: book.paperback_price,
+      hardcoverPrice: book.hardcover_price,
+      isFeatured: book.is_featured,
+      isPublished: book.is_published,
+      isVisible: book.is_visible,
+      isComingSoon: book.is_coming_soon,
+      allowDirectSale: book.allow_direct_sale,
+      allowRetailerSale: book.allow_retailer_sale,
+      stripePaymentLink: book.stripe_payment_link,
+      paypalPaymentLink: book.paypal_payment_link,
+      seoTitle: book.seo_title,
+      seoDescription: book.seo_description,
+      ogImageUrl: book.og_image_url,
+      publishedAt: book.published_at,
+      createdAt: book.created_at,
+      updatedAt: book.updated_at,
+      retailers: (book.book_retailer_links || []).map((link: any) => ({
+        id: link.id,
+        bookId: link.book_id,
+        retailerId: link.retailer_id,
+        url: link.url,
+        formatType: link.format_type,
+        isActive: link.is_active,
+        retailer: link.retailer ? {
+          id: link.retailer.id,
+          name: link.retailer.name,
+          slug: link.retailer.slug,
+          iconUrl: link.retailer.icon_url,
+          isActive: link.retailer.is_active,
+        } : null,
+      })),
+    }
 
-        setBook({
-          ...defaultBook,
-          ...data,
-          backCoverUrl: data.backCoverUrl ?? null,
-        })
-
-        if (Array.isArray(data.retailers)) {
-          setRetailerLinks(
-            data.retailers.map((r: any) => ({
-              id: r.id,
-              formatType: r.formatType || "ebook",
-              retailerName: r.retailer?.name || "",
+    return NextResponse.json(mappedBook)
+  } catch (error) {
+    console.error("Error fetching book by slug:", error)
+    return NextResponse.json({ error: "Failed to fetch book" }, { status: 500 })
+  }
+}

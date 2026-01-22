@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import crypto from "crypto"
 
 /**
@@ -28,11 +28,13 @@ export async function POST(request: Request) {
       }
 
       // Get book from database
-      const book = await prisma.book.findUnique({
-        where: { id: bookId },
-      })
+      const { data: book, error: bookError } = await supabaseAdmin
+        .from(Tables.books)
+        .select("*")
+        .eq("id", bookId)
+        .single()
 
-      if (!book) {
+      if (bookError || !book) {
         return NextResponse.json({ error: "Book not found" }, { status: 404 })
       }
 
@@ -47,61 +49,66 @@ export async function POST(request: Request) {
       }
 
       // Create Order record
-      const order = await prisma.order.create({
-        data: {
+      const { data: order, error: orderError } = await supabaseAdmin
+        .from(Tables.orders)
+        .insert({
           email: customerEmail,
-          customerName: customerName || null,
-          paypalOrderId: sale.id,
-          bookId: book.id,
-          formatType: "ebook", // Assume ebook for direct sales
+          customer_name: customerName || null,
+          paypal_order_id: sale.id,
+          book_id: book.id,
+          format_type: "ebook", // Assume ebook for direct sales
           amount: parseFloat(sale.amount.total),
           currency: sale.amount.currency || "usd",
           status: "completed",
-          completedAt: new Date(),
-        },
-      })
+          completed_at: new Date().toISOString(),
+        })
+        .select()
+        .single()
 
-      console.log("✅ Order created:", order.id)
+      if (orderError || !order) {
+        console.error("Failed to create order:", orderError)
+        return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
+      }
+
+      console.log("Order created:", order.id)
 
       // Generate download token if ebook file exists
-      if (book.ebookFileUrl) {
+      if (book.ebook_file_url) {
         const token = crypto.randomBytes(32).toString("hex")
         const expiresAt = new Date()
         expiresAt.setDate(expiresAt.getDate() + 30) // 30 days from now
 
-        const downloadToken = await prisma.downloadToken.create({
-          data: {
+        const { data: downloadToken, error: tokenError } = await supabaseAdmin
+          .from(Tables.downloadTokens)
+          .insert({
             token,
+            order_id: order.id,
+            book_id: book.id,
+            max_downloads: 5,
+            expires_at: expiresAt.toISOString(),
+          })
+          .select()
+          .single()
+
+        if (tokenError) {
+          console.error("Failed to create download token:", tokenError)
+        } else {
+          console.log("Download token created:", downloadToken.token)
+
+          const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/download/${token}`
+
+          // TODO: Send email with download link
+          // For now, just log it
+          console.log("Email should be sent to:", customerEmail)
+          console.log("Download URL:", downloadUrl)
+          console.log("Book:", book.title)
+
+          return NextResponse.json({
+            success: true,
             orderId: order.id,
-            bookId: book.id,
-            maxDownloads: 5,
-            expiresAt,
-          },
-        })
-
-        console.log("✅ Download token created:", downloadToken.token)
-
-        const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/download/${token}`
-
-        // TODO: Send email with download link
-        // For now, just log it
-        console.log("📧 Email should be sent to:", customerEmail)
-        console.log("📧 Download URL:", downloadUrl)
-        console.log("📧 Book:", book.title)
-
-        // TODO: Implement actual email sending (e.g., with Resend, SendGrid, etc.)
-        // await sendEbookDeliveryEmail({
-        //   to: customerEmail,
-        //   bookTitle: book.title,
-        //   downloadUrl,
-        //   expiresAt,
-        // })
-
-        return NextResponse.json({
-          success: true,
-          orderId: order.id,
-          downloadUrl
-        })
+            downloadUrl
+          })
+        }
       }
 
       // No ebook file - just confirm order
@@ -114,7 +121,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ received: true })
   } catch (error: any) {
-    console.error("❌ PayPal webhook error:", error)
+    console.error("PayPal webhook error:", error)
     return NextResponse.json({
       error: "Webhook processing failed",
       details: error.message
