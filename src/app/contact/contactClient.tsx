@@ -10,6 +10,7 @@ export default function ContactClient() {
     message: "",
   })
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle")
+  const [errorMessage, setErrorMessage] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,14 +23,19 @@ export default function ContactClient() {
         body: JSON.stringify(formData),
       })
 
+      const data = await response.json()
+
       if (response.ok) {
         setStatus("success")
+        setErrorMessage("")
         setFormData({ name: "", email: "", message: "" })
       } else {
         setStatus("error")
+        setErrorMessage(data.details || data.error || "Unknown error")
       }
     } catch (error) {
       setStatus("error")
+      setErrorMessage(error instanceof Error ? error.message : "Network error")
     }
   }
 
@@ -48,7 +54,7 @@ export default function ContactClient() {
 
       {status === "error" && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
-          Something went wrong. Please try again.
+          Error: {errorMessage}
         </div>
       )}
 

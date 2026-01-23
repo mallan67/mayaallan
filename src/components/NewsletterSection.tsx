@@ -25,10 +25,10 @@ export function NewsletterSection() {
         setMessage({ type: "success", text: "Successfully subscribed!" })
         setEmail("")
       } else {
-        setMessage({ type: "error", text: data.error || "Subscription failed" })
+        setMessage({ type: "error", text: data.details || data.error || "Subscription failed" })
       }
     } catch (error) {
-      setMessage({ type: "error", text: "Something went wrong. Please try again." })
+      setMessage({ type: "error", text: error instanceof Error ? error.message : "Network error" })
     } finally {
       setIsLoading(false)
     }
