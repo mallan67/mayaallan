@@ -177,7 +177,7 @@ export default async function MediaPage() {
                   url={`https://www.mayaallan.com/media/${item.slug}`}
                   title={item.title}
                   description={item.description || `${item.kind} by Maya Allan`}
-                  imageUrl={item.coverUrl || "https://www.mayaallan.com/opengraph-image"}
+                  imageUrl={`https://www.mayaallan.com/media/${item.slug}/opengraph-image`}
                   className="justify-center md:justify-start"
                 />
               </div>

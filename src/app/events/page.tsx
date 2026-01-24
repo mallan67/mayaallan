@@ -114,7 +114,7 @@ export default async function EventsPage() {
                   url={`https://www.mayaallan.com/events/${event.slug}`}
                   title={event.title}
                   description={event.description || `Join Maya Allan for ${event.title}`}
-                  imageUrl={event.eventImageUrl || "https://www.mayaallan.com/opengraph-image"}
+                  imageUrl={`https://www.mayaallan.com/events/${event.slug}/opengraph-image`}
                   className="justify-start"
                 />
               </div>
