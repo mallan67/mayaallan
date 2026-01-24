@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
@@ -274,6 +275,11 @@ export async function PUT(
       })),
     }
 
+    // Revalidate public pages so changes appear immediately
+    revalidatePath("/books")
+    revalidatePath(`/books/${updatedBook.slug}`)
+    revalidatePath("/")
+
     return NextResponse.json(mappedBook)
   } catch (error: any) {
     console.error("Error updating book:", error)
@@ -319,6 +325,10 @@ export async function DELETE(
       }
       throw error
     }
+
+    // Revalidate public pages so changes appear immediately
+    revalidatePath("/books")
+    revalidatePath("/")
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

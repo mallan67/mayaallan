@@ -1,17 +1,29 @@
 import type { Metadata } from "next"
 
+const SITE_URL = "https://www.mayaallan.com"
+
 export const metadata: Metadata = {
   title: "Articles",
   description: "Read articles and insights from Maya Allan on integration, consciousness, and personal transformation.",
   openGraph: {
     title: "Articles - Maya Allan",
     description: "Articles and insights on integration, consciousness, and personal transformation.",
-    url: "https://mayaallan.com/articles",
+    url: `${SITE_URL}/articles`,
+    images: [
+      {
+        url: `${SITE_URL}/opengraph-image`,
+        width: 1200,
+        height: 630,
+        alt: "Articles - Maya Allan",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Articles - Maya Allan",
     description: "Articles and insights on integration and transformation.",
+    images: [`${SITE_URL}/opengraph-image`],
   },
 }
 

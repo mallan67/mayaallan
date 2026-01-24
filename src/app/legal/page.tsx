@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Legal & Disclaimer - Maya Allan",
     description: "Legal disclaimer and terms of use. Informational and educational purposes only.",
-    url: "https://mayaallan.com/legal",
+    url: "https://www.mayaallan.com/legal",
   },
   robots: {
     index: true,

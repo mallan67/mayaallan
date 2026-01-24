@@ -1,6 +1,51 @@
 import type { Book, MediaItem, Event } from "@/lib/mock-data"
 
-export function generateBookSchema(book: Book, siteUrl = "https://mayaallan.com") {
+const SITE_URL = "https://www.mayaallan.com"
+
+export function generateWebSiteSchema(siteName = "Maya Allan", siteUrl = SITE_URL) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteName,
+    url: siteUrl,
+    description: "Official website of Maya Allan - Author, Speaker, and Wellness Advocate",
+    publisher: {
+      "@type": "Person",
+      name: "Maya Allan",
+      url: siteUrl,
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${siteUrl}/books?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  }
+}
+
+export function generateOrganizationSchema(siteName = "Maya Allan", siteUrl = SITE_URL, logoUrl?: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteName,
+    url: siteUrl,
+    ...(logoUrl && { logo: logoUrl }),
+    sameAs: [
+      "https://x.com/mayaallan",
+      "https://facebook.com/mayaallan",
+      "https://instagram.com/mayaallan",
+    ],
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      url: `${siteUrl}/contact`,
+    },
+  }
+}
+
+export function generateBookSchema(book: Book, siteUrl = SITE_URL) {
   return {
     "@context": "https://schema.org",
     "@type": "Book",
@@ -35,7 +80,7 @@ export function generateBookSchema(book: Book, siteUrl = "https://mayaallan.com"
   }
 }
 
-export function generateAuthorSchema(siteUrl = "https://mayaallan.com", bio?: string, imageUrl?: string) {
+export function generateAuthorSchema(siteUrl = SITE_URL, bio?: string, imageUrl?: string) {
   return {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -44,11 +89,11 @@ export function generateAuthorSchema(siteUrl = "https://mayaallan.com", bio?: st
     jobTitle: "Author",
     ...(bio && { description: bio }),
     ...(imageUrl && { image: imageUrl }),
-    sameAs: ["https://twitter.com/mayaallan", "https://facebook.com/mayaallan", "https://instagram.com/mayaallan"],
+    sameAs: ["https://x.com/mayaallan", "https://facebook.com/mayaallan", "https://instagram.com/mayaallan"],
   }
 }
 
-export function generateEventSchema(event: Event, siteUrl = "https://mayaallan.com") {
+export function generateEventSchema(event: Event, siteUrl = SITE_URL) {
   return {
     "@context": "https://schema.org",
     "@type": "Event",
@@ -76,7 +121,7 @@ export function generateEventSchema(event: Event, siteUrl = "https://mayaallan.c
   }
 }
 
-export function generateMediaSchema(media: MediaItem, siteUrl = "https://mayaallan.com") {
+export function generateMediaSchema(media: MediaItem, siteUrl = SITE_URL) {
   const baseSchema = {
     "@context": "https://schema.org",
     name: media.title,

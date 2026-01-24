@@ -19,7 +19,7 @@ export async function Header() {
     const { data: dbNavItems, error } = await supabaseAdmin
       .from(Tables.navigationItems)
       .select("label, href")
-      .eq("is_active", true)
+      .eq("is_visible", true)
       .order("sort_order", { ascending: true })
 
     // Only use DB items if we got results

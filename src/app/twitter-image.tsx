@@ -1,20 +1,20 @@
+/**
+ * Main Website Twitter/X Image
+ * Generates a 1200x630 image for the homepage
+ */
 import { ImageResponse } from "next/og"
 
 export const runtime = "edge"
 
-export const alt = "Book by Maya Allan"
+export const alt = "Maya Allan - Author"
 export const size = {
   width: 1200,
   height: 630,
 }
 export const contentType = "image/png"
 
-interface Props {
-  params: Promise<{ slug: string }>
-}
-
-// Simple fetch function for edge runtime (no heavy dependencies)
-async function getBookData(slug: string) {
+// Fetch featured book for homepage image
+async function getFeaturedBook() {
   const supabaseUrl = process.env.SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 
@@ -24,7 +24,7 @@ async function getBookData(slug: string) {
 
   try {
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/books?or=(slug.eq.${encodeURIComponent(slug)})&select=title,subtitle1,blurb,cover_url,tags_csv&limit=1`,
+      `${supabaseUrl}/rest/v1/books?is_featured=eq.true&is_published=eq.true&is_visible=eq.true&select=title,cover_url,blurb&limit=1`,
       {
         headers: {
           apikey: supabaseKey,
@@ -42,55 +42,14 @@ async function getBookData(slug: string) {
   }
 }
 
-export default async function Image({ params }: Props) {
-  const { slug } = await params
-  const decodedSlug = decodeURIComponent(slug)
-
-  const book = await getBookData(decodedSlug)
-
-  // If no book found, return a generic author image
-  if (!book) {
-    return new ImageResponse(
-      (
-        <div
-          style={{
-            height: "100%",
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#ffffff",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "72px",
-              fontWeight: "bold",
-              color: "#1e293b",
-            }}
-          >
-            Maya Allan
-          </h1>
-          <p style={{ fontSize: "32px", color: "#64748b" }}>Author</p>
-        </div>
-      ),
-      { ...size }
-    )
-  }
-
-  // Truncate description for display
-  const description = book.blurb || book.subtitle1 || ""
-  const truncatedDesc = description.length > 150 ? description.substring(0, 147) + "..." : description
-
-  // Get genre/tags for display
-  const genre = book.tags_csv?.split(",")[0]?.trim() || ""
+export default async function Image() {
+  const featuredBook = await getFeaturedBook()
 
   // Ensure cover URL is absolute
-  const coverUrl = book.cover_url
-    ? book.cover_url.startsWith("http")
-      ? book.cover_url
-      : `https://www.mayaallan.com${book.cover_url}`
+  const coverUrl = featuredBook?.cover_url
+    ? featuredBook.cover_url.startsWith("http")
+      ? featuredBook.cover_url
+      : `https://www.mayaallan.com${featuredBook.cover_url}`
     : null
 
   return new ImageResponse(
@@ -103,7 +62,7 @@ export default async function Image({ params }: Props) {
           backgroundColor: "#ffffff",
         }}
       >
-        {/* Left side - Book Cover */}
+        {/* Left side - Book Cover or placeholder */}
         <div
           style={{
             width: "400px",
@@ -119,7 +78,7 @@ export default async function Image({ params }: Props) {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={coverUrl}
-              alt={book.title}
+              alt={featuredBook?.title || "Featured Book"}
               width={300}
               height={450}
               style={{
@@ -140,14 +99,16 @@ export default async function Image({ params }: Props) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                flexDirection: "column",
               }}
             >
-              <span style={{ color: "#64748b", fontSize: "24px" }}>No Cover</span>
+              <span style={{ color: "#64748b", fontSize: "48px", marginBottom: "16px" }}>MA</span>
+              <span style={{ color: "#94a3b8", fontSize: "18px" }}>Maya Allan</span>
             </div>
           )}
         </div>
 
-        {/* Right side - Book Info */}
+        {/* Right side - Author Info */}
         <div
           style={{
             flex: 1,
@@ -158,69 +119,57 @@ export default async function Image({ params }: Props) {
             backgroundColor: "#ffffff",
           }}
         >
-          {/* Genre tag */}
-          {genre && (
-            <div
-              style={{
-                display: "flex",
-                marginBottom: "20px",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#64748b",
-                  textTransform: "uppercase",
-                  letterSpacing: "2px",
-                  backgroundColor: "#f1f5f9",
-                  padding: "8px 16px",
-                  borderRadius: "20px",
-                }}
-              >
-                {genre}
-              </span>
-            </div>
-          )}
-
-          {/* Book Title */}
+          {/* Author name */}
           <div
             style={{
-              fontSize: book.title.length > 35 ? "38px" : "48px",
+              fontSize: "64px",
               fontWeight: "bold",
               color: "#0f172a",
-              lineHeight: 1.15,
+              lineHeight: 1.1,
               marginBottom: "16px",
-              display: "flex",
-              flexWrap: "wrap",
             }}
           >
-            {book.title}
+            Maya Allan
           </div>
 
-          {/* Author */}
+          {/* Tagline */}
           <p
             style={{
-              fontSize: "24px",
+              fontSize: "28px",
               color: "#64748b",
               marginBottom: "24px",
             }}
           >
-            by Maya Allan
+            Author & Guide
           </p>
 
           {/* Description */}
-          {truncatedDesc && (
-            <p
+          <p
+            style={{
+              fontSize: "20px",
+              color: "#475569",
+              lineHeight: 1.6,
+              marginBottom: "24px",
+            }}
+          >
+            Integration guides for transformative experiences. Books, workshops, and resources for clarity and personal growth.
+          </p>
+
+          {/* Featured book title if available */}
+          {featuredBook?.title && (
+            <div
               style={{
-                fontSize: "18px",
-                color: "#475569",
-                lineHeight: 1.6,
+                display: "flex",
+                alignItems: "center",
+                padding: "12px 20px",
+                backgroundColor: "#f1f5f9",
+                borderRadius: "8px",
                 marginBottom: "24px",
               }}
             >
-              {truncatedDesc}
-            </p>
+              <span style={{ fontSize: "14px", color: "#64748b", marginRight: "8px" }}>Featured:</span>
+              <span style={{ fontSize: "16px", color: "#0f172a", fontWeight: "600" }}>{featuredBook.title}</span>
+            </div>
           )}
 
           {/* Website */}
@@ -233,7 +182,7 @@ export default async function Image({ params }: Props) {
           >
             <span
               style={{
-                fontSize: "16px",
+                fontSize: "18px",
                 color: "#94a3b8",
                 fontWeight: "500",
               }}

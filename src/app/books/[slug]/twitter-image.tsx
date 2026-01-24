@@ -1,7 +1,6 @@
 /**
  * X (Twitter) Card Image for Book Pages
  * Generates a 1200x630 image with book cover and information
- * This ensures proper display on X, iMessage, Slack, and other platforms
  */
 import { ImageResponse } from "next/og"
 
@@ -18,7 +17,7 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
-// Simple fetch function for edge runtime (no heavy dependencies)
+// Simple fetch function for edge runtime
 async function getBookData(slug: string) {
   const supabaseUrl = process.env.SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
@@ -65,20 +64,19 @@ export default async function Image({ params }: Props) {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#0f172a",
-            backgroundImage: "linear-gradient(to bottom right, #0f172a, #1e293b)",
+            backgroundColor: "#ffffff",
           }}
         >
           <h1
             style={{
               fontSize: "72px",
               fontWeight: "bold",
-              color: "#ffffff",
+              color: "#1e293b",
             }}
           >
             Maya Allan
           </h1>
-          <p style={{ fontSize: "32px", color: "#94a3b8" }}>Author</p>
+          <p style={{ fontSize: "32px", color: "#64748b" }}>Author</p>
         </div>
       ),
       { ...size }
@@ -87,7 +85,7 @@ export default async function Image({ params }: Props) {
 
   // Truncate description for display
   const description = book.blurb || book.subtitle1 || ""
-  const truncatedDesc = description.length > 120 ? description.substring(0, 117) + "..." : description
+  const truncatedDesc = description.length > 150 ? description.substring(0, 147) + "..." : description
 
   // Get genre/tags for display
   const genre = book.tags_csv?.split(",")[0]?.trim() || ""
@@ -106,19 +104,19 @@ export default async function Image({ params }: Props) {
           height: "100%",
           width: "100%",
           display: "flex",
-          backgroundColor: "#0f172a",
-          backgroundImage: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)",
+          backgroundColor: "#ffffff",
         }}
       >
         {/* Left side - Book Cover */}
         <div
           style={{
-            width: "380px",
+            width: "400px",
             height: "100%",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             padding: "40px",
+            backgroundColor: "#f8fafc",
           }}
         >
           {coverUrl ? (
@@ -126,22 +124,22 @@ export default async function Image({ params }: Props) {
             <img
               src={coverUrl}
               alt={book.title}
-              width={280}
-              height={420}
+              width={300}
+              height={450}
               style={{
-                width: "280px",
-                height: "420px",
+                width: "300px",
+                height: "450px",
                 objectFit: "cover",
                 borderRadius: "8px",
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
               }}
             />
           ) : (
             <div
               style={{
-                width: "280px",
-                height: "420px",
-                backgroundColor: "#334155",
+                width: "300px",
+                height: "450px",
+                backgroundColor: "#e2e8f0",
                 borderRadius: "8px",
                 display: "flex",
                 alignItems: "center",
@@ -160,7 +158,8 @@ export default async function Image({ params }: Props) {
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            padding: "40px 50px 40px 20px",
+            padding: "50px 60px 50px 40px",
+            backgroundColor: "#ffffff",
           }}
         >
           {/* Genre tag */}
@@ -168,18 +167,18 @@ export default async function Image({ params }: Props) {
             <div
               style={{
                 display: "flex",
-                marginBottom: "16px",
+                marginBottom: "20px",
               }}
             >
               <span
                 style={{
                   fontSize: "14px",
                   fontWeight: "600",
-                  color: "#cbd5e1",
+                  color: "#64748b",
                   textTransform: "uppercase",
                   letterSpacing: "2px",
-                  backgroundColor: "rgba(100, 116, 139, 0.3)",
-                  padding: "6px 16px",
+                  backgroundColor: "#f1f5f9",
+                  padding: "8px 16px",
                   borderRadius: "20px",
                 }}
               >
@@ -191,10 +190,10 @@ export default async function Image({ params }: Props) {
           {/* Book Title */}
           <div
             style={{
-              fontSize: book.title.length > 40 ? "42px" : "52px",
+              fontSize: book.title.length > 35 ? "38px" : "48px",
               fontWeight: "bold",
-              color: "#ffffff",
-              lineHeight: 1.1,
+              color: "#0f172a",
+              lineHeight: 1.15,
               marginBottom: "16px",
               display: "flex",
               flexWrap: "wrap",
@@ -207,8 +206,8 @@ export default async function Image({ params }: Props) {
           <p
             style={{
               fontSize: "24px",
-              color: "#94a3b8",
-              marginBottom: "20px",
+              color: "#64748b",
+              marginBottom: "24px",
             }}
           >
             by Maya Allan
@@ -219,8 +218,8 @@ export default async function Image({ params }: Props) {
             <p
               style={{
                 fontSize: "18px",
-                color: "#64748b",
-                lineHeight: 1.5,
+                color: "#475569",
+                lineHeight: 1.6,
                 marginBottom: "24px",
               }}
             >
@@ -239,7 +238,7 @@ export default async function Image({ params }: Props) {
             <span
               style={{
                 fontSize: "16px",
-                color: "#475569",
+                color: "#94a3b8",
                 fontWeight: "500",
               }}
             >

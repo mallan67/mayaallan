@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     if (!paypalClientId || !paypalSecret) {
       console.error("PayPal credentials not configured")
-      return NextResponse.json({ error: "PayPal not configured" }, { status: 500 })
+      return NextResponse.json({ error: "Payment system not configured. Please contact support." }, { status: 503 })
     }
 
     // Get PayPal access token

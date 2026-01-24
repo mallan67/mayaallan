@@ -1,5 +1,6 @@
 export const runtime = "nodejs";
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
@@ -211,6 +212,10 @@ export async function POST(request: Request) {
       createdAt: book.created_at,
       updatedAt: book.updated_at,
     }
+
+    // Revalidate public pages so changes appear immediately
+    revalidatePath("/books")
+    revalidatePath("/")
 
     return NextResponse.json(mappedBook, { status: 201 })
   } catch (error: any) {

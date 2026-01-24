@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://mayaallan.com"
+  const baseUrl = "https://www.mayaallan.com"
   const currentDate = new Date()
 
   // Static pages

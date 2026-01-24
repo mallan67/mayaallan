@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     url: `${SITE_URL}/events`,
     images: [
       {
-        url: `${SITE_URL}/opengraph-image`,
+        url: `${SITE_URL}/events/opengraph-image`,
         width: 1200,
         height: 630,
         alt: "Events - Maya Allan",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Events - Maya Allan",
     description: "Upcoming talks, readings, and workshops.",
-    images: [`${SITE_URL}/opengraph-image`],
+    images: [`${SITE_URL}/events/twitter-image`],
   },
 }
 
