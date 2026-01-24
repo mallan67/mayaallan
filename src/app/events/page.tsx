@@ -2,18 +2,30 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { ShareButtons } from "@/components/share-buttons"
 import type { Metadata } from "next"
 
+const SITE_URL = "https://www.mayaallan.com"
+
 export const metadata: Metadata = {
   title: "Events",
   description: "Upcoming talks, readings, and workshops with Maya Allan.",
   openGraph: {
     title: "Events - Maya Allan",
     description: "Upcoming talks, readings, and workshops with Maya Allan.",
-    url: "https://mayaallan.com/events",
+    url: `${SITE_URL}/events`,
+    images: [
+      {
+        url: `${SITE_URL}/opengraph-image`,
+        width: 1200,
+        height: 630,
+        alt: "Events - Maya Allan",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Events - Maya Allan",
     description: "Upcoming talks, readings, and workshops.",
+    images: [`${SITE_URL}/opengraph-image`],
   },
 }
 
@@ -48,9 +60,10 @@ export default async function EventsPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-serif text-2xl md:text-3xl font-semibold">Events</h1>
         <ShareButtons
-          url="https://mayaallan.com/events"
+          url="https://www.mayaallan.com/events"
           title="Events with Maya Allan"
           description="Upcoming talks, readings, and workshops with Maya Allan."
+          imageUrl="https://www.mayaallan.com/opengraph-image"
         />
       </div>
 
@@ -98,9 +111,10 @@ export default async function EventsPage() {
 
               <div className="pt-2 mt-2 border-t border-slate-100">
                 <ShareButtons
-                  url={`https://mayaallan.com/events/${event.slug}`}
+                  url={`https://www.mayaallan.com/events/${event.slug}`}
                   title={event.title}
                   description={event.description || `Join Maya Allan for ${event.title}`}
+                  imageUrl={event.eventImageUrl || "https://www.mayaallan.com/opengraph-image"}
                   className="justify-start"
                 />
               </div>

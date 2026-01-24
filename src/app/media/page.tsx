@@ -2,18 +2,30 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { ShareButtons } from "@/components/share-buttons"
 import type { Metadata } from "next"
 
+const SITE_URL = "https://www.mayaallan.com"
+
 export const metadata: Metadata = {
   title: "Media",
   description: "Music, guided audios, videos, and PDF guides by Maya Allan for integration and personal development.",
   openGraph: {
     title: "Media - Maya Allan",
     description: "Music, guided audios, videos, and PDF guides for integration and personal development.",
-    url: "https://mayaallan.com/media",
+    url: `${SITE_URL}/media`,
+    images: [
+      {
+        url: `${SITE_URL}/opengraph-image`,
+        width: 1200,
+        height: 630,
+        alt: "Media - Maya Allan",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Media - Maya Allan",
     description: "Music, guided audios, videos, and PDF guides.",
+    images: [`${SITE_URL}/opengraph-image`],
   },
 }
 
@@ -60,9 +72,10 @@ export default async function MediaPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-serif text-2xl md:text-3xl font-semibold">Media – Music, Guides &amp; Videos</h1>
         <ShareButtons
-          url="https://mayaallan.com/media"
+          url="https://www.mayaallan.com/media"
           title="Media by Maya Allan"
           description="Music, guided audios, videos, and PDF guides by Maya Allan for integration and personal development."
+          imageUrl="https://www.mayaallan.com/opengraph-image"
         />
       </div>
 
@@ -161,9 +174,10 @@ export default async function MediaPage() {
 
               <div className="mb-3 pt-3 border-t border-slate-100">
                 <ShareButtons
-                  url={`https://mayaallan.com/media/${item.slug}`}
+                  url={`https://www.mayaallan.com/media/${item.slug}`}
                   title={item.title}
                   description={item.description || `${item.kind} by Maya Allan`}
+                  imageUrl={item.coverUrl || "https://www.mayaallan.com/opengraph-image"}
                   className="justify-center md:justify-start"
                 />
               </div>

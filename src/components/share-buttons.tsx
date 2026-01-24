@@ -8,6 +8,7 @@ interface ShareButtonsProps {
   title: string
   description?: string
   hashtags?: string[]
+  imageUrl?: string
   className?: string
 }
 
@@ -54,7 +55,7 @@ const SnapchatIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-export function ShareButtons({ url, title, description, hashtags, className = "" }: ShareButtonsProps) {
+export function ShareButtons({ url, title, description, hashtags, imageUrl, className = "" }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false)
   const [instagramCopied, setInstagramCopied] = useState(false)
 
@@ -63,16 +64,28 @@ export function ShareButtons({ url, title, description, hashtags, className = ""
   const encodedDesc = encodeURIComponent(description || title)
   const hashtagString = hashtags ? hashtags.join(",") : ""
 
+  // Build image URL for platforms that need it - derive from URL if not provided
+  const ogImageUrl = imageUrl || `${url}/opengraph-image`
+  const encodedImageUrl = encodeURIComponent(ogImageUrl)
+
   const shareLinks = {
-    // Major platforms with web share URLs
+    // Facebook - uses sharer/sharer.php for better OG tag support
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}${hashtagString ? `&hashtags=${hashtagString}` : ""}`,
+    // X (Twitter) - includes hashtags
+    x: `https://x.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}${hashtagString ? `&hashtags=${hashtagString}` : ""}`,
+    // LinkedIn - shareArticle endpoint for better previews
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`,
+    // WhatsApp - include title and URL in message
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${title}\n\n${description || ""}\n\n${url}`)}`,
+    // Telegram - includes title
     telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`,
+    // Reddit - title and URL
     reddit: `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`,
-    pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&description=${encodedDesc}`,
+    // Pinterest - MUST include media parameter for image to show
+    pinterest: `https://pinterest.com/pin/create/button/?url=${encodedUrl}&media=${encodedImageUrl}&description=${encodedDesc}`,
+    // TikTok
     tiktok: `https://www.tiktok.com/share?url=${encodedUrl}&text=${encodedTitle}`,
+    // Email - includes full description
     email: `mailto:?subject=${encodedTitle}&body=${encodeURIComponent(`${description || title}\n\n${url}`)}`,
   }
 
@@ -111,9 +124,9 @@ export function ShareButtons({ url, title, description, hashtags, className = ""
           <Facebook className="w-5 h-5 text-slate-600 group-hover:text-blue-600" />
         </a>
 
-        {/* X */}
+        {/* X (formerly Twitter) */}
         <a
-          href={shareLinks.twitter}
+          href={shareLinks.x}
           target="_blank"
           rel="noopener noreferrer"
           className="p-2 rounded-full hover:bg-slate-100 transition group"

@@ -6,6 +6,7 @@ import { PaymentButtons } from "@/components/PaymentButtons"
 import { RetailerIcon } from "@/lib/retailer-icons"
 import type { Metadata } from "next"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { generateBookSchema } from "@/lib/structured-data"
 
 interface BookPageProps {
   params: Promise<{ slug: string }>
@@ -32,13 +33,13 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
     const title = book.seo_title || book.title
     const subtitles = [book.subtitle1, book.subtitle2, book.subtitle3].filter(Boolean).join(" | ")
     const description = book.seo_description || book.blurb || subtitles || `${book.title} by Maya Allan`
-    const rawImageUrl = book.og_image_url || book.cover_url
     const bookUrl = `https://www.mayaallan.com/books/${slug}`
 
-    // Ensure image URL is absolute
-    const imageUrl = rawImageUrl && !rawImageUrl.startsWith("http")
-      ? `https://www.mayaallan.com${rawImageUrl}`
-      : rawImageUrl
+    // ALWAYS use the dynamic OG image route for consistent 1200x630 social images
+    // This ensures Facebook, LinkedIn, Twitter, etc. all get properly sized images
+    // with book cover, title, author, and description
+    const ogImageUrl = `https://www.mayaallan.com/books/${slug}/opengraph-image`
+    const twitterImageUrl = `https://www.mayaallan.com/books/${slug}/twitter-image`
 
     const fullTitle = `${book.title}${subtitles ? ` - ${subtitles}` : ""}`
 
@@ -59,17 +60,16 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
         siteName: "Maya Allan",
         type: "book",
         locale: "en_US",
-        ...(imageUrl && {
-          images: [
-            {
-              url: imageUrl,
-              secureUrl: imageUrl,
-              width: 1200,
-              height: 630,
-              alt: fullTitle,
-            },
-          ],
-        }),
+        images: [
+          {
+            url: ogImageUrl,
+            secureUrl: ogImageUrl,
+            width: 1200,
+            height: 630,
+            alt: fullTitle,
+            type: "image/png",
+          },
+        ],
       },
       twitter: {
         card: "summary_large_image",
@@ -77,15 +77,16 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
         creator: "@mayaallan",
         title: fullTitle,
         description: socialDescription,
-        ...(imageUrl && { images: [imageUrl] }),
+        images: [twitterImageUrl],
       },
       other: {
-        // LinkedIn specific
+        // Additional meta tags for maximum compatibility
         "og:image:width": "1200",
         "og:image:height": "630",
+        "og:image:type": "image/png",
         // Pinterest
         "pinterest:description": socialDescription,
-        ...(imageUrl && { "pinterest:image": imageUrl }),
+        "pinterest:image": ogImageUrl,
       },
     }
   } catch (error) {
@@ -145,6 +146,10 @@ export default async function BookPage({ params }: BookPageProps) {
         allowRetailerSale: data.allow_retailer_sale,
         stripePaymentLink: data.stripe_payment_link,
         paypalPaymentLink: data.paypal_payment_link,
+        // Additional fields for schema
+        isbn: data.isbn,
+        copyright: data.copyright,
+        publishedAt: data.published_at,
         retailers: (data.book_retailer_links || [])
           .filter((link: any) => link.is_active)
           .map((link: any) => ({
@@ -168,7 +173,22 @@ export default async function BookPage({ params }: BookPageProps) {
     notFound()
   }
 
-  const bookUrl = `https://mayaallan.com/books/${book.slug}`
+  const bookUrl = `https://www.mayaallan.com/books/${book.slug}`
+
+  // Generate Book schema for SEO
+  const bookSchema = generateBookSchema({
+    title: book.title,
+    subtitle1: book.subtitle1,
+    blurb: book.blurb,
+    coverUrl: book.coverUrl,
+    slug: book.slug,
+    tagsCsv: book.tagsCsv,
+    isbn: book.isbn,
+    copyright: book.copyright,
+    publishedAt: book.publishedAt,
+    allowDirectSale: book.allowDirectSale,
+    stripePaymentLink: book.stripePaymentLink,
+  } as any)
 
   // ============================================
   // DIRECT SALE LOGIC
@@ -220,6 +240,13 @@ export default async function BookPage({ params }: BookPageProps) {
   // ============================================
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+      {/* Book Schema JSON-LD for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(bookSchema),
+        }}
+      />
       <Link href="/books" className="text-sm text-slate-500 hover:text-slate-700 transition-colors inline-flex items-center gap-1">
         ← Back to Books
       </Link>
@@ -398,6 +425,7 @@ export default async function BookPage({ params }: BookPageProps) {
               title={book.title}
               description={book.blurb ?? book.subtitle1 ?? undefined}
               hashtags={book.tagsCsv?.split(",").map((t: string) => t.trim())}
+              imageUrl={`https://www.mayaallan.com/books/${book.slug}/opengraph-image`}
             />
           </div>
         </div>

@@ -3,12 +3,72 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { NewsletterSection } from "@/components/NewsletterSection"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { generateAuthorSchema } from "@/lib/structured-data"
+
+const SITE_URL = "https://www.mayaallan.com"
 
 export const revalidate = 300 // 5 minutes
 
-export const metadata: Metadata = {
-  title: "Maya Allan | Author",
-  description: "Official website of Maya Allan - Author, Speaker, and Wellness Advocate",
+async function getFeaturedBookForMetadata() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from(Tables.books)
+      .select("title, blurb, cover_url, og_image_url")
+      .eq("is_featured", true)
+      .eq("is_published", true)
+      .eq("is_visible", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single()
+
+    if (error || !data) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const featuredBook = await getFeaturedBookForMetadata()
+
+  const title = "Maya Allan | Author"
+  const description = featuredBook?.blurb
+    ? `${featuredBook.blurb.substring(0, 150)}...`
+    : "Official website of Maya Allan - Author, Speaker, and Wellness Advocate. Discover books, events, and resources for integration and transformation."
+
+  // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
+  // The dynamic image generator creates properly sized images that work on Facebook, LinkedIn, etc.
+  const imageUrl = `${SITE_URL}/opengraph-image`
+  const imageAlt = featuredBook ? `${featuredBook.title} by Maya Allan` : "Maya Allan - Author"
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: SITE_URL,
+      type: "website",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: imageAlt,
+          type: "image/png",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+    alternates: {
+      canonical: SITE_URL,
+    },
+  }
 }
 
 /**
@@ -63,10 +123,23 @@ export default async function HomePage() {
     console.error("Homepage featured book fetch failed:", error?.message || error)
   }
 
+  // Author schema for SEO
+  const authorSchema = generateAuthorSchema(
+    SITE_URL,
+    "Maya Allan is a writer dedicated to helping readers navigate life's most profound experiences with clarity, compassion, and practical wisdom."
+  )
+
   // If no featured book, render default hero
   if (!featuredBook) {
     return (
       <div className="min-h-screen">
+        {/* Author Schema JSON-LD */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(authorSchema),
+          }}
+        />
         {/* Default Hero Section */}
         <section className="max-w-4xl mx-auto px-4 py-24 md:py-32">
           <div className="text-center space-y-6">
@@ -114,6 +187,13 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
+      {/* Author Schema JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(authorSchema),
+        }}
+      />
       {/* ============================================ */}
       {/* HERO SECTION */}
       {/* ============================================ */}
