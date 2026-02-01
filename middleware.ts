@@ -11,15 +11,21 @@ export function middleware(request: NextRequest) {
 
   // Protect admin routes - always require login
   if (pathname.startsWith("/admin")) {
+    // CRITICAL: If admin auth is not configured, BLOCK ALL ACCESS
+    const hasSessionSecret = !!process.env.SESSION_SECRET
+    const hasAdminEmail = !!process.env.ADMIN_EMAIL
+    const hasAdminPassword = !!process.env.ADMIN_PASSWORD
+
+    // EMERGENCY BLOCK: If environment variables are missing, redirect to login
+    // (AdminAuthGuard will show the error message)
+    if (!hasSessionSecret || !hasAdminEmail || !hasAdminPassword) {
+      return NextResponse.redirect(new URL("/admin/login", request.url))
+    }
+
     const sessionCookie = request.cookies.get("mayaallan_admin_session")
 
     // No valid session - redirect to login
     if (!sessionCookie?.value) {
-      return NextResponse.redirect(new URL("/admin/login", request.url))
-    }
-
-    // Simple check: if cookie exists but SESSION_SECRET not set, reject
-    if (!process.env.SESSION_SECRET) {
       return NextResponse.redirect(new URL("/admin/login", request.url))
     }
   }
