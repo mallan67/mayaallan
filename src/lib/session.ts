@@ -1,27 +1,31 @@
 import { getIronSession, type IronSession } from "iron-session"
 import { cookies } from "next/headers"
 
-export type AdminSession = IronSession<{ 
+export type AdminSession = IronSession<{
   adminId?: string
   isLoggedIn?: boolean
 }>
 
-// Get session secret - allow build to succeed without env vars
-const sessionSecret = process.env.SESSION_SECRET || "build-time-placeholder-secret-32chars"
+function getSessionOptions() {
+  const sessionSecret = process.env.SESSION_SECRET
+  if (!sessionSecret) {
+    throw new Error("SESSION_SECRET environment variable is required")
+  }
 
-export const sessionOptions = {
-  password: sessionSecret,
-  cookieName: "mayaallan_admin_session",
-  cookieOptions: {
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
-    httpOnly: true,
-    path: "/",
-  },
+  return {
+    password: sessionSecret,
+    cookieName: "mayaallan_admin_session",
+    cookieOptions: {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
+      httpOnly: true,
+      path: "/",
+    },
+  }
 }
 
 export async function getAdminSession() {
-  return getIronSession(await cookies(), sessionOptions) as Promise<AdminSession>
+  return getIronSession(await cookies(), getSessionOptions()) as Promise<AdminSession>
 }
 
 export const getSession = getAdminSession
