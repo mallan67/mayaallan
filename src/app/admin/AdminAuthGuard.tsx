@@ -1,4 +1,5 @@
 import { requireAdminAuth } from "@/lib/adminAuth"
+import { headers } from "next/headers"
 import type React from "react"
 
 /**
@@ -6,6 +7,15 @@ import type React from "react"
  * This creates a server-side authentication barrier
  */
 export default async function AdminAuthGuard({ children }: { children: React.ReactNode }) {
+  // Get current path to skip auth for login page
+  const headersList = await headers()
+  const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || ""
+
+  // Skip auth check for login page
+  if (pathname === "/admin/login" || pathname.startsWith("/admin/login")) {
+    return <>{children}</>
+  }
+
   // CRITICAL: Check if admin authentication is configured
   const hasSessionSecret = !!process.env.SESSION_SECRET
   const hasAdminEmail = !!process.env.ADMIN_EMAIL
@@ -16,7 +26,7 @@ export default async function AdminAuthGuard({ children }: { children: React.Rea
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-50 p-6">
         <div className="max-w-2xl w-full bg-white border-2 border-red-500 rounded-lg p-8">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">🚨 CRITICAL SECURITY ERROR</h1>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">CRITICAL SECURITY ERROR</h1>
           <p className="text-red-800 mb-4">
             Admin authentication is not configured. The admin panel is DISABLED for security.
           </p>
