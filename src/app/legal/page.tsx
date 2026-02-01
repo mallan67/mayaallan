@@ -3,6 +3,9 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: "Legal & Disclaimer",
   description: "Legal disclaimer and terms of use for mayaallan.com. Informational and educational purposes only.",
+  alternates: {
+    canonical: "https://www.mayaallan.com/legal",
+  },
   openGraph: {
     title: "Legal & Disclaimer - Maya Allan",
     description: "Legal disclaimer and terms of use. Informational and educational purposes only.",

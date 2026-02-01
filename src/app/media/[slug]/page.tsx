@@ -53,6 +53,9 @@ export async function generateMetadata({ params }: MediaPageProps): Promise<Meta
   return {
     title,
     description,
+    alternates: {
+      canonical: `${SITE_URL}/media/${slug}`,
+    },
     openGraph: {
       title: `${title} - Maya Allan`,
       description,

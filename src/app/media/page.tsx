@@ -7,6 +7,9 @@ const SITE_URL = "https://www.mayaallan.com"
 export const metadata: Metadata = {
   title: "Media",
   description: "Music, guided audios, videos, and PDF guides by Maya Allan for integration and personal development.",
+  alternates: {
+    canonical: `${SITE_URL}/media`,
+  },
   openGraph: {
     title: "Media - Maya Allan",
     description: "Music, guided audios, videos, and PDF guides for integration and personal development.",

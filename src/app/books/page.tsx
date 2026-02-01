@@ -7,6 +7,9 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 export const metadata: Metadata = {
   title: "Books | Maya Allan",
   description: "Browse books by Maya Allan",
+  alternates: {
+    canonical: "https://www.mayaallan.com/books",
+  },
 }
 
 export const revalidate = 300 // 5 minutes

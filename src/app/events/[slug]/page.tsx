@@ -53,6 +53,9 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
   return {
     title,
     description,
+    alternates: {
+      canonical: `${SITE_URL}/events/${slug}`,
+    },
     openGraph: {
       title: `${title} - Maya Allan`,
       description,

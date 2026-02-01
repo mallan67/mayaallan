@@ -5,6 +5,9 @@ const SITE_URL = "https://www.mayaallan.com"
 export const metadata: Metadata = {
   title: "Articles",
   description: "Read articles and insights from Maya Allan on integration, consciousness, and personal transformation.",
+  alternates: {
+    canonical: `${SITE_URL}/articles`,
+  },
   openGraph: {
     title: "Articles - Maya Allan",
     description: "Articles and insights on integration, consciousness, and personal transformation.",

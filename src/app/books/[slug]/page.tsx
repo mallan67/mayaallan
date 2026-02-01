@@ -52,7 +52,9 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
       title,
       description,
       authors: [{ name: "Maya Allan" }],
-      metadataBase: new URL("https://www.mayaallan.com"),
+      alternates: {
+        canonical: bookUrl,
+      },
       openGraph: {
         title: fullTitle,
         description: socialDescription,

@@ -8,6 +8,22 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      // Redirect non-www to www for SEO consistency
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "mayaallan.com",
+          },
+        ],
+        destination: "https://www.mayaallan.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
