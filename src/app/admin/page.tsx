@@ -1,5 +1,9 @@
 import { redirect } from "next/navigation"
+import { requireAdminAuth } from "@/lib/adminAuth"
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  // SERVER-SIDE AUTH CHECK - blocks page from loading if not authenticated
+  await requireAdminAuth()
+
   redirect("/admin/books")
 }
