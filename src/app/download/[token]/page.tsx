@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import type { Metadata } from "next"
 
 /**
  * DOWNLOAD PAGE (Issue #3B Fix):
@@ -11,6 +12,17 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
  * 3. Shows expiration date
  * 4. Provides download button
  */
+
+// Prevent search engines from indexing download pages
+export const metadata: Metadata = {
+  title: "Download Your Ebook",
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+    nosnippet: true,
+  },
+}
 
 interface DownloadPageProps {
   params: Promise<{ token: string }>

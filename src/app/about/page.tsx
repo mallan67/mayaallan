@@ -2,27 +2,32 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import Image from "next/image"
 import type { Metadata } from "next"
 import { generateAuthorSchema } from "@/lib/structured-data"
+import { unstable_noStore as noStore } from "next/cache"
 
 const SITE_URL = "https://www.mayaallan.com"
 
-export const revalidate = 300 // 5 minutes
-
 async function getAuthorInfo() {
+  // Disable caching to ensure fresh data on every request
+  noStore()
+
   try {
+    // Order by id to ensure we get the same row as admin settings
     const { data: settings, error } = await supabaseAdmin
       .from(Tables.siteSettings)
-      .select("authorName, authorBio, authorPhotoUrl")
+      .select("id, authorName, authorBio, authorPhotoUrl")
+      .order("id", { ascending: true })
       .limit(1)
       .single()
 
     if (error) {
-      console.error("Error fetching author info:", error)
+      console.error("About page - Error fetching author info:", error.message, error.code)
       return null
     }
 
+    console.log("About page - Loaded settings id:", settings?.id, "authorName:", settings?.authorName)
     return settings
   } catch (error) {
-    console.error("Failed to fetch author info:", error)
+    console.error("About page - Failed to fetch author info:", error)
     return null
   }
 }

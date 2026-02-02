@@ -1,5 +1,5 @@
-import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import { isAuthenticated } from "./session"
 
 /**
  * Server-side authentication check for admin pages
@@ -8,16 +8,16 @@ import { redirect } from "next/navigation"
  * Returns true if authenticated, redirects to login if not
  */
 export async function requireAdminAuth(): Promise<boolean> {
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get("mayaallan_admin_session")
-
-  // No session cookie = not logged in
-  if (!sessionCookie?.value) {
+  // If SESSION_SECRET not configured, block access
+  if (!process.env.SESSION_SECRET) {
     redirect("/admin/login")
   }
 
-  // If SESSION_SECRET not configured, block access
-  if (!process.env.SESSION_SECRET) {
+  // CRITICAL: Actually validate the session, not just check if cookie exists
+  // This decrypts the session and verifies the user is logged in
+  const authenticated = await isAuthenticated()
+
+  if (!authenticated) {
     redirect("/admin/login")
   }
 
@@ -29,12 +29,10 @@ export async function requireAdminAuth(): Promise<boolean> {
  * Use this for conditional rendering or API routes
  */
 export async function isAdminAuthenticated(): Promise<boolean> {
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get("mayaallan_admin_session")
-
-  if (!sessionCookie?.value || !process.env.SESSION_SECRET) {
+  if (!process.env.SESSION_SECRET) {
     return false
   }
 
-  return true
+  // CRITICAL: Actually validate the session, not just check if cookie exists
+  return await isAuthenticated()
 }

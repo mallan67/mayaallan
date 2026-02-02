@@ -79,15 +79,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     // Dynamic event pages - fetch visible events from Supabase
+    // Note: Event table uses camelCase columns (isVisible, updatedAt)
     const { data: events, error: eventsError } = await supabaseAdmin
       .from(Tables.events)
-      .select("slug, updated_at")
-      .eq("is_visible", true)
+      .select("slug, updatedAt")
+      .eq("isVisible", true)
 
     if (!eventsError && events) {
       eventPages = events.map((event) => ({
         url: `${baseUrl}/events/${event.slug}`,
-        lastModified: event.updated_at ? new Date(event.updated_at) : currentDate,
+        lastModified: event.updatedAt ? new Date(event.updatedAt) : currentDate,
         changeFrequency: "weekly" as const,
         priority: 0.7,
       }))
