@@ -201,9 +201,9 @@ export default async function Image({ params }: Props) {
           {/* Author */}
           <p
             style={{
-              fontSize: "26px",
-              color: "#0f172a",
-              fontWeight: "600",
+              fontSize: "28px",
+              color: "#000000",
+              fontWeight: "700",
               marginBottom: "24px",
             }}
           >
@@ -214,10 +214,10 @@ export default async function Image({ params }: Props) {
           {truncatedDesc && (
             <p
               style={{
-                fontSize: "20px",
-                color: "#0f172a",
-                fontWeight: "500",
-                lineHeight: 1.5,
+                fontSize: "22px",
+                color: "#000000",
+                fontWeight: "600",
+                lineHeight: 1.4,
                 marginBottom: "24px",
               }}
             >
