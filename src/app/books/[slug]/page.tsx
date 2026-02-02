@@ -50,10 +50,29 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
       ? description.substring(0, 197) + "..."
       : description
 
+    // Build keywords from book tags plus common search terms
+    const bookKeywords = [
+      book.title,
+      "Maya Allan",
+      "psilocybin integration",
+      "mushroom guide",
+      "psychedelic integration",
+      "practitioners",
+      "healers",
+      "facilitators",
+      "psychedelic guides",
+      "solo mushroom experience",
+      "psilocybin therapy",
+      "integration book",
+      "psychedelic healing",
+      "plant medicine guide",
+    ]
+
     return {
       title,
       description,
       authors: [{ name: "Maya Allan" }],
+      keywords: bookKeywords,
       alternates: {
         canonical: bookUrl,
       },

@@ -6,7 +6,19 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 export const metadata: Metadata = {
   title: "Books | Maya Allan",
-  description: "Browse books by Maya Allan",
+  description: "Integration guides for psilocybin and psychedelic experiences by Maya Allan. Essential reading for practitioners, healers, facilitators, guides, and solo journeyers seeking clarity and transformation.",
+  keywords: [
+    "psilocybin books",
+    "psychedelic integration books",
+    "mushroom guide books",
+    "Maya Allan books",
+    "integration guides",
+    "practitioner resources",
+    "healer resources",
+    "facilitator guide",
+    "psychedelic therapy books",
+    "plant medicine books",
+  ],
   alternates: {
     canonical: "https://www.mayaallan.com/books",
   },

@@ -46,6 +46,11 @@ export function generateOrganizationSchema(siteName = "Maya Allan", siteUrl = SI
 }
 
 export function generateBookSchema(book: Book, siteUrl = SITE_URL) {
+  // Combine book tags with relevant audience keywords for better discoverability
+  const baseKeywords = book.tagsCsv || ""
+  const audienceKeywords = "practitioners, healers, facilitators, psychedelic guides, solo journeyers, therapists, integration specialists"
+  const combinedKeywords = baseKeywords ? `${baseKeywords}, ${audienceKeywords}` : audienceKeywords
+
   return {
     "@context": "https://schema.org",
     "@type": "Book",
@@ -65,9 +70,18 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL) {
       name: "Maya Allan",
       url: siteUrl,
     },
-    ...(book.tagsCsv && {
-      keywords: book.tagsCsv,
-    }),
+    keywords: combinedKeywords,
+    genre: "Self-Help",
+    audience: {
+      "@type": "Audience",
+      audienceType: "Practitioners, Healers, Facilitators, Guides, Solo Experiencers",
+    },
+    about: [
+      { "@type": "Thing", name: "Psilocybin" },
+      { "@type": "Thing", name: "Psychedelic Integration" },
+      { "@type": "Thing", name: "Plant Medicine" },
+      { "@type": "Thing", name: "Consciousness" },
+    ],
     url: `${siteUrl}/books/${book.slug}`,
     ...(book.allowDirectSale &&
       book.stripePaymentLink && {
