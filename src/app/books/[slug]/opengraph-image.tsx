@@ -72,7 +72,7 @@ export default async function Image({ params }: Props) {
           >
             Maya Allan
           </h1>
-          <p style={{ fontSize: "32px", color: "#64748b" }}>Author</p>
+          <p style={{ fontSize: "32px", color: "#334155" }}>Author</p>
         </div>
       ),
       { ...size }
@@ -142,7 +142,7 @@ export default async function Image({ params }: Props) {
                 justifyContent: "center",
               }}
             >
-              <span style={{ color: "#64748b", fontSize: "24px" }}>No Cover</span>
+              <span style={{ color: "#334155", fontSize: "24px" }}>No Cover</span>
             </div>
           )}
         </div>
@@ -170,10 +170,10 @@ export default async function Image({ params }: Props) {
                 style={{
                   fontSize: "14px",
                   fontWeight: "600",
-                  color: "#64748b",
+                  color: "#1e293b",
                   textTransform: "uppercase",
                   letterSpacing: "2px",
-                  backgroundColor: "#f1f5f9",
+                  backgroundColor: "#e2e8f0",
                   padding: "8px 16px",
                   borderRadius: "20px",
                 }}
@@ -202,7 +202,7 @@ export default async function Image({ params }: Props) {
           <p
             style={{
               fontSize: "24px",
-              color: "#64748b",
+              color: "#334155",
               marginBottom: "24px",
             }}
           >
@@ -214,7 +214,7 @@ export default async function Image({ params }: Props) {
             <p
               style={{
                 fontSize: "18px",
-                color: "#475569",
+                color: "#1e293b",
                 lineHeight: 1.6,
                 marginBottom: "24px",
               }}
@@ -234,7 +234,7 @@ export default async function Image({ params }: Props) {
             <span
               style={{
                 fontSize: "16px",
-                color: "#94a3b8",
+                color: "#475569",
                 fontWeight: "500",
               }}
             >

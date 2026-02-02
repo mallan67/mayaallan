@@ -149,7 +149,7 @@ export default async function Image({ params }: Props) {
                 height="80"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#64748b"
+                stroke="#334155"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -180,10 +180,10 @@ export default async function Image({ params }: Props) {
               style={{
                 fontSize: "14px",
                 fontWeight: "600",
-                color: "#64748b",
+                color: "#1e293b",
                 textTransform: "uppercase",
                 letterSpacing: "2px",
-                backgroundColor: "#f1f5f9",
+                backgroundColor: "#e2e8f0",
                 padding: "8px 16px",
                 borderRadius: "20px",
               }}
@@ -219,33 +219,33 @@ export default async function Image({ params }: Props) {
             <span style={{ fontSize: "20px", color: "#0f172a", fontWeight: "600" }}>
               {dateStr}
             </span>
-            <span style={{ fontSize: "20px", color: "#64748b" }}>
+            <span style={{ fontSize: "20px", color: "#334155" }}>
               {timeStr}
             </span>
           </div>
 
           {/* Location */}
           {event.locationText && (
-            <p style={{ fontSize: "18px", color: "#64748b", marginBottom: "16px" }}>
+            <p style={{ fontSize: "18px", color: "#334155", marginBottom: "16px" }}>
               {event.locationText}
             </p>
           )}
 
           {/* Description */}
           {truncatedDesc && (
-            <p style={{ fontSize: "16px", color: "#475569", lineHeight: 1.5, marginBottom: "20px" }}>
+            <p style={{ fontSize: "16px", color: "#1e293b", lineHeight: 1.5, marginBottom: "20px" }}>
               {truncatedDesc}
             </p>
           )}
 
           {/* Author */}
-          <p style={{ fontSize: "18px", color: "#64748b" }}>
+          <p style={{ fontSize: "18px", color: "#334155" }}>
             with Maya Allan
           </p>
 
           {/* Website */}
           <div style={{ display: "flex", alignItems: "center", marginTop: "auto" }}>
-            <span style={{ fontSize: "16px", color: "#94a3b8", fontWeight: "500" }}>
+            <span style={{ fontSize: "16px", color: "#475569", fontWeight: "500" }}>
               mayaallan.com/events
             </span>
           </div>

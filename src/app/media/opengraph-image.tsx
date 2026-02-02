@@ -53,7 +53,7 @@ export default async function Image() {
               height="80"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#64748b"
+              stroke="#334155"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -85,10 +85,10 @@ export default async function Image() {
               style={{
                 fontSize: "14px",
                 fontWeight: "600",
-                color: "#64748b",
+                color: "#1e293b",
                 textTransform: "uppercase",
                 letterSpacing: "2px",
-                backgroundColor: "#f1f5f9",
+                backgroundColor: "#e2e8f0",
                 padding: "8px 16px",
                 borderRadius: "20px",
               }}
@@ -114,7 +114,7 @@ export default async function Image() {
           <p
             style={{
               fontSize: "28px",
-              color: "#64748b",
+              color: "#334155",
               marginBottom: "24px",
             }}
           >
@@ -125,7 +125,7 @@ export default async function Image() {
           <p
             style={{
               fontSize: "20px",
-              color: "#475569",
+              color: "#1e293b",
               lineHeight: 1.6,
               marginBottom: "24px",
             }}
@@ -144,7 +144,7 @@ export default async function Image() {
             <span
               style={{
                 fontSize: "18px",
-                color: "#94a3b8",
+                color: "#475569",
                 fontWeight: "500",
               }}
             >
