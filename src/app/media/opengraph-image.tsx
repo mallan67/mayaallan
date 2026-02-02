@@ -113,8 +113,9 @@ export default async function Image() {
           {/* Author */}
           <p
             style={{
-              fontSize: "28px",
+              fontSize: "30px",
               color: "#0f172a",
+              fontWeight: "600",
               marginBottom: "24px",
             }}
           >
@@ -124,9 +125,10 @@ export default async function Image() {
           {/* Description */}
           <p
             style={{
-              fontSize: "20px",
-              color: "#1e293b",
-              lineHeight: 1.6,
+              fontSize: "22px",
+              color: "#0f172a",
+              fontWeight: "500",
+              lineHeight: 1.5,
               marginBottom: "24px",
             }}
           >
@@ -143,9 +145,9 @@ export default async function Image() {
           >
             <span
               style={{
-                fontSize: "18px",
-                color: "#1e293b",
-                fontWeight: "500",
+                fontSize: "20px",
+                color: "#0f172a",
+                fontWeight: "600",
               }}
             >
               mayaallan.com/media

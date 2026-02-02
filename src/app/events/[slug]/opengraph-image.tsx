@@ -216,36 +216,36 @@ export default async function Image({ params }: Props) {
               marginBottom: "16px",
             }}
           >
-            <span style={{ fontSize: "20px", color: "#0f172a", fontWeight: "600" }}>
+            <span style={{ fontSize: "22px", color: "#0f172a", fontWeight: "700" }}>
               {dateStr}
             </span>
-            <span style={{ fontSize: "20px", color: "#0f172a" }}>
+            <span style={{ fontSize: "22px", color: "#0f172a", fontWeight: "600" }}>
               {timeStr}
             </span>
           </div>
 
           {/* Location */}
           {event.locationText && (
-            <p style={{ fontSize: "18px", color: "#0f172a", marginBottom: "16px" }}>
+            <p style={{ fontSize: "20px", color: "#0f172a", fontWeight: "500", marginBottom: "16px" }}>
               {event.locationText}
             </p>
           )}
 
           {/* Description */}
           {truncatedDesc && (
-            <p style={{ fontSize: "16px", color: "#1e293b", lineHeight: 1.5, marginBottom: "20px" }}>
+            <p style={{ fontSize: "18px", color: "#0f172a", fontWeight: "500", lineHeight: 1.5, marginBottom: "20px" }}>
               {truncatedDesc}
             </p>
           )}
 
           {/* Author */}
-          <p style={{ fontSize: "18px", color: "#0f172a" }}>
+          <p style={{ fontSize: "20px", color: "#0f172a", fontWeight: "600" }}>
             with Maya Allan
           </p>
 
           {/* Website */}
           <div style={{ display: "flex", alignItems: "center", marginTop: "auto" }}>
-            <span style={{ fontSize: "16px", color: "#1e293b", fontWeight: "500" }}>
+            <span style={{ fontSize: "18px", color: "#0f172a", fontWeight: "600" }}>
               mayaallan.com/events
             </span>
           </div>

@@ -201,8 +201,9 @@ export default async function Image({ params }: Props) {
           {/* Author */}
           <p
             style={{
-              fontSize: "24px",
+              fontSize: "26px",
               color: "#0f172a",
+              fontWeight: "600",
               marginBottom: "24px",
             }}
           >
@@ -213,9 +214,10 @@ export default async function Image({ params }: Props) {
           {truncatedDesc && (
             <p
               style={{
-                fontSize: "18px",
-                color: "#1e293b",
-                lineHeight: 1.6,
+                fontSize: "20px",
+                color: "#0f172a",
+                fontWeight: "500",
+                lineHeight: 1.5,
                 marginBottom: "24px",
               }}
             >
@@ -233,9 +235,9 @@ export default async function Image({ params }: Props) {
           >
             <span
               style={{
-                fontSize: "16px",
-                color: "#1e293b",
-                fontWeight: "500",
+                fontSize: "18px",
+                color: "#0f172a",
+                fontWeight: "600",
               }}
             >
               mayaallan.com

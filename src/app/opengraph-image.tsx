@@ -135,8 +135,9 @@ export default async function Image() {
           {/* Tagline */}
           <p
             style={{
-              fontSize: "28px",
+              fontSize: "30px",
               color: "#0f172a",
+              fontWeight: "600",
               marginBottom: "24px",
             }}
           >
@@ -146,9 +147,10 @@ export default async function Image() {
           {/* Description */}
           <p
             style={{
-              fontSize: "20px",
-              color: "#1e293b",
-              lineHeight: 1.6,
+              fontSize: "22px",
+              color: "#0f172a",
+              fontWeight: "500",
+              lineHeight: 1.5,
               marginBottom: "24px",
             }}
           >
@@ -162,13 +164,13 @@ export default async function Image() {
                 display: "flex",
                 alignItems: "center",
                 padding: "12px 20px",
-                backgroundColor: "#f1f5f9",
+                backgroundColor: "#e2e8f0",
                 borderRadius: "8px",
                 marginBottom: "24px",
               }}
             >
-              <span style={{ fontSize: "14px", color: "#1e293b", marginRight: "8px" }}>Featured:</span>
-              <span style={{ fontSize: "16px", color: "#0f172a", fontWeight: "600" }}>{featuredBook.title}</span>
+              <span style={{ fontSize: "16px", color: "#0f172a", fontWeight: "600", marginRight: "8px" }}>Featured:</span>
+              <span style={{ fontSize: "18px", color: "#0f172a", fontWeight: "700" }}>{featuredBook.title}</span>
             </div>
           )}
 
@@ -182,9 +184,9 @@ export default async function Image() {
           >
             <span
               style={{
-                fontSize: "18px",
-                color: "#1e293b",
-                fontWeight: "500",
+                fontSize: "20px",
+                color: "#0f172a",
+                fontWeight: "600",
               }}
             >
               mayaallan.com

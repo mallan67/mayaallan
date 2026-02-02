@@ -209,20 +209,20 @@ export default async function Image({ params }: Props) {
           </div>
 
           {/* Author */}
-          <p style={{ fontSize: "24px", color: "#0f172a", marginBottom: "24px" }}>
+          <p style={{ fontSize: "26px", color: "#0f172a", fontWeight: "600", marginBottom: "24px" }}>
             by Maya Allan
           </p>
 
           {/* Description */}
           {truncatedDesc && (
-            <p style={{ fontSize: "18px", color: "#1e293b", lineHeight: 1.6, marginBottom: "24px" }}>
+            <p style={{ fontSize: "20px", color: "#0f172a", fontWeight: "500", lineHeight: 1.5, marginBottom: "24px" }}>
               {truncatedDesc}
             </p>
           )}
 
           {/* Website */}
           <div style={{ display: "flex", alignItems: "center", marginTop: "auto" }}>
-            <span style={{ fontSize: "16px", color: "#1e293b", fontWeight: "500" }}>
+            <span style={{ fontSize: "18px", color: "#0f172a", fontWeight: "600" }}>
               mayaallan.com/media
             </span>
           </div>
