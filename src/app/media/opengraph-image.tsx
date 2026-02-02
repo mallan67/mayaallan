@@ -114,8 +114,8 @@ export default async function Image() {
           <p
             style={{
               fontSize: "30px",
-              color: "#0f172a",
-              fontWeight: "600",
+              color: "#000000",
+              fontWeight: "700",
               marginBottom: "24px",
             }}
           >
@@ -126,8 +126,8 @@ export default async function Image() {
           <p
             style={{
               fontSize: "22px",
-              color: "#0f172a",
-              fontWeight: "500",
+              color: "#000000",
+              fontWeight: "600",
               lineHeight: 1.5,
               marginBottom: "24px",
             }}

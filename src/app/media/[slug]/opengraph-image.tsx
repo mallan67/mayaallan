@@ -209,13 +209,13 @@ export default async function Image({ params }: Props) {
           </div>
 
           {/* Author */}
-          <p style={{ fontSize: "26px", color: "#0f172a", fontWeight: "600", marginBottom: "24px" }}>
+          <p style={{ fontSize: "28px", color: "#000000", fontWeight: "700", marginBottom: "24px" }}>
             by Maya Allan
           </p>
 
           {/* Description */}
           {truncatedDesc && (
-            <p style={{ fontSize: "20px", color: "#0f172a", fontWeight: "500", lineHeight: 1.5, marginBottom: "24px" }}>
+            <p style={{ fontSize: "20px", color: "#000000", fontWeight: "600", lineHeight: 1.5, marginBottom: "24px" }}>
               {truncatedDesc}
             </p>
           )}

@@ -226,20 +226,20 @@ export default async function Image({ params }: Props) {
 
           {/* Location */}
           {event.locationText && (
-            <p style={{ fontSize: "20px", color: "#0f172a", fontWeight: "500", marginBottom: "16px" }}>
+            <p style={{ fontSize: "20px", color: "#000000", fontWeight: "600", marginBottom: "16px" }}>
               {event.locationText}
             </p>
           )}
 
           {/* Description */}
           {truncatedDesc && (
-            <p style={{ fontSize: "18px", color: "#0f172a", fontWeight: "500", lineHeight: 1.5, marginBottom: "20px" }}>
+            <p style={{ fontSize: "18px", color: "#000000", fontWeight: "600", lineHeight: 1.5, marginBottom: "20px" }}>
               {truncatedDesc}
             </p>
           )}
 
           {/* Author */}
-          <p style={{ fontSize: "20px", color: "#0f172a", fontWeight: "600" }}>
+          <p style={{ fontSize: "20px", color: "#000000", fontWeight: "700" }}>
             with Maya Allan
           </p>
 
