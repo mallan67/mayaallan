@@ -149,7 +149,7 @@ export default async function Image({ params }: Props) {
                 height="80"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#334155"
+                stroke="#0f172a"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -219,14 +219,14 @@ export default async function Image({ params }: Props) {
             <span style={{ fontSize: "20px", color: "#0f172a", fontWeight: "600" }}>
               {dateStr}
             </span>
-            <span style={{ fontSize: "20px", color: "#334155" }}>
+            <span style={{ fontSize: "20px", color: "#0f172a" }}>
               {timeStr}
             </span>
           </div>
 
           {/* Location */}
           {event.locationText && (
-            <p style={{ fontSize: "18px", color: "#334155", marginBottom: "16px" }}>
+            <p style={{ fontSize: "18px", color: "#0f172a", marginBottom: "16px" }}>
               {event.locationText}
             </p>
           )}
@@ -239,13 +239,13 @@ export default async function Image({ params }: Props) {
           )}
 
           {/* Author */}
-          <p style={{ fontSize: "18px", color: "#334155" }}>
+          <p style={{ fontSize: "18px", color: "#0f172a" }}>
             with Maya Allan
           </p>
 
           {/* Website */}
           <div style={{ display: "flex", alignItems: "center", marginTop: "auto" }}>
-            <span style={{ fontSize: "16px", color: "#475569", fontWeight: "500" }}>
+            <span style={{ fontSize: "16px", color: "#1e293b", fontWeight: "500" }}>
               mayaallan.com/events
             </span>
           </div>

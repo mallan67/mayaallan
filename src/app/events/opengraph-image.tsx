@@ -53,7 +53,7 @@ export default async function Image() {
               height="80"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#334155"
+              stroke="#0f172a"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -117,7 +117,7 @@ export default async function Image() {
           <p
             style={{
               fontSize: "28px",
-              color: "#334155",
+              color: "#0f172a",
               marginBottom: "24px",
             }}
           >
@@ -147,7 +147,7 @@ export default async function Image() {
             <span
               style={{
                 fontSize: "18px",
-                color: "#475569",
+                color: "#1e293b",
                 fontWeight: "500",
               }}
             >

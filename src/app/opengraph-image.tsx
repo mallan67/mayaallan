@@ -102,8 +102,8 @@ export default async function Image() {
                 flexDirection: "column",
               }}
             >
-              <span style={{ color: "#334155", fontSize: "48px", marginBottom: "16px" }}>MA</span>
-              <span style={{ color: "#475569", fontSize: "18px" }}>Maya Allan</span>
+              <span style={{ color: "#0f172a", fontSize: "48px", marginBottom: "16px" }}>MA</span>
+              <span style={{ color: "#1e293b", fontSize: "18px" }}>Maya Allan</span>
             </div>
           )}
         </div>
@@ -136,7 +136,7 @@ export default async function Image() {
           <p
             style={{
               fontSize: "28px",
-              color: "#334155",
+              color: "#0f172a",
               marginBottom: "24px",
             }}
           >
@@ -167,7 +167,7 @@ export default async function Image() {
                 marginBottom: "24px",
               }}
             >
-              <span style={{ fontSize: "14px", color: "#475569", marginRight: "8px" }}>Featured:</span>
+              <span style={{ fontSize: "14px", color: "#1e293b", marginRight: "8px" }}>Featured:</span>
               <span style={{ fontSize: "16px", color: "#0f172a", fontWeight: "600" }}>{featuredBook.title}</span>
             </div>
           )}
@@ -183,7 +183,7 @@ export default async function Image() {
             <span
               style={{
                 fontSize: "18px",
-                color: "#475569",
+                color: "#1e293b",
                 fontWeight: "500",
               }}
             >

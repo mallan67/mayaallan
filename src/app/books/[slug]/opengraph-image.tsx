@@ -72,7 +72,7 @@ export default async function Image({ params }: Props) {
           >
             Maya Allan
           </h1>
-          <p style={{ fontSize: "32px", color: "#334155" }}>Author</p>
+          <p style={{ fontSize: "32px", color: "#0f172a" }}>Author</p>
         </div>
       ),
       { ...size }
@@ -142,7 +142,7 @@ export default async function Image({ params }: Props) {
                 justifyContent: "center",
               }}
             >
-              <span style={{ color: "#334155", fontSize: "24px" }}>No Cover</span>
+              <span style={{ color: "#0f172a", fontSize: "24px" }}>No Cover</span>
             </div>
           )}
         </div>
@@ -202,7 +202,7 @@ export default async function Image({ params }: Props) {
           <p
             style={{
               fontSize: "24px",
-              color: "#334155",
+              color: "#0f172a",
               marginBottom: "24px",
             }}
           >
@@ -234,7 +234,7 @@ export default async function Image({ params }: Props) {
             <span
               style={{
                 fontSize: "16px",
-                color: "#475569",
+                color: "#1e293b",
                 fontWeight: "500",
               }}
             >

@@ -19,14 +19,16 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
   const decodedSlug = decodeURIComponent(slug)
 
   try {
+    // Use simple .eq() filter - the slug should match directly
     const { data: book, error } = await supabaseAdmin
       .from(Tables.books)
       .select("title, seo_title, seo_description, blurb, subtitle1, subtitle2, subtitle3, cover_url, og_image_url")
-      .or(`slug.eq.${decodedSlug},slug.eq.${slug}`)
+      .eq("slug", decodedSlug)
       .limit(1)
       .single()
 
     if (error || !book) {
+      console.error("Book metadata fetch error:", error?.message)
       return { title: "Book Not Found" }
     }
 
@@ -121,7 +123,7 @@ export default async function BookPage({ params }: BookPageProps) {
           )
         )
       `)
-      .or(`slug.eq.${decodedSlug},slug.eq.${slug}`)
+      .eq("slug", decodedSlug)
       .eq("is_published", true)
       .limit(1)
       .single()

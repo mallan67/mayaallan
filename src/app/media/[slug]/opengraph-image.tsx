@@ -65,7 +65,7 @@ export default async function Image({ params }: Props) {
           }}
         >
           <h1 style={{ fontSize: "72px", fontWeight: "bold", color: "#1e293b" }}>Maya Allan</h1>
-          <p style={{ fontSize: "32px", color: "#334155" }}>Media</p>
+          <p style={{ fontSize: "32px", color: "#0f172a" }}>Media</p>
         </div>
       ),
       { ...size }
@@ -87,13 +87,13 @@ export default async function Image({ params }: Props) {
     switch (kind) {
       case "video":
         return (
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
         )
       case "audio":
         return (
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2">
             <path d="M9 18V5l12-2v13"></path>
             <circle cx="6" cy="18" r="3"></circle>
             <circle cx="18" cy="16" r="3"></circle>
@@ -101,7 +101,7 @@ export default async function Image({ params }: Props) {
         )
       default:
         return (
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#334155" strokeWidth="2">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
             <circle cx="8.5" cy="8.5" r="1.5"></circle>
             <polyline points="21 15 16 10 5 21"></polyline>
@@ -209,7 +209,7 @@ export default async function Image({ params }: Props) {
           </div>
 
           {/* Author */}
-          <p style={{ fontSize: "24px", color: "#334155", marginBottom: "24px" }}>
+          <p style={{ fontSize: "24px", color: "#0f172a", marginBottom: "24px" }}>
             by Maya Allan
           </p>
 
@@ -222,7 +222,7 @@ export default async function Image({ params }: Props) {
 
           {/* Website */}
           <div style={{ display: "flex", alignItems: "center", marginTop: "auto" }}>
-            <span style={{ fontSize: "16px", color: "#475569", fontWeight: "500" }}>
+            <span style={{ fontSize: "16px", color: "#1e293b", fontWeight: "500" }}>
               mayaallan.com/media
             </span>
           </div>
