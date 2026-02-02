@@ -17,6 +17,21 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
+// Load Inter font for crisp text rendering
+async function loadFont() {
+  const response = await fetch(
+    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2")
+  )
+  return await response.arrayBuffer()
+}
+
+async function loadFontBold() {
+  const response = await fetch(
+    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2")
+  )
+  return await response.arrayBuffer()
+}
+
 async function getMediaItem(slug: string) {
   const supabaseUrl = process.env.SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
@@ -47,7 +62,27 @@ async function getMediaItem(slug: string) {
 
 export default async function Image({ params }: Props) {
   const { slug } = await params
-  const item = await getMediaItem(slug)
+
+  const [item, interRegular, interBold] = await Promise.all([
+    getMediaItem(slug),
+    loadFont(),
+    loadFontBold(),
+  ])
+
+  const fonts = [
+    {
+      name: "Inter",
+      data: interRegular,
+      style: "normal" as const,
+      weight: 400 as const,
+    },
+    {
+      name: "Inter",
+      data: interBold,
+      style: "normal" as const,
+      weight: 700 as const,
+    },
+  ]
 
   // Fallback if no item found
   if (!item) {
@@ -62,13 +97,14 @@ export default async function Image({ params }: Props) {
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: "#ffffff",
+            fontFamily: "Inter",
           }}
         >
-          <h1 style={{ fontSize: "72px", fontWeight: "bold", color: "#1e293b" }}>Maya Allan</h1>
-          <p style={{ fontSize: "32px", color: "#0f172a" }}>Media</p>
+          <h1 style={{ fontSize: "72px", fontWeight: 700, color: "#000000" }}>Maya Allan</h1>
+          <p style={{ fontSize: "32px", color: "#000000", fontWeight: 400 }}>Media</p>
         </div>
       ),
-      { ...size }
+      { ...size, fonts }
     )
   }
 
@@ -87,13 +123,13 @@ export default async function Image({ params }: Props) {
     switch (kind) {
       case "video":
         return (
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2">
             <polygon points="5 3 19 12 5 21 5 3"></polygon>
           </svg>
         )
       case "audio":
         return (
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2">
             <path d="M9 18V5l12-2v13"></path>
             <circle cx="6" cy="18" r="3"></circle>
             <circle cx="18" cy="16" r="3"></circle>
@@ -101,7 +137,7 @@ export default async function Image({ params }: Props) {
         )
       default:
         return (
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2">
             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
             <circle cx="8.5" cy="8.5" r="1.5"></circle>
             <polyline points="21 15 16 10 5 21"></polyline>
@@ -118,6 +154,7 @@ export default async function Image({ params }: Props) {
           width: "100%",
           display: "flex",
           backgroundColor: "#ffffff",
+          fontFamily: "Inter",
         }}
       >
         {/* Left side - Cover or Icon */}
@@ -180,8 +217,8 @@ export default async function Image({ params }: Props) {
             <span
               style={{
                 fontSize: "14px",
-                fontWeight: "600",
-                color: "#1e293b",
+                fontWeight: 700,
+                color: "#000000",
                 textTransform: "uppercase",
                 letterSpacing: "2px",
                 backgroundColor: "#e2e8f0",
@@ -197,8 +234,8 @@ export default async function Image({ params }: Props) {
           <div
             style={{
               fontSize: item.title.length > 40 ? "38px" : "48px",
-              fontWeight: "bold",
-              color: "#0f172a",
+              fontWeight: 700,
+              color: "#000000",
               lineHeight: 1.15,
               marginBottom: "16px",
               display: "flex",
@@ -209,26 +246,26 @@ export default async function Image({ params }: Props) {
           </div>
 
           {/* Author */}
-          <p style={{ fontSize: "28px", color: "#000000", fontWeight: "700", marginBottom: "24px" }}>
+          <p style={{ fontSize: "28px", color: "#000000", fontWeight: 700, marginBottom: "24px" }}>
             by Maya Allan
           </p>
 
           {/* Description */}
           {truncatedDesc && (
-            <p style={{ fontSize: "20px", color: "#000000", fontWeight: "600", lineHeight: 1.5, marginBottom: "24px" }}>
+            <p style={{ fontSize: "20px", color: "#1a1a1a", fontWeight: 400, lineHeight: 1.5, marginBottom: "24px" }}>
               {truncatedDesc}
             </p>
           )}
 
           {/* Website */}
           <div style={{ display: "flex", alignItems: "center", marginTop: "auto" }}>
-            <span style={{ fontSize: "18px", color: "#0f172a", fontWeight: "600" }}>
+            <span style={{ fontSize: "18px", color: "#000000", fontWeight: 700 }}>
               mayaallan.com/media
             </span>
           </div>
         </div>
       </div>
     ),
-    { ...size }
+    { ...size, fonts }
   )
 }

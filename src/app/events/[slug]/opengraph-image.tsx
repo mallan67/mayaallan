@@ -17,6 +17,21 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
+// Load Inter font for crisp text rendering
+async function loadFont() {
+  const response = await fetch(
+    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2")
+  )
+  return await response.arrayBuffer()
+}
+
+async function loadFontBold() {
+  const response = await fetch(
+    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2")
+  )
+  return await response.arrayBuffer()
+}
+
 async function getEvent(slug: string) {
   const supabaseUrl = process.env.SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
@@ -47,7 +62,27 @@ async function getEvent(slug: string) {
 
 export default async function Image({ params }: Props) {
   const { slug } = await params
-  const event = await getEvent(slug)
+
+  const [event, interRegular, interBold] = await Promise.all([
+    getEvent(slug),
+    loadFont(),
+    loadFontBold(),
+  ])
+
+  const fonts = [
+    {
+      name: "Inter",
+      data: interRegular,
+      style: "normal" as const,
+      weight: 400 as const,
+    },
+    {
+      name: "Inter",
+      data: interBold,
+      style: "normal" as const,
+      weight: 700 as const,
+    },
+  ]
 
   // Fallback if no event found
   if (!event) {
@@ -62,13 +97,14 @@ export default async function Image({ params }: Props) {
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: "#ffffff",
+            fontFamily: "Inter",
           }}
         >
-          <h1 style={{ fontSize: "72px", fontWeight: "bold", color: "#1e293b" }}>Maya Allan</h1>
-          <p style={{ fontSize: "32px", color: "#64748b" }}>Events</p>
+          <h1 style={{ fontSize: "72px", fontWeight: 700, color: "#000000" }}>Maya Allan</h1>
+          <p style={{ fontSize: "32px", color: "#000000", fontWeight: 400 }}>Events</p>
         </div>
       ),
-      { ...size }
+      { ...size, fonts }
     )
   }
 
@@ -103,6 +139,7 @@ export default async function Image({ params }: Props) {
           width: "100%",
           display: "flex",
           backgroundColor: "#ffffff",
+          fontFamily: "Inter",
         }}
       >
         {/* Left side - Image or Icon */}
@@ -149,7 +186,7 @@ export default async function Image({ params }: Props) {
                 height="80"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#0f172a"
+                stroke="#000000"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -179,8 +216,8 @@ export default async function Image({ params }: Props) {
             <span
               style={{
                 fontSize: "14px",
-                fontWeight: "600",
-                color: "#1e293b",
+                fontWeight: 700,
+                color: "#000000",
                 textTransform: "uppercase",
                 letterSpacing: "2px",
                 backgroundColor: "#e2e8f0",
@@ -196,8 +233,8 @@ export default async function Image({ params }: Props) {
           <div
             style={{
               fontSize: event.title.length > 40 ? "36px" : "44px",
-              fontWeight: "bold",
-              color: "#0f172a",
+              fontWeight: 700,
+              color: "#000000",
               lineHeight: 1.15,
               marginBottom: "16px",
               display: "flex",
@@ -216,42 +253,42 @@ export default async function Image({ params }: Props) {
               marginBottom: "16px",
             }}
           >
-            <span style={{ fontSize: "22px", color: "#0f172a", fontWeight: "700" }}>
+            <span style={{ fontSize: "22px", color: "#000000", fontWeight: 700 }}>
               {dateStr}
             </span>
-            <span style={{ fontSize: "22px", color: "#0f172a", fontWeight: "600" }}>
+            <span style={{ fontSize: "22px", color: "#000000", fontWeight: 700 }}>
               {timeStr}
             </span>
           </div>
 
           {/* Location */}
           {event.locationText && (
-            <p style={{ fontSize: "20px", color: "#000000", fontWeight: "600", marginBottom: "16px" }}>
+            <p style={{ fontSize: "20px", color: "#000000", fontWeight: 400, marginBottom: "16px" }}>
               {event.locationText}
             </p>
           )}
 
           {/* Description */}
           {truncatedDesc && (
-            <p style={{ fontSize: "18px", color: "#000000", fontWeight: "600", lineHeight: 1.5, marginBottom: "20px" }}>
+            <p style={{ fontSize: "18px", color: "#1a1a1a", fontWeight: 400, lineHeight: 1.5, marginBottom: "20px" }}>
               {truncatedDesc}
             </p>
           )}
 
           {/* Author */}
-          <p style={{ fontSize: "20px", color: "#000000", fontWeight: "700" }}>
+          <p style={{ fontSize: "20px", color: "#000000", fontWeight: 700 }}>
             with Maya Allan
           </p>
 
           {/* Website */}
           <div style={{ display: "flex", alignItems: "center", marginTop: "auto" }}>
-            <span style={{ fontSize: "18px", color: "#0f172a", fontWeight: "600" }}>
+            <span style={{ fontSize: "18px", color: "#000000", fontWeight: 700 }}>
               mayaallan.com/events
             </span>
           </div>
         </div>
       </div>
     ),
-    { ...size }
+    { ...size, fonts }
   )
 }

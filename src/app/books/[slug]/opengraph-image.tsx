@@ -13,6 +13,21 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
+// Load Inter font for crisp text rendering
+async function loadFont() {
+  const response = await fetch(
+    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2")
+  )
+  return await response.arrayBuffer()
+}
+
+async function loadFontBold() {
+  const response = await fetch(
+    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2")
+  )
+  return await response.arrayBuffer()
+}
+
 // Simple fetch function for edge runtime (no heavy dependencies)
 async function getBookData(slug: string) {
   const supabaseUrl = process.env.SUPABASE_URL
@@ -46,7 +61,27 @@ export default async function Image({ params }: Props) {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
 
-  const book = await getBookData(decodedSlug)
+  // Load fonts in parallel with data
+  const [book, interRegular, interBold] = await Promise.all([
+    getBookData(decodedSlug),
+    loadFont(),
+    loadFontBold(),
+  ])
+
+  const fonts = [
+    {
+      name: "Inter",
+      data: interRegular,
+      style: "normal" as const,
+      weight: 400 as const,
+    },
+    {
+      name: "Inter",
+      data: interBold,
+      style: "normal" as const,
+      weight: 700 as const,
+    },
+  ]
 
   // If no book found, return a generic author image
   if (!book) {
@@ -61,21 +96,22 @@ export default async function Image({ params }: Props) {
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: "#ffffff",
+            fontFamily: "Inter",
           }}
         >
           <h1
             style={{
               fontSize: "72px",
-              fontWeight: "bold",
-              color: "#1e293b",
+              fontWeight: 700,
+              color: "#000000",
             }}
           >
             Maya Allan
           </h1>
-          <p style={{ fontSize: "32px", color: "#0f172a" }}>Author</p>
+          <p style={{ fontSize: "32px", color: "#000000", fontWeight: 400 }}>Author</p>
         </div>
       ),
-      { ...size }
+      { ...size, fonts }
     )
   }
 
@@ -101,6 +137,7 @@ export default async function Image({ params }: Props) {
           width: "100%",
           display: "flex",
           backgroundColor: "#ffffff",
+          fontFamily: "Inter",
         }}
       >
         {/* Left side - Book Cover */}
@@ -142,7 +179,7 @@ export default async function Image({ params }: Props) {
                 justifyContent: "center",
               }}
             >
-              <span style={{ color: "#0f172a", fontSize: "24px" }}>No Cover</span>
+              <span style={{ color: "#000000", fontSize: "24px", fontWeight: 700 }}>No Cover</span>
             </div>
           )}
         </div>
@@ -169,8 +206,8 @@ export default async function Image({ params }: Props) {
               <span
                 style={{
                   fontSize: "14px",
-                  fontWeight: "600",
-                  color: "#1e293b",
+                  fontWeight: 700,
+                  color: "#000000",
                   textTransform: "uppercase",
                   letterSpacing: "2px",
                   backgroundColor: "#e2e8f0",
@@ -187,8 +224,8 @@ export default async function Image({ params }: Props) {
           <div
             style={{
               fontSize: book.title.length > 35 ? "38px" : "48px",
-              fontWeight: "bold",
-              color: "#0f172a",
+              fontWeight: 700,
+              color: "#000000",
               lineHeight: 1.15,
               marginBottom: "16px",
               display: "flex",
@@ -203,7 +240,7 @@ export default async function Image({ params }: Props) {
             style={{
               fontSize: "28px",
               color: "#000000",
-              fontWeight: "700",
+              fontWeight: 700,
               marginBottom: "24px",
             }}
           >
@@ -215,8 +252,8 @@ export default async function Image({ params }: Props) {
             <p
               style={{
                 fontSize: "22px",
-                color: "#000000",
-                fontWeight: "600",
+                color: "#1a1a1a",
+                fontWeight: 400,
                 lineHeight: 1.4,
                 marginBottom: "24px",
               }}
@@ -236,8 +273,8 @@ export default async function Image({ params }: Props) {
             <span
               style={{
                 fontSize: "18px",
-                color: "#0f172a",
-                fontWeight: "600",
+                color: "#000000",
+                fontWeight: 700,
               }}
             >
               mayaallan.com
@@ -248,6 +285,7 @@ export default async function Image({ params }: Props) {
     ),
     {
       ...size,
+      fonts,
     }
   )
 }

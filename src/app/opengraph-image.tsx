@@ -13,6 +13,21 @@ export const size = {
 }
 export const contentType = "image/png"
 
+// Load Inter font for crisp text rendering
+async function loadFont() {
+  const response = await fetch(
+    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2")
+  )
+  return await response.arrayBuffer()
+}
+
+async function loadFontBold() {
+  const response = await fetch(
+    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2")
+  )
+  return await response.arrayBuffer()
+}
+
 // Fetch featured book for homepage OG image
 async function getFeaturedBook() {
   const supabaseUrl = process.env.SUPABASE_URL
@@ -43,7 +58,27 @@ async function getFeaturedBook() {
 }
 
 export default async function Image() {
-  const featuredBook = await getFeaturedBook()
+  // Load fonts in parallel with data
+  const [featuredBook, interRegular, interBold] = await Promise.all([
+    getFeaturedBook(),
+    loadFont(),
+    loadFontBold(),
+  ])
+
+  const fonts = [
+    {
+      name: "Inter",
+      data: interRegular,
+      style: "normal" as const,
+      weight: 400 as const,
+    },
+    {
+      name: "Inter",
+      data: interBold,
+      style: "normal" as const,
+      weight: 700 as const,
+    },
+  ]
 
   // Ensure cover URL is absolute
   const coverUrl = featuredBook?.cover_url
@@ -60,6 +95,7 @@ export default async function Image() {
           width: "100%",
           display: "flex",
           backgroundColor: "#ffffff",
+          fontFamily: "Inter",
         }}
       >
         {/* Left side - Book Cover or placeholder */}
@@ -102,8 +138,8 @@ export default async function Image() {
                 flexDirection: "column",
               }}
             >
-              <span style={{ color: "#0f172a", fontSize: "48px", marginBottom: "16px" }}>MA</span>
-              <span style={{ color: "#1e293b", fontSize: "18px" }}>Maya Allan</span>
+              <span style={{ color: "#000000", fontSize: "48px", marginBottom: "16px", fontWeight: 700 }}>MA</span>
+              <span style={{ color: "#000000", fontSize: "18px", fontWeight: 400 }}>Maya Allan</span>
             </div>
           )}
         </div>
@@ -123,8 +159,8 @@ export default async function Image() {
           <div
             style={{
               fontSize: "64px",
-              fontWeight: "bold",
-              color: "#0f172a",
+              fontWeight: 700,
+              color: "#000000",
               lineHeight: 1.1,
               marginBottom: "16px",
             }}
@@ -137,7 +173,7 @@ export default async function Image() {
             style={{
               fontSize: "30px",
               color: "#000000",
-              fontWeight: "700",
+              fontWeight: 700,
               marginBottom: "24px",
             }}
           >
@@ -148,8 +184,8 @@ export default async function Image() {
           <p
             style={{
               fontSize: "22px",
-              color: "#000000",
-              fontWeight: "600",
+              color: "#1a1a1a",
+              fontWeight: 400,
               lineHeight: 1.5,
               marginBottom: "24px",
             }}
@@ -169,8 +205,8 @@ export default async function Image() {
                 marginBottom: "24px",
               }}
             >
-              <span style={{ fontSize: "16px", color: "#0f172a", fontWeight: "600", marginRight: "8px" }}>Featured:</span>
-              <span style={{ fontSize: "18px", color: "#0f172a", fontWeight: "700" }}>{featuredBook.title}</span>
+              <span style={{ fontSize: "16px", color: "#000000", fontWeight: 700, marginRight: "8px" }}>Featured:</span>
+              <span style={{ fontSize: "18px", color: "#000000", fontWeight: 700 }}>{featuredBook.title}</span>
             </div>
           )}
 
@@ -185,8 +221,8 @@ export default async function Image() {
             <span
               style={{
                 fontSize: "20px",
-                color: "#0f172a",
-                fontWeight: "600",
+                color: "#000000",
+                fontWeight: 700,
               }}
             >
               mayaallan.com
@@ -197,6 +233,7 @@ export default async function Image() {
     ),
     {
       ...size,
+      fonts,
     }
   )
 }

@@ -13,7 +13,42 @@ export const size = {
 }
 export const contentType = "image/png"
 
+// Load Inter font for crisp text rendering
+async function loadFont() {
+  const response = await fetch(
+    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2")
+  )
+  return await response.arrayBuffer()
+}
+
+async function loadFontBold() {
+  const response = await fetch(
+    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2")
+  )
+  return await response.arrayBuffer()
+}
+
 export default async function Image() {
+  const [interRegular, interBold] = await Promise.all([
+    loadFont(),
+    loadFontBold(),
+  ])
+
+  const fonts = [
+    {
+      name: "Inter",
+      data: interRegular,
+      style: "normal" as const,
+      weight: 400 as const,
+    },
+    {
+      name: "Inter",
+      data: interBold,
+      style: "normal" as const,
+      weight: 700 as const,
+    },
+  ]
+
   return new ImageResponse(
     (
       <div
@@ -22,6 +57,7 @@ export default async function Image() {
           width: "100%",
           display: "flex",
           backgroundColor: "#ffffff",
+          fontFamily: "Inter",
         }}
       >
         {/* Left side - Icon/Visual */}
@@ -53,7 +89,7 @@ export default async function Image() {
               height="80"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#0f172a"
+              stroke="#000000"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -84,8 +120,8 @@ export default async function Image() {
             <span
               style={{
                 fontSize: "14px",
-                fontWeight: "600",
-                color: "#1e293b",
+                fontWeight: 700,
+                color: "#000000",
                 textTransform: "uppercase",
                 letterSpacing: "2px",
                 backgroundColor: "#e2e8f0",
@@ -101,8 +137,8 @@ export default async function Image() {
           <div
             style={{
               fontSize: "56px",
-              fontWeight: "bold",
-              color: "#0f172a",
+              fontWeight: 700,
+              color: "#000000",
               lineHeight: 1.1,
               marginBottom: "16px",
             }}
@@ -115,7 +151,7 @@ export default async function Image() {
             style={{
               fontSize: "30px",
               color: "#000000",
-              fontWeight: "700",
+              fontWeight: 700,
               marginBottom: "24px",
             }}
           >
@@ -126,8 +162,8 @@ export default async function Image() {
           <p
             style={{
               fontSize: "22px",
-              color: "#000000",
-              fontWeight: "600",
+              color: "#1a1a1a",
+              fontWeight: 400,
               lineHeight: 1.5,
               marginBottom: "24px",
             }}
@@ -146,8 +182,8 @@ export default async function Image() {
             <span
               style={{
                 fontSize: "20px",
-                color: "#0f172a",
-                fontWeight: "600",
+                color: "#000000",
+                fontWeight: 700,
               }}
             >
               mayaallan.com/media
@@ -158,6 +194,7 @@ export default async function Image() {
     ),
     {
       ...size,
+      fonts,
     }
   )
 }
