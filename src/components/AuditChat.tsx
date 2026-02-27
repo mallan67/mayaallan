@@ -158,7 +158,7 @@ export function AuditChat() {
       </div>
 
       {/* ── Input Area ─────────────────────────────────────── */}
-      <div className="shrink-0 border-t border-[#E8ECF0]/40 px-4 sm:px-6 pt-2 sm:pt-3 pb-2 sm:pb-3">
+      <div className="shrink-0 border-t border-[#E8ECF0]/40 px-4 sm:px-6 pt-1.5 sm:pt-3 pb-1 sm:pb-3">
         <div className="flex items-center gap-3 max-w-3xl mx-auto">
           <input
             ref={textareaRef}
