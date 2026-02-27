@@ -165,7 +165,7 @@ export function ResetChat() {
       </div>
 
       {/* ── Input Area ─────────────────────────────────────── */}
-      <div className="shrink-0 border-t border-[#E8ECF0]/40 px-4 sm:px-6 py-3 pb-[env(safe-area-inset-bottom,8px)]">
+      <div className="shrink-0 border-t border-[#E8ECF0]/40 px-4 sm:px-6 pt-2 sm:pt-3 pb-2 sm:pb-3">
         <div className="flex items-center gap-3 max-w-3xl mx-auto">
           <input
             ref={textareaRef}
@@ -194,7 +194,7 @@ export function ResetChat() {
         </div>
 
         {/* Footer actions */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 max-w-3xl mx-auto">
+        <div className="flex items-center justify-between gap-3 mt-2 sm:mt-3 max-w-3xl mx-auto">
           {messages.length > 0 && (
             <button
               onClick={handleReset}
@@ -204,7 +204,7 @@ export function ResetChat() {
               Start Over
             </button>
           )}
-          <p className="text-charcoal-soft/50 text-xs text-center sm:text-right sm:ml-auto">
+          <p className="hidden sm:block text-charcoal-soft/50 text-xs text-right ml-auto">
             This is not therapy. If you need support, please reach out to a licensed professional.
           </p>
         </div>
