@@ -263,16 +263,16 @@ export default async function HomePage() {
               className="object-cover object-top"
               priority
             />
-            {/* Gradient overlay to blend photo into dark bg */}
-            <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/80 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-navy/60 to-transparent" />
+            {/* Gradient overlay — starts blending well before the face */}
+            <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/50 via-[35%] to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/40 to-transparent" />
           </div>
         )}
 
         {/* Content */}
         <div className="max-w-[1160px] mx-auto px-5 md:px-9 relative z-10 py-20 md:py-24">
           <div className="max-w-[560px]">
-            <p className="inline-flex items-center gap-2 text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-7">
+            <p className="hidden md:inline-flex items-center gap-2 text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-7">
               <span className="w-7 h-0.5 bg-gold" />
               Author &middot; Speaker &middot; Wellness Advocate
             </p>
