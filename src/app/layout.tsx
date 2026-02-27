@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Inter, Playfair_Display } from "next/font/google"
+import { Space_Grotesk, Fraunces } from "next/font/google"
 import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
@@ -8,16 +8,16 @@ import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structu
 
 const SITE_URL = "https://www.mayaallan.com"
 
-const inter = Inter({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-space-grotesk",
 })
 
-const playfair = Playfair_Display({
+const fraunces = Fraunces({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-playfair",
+  variable: "--font-fraunces",
 })
 
 export const viewport: Viewport = {
@@ -146,7 +146,7 @@ export default function RootLayout({
   const organizationSchema = generateOrganizationSchema()
 
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${spaceGrotesk.variable} ${fraunces.variable}`}>
       <head>
         <script
           type="application/ld+json"
@@ -161,7 +161,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen flex flex-col bg-white text-slate-900 antialiased">
+      <body className="min-h-screen flex flex-col bg-white text-charcoal antialiased">
         <Header />
         <main className="flex-1">
           {children}

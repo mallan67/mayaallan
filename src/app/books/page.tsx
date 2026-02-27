@@ -3,6 +3,9 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { RetailerIcon } from "@/lib/retailer-icons"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { generateBreadcrumbSchema } from "@/lib/structured-data"
+
+const SITE_URL = "https://www.mayaallan.com"
 
 export const metadata: Metadata = {
   title: "Books | Maya Allan",
@@ -101,9 +104,22 @@ export default async function BooksPage() {
     console.warn("Books fetch failed:", error)
   }
 
+  // AEO: Breadcrumb Schema for navigation context
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: SITE_URL },
+    { name: "Books", url: `${SITE_URL}/books` },
+  ])
+
   if (books.length === 0) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-16 text-center">
+        {/* AEO: Breadcrumb Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(breadcrumbSchema),
+          }}
+        />
         <h1 className="font-serif text-3xl font-semibold mb-4">Books</h1>
         <p className="text-slate-600">No books available yet. Check back soon!</p>
       </div>
@@ -112,6 +128,13 @@ export default async function BooksPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 md:py-16">
+      {/* AEO: Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
+        }}
+      />
       <h1 className="font-serif text-3xl md:text-4xl font-semibold text-center mb-10">
         Books
       </h1>

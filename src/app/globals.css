@@ -8,16 +8,27 @@
   }
 
   body {
-    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-space-grotesk), system-ui, sans-serif;
+    color: #0A0A0D;
+    line-height: 1.7;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-playfair), ui-serif, Georgia, serif;
+    font-family: var(--font-fraunces), Georgia, serif;
+    line-height: 1.15;
+    color: #0A0A0D;
+    font-weight: 600;
   }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .glass-header {
+    background: rgba(15,19,34,0.82);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
   }
 }

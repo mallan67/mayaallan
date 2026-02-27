@@ -6,7 +6,12 @@ import { PaymentButtons } from "@/components/PaymentButtons"
 import { RetailerIcon } from "@/lib/retailer-icons"
 import type { Metadata } from "next"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
-import { generateBookSchema } from "@/lib/structured-data"
+import {
+  generateBookSchema,
+  generateFAQSchema,
+  generateBreadcrumbSchema,
+  BOOK_FAQS,
+} from "@/lib/structured-data"
 
 interface BookPageProps {
   params: Promise<{ slug: string }>
@@ -213,6 +218,16 @@ export default async function BookPage({ params }: BookPageProps) {
     stripePaymentLink: book.stripePaymentLink,
   } as any)
 
+  // AEO: FAQ Schema for AI answer engines
+  const faqSchema = generateFAQSchema(BOOK_FAQS(book.title, book.blurb), bookUrl)
+
+  // AEO: Breadcrumb Schema for navigation context
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "https://www.mayaallan.com" },
+    { name: "Books", url: "https://www.mayaallan.com/books" },
+    { name: book.title, url: bookUrl },
+  ])
+
   // ============================================
   // DIRECT SALE LOGIC
   // ============================================
@@ -268,6 +283,20 @@ export default async function BookPage({ params }: BookPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(bookSchema),
+        }}
+      />
+      {/* AEO: FAQ Schema for AI answer engines */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
+      />
+      {/* AEO: Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
       <Link href="/books" className="text-sm text-slate-500 hover:text-slate-700 transition-colors inline-flex items-center gap-1">

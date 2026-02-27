@@ -19,8 +19,31 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-        serif: ['var(--font-playfair)', 'ui-serif', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
+        sans: ['var(--font-space-grotesk)', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        serif: ['var(--font-fraunces)', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
+      },
+      colors: {
+        navy: {
+          DEFAULT: '#0F1322',
+          light: '#1A1F35',
+        },
+        'liquid-blue': {
+          DEFAULT: '#0D6EBF',
+          bright: '#1488E0',
+          wash: 'rgba(13,110,191,0.07)',
+        },
+        gold: {
+          DEFAULT: '#D4A520',
+          deep: '#B8910A',
+          wash: 'rgba(212,165,32,0.12)',
+        },
+        surface: '#F4F4F5',
+        charcoal: {
+          DEFAULT: '#0A0A0D',
+          body: '#141418',
+          mid: '#2A2A30',
+          soft: '#484850',
+        },
       },
       // Fluid typography
       fontSize: {

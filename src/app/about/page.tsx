@@ -1,7 +1,12 @@
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import Image from "next/image"
 import type { Metadata } from "next"
-import { generateAuthorSchema } from "@/lib/structured-data"
+import {
+  generateAuthorSchema,
+  generateFAQSchema,
+  generateBreadcrumbSchema,
+  AUTHOR_FAQS,
+} from "@/lib/structured-data"
 import { unstable_noStore as noStore } from "next/cache"
 
 const SITE_URL = "https://www.mayaallan.com"
@@ -84,6 +89,15 @@ export default async function AboutPage() {
     author?.authorPhotoUrl
   )
 
+  // AEO: FAQ Schema for AI answer engines
+  const faqSchema = generateFAQSchema(AUTHOR_FAQS, `${SITE_URL}/about`)
+
+  // AEO: Breadcrumb Schema for navigation context
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: SITE_URL },
+    { name: "About", url: `${SITE_URL}/about` },
+  ])
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       {/* Author Schema JSON-LD for SEO */}
@@ -91,6 +105,20 @@ export default async function AboutPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(authorSchema),
+        }}
+      />
+      {/* AEO: FAQ Schema for AI answer engines */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
+      />
+      {/* AEO: Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
       <h1 className="font-serif text-4xl mb-8">About</h1>
