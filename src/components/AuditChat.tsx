@@ -89,8 +89,8 @@ export function AuditChat() {
                 <button
                   key={prompt}
                   onClick={() => handleStarterClick(prompt)}
-                  className="px-4 py-3 rounded-xl border border-[#E8ECF0] bg-white text-charcoal-soft text-sm
-                    hover:bg-[#F0F7FF] hover:border-liquid-blue/25 hover:text-charcoal transition-all text-left sm:text-center"
+                  className="px-4 py-3 rounded-xl border border-[#E8ECF0]/60 bg-white/70 text-charcoal-soft text-sm rounded-2xl
+                    hover:bg-[#F0F7FF]/60 hover:border-liquid-blue/20 hover:text-charcoal hover:shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-all text-left sm:text-center"
                 >
                   {prompt}
                 </button>
@@ -112,7 +112,7 @@ export function AuditChat() {
                 className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-4 ${
                   message.role === "user"
                     ? "bg-liquid-blue text-white rounded-br-md"
-                    : "bg-white border border-[#E8ECF0] text-charcoal-body rounded-bl-md shadow-sm"
+                    : "bg-white/90 border border-[#E8ECF0]/50 text-charcoal-body rounded-bl-md shadow-[0_2px_10px_rgba(0,0,0,0.03)]"
                 }`}
               >
                 {message.role === "assistant" && (
@@ -131,7 +131,7 @@ export function AuditChat() {
         {/* Typing indicator */}
         {status === "submitted" && (
           <div className="flex justify-start">
-            <div className="bg-white border border-[#E8ECF0] rounded-2xl rounded-bl-md px-5 py-4 shadow-sm">
+            <div className="bg-white/90 border border-[#E8ECF0]/50 rounded-2xl rounded-bl-md px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
               <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-liquid-blue block mb-2">
                 Audit
               </span>
@@ -158,7 +158,7 @@ export function AuditChat() {
       </div>
 
       {/* ── Input Area ─────────────────────────────────────── */}
-      <div className="shrink-0 border-t border-[#E8ECF0] px-4 sm:px-6 py-3">
+      <div className="shrink-0 border-t border-[#E8ECF0]/40 px-4 sm:px-6 py-3">
         <div className="flex items-center gap-3 max-w-3xl mx-auto">
           <input
             ref={textareaRef}
@@ -168,7 +168,7 @@ export function AuditChat() {
             onKeyDown={handleKeyDown}
             placeholder="Share what's on your mind..."
             disabled={isStreaming}
-            className="flex-1 bg-white border border-[#E0E4E8] rounded-xl px-4 py-3 h-11
+            className="flex-1 bg-white/80 border border-[#E0E4E8]/50 rounded-2xl px-4 py-3 h-11
               text-charcoal text-sm sm:text-base placeholder:text-charcoal-soft/40
               focus:outline-none focus:border-liquid-blue/40 focus:ring-1 focus:ring-liquid-blue/15
               disabled:opacity-50 transition-colors"

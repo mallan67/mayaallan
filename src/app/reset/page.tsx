@@ -69,7 +69,7 @@ export default function ResetPage() {
 
         {/* ── Chat Container — fills remaining height ────────── */}
         <div className="flex-1 flex flex-col min-h-0 max-w-3xl mx-auto w-full px-4 sm:px-6 pb-4">
-          <div className="flex-1 flex flex-col min-h-0 bg-[#FAFBFC] border border-[#E8ECF0] rounded-2xl overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0 bg-white/80 rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden">
             <ResetChat />
           </div>
         </div>
