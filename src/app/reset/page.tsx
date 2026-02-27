@@ -32,15 +32,16 @@ export const metadata: Metadata = {
 export default function ResetPage() {
   return (
     <>
-      {/* Lock viewport on all screens so flex fills correctly */}
       <style>{`
         footer { display: none !important; }
-        body { overflow: hidden !important; height: 100dvh !important; height: 100vh !important; }
-        @supports (height: 100dvh) { body { height: 100dvh !important; } }
-        main { display: flex !important; flex-direction: column !important; min-height: 0 !important; flex: 1 !important; }
+        @media (min-width: 640px) {
+          body { overflow: hidden; height: 100dvh; height: 100vh; }
+          @supports (height: 100dvh) { body { height: 100dvh; } }
+          main { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+        }
       `}</style>
 
-      <div className="bg-white flex flex-col flex-1 min-h-0">
+      <div className="bg-white flex flex-col sm:flex-1 sm:min-h-0">
         {/* ── Hero Header ────────────────────────────────────── */}
         <div className="shrink-0 px-5 sm:px-8 pt-2 sm:pt-8 pb-2 sm:pb-5 text-center relative overflow-hidden">
           {/* Soft ambient orb */}
@@ -68,7 +69,7 @@ export default function ResetPage() {
         </div>
 
         {/* ── Chat Container — fills remaining height ────────── */}
-        <div className="flex-1 flex flex-col min-h-0 max-w-3xl mx-auto w-full px-3 sm:px-6 pb-0 sm:pb-4">
+        <div className="h-[calc(100dvh-170px)] sm:h-auto sm:flex-1 flex flex-col min-h-0 max-w-3xl mx-auto w-full px-3 sm:px-6 pb-0 sm:pb-4">
           <div className="flex-1 flex flex-col min-h-0 bg-white/80 rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden">
             <ResetChat />
           </div>
