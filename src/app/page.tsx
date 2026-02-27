@@ -609,7 +609,7 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Belief Systems Audit */}
-            <Link href="/audit" className="block">
+            <Link href="/beliefaudit" className="block">
               <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
                 <div className="w-14 h-14 rounded-[14px] bg-gold-wash flex items-center justify-center mb-6 text-gold-deep">
                   <ListChecks className="w-[26px] h-[26px]" />

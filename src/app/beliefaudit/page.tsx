@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: "Free Belief Systems Audit — Uncover the Hidden Beliefs Running Your Life",
     description:
       "A free AI-guided self-inquiry tool to identify limiting beliefs, trace inherited patterns, and find what's actually true for you now. No signup required.",
-    url: "https://www.mayaallan.com/audit",
+    url: "https://www.mayaallan.com/beliefaudit",
     siteName: "Maya Allan",
     type: "website",
   },
