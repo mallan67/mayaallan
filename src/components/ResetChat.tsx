@@ -165,7 +165,7 @@ export function ResetChat() {
       </div>
 
       {/* ── Input Area ─────────────────────────────────────── */}
-      <div className="shrink-0 border-t border-[#E8ECF0]/40 px-4 sm:px-6 py-3">
+      <div className="shrink-0 border-t border-[#E8ECF0]/40 px-4 sm:px-6 py-3 pb-[env(safe-area-inset-bottom,8px)]">
         <div className="flex items-center gap-3 max-w-3xl mx-auto">
           <input
             ref={textareaRef}
