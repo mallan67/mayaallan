@@ -253,9 +253,9 @@ export default async function HomePage() {
       {/* 1. HERO SECTION                                 */}
       {/* ════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden bg-navy min-h-[420px] md:min-h-[520px]">
-        {/* Author photo — blended into background */}
+        {/* Author photo — blended into background (desktop only) */}
         {authorInfo?.authorPhotoUrl && (
-          <div className="absolute right-0 top-0 bottom-0 w-[55%] md:w-[45%]">
+          <div className="hidden md:block absolute right-0 top-0 bottom-0 w-[45%]">
             <Image
               src={authorInfo.authorPhotoUrl}
               alt="Maya Allan"
