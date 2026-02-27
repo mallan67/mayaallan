@@ -620,32 +620,36 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Belief Systems Audit */}
-            <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
-              <div className="w-14 h-14 rounded-[14px] bg-gold-wash flex items-center justify-center mb-6 text-gold-deep">
-                <ListChecks className="w-[26px] h-[26px]" />
-              </div>
-              <h3 className="font-serif text-[1.15rem] font-medium mb-3.5">Belief Systems Audit</h3>
-              <p className="text-[0.9rem] text-charcoal-mid leading-[1.8] mb-5">
-                A self-guided framework for examining the narratives running your life. Most of what we believe was installed before we had a say. Clarity starts with seeing it.
-              </p>
-              <span className="inline-block px-4 py-1.5 text-[0.68rem] font-bold tracking-[0.1em] uppercase text-gold-deep bg-gold-wash border border-[rgba(200,155,60,0.2)] rounded-full">
-                Coming Soon
-              </span>
-            </article>
+            <Link href="/audit" className="block">
+              <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
+                <div className="w-14 h-14 rounded-[14px] bg-gold-wash flex items-center justify-center mb-6 text-gold-deep">
+                  <ListChecks className="w-[26px] h-[26px]" />
+                </div>
+                <h3 className="font-serif text-[1.15rem] font-medium mb-3.5">Belief Systems Audit</h3>
+                <p className="text-[0.9rem] text-charcoal-mid leading-[1.8] mb-5">
+                  A self-guided framework for examining the narratives running your life. Most of what we believe was installed before we had a say. Clarity starts with seeing it.
+                </p>
+                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[0.68rem] font-bold tracking-[0.1em] uppercase text-liquid-blue bg-liquid-blue-wash border border-liquid-blue/20 rounded-full">
+                  Start Your Audit <ArrowRight className="w-3 h-3" />
+                </span>
+              </article>
+            </Link>
 
             {/* Nervous System Reset */}
-            <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
-              <div className="w-14 h-14 rounded-[14px] bg-gold-wash flex items-center justify-center mb-6 text-gold-deep">
-                <HeartPulse className="w-[26px] h-[26px]" />
-              </div>
-              <h3 className="font-serif text-[1.15rem] font-medium mb-3.5">Nervous System Reset</h3>
-              <p className="text-[0.9rem] text-charcoal-mid leading-[1.8] mb-5">
-                Somatic regulation techniques you can use anywhere. A regulated nervous system is the foundation everything else builds on — no certification required.
-              </p>
-              <span className="inline-block px-4 py-1.5 text-[0.68rem] font-bold tracking-[0.1em] uppercase text-gold-deep bg-gold-wash border border-[rgba(200,155,60,0.2)] rounded-full">
-                Coming Soon
-              </span>
-            </article>
+            <Link href="/reset" className="block">
+              <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
+                <div className="w-14 h-14 rounded-[14px] bg-gold-wash flex items-center justify-center mb-6 text-gold-deep">
+                  <HeartPulse className="w-[26px] h-[26px]" />
+                </div>
+                <h3 className="font-serif text-[1.15rem] font-medium mb-3.5">Nervous System Reset</h3>
+                <p className="text-[0.9rem] text-charcoal-mid leading-[1.8] mb-5">
+                  Somatic regulation techniques you can use anywhere. A regulated nervous system is the foundation everything else builds on — no certification required.
+                </p>
+                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[0.68rem] font-bold tracking-[0.1em] uppercase text-teal-600 bg-teal-50 border border-teal-600/20 rounded-full">
+                  Start Your Reset <ArrowRight className="w-3 h-3" />
+                </span>
+              </article>
+            </Link>
 
             {/* Integration Reflections */}
             <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
