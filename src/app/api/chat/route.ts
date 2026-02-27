@@ -1,5 +1,13 @@
 import { streamText, convertToModelMessages } from "ai"
-import { google } from "@ai-sdk/google"
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
+
+// Separate Google AI clients per tool (different API keys / quotas)
+const googleAudit = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+})
+const googleReset = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY_RESET || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+})
 
 // ── Rate-limit state (in-memory, resets on cold start) ──────────────
 const GLOBAL_DAILY_CAP = 400
@@ -178,8 +186,10 @@ export async function POST(req: Request) {
     const trimmedMessages = messages.slice(-MAX_MESSAGES)
     const modelMessages = await convertToModelMessages(trimmedMessages)
 
+    const googleClient = tool === "reset" ? googleReset : googleAudit
+
     const result = streamText({
-      model: google("gemini-2.5-flash-lite"),
+      model: googleClient("gemini-2.5-flash-lite"),
       system: systemPrompt,
       messages: modelMessages,
       maxOutputTokens: 800,
