@@ -630,7 +630,7 @@ export default async function HomePage() {
                   A self-guided framework for examining the narratives running your life. Most of what we believe was installed before we had a say. Clarity starts with seeing it.
                 </p>
                 <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[0.68rem] font-bold tracking-[0.1em] uppercase text-liquid-blue bg-liquid-blue-wash border border-liquid-blue/20 rounded-full">
-                  Start Your Audit <ArrowRight className="w-3 h-3" />
+                  Start Your Belief Audit <ArrowRight className="w-3 h-3" />
                 </span>
               </article>
             </Link>
