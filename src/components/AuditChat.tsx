@@ -117,7 +117,7 @@ export function AuditChat() {
               >
                 {message.role === "assistant" && (
                   <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-liquid-blue block mb-2">
-                    Audit
+                    Belief Audit
                   </span>
                 )}
                 <div className="text-sm sm:text-[0.92rem] leading-[1.8] whitespace-pre-wrap">
