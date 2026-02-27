@@ -35,7 +35,7 @@ export default function AuditPage() {
     <>
       {/* Force the page to fill viewport and prevent outer scroll */}
       <style>{`
-        footer { display: none; }
+        footer { display: none !important; }
         @media (min-width: 640px) {
           body { overflow: hidden; height: 100dvh; height: 100vh; }
           @supports (height: 100dvh) { body { height: 100dvh; } }
