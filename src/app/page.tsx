@@ -252,8 +252,13 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════ */}
       {/* 1. HERO SECTION                                 */}
       {/* ════════════════════════════════════════════════ */}
-      <section className="py-24 md:py-[96px]">
-        <div className="max-w-[1160px] mx-auto px-5 md:px-9">
+      <section className="py-24 md:py-[96px] relative overflow-hidden">
+        {/* Ambient orbs */}
+        <div className="orb orb-gold w-[500px] h-[500px] -top-40 -left-40 absolute opacity-60" />
+        <div className="orb orb-blue w-[400px] h-[400px] top-20 -right-32 absolute opacity-50" />
+        <div className="orb orb-gold w-[300px] h-[300px] bottom-0 left-1/3 absolute opacity-40" />
+
+        <div className="max-w-[1160px] mx-auto px-5 md:px-9 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[72px] items-center">
             {/* Content */}
             <div className="max-w-[540px] text-center md:text-left order-2 md:order-1 mx-auto md:mx-0">
@@ -315,10 +320,15 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Divider ── */}
+      <div className="section-divider max-w-[1160px] mx-auto">
+        <div className="diamond" />
+      </div>
+
       {/* ════════════════════════════════════════════════ */}
       {/* 2. AREAS OF EXPLORATION                         */}
       {/* ════════════════════════════════════════════════ */}
-      <section className="bg-surface py-24 border-t border-[#CDCDD2]">
+      <section className="bg-surface py-24">
         <div className="max-w-[1160px] mx-auto px-5 md:px-9">
           <div className="text-center mb-14">
             <p className="text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-3">
@@ -369,12 +379,19 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Divider ── */}
+      <div className="section-divider max-w-[1160px] mx-auto">
+        <div className="diamond" />
+      </div>
+
       {/* ════════════════════════════════════════════════ */}
       {/* 3. BOOKS SECTION (DATA-DRIVEN)                  */}
       {/* ════════════════════════════════════════════════ */}
       {featuredBook && (
-        <section className="py-24">
-          <div className="max-w-[1160px] mx-auto px-5 md:px-9">
+        <section className="py-24 relative overflow-hidden">
+          {/* Ambient orb */}
+          <div className="orb orb-blue w-[350px] h-[350px] -top-20 -right-24 absolute opacity-40" />
+          <div className="max-w-[1160px] mx-auto px-5 md:px-9 relative z-10">
             {/* Section Header */}
             <div className="flex flex-wrap justify-between items-end gap-5 mb-12">
               <div>
@@ -483,8 +500,13 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════ */}
       {/* 4. ABOUT SECTION (dark navy bg)                 */}
       {/* ════════════════════════════════════════════════ */}
-      <section className="py-24 bg-navy text-white">
-        <div className="max-w-[1160px] mx-auto px-5 md:px-9">
+      <section className="py-24 bg-navy text-white relative overflow-hidden">
+        {/* Ambient orbs on dark bg */}
+        <div className="orb orb-white w-[500px] h-[500px] -top-32 -right-40 absolute opacity-70" />
+        <div className="orb orb-blue w-[400px] h-[400px] bottom-0 -left-32 absolute opacity-30" />
+        <div className="orb orb-gold w-[300px] h-[300px] top-1/2 right-1/4 absolute opacity-20" />
+
+        <div className="max-w-[1160px] mx-auto px-5 md:px-9 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10 md:gap-[72px] items-start">
             {/* Photo Column */}
             <div className="md:sticky md:top-[100px] text-center">
@@ -572,11 +594,18 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Divider ── */}
+      <div className="section-divider max-w-[1160px] mx-auto">
+        <div className="diamond" />
+      </div>
+
       {/* ════════════════════════════════════════════════ */}
       {/* 5. RESOURCES                                    */}
       {/* ════════════════════════════════════════════════ */}
-      <section className="py-24">
-        <div className="max-w-[1160px] mx-auto px-5 md:px-9">
+      <section className="py-24 relative overflow-hidden">
+        {/* Ambient orb */}
+        <div className="orb orb-gold w-[350px] h-[350px] top-10 -left-20 absolute opacity-35" />
+        <div className="max-w-[1160px] mx-auto px-5 md:px-9 relative z-10">
           <div className="text-center mb-14">
             <p className="text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-3">
               In Development
@@ -704,6 +733,11 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ── Divider ── */}
+      <div className="section-divider max-w-[1160px] mx-auto">
+        <div className="diamond" />
+      </div>
 
       {/* ════════════════════════════════════════════════ */}
       {/* 7. NEWSLETTER                                   */}
