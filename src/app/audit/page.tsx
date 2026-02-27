@@ -63,7 +63,7 @@ export default function AuditPage() {
 
             {/* Disclosure banner */}
             <div className="inline-block bg-[#F0F7FF] border border-[#D6E8FA] rounded-xl px-3 sm:px-4 py-1.5 sm:py-2.5">
-              <p className="text-charcoal-soft text-[0.65rem] sm:text-xs leading-relaxed">
+              <p className="text-charcoal-mid text-[0.7rem] sm:text-xs leading-relaxed">
                 Not therapy or a substitute for professional mental health care.
               </p>
             </div>

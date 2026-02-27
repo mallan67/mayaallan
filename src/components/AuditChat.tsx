@@ -81,7 +81,7 @@ export function AuditChat() {
             <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-liquid-blue-wash items-center justify-center mb-6">
               <ListChecks className="w-7 h-7 text-liquid-blue" />
             </div>
-            <p className="text-charcoal-soft text-center text-sm sm:text-base leading-relaxed max-w-md mb-4 sm:mb-8">
+            <p className="text-charcoal-mid text-center text-[0.9rem] sm:text-base leading-relaxed max-w-md mb-4 sm:mb-8">
               Start by sharing a belief you&apos;d like to examine, or choose a prompt below.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
@@ -89,7 +89,7 @@ export function AuditChat() {
                 <button
                   key={prompt}
                   onClick={() => handleStarterClick(prompt)}
-                  className="px-4 py-3 rounded-xl border border-[#E8ECF0]/60 bg-white/70 text-charcoal-soft text-sm rounded-2xl
+                  className="px-4 py-3 rounded-xl border border-[#D0D4D8] bg-white text-charcoal-mid font-medium text-[0.85rem] sm:text-sm rounded-2xl
                     hover:bg-[#F0F7FF]/60 hover:border-liquid-blue/20 hover:text-charcoal hover:shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-all text-left sm:text-center"
                 >
                   {prompt}
@@ -112,7 +112,7 @@ export function AuditChat() {
                 className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-4 ${
                   message.role === "user"
                     ? "bg-liquid-blue text-white rounded-br-md"
-                    : "bg-white/90 border border-[#E8ECF0]/50 text-charcoal-body rounded-bl-md shadow-[0_2px_10px_rgba(0,0,0,0.03)]"
+                    : "bg-white/90 border border-[#E8ECF0]/50 text-charcoal rounded-bl-md shadow-[0_2px_10px_rgba(0,0,0,0.03)]"
                 }`}
               >
                 {message.role === "assistant" && (
@@ -120,7 +120,7 @@ export function AuditChat() {
                     Belief Audit
                   </span>
                 )}
-                <div className="text-sm sm:text-[0.92rem] leading-[1.8] whitespace-pre-wrap">
+                <div className="text-[0.88rem] sm:text-[0.92rem] leading-[1.8] whitespace-pre-wrap font-normal">
                   {text}
                 </div>
               </div>
@@ -169,7 +169,7 @@ export function AuditChat() {
             placeholder="Share what's on your mind..."
             disabled={isStreaming}
             className="flex-1 bg-white border border-[#B8BCC0] rounded-2xl px-4 py-3 h-12
-              text-charcoal text-sm sm:text-base placeholder:text-charcoal-soft/50
+              text-charcoal text-[0.9rem] sm:text-base placeholder:text-charcoal-soft
               focus:outline-none focus:border-liquid-blue/50 focus:ring-2 focus:ring-liquid-blue/15
               disabled:opacity-50 transition-colors shadow-sm"
           />
