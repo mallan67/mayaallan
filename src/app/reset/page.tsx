@@ -44,7 +44,7 @@ export default function ResetPage() {
 
       <div className="bg-white flex flex-col sm:flex-1 sm:min-h-0">
         {/* ── Hero Header ────────────────────────────────────── */}
-        <div className="shrink-0 px-5 sm:px-8 pt-4 sm:pt-8 pb-3 sm:pb-5 text-center relative overflow-hidden">
+        <div className="shrink-0 px-5 sm:px-8 pt-2 sm:pt-8 pb-2 sm:pb-5 text-center relative overflow-hidden">
           {/* Soft ambient orb */}
           <div className="orb orb-blue w-[400px] h-[400px] top-[-100px] left-1/2 -translate-x-1/2 absolute opacity-[0.04]" />
 
@@ -70,7 +70,7 @@ export default function ResetPage() {
         </div>
 
         {/* ── Chat Container — fills remaining height ────────── */}
-        <div className="h-[calc(100dvh-200px)] sm:flex-1 flex flex-col min-h-0 max-w-3xl mx-auto w-full px-3 sm:px-6 pb-1 sm:pb-4">
+        <div className="h-[calc(100dvh-160px)] sm:flex-1 flex flex-col min-h-0 max-w-3xl mx-auto w-full px-3 sm:px-6 pb-1 sm:pb-4">
           <div className="flex-1 flex flex-col min-h-0 bg-white/80 rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden">
             <ResetChat />
           </div>
