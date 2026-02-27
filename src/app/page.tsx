@@ -300,18 +300,18 @@ export default async function HomePage() {
             {/* Author Photo */}
             <div className="flex justify-center items-center order-1 md:order-2">
               {authorInfo?.authorPhotoUrl ? (
-                <div className="w-[200px] h-[200px] md:w-[280px] md:h-[280px] rounded-full overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.16)] border-[3px] border-white/20">
+                <div className="w-[180px] h-[230px] md:w-[200px] md:h-[260px] rounded-[20px] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.14),0_0_0_1px_rgba(0,0,0,0.05)]">
                   <Image
                     src={authorInfo.authorPhotoUrl}
                     alt="Maya Allan"
-                    width={280}
-                    height={280}
+                    width={200}
+                    height={260}
                     className="w-full h-full object-cover"
                     priority
                   />
                 </div>
               ) : (
-                <div className="w-[200px] h-[200px] md:w-[280px] md:h-[280px] rounded-full bg-surface flex items-center justify-center">
+                <div className="w-[180px] h-[230px] md:w-[200px] md:h-[260px] rounded-[20px] bg-surface flex items-center justify-center">
                   <span className="text-charcoal-soft">Photo</span>
                 </div>
               )}
