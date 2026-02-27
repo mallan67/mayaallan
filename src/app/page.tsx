@@ -252,70 +252,59 @@ export default async function HomePage() {
       {/* ════════════════════════════════════════════════ */}
       {/* 1. HERO SECTION                                 */}
       {/* ════════════════════════════════════════════════ */}
-      <section className="py-24 md:py-[96px] relative overflow-hidden">
-        {/* Ambient orbs */}
-        <div className="orb orb-gold w-[500px] h-[500px] -top-40 -left-40 absolute opacity-60" />
-        <div className="orb orb-blue w-[400px] h-[400px] top-20 -right-32 absolute opacity-50" />
-        <div className="orb orb-gold w-[300px] h-[300px] bottom-0 left-1/3 absolute opacity-40" />
+      <section className="relative overflow-hidden bg-navy min-h-[420px] md:min-h-[520px]">
+        {/* Author photo — blended into background */}
+        {authorInfo?.authorPhotoUrl && (
+          <div className="absolute right-0 top-0 bottom-0 w-[55%] md:w-[45%]">
+            <Image
+              src={authorInfo.authorPhotoUrl}
+              alt="Maya Allan"
+              fill
+              className="object-cover object-top"
+              priority
+            />
+            {/* Gradient overlay to blend photo into dark bg */}
+            <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/80 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/60 to-transparent" />
+          </div>
+        )}
 
-        <div className="max-w-[1160px] mx-auto px-5 md:px-9 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-[72px] items-center">
-            {/* Content */}
-            <div className="max-w-[540px] text-center md:text-left order-2 md:order-1 mx-auto md:mx-0">
-              <p className="inline-flex items-center gap-2 text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-7">
-                <span className="w-7 h-0.5 bg-gold" />
-                Author &middot; Speaker &middot; Wellness Advocate
-              </p>
+        {/* Content */}
+        <div className="max-w-[1160px] mx-auto px-5 md:px-9 relative z-10 py-20 md:py-24">
+          <div className="max-w-[560px]">
+            <p className="inline-flex items-center gap-2 text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-7">
+              <span className="w-7 h-0.5 bg-gold" />
+              Author &middot; Speaker &middot; Wellness Advocate
+            </p>
 
-              <h1 className="font-serif text-[clamp(2.6rem,5.5vw,3.8rem)] font-semibold leading-[1.15] tracking-[-0.03em] mb-6">
-                Practical Tools for{" "}
-                <em className="font-normal italic text-liquid-blue-bright">Coming Home</em>{" "}
-                to Yourself.
-              </h1>
+            <h1 className="font-serif text-[clamp(2.4rem,5.5vw,3.8rem)] font-semibold leading-[1.15] tracking-[-0.03em] mb-6 text-white">
+              Practical Tools for{" "}
+              <em className="font-normal italic text-gold">Coming Home</em>{" "}
+              to Yourself.
+            </h1>
 
-              <p className="text-[1.08rem] text-charcoal-mid leading-[1.8] mb-10">
-                I write about what most people are afraid to question — inherited beliefs, old patterns, the stories that quietly run our lives. My work is for anyone ready to stop outsourcing their healing and start authoring their own transformation.
-              </p>
+            <p className="text-[1.05rem] text-white/80 leading-[1.8] mb-10">
+              I write about what most people are afraid to question — inherited beliefs, old patterns, the stories that quietly run our lives. My work is for anyone ready to stop outsourcing their healing and start authoring their own transformation.
+            </p>
 
-              <div className="flex flex-wrap gap-3.5 mb-12 justify-center md:justify-start">
-                <Link
-                  href="/books"
-                  className="inline-flex items-center gap-2 px-9 py-[15px] text-[0.85rem] font-semibold tracking-[0.03em] text-white bg-charcoal rounded-full transition-all hover:bg-black hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
-                >
-                  Explore My Books
-                </Link>
-                <Link
-                  href="/about"
-                  className="inline-flex items-center gap-2 px-9 py-[15px] text-[0.85rem] font-semibold tracking-[0.03em] text-charcoal bg-transparent border-2 border-[#CDCDD2] rounded-full transition-all hover:border-charcoal"
-                >
-                  About Me
-                </Link>
-              </div>
-
-              <p className="font-serif italic font-normal text-base text-charcoal-body leading-[1.7] pl-5 border-l-[3px] border-gold text-left">
-                &ldquo;No one can heal us but ourselves. The return to yourself is a path only you can take.&rdquo;
-              </p>
+            <div className="flex flex-wrap gap-3.5 mb-12">
+              <Link
+                href="/books"
+                className="inline-flex items-center gap-2 px-9 py-[15px] text-[0.85rem] font-semibold tracking-[0.03em] text-navy bg-white rounded-full transition-all hover:bg-gold hover:text-navy hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+              >
+                Explore My Books
+              </Link>
+              <Link
+                href="/about"
+                className="inline-flex items-center gap-2 px-9 py-[15px] text-[0.85rem] font-semibold tracking-[0.03em] text-white bg-transparent border-2 border-white/30 rounded-full transition-all hover:border-white/60"
+              >
+                About Me
+              </Link>
             </div>
 
-            {/* Author Photo */}
-            <div className="flex justify-center items-center order-1 md:order-2">
-              {authorInfo?.authorPhotoUrl ? (
-                <div className="w-[140px] h-[180px] md:w-[260px] md:h-[340px] rounded-[16px] md:rounded-[20px] overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.14),0_0_0_1px_rgba(0,0,0,0.05)]">
-                  <Image
-                    src={authorInfo.authorPhotoUrl}
-                    alt="Maya Allan"
-                    width={260}
-                    height={340}
-                    className="w-full h-full object-cover"
-                    priority
-                  />
-                </div>
-              ) : (
-                <div className="w-[140px] h-[180px] md:w-[260px] md:h-[340px] rounded-[16px] md:rounded-[20px] bg-surface flex items-center justify-center">
-                  <span className="text-charcoal-soft">Photo</span>
-                </div>
-              )}
-            </div>
+            <p className="font-serif italic font-normal text-base text-white/75 leading-[1.7] pl-5 border-l-[3px] border-gold text-left">
+              &ldquo;No one can heal us but ourselves. The return to yourself is a path only you can take.&rdquo;
+            </p>
           </div>
         </div>
       </section>
