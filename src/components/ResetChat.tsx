@@ -85,8 +85,8 @@ export function ResetChat() {
         {/* Empty state with starter prompts */}
         {messages.length === 0 && !isStreaming && (
           <div className="flex flex-col items-center justify-center py-12 sm:py-20">
-            <div className="w-14 h-14 rounded-2xl bg-teal-50 flex items-center justify-center mb-6">
-              <HeartPulse className="w-7 h-7 text-teal-600" />
+            <div className="w-14 h-14 rounded-2xl bg-violet-50 flex items-center justify-center mb-6">
+              <HeartPulse className="w-7 h-7 text-violet-400" />
             </div>
             <p className="text-charcoal-soft text-center text-sm sm:text-base leading-relaxed max-w-md mb-8">
               Start by describing how your body feels right now, or choose a prompt below.
@@ -97,7 +97,7 @@ export function ResetChat() {
                   key={prompt}
                   onClick={() => handleStarterClick(prompt)}
                   className="px-4 py-3 rounded-xl border border-[#E8ECF0] bg-white text-charcoal-soft text-sm
-                    hover:bg-teal-50 hover:border-teal-600/25 hover:text-charcoal transition-all text-left sm:text-center"
+                    hover:bg-violet-50 hover:border-violet-400/25 hover:text-charcoal transition-all text-left sm:text-center"
                 >
                   {prompt}
                 </button>
@@ -118,12 +118,12 @@ export function ResetChat() {
               <div
                 className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-4 ${
                   message.role === "user"
-                    ? "bg-teal-600 text-white rounded-br-md"
+                    ? "bg-violet-400 text-white rounded-br-md"
                     : "bg-white border border-[#E8ECF0] text-charcoal-body rounded-bl-md shadow-sm"
                 }`}
               >
                 {message.role === "assistant" && (
-                  <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-teal-600 block mb-2">
+                  <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-violet-400 block mb-2">
                     Reset
                   </span>
                 )}
@@ -139,13 +139,13 @@ export function ResetChat() {
         {status === "submitted" && (
           <div className="flex justify-start">
             <div className="bg-white border border-[#E8ECF0] rounded-2xl rounded-bl-md px-5 py-4 shadow-sm">
-              <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-teal-600 block mb-2">
+              <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-violet-400 block mb-2">
                 Reset
               </span>
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-teal-600/30 animate-pulse" />
-                <span className="w-2 h-2 rounded-full bg-teal-600/30 animate-pulse [animation-delay:150ms]" />
-                <span className="w-2 h-2 rounded-full bg-teal-600/30 animate-pulse [animation-delay:300ms]" />
+                <span className="w-2 h-2 rounded-full bg-violet-400/30 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-violet-400/30 animate-pulse [animation-delay:150ms]" />
+                <span className="w-2 h-2 rounded-full bg-violet-400/30 animate-pulse [animation-delay:300ms]" />
               </div>
             </div>
           </div>
@@ -177,15 +177,15 @@ export function ResetChat() {
             disabled={isStreaming}
             className="flex-1 bg-white border border-[#E0E4E8] rounded-xl px-4 py-3 h-11
               text-charcoal text-sm sm:text-base placeholder:text-charcoal-soft/40
-              focus:outline-none focus:border-teal-600/40 focus:ring-1 focus:ring-teal-600/15
+              focus:outline-none focus:border-violet-400/40 focus:ring-1 focus:ring-violet-400/15
               disabled:opacity-50 transition-colors"
           />
           <button
             type="button"
             onClick={handleSend}
             disabled={isStreaming || !input.trim()}
-            className="flex-shrink-0 w-11 h-11 rounded-xl bg-teal-600 flex items-center justify-center
-              text-white font-bold hover:bg-teal-700 transition-colors
+            className="flex-shrink-0 w-11 h-11 rounded-xl bg-violet-400 flex items-center justify-center
+              text-white font-bold hover:bg-violet-500 transition-colors
               disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Send message"
           >

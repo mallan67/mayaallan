@@ -645,7 +645,7 @@ export default async function HomePage() {
                 <p className="text-[0.9rem] text-charcoal-mid leading-[1.8] mb-5">
                   Somatic regulation techniques you can use anywhere. A regulated nervous system is the foundation everything else builds on — no certification required.
                 </p>
-                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[0.68rem] font-bold tracking-[0.1em] uppercase text-teal-600 bg-teal-50 border border-teal-600/20 rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[0.68rem] font-bold tracking-[0.1em] uppercase text-violet-500 bg-violet-50 border border-violet-400/20 rounded-full">
                   Start Your Reset <ArrowRight className="w-3 h-3" />
                 </span>
               </article>

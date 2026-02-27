@@ -46,8 +46,8 @@ export default function ResetPage() {
           <div className="orb orb-blue w-[400px] h-[400px] top-[-100px] left-1/2 -translate-x-1/2 absolute opacity-[0.04]" />
 
           <div className="relative z-10 max-w-2xl mx-auto">
-            <div className="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center mx-auto mb-4">
-              <HeartPulse className="w-6 h-6 text-teal-600" />
+            <div className="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center mx-auto mb-4">
+              <HeartPulse className="w-6 h-6 text-violet-400" />
             </div>
             <h1 className="font-serif text-[clamp(1.5rem,3.5vw,2.25rem)] font-semibold text-charcoal tracking-[-0.02em] mb-2">
               Nervous System Reset
@@ -58,7 +58,7 @@ export default function ResetPage() {
             </p>
 
             {/* Disclosure banner */}
-            <div className="inline-block bg-teal-50 border border-teal-200 rounded-xl px-4 py-2.5">
+            <div className="inline-block bg-violet-50 border border-violet-200 rounded-xl px-4 py-2.5">
               <p className="text-charcoal-soft text-xs leading-relaxed">
                 This tool is for informational and self-reflection purposes only.
                 It is not therapy, counseling, or a substitute for professional mental health care.
