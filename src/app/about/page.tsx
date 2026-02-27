@@ -124,39 +124,48 @@ export default async function AboutPage() {
         }}
       />
 
-      {/* ── Hero / Photo Section ── */}
+      {/* ── Hero / Photo + Intro Section ── */}
       <section className="pt-16 pb-12 md:pt-24 md:pb-16 relative overflow-hidden">
         {/* Ambient orbs */}
         <div className="orb orb-gold w-[400px] h-[400px] -top-32 -right-32 absolute opacity-50" />
         <div className="orb orb-blue w-[300px] h-[300px] bottom-0 -left-20 absolute opacity-30" />
 
-        <div className="max-w-[880px] mx-auto px-5 md:px-9 relative z-10">
+        <div className="max-w-[960px] mx-auto px-5 md:px-9 relative z-10">
           {/* Breadcrumb label */}
-          <p className="text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-8 text-center">
+          <p className="text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-8 text-center md:text-left">
             About the Author
           </p>
 
-          {/* Photo + Name — centered, personal */}
-          <div className="flex flex-col items-center text-center mb-12">
+          {/* Side-by-side: photo + intro text */}
+          <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 md:gap-12 items-start">
+            {/* Photo — smaller, circular */}
             {author?.authorPhotoUrl && (
-              <div className="w-[280px] h-[340px] md:w-[340px] md:h-[420px] rounded-[20px] overflow-hidden shadow-[0_32px_72px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)] mb-8">
-                <Image
-                  src={author.authorPhotoUrl}
-                  alt={author.authorName || "Maya Allan"}
-                  width={340}
-                  height={420}
-                  className="w-full h-full object-cover"
-                  priority
-                />
+              <div className="flex justify-center md:justify-start">
+                <div className="w-[180px] h-[180px] md:w-[200px] md:h-[200px] rounded-full overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.05)]">
+                  <Image
+                    src={author.authorPhotoUrl}
+                    alt={author.authorName || "Maya Allan"}
+                    width={200}
+                    height={200}
+                    className="w-full h-full object-cover"
+                    priority
+                  />
+                </div>
               </div>
             )}
 
-            <h1 className="font-serif text-[clamp(2.2rem,5vw,3.2rem)] font-semibold tracking-[-0.02em] mb-3">
-              {author?.authorName || "Maya Allan"}
-            </h1>
-            <p className="text-[0.85rem] text-gold font-semibold tracking-[0.06em] uppercase">
-              Author &middot; Speaker &middot; Wellness Advocate
-            </p>
+            {/* Name + intro */}
+            <div className="text-center md:text-left">
+              <h1 className="font-serif text-[clamp(2rem,4.5vw,2.8rem)] font-semibold tracking-[-0.02em] mb-2">
+                {author?.authorName || "Maya Allan"}
+              </h1>
+              <p className="text-[0.85rem] text-gold font-semibold tracking-[0.06em] uppercase mb-5">
+                Author &middot; Speaker &middot; Wellness Advocate
+              </p>
+              <p className="text-[1.05rem] text-charcoal-mid leading-[1.8] max-w-[540px]">
+                I believe deep inner clarity is a fundamental human birthright. My work starts with a simple conviction: no one can heal us but ourselves.
+              </p>
+            </div>
           </div>
         </div>
       </section>
