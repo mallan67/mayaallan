@@ -168,7 +168,7 @@ export function AuditChat() {
             onKeyDown={handleKeyDown}
             placeholder="Share what's on your mind..."
             disabled={isStreaming}
-            className="flex-1 bg-white/80 border border-[#E0E4E8]/50 rounded-2xl px-4 py-3 h-11
+            className="flex-1 bg-white border border-[#D0D4D8] rounded-2xl px-4 py-3 h-11
               text-charcoal text-sm sm:text-base placeholder:text-charcoal-soft/40
               focus:outline-none focus:border-liquid-blue/40 focus:ring-1 focus:ring-liquid-blue/15
               disabled:opacity-50 transition-colors"
