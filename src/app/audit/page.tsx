@@ -35,8 +35,9 @@ export default function AuditPage() {
     <>
       {/* Force the page to fill viewport and prevent outer scroll */}
       <style>{`
-        body { overflow: hidden; height: 100vh; }
-        main { display: flex; flex-direction: column; min-height: 0; }
+        body { overflow: hidden; height: 100dvh; height: 100vh; }
+        @supports (height: 100dvh) { body { height: 100dvh; } }
+        main { display: flex; flex-direction: column; min-height: 0; flex: 1; }
         footer { display: none; }
       `}</style>
 
