@@ -308,7 +308,7 @@ export default async function BookPage({ params }: BookPageProps) {
         {/* Cover Image */}
         <div>
           {book.coverUrl ? (
-            <div className="relative w-full max-w-[320px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 shadow-2xl rounded-xl overflow-hidden md:sticky md:top-6">
+            <div className="relative w-full max-w-[320px] mx-auto md:max-w-none aspect-[2/3] border border-slate-200 shadow-2xl rounded-xl overflow-hidden md:sticky md:top-24">
               <Image
                 src={book.coverUrl}
                 alt={book.title}
@@ -360,15 +360,25 @@ export default async function BookPage({ params }: BookPageProps) {
             )}
           </div>
 
+          {/* Soft divider */}
+          <div className="section-divider">
+            <div className="diamond" />
+          </div>
+
           {/* About the Book (moved up) */}
           {book.blurb && (
-            <div className="py-6 border-y border-slate-200">
+            <div className="py-2">
               <h2 className="font-serif text-xl font-semibold mb-3 text-slate-900">About This Book</h2>
               <div className="text-base leading-relaxed text-slate-700 whitespace-pre-wrap">
                 {book.blurb}
               </div>
             </div>
           )}
+
+          {/* Soft divider */}
+          <div className="section-divider">
+            <div className="diamond" />
+          </div>
 
           {/* ============================================ */}
           {/* FORMATS & PRICING SECTION */}
@@ -469,8 +479,13 @@ export default async function BookPage({ params }: BookPageProps) {
             </div>
           )}
 
+          {/* Soft divider */}
+          <div className="section-divider">
+            <div className="diamond" />
+          </div>
+
           {/* Share Buttons */}
-          <div className="pt-6 border-t border-slate-200">
+          <div className="pt-2">
             <p className="text-sm font-semibold text-slate-600 mb-3">Share this book</p>
             <ShareButtons
               url={bookUrl}
