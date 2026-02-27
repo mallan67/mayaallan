@@ -10,9 +10,9 @@ const googleReset = createGoogleGenerativeAI({
 })
 
 // ── Rate-limit state (in-memory, resets on cold start) ──────────────
-const GLOBAL_DAILY_CAP = 400
-const PER_IP_DAILY_CAP = 30
-const MAX_MESSAGES = 20
+const GLOBAL_DAILY_CAP = 1000
+const PER_IP_DAILY_CAP = 80
+const MAX_MESSAGES = 40
 
 let globalCount = 0
 let globalResetDate = todayKey()
@@ -192,7 +192,7 @@ export async function POST(req: Request) {
       model: googleClient("gemini-2.5-flash-lite"),
       system: systemPrompt,
       messages: modelMessages,
-      maxOutputTokens: 800,
+      maxOutputTokens: 1200,
       temperature: 0.7,
     })
 

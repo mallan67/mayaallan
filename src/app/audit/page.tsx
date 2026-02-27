@@ -35,13 +35,15 @@ export default function AuditPage() {
     <>
       {/* Force the page to fill viewport and prevent outer scroll */}
       <style>{`
-        body { overflow: hidden; height: 100dvh; height: 100vh; }
-        @supports (height: 100dvh) { body { height: 100dvh; } }
-        main { display: flex; flex-direction: column; min-height: 0; flex: 1; }
         footer { display: none; }
+        @media (min-width: 640px) {
+          body { overflow: hidden; height: 100dvh; height: 100vh; }
+          @supports (height: 100dvh) { body { height: 100dvh; } }
+          main { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+        }
       `}</style>
 
-      <div className="bg-white flex flex-col flex-1 min-h-0">
+      <div className="bg-white flex flex-col sm:flex-1 sm:min-h-0">
         {/* ── Hero Header ────────────────────────────────────── */}
         <div className="shrink-0 px-5 sm:px-8 pt-4 sm:pt-8 pb-3 sm:pb-5 text-center relative overflow-hidden">
           {/* Soft ambient orb */}
@@ -68,8 +70,8 @@ export default function AuditPage() {
           </div>
         </div>
 
-        {/* ── Chat Container — fills remaining height ────────── */}
-        <div className="flex-1 flex flex-col min-h-0 max-w-3xl mx-auto w-full px-3 sm:px-6 pb-1 sm:pb-4">
+        {/* ── Chat Container ────────────────────────────────── */}
+        <div className="h-[calc(100dvh-200px)] sm:flex-1 flex flex-col min-h-0 max-w-3xl mx-auto w-full px-3 sm:px-6 pb-1 sm:pb-4">
           <div className="flex-1 flex flex-col min-h-0 bg-white/80 rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden">
             <AuditChat />
           </div>
