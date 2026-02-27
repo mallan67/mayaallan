@@ -74,14 +74,14 @@ export function AuditChat() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* ── Messages Area ──────────────────────────────────── */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-5 min-h-0">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-5 min-h-0">
         {/* Empty state with starter prompts */}
         {messages.length === 0 && !isStreaming && (
-          <div className="flex flex-col items-center justify-center py-12 sm:py-20">
-            <div className="w-14 h-14 rounded-2xl bg-liquid-blue-wash flex items-center justify-center mb-6">
+          <div className="flex flex-col items-center justify-center py-4 sm:py-20">
+            <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-liquid-blue-wash items-center justify-center mb-6">
               <ListChecks className="w-7 h-7 text-liquid-blue" />
             </div>
-            <p className="text-charcoal-soft text-center text-sm sm:text-base leading-relaxed max-w-md mb-8">
+            <p className="text-charcoal-soft text-center text-sm sm:text-base leading-relaxed max-w-md mb-4 sm:mb-8">
               Start by sharing a belief you&apos;d like to examine, or choose a prompt below.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
@@ -133,7 +133,7 @@ export function AuditChat() {
           <div className="flex justify-start">
             <div className="bg-white/90 border border-[#E8ECF0]/50 rounded-2xl rounded-bl-md px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
               <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-liquid-blue block mb-2">
-                Audit
+                Belief Audit
               </span>
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-liquid-blue/30 animate-pulse" />

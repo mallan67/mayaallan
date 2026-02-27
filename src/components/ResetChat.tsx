@@ -81,14 +81,14 @@ export function ResetChat() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* ── Messages Area ──────────────────────────────────── */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-5 min-h-0">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-5 min-h-0">
         {/* Empty state with starter prompts */}
         {messages.length === 0 && !isStreaming && (
-          <div className="flex flex-col items-center justify-center py-12 sm:py-20">
-            <div className="w-14 h-14 rounded-2xl bg-violet-50 flex items-center justify-center mb-6">
+          <div className="flex flex-col items-center justify-center py-4 sm:py-20">
+            <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-violet-50 items-center justify-center mb-6">
               <HeartPulse className="w-7 h-7 text-violet-400" />
             </div>
-            <p className="text-charcoal-soft text-center text-sm sm:text-base leading-relaxed max-w-md mb-8">
+            <p className="text-charcoal-soft text-center text-sm sm:text-base leading-relaxed max-w-md mb-4 sm:mb-8">
               Start by describing how your body feels right now, or choose a prompt below.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
