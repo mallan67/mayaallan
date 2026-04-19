@@ -82,16 +82,47 @@ Phase 1a → 1g in order. Each phase produces working, committable software.
 
 ## Phase 1a — Cleanup and prompt foundations
 
-### Task 1a-0: Upgrade the Gemini model from Flash Lite to Flash
+### Task 1a-0: Route via Vercel AI Gateway + upgrade to Gemini Flash
 
 **Files:**
 - Modify: `src/app/api/chat/route.ts`
+- Modify: `package.json` (may need to add `ai` gateway config / remove `@ai-sdk/google` direct dep later)
+- Environment: add `AI_GATEWAY_API_KEY` to Vercel env vars (Maya does this)
 
-**Rationale:** Clean Language requires restraint — the AI must echo user words rather than reframe. Flash Lite is more prone to helpful-reframer drift than Flash. One-line change.
+**Rationale:** Two improvements in one task:
+1. **Model upgrade:** Flash (not Lite) for stronger Clean Language adherence
+2. **Provider portability:** Vercel AI Gateway lets us swap providers (Google, Groq, Anthropic, OpenAI) with a string change — critical for cost management and fallback if Gemini's free tier is exceeded or rate-limited
 
-- [ ] **Step 1: Update the model reference**
+**Cost:** Gateway adds ~50-100ms latency; is free to use; underlying provider costs unchanged. At current volume, Gemini Flash stays within the free tier.
 
-In `src/app/api/chat/route.ts`, find the `streamText` call (around line 192) and change:
+- [ ] **Step 1: Maya adds `AI_GATEWAY_API_KEY`**
+
+Maya generates a key at [vercel.com/dashboard/ai-gateway](https://vercel.com/dashboard/ai-gateway) and adds it to Vercel Project Settings → Environment Variables (all three environments). On Vercel deployments, this can be enabled with zero-config via OIDC; for local dev, set it in `.env.local`.
+
+- [ ] **Step 2: Update the chat route to use the gateway**
+
+In `src/app/api/chat/route.ts`, change:
+
+```ts
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
+
+const googleAudit = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+})
+const googleReset = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY_RESET || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+})
+```
+
+to:
+
+```ts
+// Gateway provider string — can be swapped to "groq/llama-3.3-70b", "anthropic/claude-haiku-4-5", etc.
+// Gateway handles routing; just change the string to switch providers.
+const MODEL = "google/gemini-2.5-flash"
+```
+
+Then find the `streamText` call and change:
 
 ```ts
 model: googleClient("gemini-2.5-flash-lite"),
@@ -100,18 +131,28 @@ model: googleClient("gemini-2.5-flash-lite"),
 to:
 
 ```ts
-model: googleClient("gemini-2.5-flash"),
+model: MODEL,
 ```
 
-- [ ] **Step 2: Verify**
+(The AI SDK automatically routes string-form model IDs through the Vercel AI Gateway when `AI_GATEWAY_API_KEY` is set or when deployed on Vercel.)
+
+- [ ] **Step 3: Remove the unused `googleAudit` / `googleReset` per-tool clients**
+
+Since the gateway handles routing, we no longer need the two `createGoogleGenerativeAI` clients. Remove them and remove the `tool === "reset" ? googleReset : googleAudit` conditional. Update the `streamText` call to use `MODEL` directly.
+
+- [ ] **Step 4: Verify locally**
 
 Run: `pnpm dev`. Send a test message at `/reset`. Confirm the response streams normally.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 5: Confirm a provider switch is a one-line change**
+
+(Verification only — do NOT commit this change.) Temporarily change `MODEL = "google/gemini-2.5-flash"` to `MODEL = "groq/llama-3.3-70b-versatile"` and send a message. Confirm it works. Revert to Gemini before committing.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 git add src/app/api/chat/route.ts
-git commit -m "Upgrade chat model to gemini-2.5-flash for better prompt adherence"
+git commit -m "Route chat via Vercel AI Gateway; upgrade to gemini-2.5-flash"
 ```
 
 ### Task 1a-1: Remove the unused Ollama route and dependency
