@@ -8,11 +8,18 @@
 
 **Tech Stack:** Next.js 16 (App Router), React 19, TypeScript 5.7, Tailwind, `@ai-sdk/react` + `@ai-sdk/google`, `@vercel/blob`, `@vercel/analytics`, `@lemonsqueezy/lemonsqueezy.js`, `@react-pdf/renderer`, Resend.
 
-**Verification model:** The codebase has no existing unit test framework. Rather than introducing Vitest/RTL just for this plan (scope creep), each task uses a **Verify** step that specifies a command, URL, or observable outcome to confirm correctness. Where logic-heavy code is introduced (webhook signature verification, PDF generation), we add a lightweight `node:test` script invocable via `node --test`.
+**Verification model:** The codebase has no existing unit test framework. Rather than introducing Vitest/RTL just for this plan (scope creep), each task uses a **Verify** step that specifies a command, URL, or observable outcome to confirm correctness. Where logic-heavy code is introduced (webhook signature verification, PDF generation), we add a lightweight `node:test` script invocable via `node --test`. A prompt-adherence eval script (Task 1a-6) runs a small set of scripted scenarios against each tool to catch prompt drift before deploy.
 
 **Pre-flight requirements (by Maya, not the engineer):**
 - Lemon Squeezy account approved (may be pending; implementation continues in LS test mode until approved)
 - `RESEND_API_KEY` already present in Vercel env (confirm during Phase 1f)
+
+**Quality & legal additions (added post-review):**
+- Model upgraded from `gemini-2.5-flash-lite` to `gemini-2.5-flash` for better instruction-following on restraint-heavy Clean Language prompts (Task 1a-0)
+- Few-shot DO/DO-NOT examples appended to each prompt to lock behaviour (Tasks 1a-3, 1a-4, 1b-1)
+- Prompt-adherence eval script for catching drift (Task 1a-6)
+- `/methods` attributions page credits researchers (Schwartz, Grove, Ecker, Miller & Rollnick) and strengthens legal posture (Task 1d-2)
+- Public-facing tool copy stays descriptive ("curious exploration", "reflection tool") — method names appear only in internal system prompts and on `/methods`
 
 ---
 
@@ -74,6 +81,38 @@ Phase 1a → 1g in order. Each phase produces working, committable software.
 ---
 
 ## Phase 1a — Cleanup and prompt foundations
+
+### Task 1a-0: Upgrade the Gemini model from Flash Lite to Flash
+
+**Files:**
+- Modify: `src/app/api/chat/route.ts`
+
+**Rationale:** Clean Language requires restraint — the AI must echo user words rather than reframe. Flash Lite is more prone to helpful-reframer drift than Flash. One-line change.
+
+- [ ] **Step 1: Update the model reference**
+
+In `src/app/api/chat/route.ts`, find the `streamText` call (around line 192) and change:
+
+```ts
+model: googleClient("gemini-2.5-flash-lite"),
+```
+
+to:
+
+```ts
+model: googleClient("gemini-2.5-flash"),
+```
+
+- [ ] **Step 2: Verify**
+
+Run: `pnpm dev`. Send a test message at `/reset`. Confirm the response streams normally.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/app/api/chat/route.ts
+git commit -m "Upgrade chat model to gemini-2.5-flash for better prompt adherence"
+```
 
 ### Task 1a-1: Remove the unused Ollama route and dependency
 
@@ -228,7 +267,30 @@ When the conversation starts, greet them and guide into CHECK IN:
 Remember: this isn't about fixing anyone. It's about helping them come back to their body — so they can feel safe enough to be present.`,
 ```
 
-- [ ] **Step 3: Verify in dev server**
+- [ ] **Step 3: Append few-shot examples to the Reset prompt**
+
+Before the closing backtick of the `reset:` template literal (after the final "Remember: this isn't about fixing anyone..." line), append:
+
+```
+FEW-SHOT EXAMPLES (learn from these — do not output them):
+
+User: "I can't stop shaking."
+GOOD response: "Sounds like a part of you is activated right now — working hard, maybe alarm or protection. Take one normal breath. Where in your body is that shaking most — hands, chest, legs?"
+BAD response (DO NOT do this): "Shaking is a common stress response caused by adrenaline. You can try deep breathing exercises to calm your nervous system."
+Why the bad one fails: clinical, explaining instead of meeting them in body, listing techniques before checking stance.
+
+User: "I shouldn't be feeling this, I'm so pathetic."
+GOOD response: "Pause for a moment — sounds like there's also a part of you that's frustrated with the part that's activated. Can that frustrated part make just a little space, so we can get to know the first one? What does your body feel like, underneath the frustration?"
+BAD response (DO NOT do this): "Don't be hard on yourself! Everyone feels this way sometimes. Let's work on building self-compassion."
+Why the bad one fails: toxic positivity, skipping the judgmental part instead of making space for it, inserting a prescription.
+
+User: "I feel completely numb, like I'm not here."
+GOOD response: "Sounds like a part of you has gone quiet — shielding you from something that may have felt like too much. Can you feel your feet on the ground right now? Even if the feeling is faint."
+BAD response (DO NOT do this): "Numbness can be a sign of dissociation. It's important to ground yourself. Try naming 5 things you can see."
+Why the bad one fails: pathologizing (naming a clinical term), instructing instead of inviting, rushing to technique.
+```
+
+- [ ] **Step 4: Verify in dev server**
 
 Run: `pnpm dev`
 Navigate to `/reset`. Start a conversation: "I feel really wired right now." Confirm the AI:
@@ -236,11 +298,11 @@ Navigate to `/reset`. Start a conversation: "I feel really wired right now." Con
 - Asks a body-scan question
 - Does not rush to technique before feeling-toward
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add src/app/api/chat/route.ts
-git commit -m "Update Reset prompt: IFS-informed stance and adaptive fallback"
+git commit -m "Update Reset prompt: IFS-informed stance, adaptive fallback, few-shot examples"
 ```
 
 ### Task 1a-4: Update the Belief Audit prompt (Clean Language + Coherence close)
@@ -317,7 +379,35 @@ OPENING:
 Remember: you're not here to fix them. You're helping them see what's been running in the background — so they can decide for themselves what stays and what goes.`,
 ```
 
-- [ ] **Step 2: Verify in dev server**
+- [ ] **Step 2: Append few-shot examples to the audit prompt**
+
+Before the closing backtick of the `audit:` template literal (after "Remember: you're not here to fix them..."), append:
+
+```
+FEW-SHOT EXAMPLES (learn from these — do not output them):
+
+User: "I believe I'm not good enough."
+GOOD response: "Thank you for naming that. 'Not good enough' — what kind of not good enough is that not good enough? Just use your own words."
+BAD response (DO NOT do this): "That sounds like a core limiting belief. Let's explore where it came from. What messages did you receive as a child?"
+Why the bad one fails: labels the belief ("core limiting belief" = diagnosis), imposes a frame (childhood origin), stacks two questions.
+
+User: "It feels heavy, like a weight on my chest."
+GOOD response: "Is there anything else about that heavy weight on your chest?"
+BAD response (DO NOT do this): "That heaviness might be emotional blockage from suppressed feelings. When we hold things in our body, they often show up as physical sensations."
+Why the bad one fails: introduces AI-generated metaphor ("emotional blockage"), explains instead of echoes, steals the user's metaphor and replaces it with the AI's.
+
+User: "I don't know. I never really thought about it."
+GOOD response: "That's okay. Take a breath. If you had to guess — just a guess — what does that not-good-enough feel like in your body, or where do you notice it?"
+BAD response (DO NOT do this): "Most limiting beliefs come from family conditioning. Were there people in your life who made you feel inadequate?"
+Why the bad one fails: fills the user's silence with the AI's hypothesis (forbidden until 2 consecutive stuck turns), and introduces a leading question.
+
+User: "I guess the truer statement is that I'm doing my best."
+GOOD response: "That's something you landed on. Stay with this for a second — can you also hold the old belief, 'I'm not good enough,' at the same time as 'I'm doing my best'? What happens in you when both are present?"
+BAD response (DO NOT do this): "Yes! That's a much healthier belief. Let's reinforce that: 'I am enough. I am doing my best.' Repeat that to yourself."
+Why the bad one fails: installs an affirmation (explicitly forbidden), cheerleads, mistakes the Coherence juxtaposition move for affirmation-replacement.
+```
+
+- [ ] **Step 3: Verify in dev server**
 
 Run: `pnpm dev`
 Navigate to `/beliefaudit`. Try: "I believe I'm not good enough." Confirm the AI:
@@ -325,11 +415,132 @@ Navigate to `/beliefaudit`. Try: "I believe I'm not good enough." Confirm the AI
 - Does NOT offer a reframe or affirmation
 - Does NOT diagnose or label
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add src/app/api/chat/route.ts
-git commit -m "Update Belief Audit prompt: Clean Language + Coherence close + adaptive fallback"
+git commit -m "Update Belief Audit prompt: Clean Language + Coherence close + few-shot examples"
+```
+
+### Task 1a-6: Add a prompt-adherence eval script
+
+**Files:**
+- Create: `scripts/eval-prompts.mjs`
+- Modify: `package.json` (add script alias)
+
+**Purpose:** Catch prompt drift (AI reframing, diagnosing, installing affirmations) before deploy. Runs a few known scenarios against each tool and flags rule violations via simple string checks. Not a replacement for manual review, but enough to catch regressions quickly.
+
+- [ ] **Step 1: Create the eval script**
+
+```js
+// scripts/eval-prompts.mjs
+// Runs a small set of prompts against each tool and checks for forbidden patterns.
+// Run with: `node scripts/eval-prompts.mjs` (server must be running on localhost:3000 in another terminal)
+
+const BASE = process.env.EVAL_BASE_URL || "http://localhost:3000"
+
+const SCENARIOS = [
+  {
+    tool: "reset",
+    input: "I feel really wired and can't calm down",
+    forbidden: [/\bcommon\b.*\bresponse\b/i, /\badrenaline\b/i, /\btrauma response\b/i],
+    forbiddenReason: "clinical explaining",
+  },
+  {
+    tool: "reset",
+    input: "I shouldn't feel this way, I'm being pathetic",
+    forbidden: [/don't be (hard|tough) on yourself/i, /\beveryone feels this way\b/i],
+    forbiddenReason: "toxic positivity / skipping the self-critical part",
+  },
+  {
+    tool: "belief_inquiry",
+    input: "I believe I'm not good enough",
+    forbidden: [/core limiting belief/i, /childhood/i, /family conditioning/i, /truer statement/i],
+    forbiddenReason: "diagnosing, imposing childhood frame, or installing replacement",
+  },
+  {
+    tool: "belief_inquiry",
+    input: "I don't know, I never thought about it",
+    forbidden: [/family conditioning/i, /were there people in your life/i, /\bmost limiting beliefs\b/i],
+    forbiddenReason: "filling silence with AI hypothesis (forbidden before 2 stuck turns)",
+  },
+  {
+    tool: "integration",
+    input: "My old belief was 'I'm too much.' I felt received by a friend this week.",
+    forbidden: [/replaced by/i, /truer belief/i, /let's anchor this new belief/i],
+    forbiddenReason: "declaring replacement or installing new belief (not Coherence Therapy)",
+  },
+]
+
+async function run(tool, input) {
+  const res = await fetch(`${BASE}/api/chat?tool=${tool}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messages: [{ role: "user", parts: [{ type: "text", text: input }] }],
+    }),
+  })
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  // Stream → text
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let text = ""
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    text += decoder.decode(value, { stream: true })
+  }
+  return text
+}
+
+let passed = 0
+let failed = 0
+for (const s of SCENARIOS) {
+  try {
+    const response = await run(s.tool, s.input)
+    const hit = s.forbidden.find((re) => re.test(response))
+    if (hit) {
+      console.error(
+        `FAIL [${s.tool}] "${s.input}"\n  matched forbidden pattern: ${hit}\n  reason: ${s.forbiddenReason}\n  response excerpt: ${response.slice(0, 200)}...\n`
+      )
+      failed++
+    } else {
+      console.log(`PASS [${s.tool}] "${s.input}"`)
+      passed++
+    }
+  } catch (err) {
+    console.error(`ERROR [${s.tool}] "${s.input}": ${err.message}`)
+    failed++
+  }
+}
+
+console.log(`\n${passed} passed, ${failed} failed`)
+if (failed > 0) process.exit(1)
+```
+
+- [ ] **Step 2: Add the npm script**
+
+In `package.json`, add to the `scripts` block:
+
+```json
+"eval:prompts": "node scripts/eval-prompts.mjs"
+```
+
+- [ ] **Step 3: Run it**
+
+With `pnpm dev` running in another terminal:
+
+```bash
+pnpm eval:prompts
+```
+
+Expected: all 5 scenarios PASS. If any fail, the script will print which forbidden pattern matched — that tells you exactly where the prompt is drifting, and you edit the offending prompt to tighten it.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add scripts/eval-prompts.mjs package.json
+git commit -m "Add prompt-adherence eval script"
 ```
 
 ---
@@ -400,11 +611,34 @@ OPENING:
 Remember: you're not delivering the shift. You're holding the space while it consolidates.`,
 ```
 
-- [ ] **Step 2: Verify the route accepts `tool=integration`**
+- [ ] **Step 2: Append few-shot examples to the integration prompt**
+
+Before the closing backtick of the `integration:` template literal (after "Remember: you're not delivering the shift..."), append:
+
+```
+FEW-SHOT EXAMPLES (learn from these — do not output them):
+
+User: "My old belief was 'I'm too much.' Last week in a conversation with a friend I felt really received for the first time."
+GOOD response: "That's a real shift. Stay with the moment of being received for a second — can you picture it, feel it? Now, without pushing it away, can you also hold 'I'm too much' at the same time? Both at once."
+BAD response (DO NOT do this): "That's beautiful — the old belief 'I'm too much' is being replaced by a truer belief that you are enough and lovable. Let's anchor this new belief."
+Why the bad one fails: the AI declares the old belief is "being replaced" (user's job, not AI's), calls the new one "truer" (forbidden), and installs a replacement belief (explicitly not what Coherence Therapy does).
+
+User: "I'm not sure if anything shifted. It still feels the same."
+GOOD response: "That's honest. Sometimes integration is quiet — nothing dramatic. Let me ask: when you held both — the old belief and the new experience — did you notice any difference, even small? Or did they just sit side by side?"
+BAD response (DO NOT do this): "Don't worry, the shift happens on a subconscious level. Your brain is rewiring itself as we speak. Give it time."
+Why the bad one fails: makes up a neuroscience claim, reassures instead of staying curious, turns a real observation into something to bypass.
+
+User: "Is my old belief still true now?"
+GOOD response: "What do you notice now, when both are held together?"
+BAD response (DO NOT do this): "The old belief was your nervous system trying to protect you, but now with this new experience, you can see that it was based on incomplete information. It doesn't have to be true anymore."
+Why the bad one fails: answers the user's question (AI's job is to return it), delivers an interpretation, flattens the nuance of juxtaposition into a before/after narrative.
+```
+
+- [ ] **Step 3: Verify the route accepts `tool=integration`**
 
 Open the file and confirm the POST handler looks up `SYSTEM_PROMPTS[tool]` and returns 404 if missing. Confirm it now accepts `integration` as a valid tool name.
 
-- [ ] **Step 3: Smoke-test via curl**
+- [ ] **Step 4: Smoke-test via curl**
 
 Run the dev server: `pnpm dev`
 
@@ -417,11 +651,11 @@ curl -X POST "http://localhost:3000/api/chat?tool=integration" \
 
 Expected: a streaming text response; no 404; includes something invitational about integration.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add src/app/api/chat/route.ts
-git commit -m "Add integration system prompt"
+git commit -m "Add integration system prompt with few-shot examples"
 ```
 
 ### Task 1b-2: Create the `IntegrationChat` component
@@ -1135,6 +1369,156 @@ Run `pnpm dev`, navigate to `/tools`. Confirm:
 ```bash
 git add src/app/tools src/app/page.tsx src/app/sitemap.ts
 git commit -m "Add /tools landing page with three tool cards"
+```
+
+### Task 1d-2: Create `/methods` attributions page
+
+**Files:**
+- Create: `src/app/methods/page.tsx`
+- Modify: footer component (likely `src/components/footer.tsx`) — add link
+
+**Purpose:** Credit the researchers and strengthen legal posture. Makes explicit that the tools *draw on* established methods rather than *being* certified in any of them. Linked from the footer, not the main nav (low-profile but discoverable).
+
+- [ ] **Step 1: Create the page**
+
+```tsx
+import type { Metadata } from "next"
+import Link from "next/link"
+
+export const metadata: Metadata = {
+  title: "Methods & Attributions | Maya Allan",
+  description:
+    "The research and practitioners whose work informs the reflection tools on this site. Attribution to the originators of Internal Family Systems, Clean Language, Coherence Therapy, and Motivational Interviewing.",
+}
+
+export default function MethodsPage() {
+  return (
+    <div className="bg-white min-h-[calc(100dvh-80px)] px-5 sm:px-8 py-10 sm:py-16">
+      <div className="max-w-3xl mx-auto prose prose-charcoal">
+        <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-charcoal mb-6">
+          Methods &amp; Attributions
+        </h1>
+
+        <p className="text-charcoal-soft text-base leading-relaxed mb-8">
+          The reflection tools on this site draw on established, peer-reviewed
+          approaches to self-inquiry, somatic regulation, and integration. They
+          are not those methods, and neither Maya Allan nor this site claims
+          certification, affiliation, or training in any of the following. The
+          tools are educational reflection aids, not therapy.
+        </p>
+
+        <section className="mb-8">
+          <h2 className="font-serif text-xl font-semibold text-charcoal mb-2">
+            Internal Family Systems (IFS)
+          </h2>
+          <p className="text-charcoal-soft text-sm leading-relaxed">
+            Developed by Dr. Richard C. Schwartz. The Nervous System Reset tool
+            draws on IFS language around parts, the 8 Cs of Self (particularly
+            Curiosity and Compassion), and the 6 Fs protocol for relating to an
+            activated state as a part doing a protective job. &quot;Internal
+            Family Systems&quot; and &quot;IFS&quot; are trademarks of the IFS
+            Institute. Further reading: <em>No Bad Parts</em> (Schwartz, 2021).
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="font-serif text-xl font-semibold text-charcoal mb-2">
+            Clean Language
+          </h2>
+          <p className="text-charcoal-soft text-sm leading-relaxed">
+            Developed by David Grove (1950–2008) and systematized by Penny
+            Tompkins and James Lawley. The Belief Inquiry tool uses Clean
+            Language&apos;s two primary questions (&quot;What kind of X is that
+            X?&quot; and &quot;Is there anything else about X?&quot;) to
+            reflect the user&apos;s own words back without introducing the
+            facilitator&apos;s metaphors or frames. Further reading:{" "}
+            <em>Metaphors in Mind</em> (Lawley &amp; Tompkins, 2000).
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="font-serif text-xl font-semibold text-charcoal mb-2">
+            Coherence Therapy
+          </h2>
+          <p className="text-charcoal-soft text-sm leading-relaxed">
+            Developed by Bruce Ecker, Laurel Hulley, and Robin Ticic. The
+            Integration tool draws on Coherence Therapy&apos;s juxtaposition
+            experience, linked in published research to the neural process of
+            memory reconsolidation. It does not install replacement beliefs;
+            it helps hold the old pattern alongside a contradictory lived
+            experience. Further reading:{" "}
+            <em>Unlocking the Emotional Brain</em> (Ecker, Ticic &amp; Hulley,
+            2012).
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="font-serif text-xl font-semibold text-charcoal mb-2">
+            Motivational Interviewing (OARS)
+          </h2>
+          <p className="text-charcoal-soft text-sm leading-relaxed">
+            Developed by William R. Miller and Stephen Rollnick. Open
+            questions, affirmations, reflections, and summaries (OARS) inform
+            the conversational style of all three tools. The tools do not
+            attempt to evoke change talk in the clinical MI sense. Further
+            reading: <em>Motivational Interviewing: Helping People Change</em>{" "}
+            (Miller &amp; Rollnick, 4th ed., 2023).
+          </p>
+        </section>
+
+        <section className="mb-8 p-5 rounded-xl bg-[#F0F7FF]/40 border border-[#D6E8FA]/50">
+          <h3 className="font-serif text-base font-semibold text-charcoal mb-2">
+            Safety note
+          </h3>
+          <p className="text-charcoal-soft text-sm leading-relaxed">
+            These tools do not diagnose, prescribe, or treat. They are not a
+            substitute for licensed mental health care. If you are in crisis,
+            call or text <strong>988</strong> (Suicide &amp; Crisis Lifeline).
+            If you are processing trauma, working with a trauma-informed
+            professional will serve you better than any AI tool can.
+          </p>
+        </section>
+
+        <footer className="mt-10 text-charcoal-soft/70 text-xs">
+          <Link href="/tools" className="hover:text-liquid-blue transition-colors">
+            ← Back to Tools
+          </Link>
+        </footer>
+      </div>
+    </div>
+  )
+}
+```
+
+- [ ] **Step 2: Link from the site footer**
+
+Open `src/components/footer.tsx` (or wherever the site-wide footer lives). Add a small link in the footer's link row:
+
+```tsx
+<Link href="/methods" className="text-charcoal-soft/70 hover:text-charcoal-mid text-xs transition-colors">
+  Methods &amp; Attributions
+</Link>
+```
+
+Placement should match the existing footer link style. If there is no footer component, add the link inline in `src/app/layout.tsx` in the footer slot.
+
+- [ ] **Step 3: Update sitemap**
+
+Add `/methods` to `src/app/sitemap.ts`.
+
+- [ ] **Step 4: Verify**
+
+Run `pnpm dev`, navigate to `/methods`. Confirm:
+- All four sections render
+- Safety note is visible
+- Footer back-link works
+- Link from site footer works
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/app/methods src/components/footer.tsx src/app/sitemap.ts
+git commit -m "Add /methods attributions page for legal posture"
 ```
 
 ---
