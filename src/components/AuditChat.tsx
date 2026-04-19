@@ -1,9 +1,14 @@
 "use client"
 
 import { useChat } from "@ai-sdk/react"
+import { DefaultChatTransport } from "ai"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Send, RotateCcw, ListChecks } from "lucide-react"
 import type { UIMessage } from "ai"
+
+const auditTransport = new DefaultChatTransport({
+  api: "/api/chat?tool=audit",
+})
 
 const STARTER_PROMPTS = [
   "I have a belief about myself I want to examine",
@@ -19,7 +24,9 @@ function getMessageText(message: UIMessage): string {
 }
 
 export function AuditChat() {
-  const { messages, sendMessage, status, setMessages, error } = useChat()
+  const { messages, sendMessage, status, setMessages, error } = useChat({
+    transport: auditTransport,
+  })
 
   const [input, setInput] = useState("")
   const messagesContainerRef = useRef<HTMLDivElement>(null)
