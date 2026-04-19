@@ -210,11 +210,20 @@ Replace line 22:
 const { messages, sendMessage, status, setMessages, error } = useChat()
 ```
 
-With:
+With the transport pattern already used by `ResetChat.tsx` (AI SDK v6 replaced the top-level `api` prop with an explicit `DefaultChatTransport`):
 
 ```tsx
-const { messages, sendMessage, status, setMessages, error } = useChat({
+// at the top of the imports
+import { DefaultChatTransport } from "ai"
+
+// at module scope (between imports and STARTER_PROMPTS)
+const auditTransport = new DefaultChatTransport({
   api: "/api/chat?tool=audit",
+})
+
+// inside the component
+const { messages, sendMessage, status, setMessages, error } = useChat({
+  transport: auditTransport,
 })
 ```
 
@@ -710,6 +719,7 @@ git commit -m "Add integration system prompt with few-shot examples"
 "use client"
 
 import { useChat } from "@ai-sdk/react"
+import { DefaultChatTransport } from "ai"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Send, RotateCcw, Sparkles } from "lucide-react"
 import type { UIMessage } from "ai"
@@ -727,9 +737,13 @@ function getMessageText(message: UIMessage): string {
     .join("")
 }
 
+const integrationTransport = new DefaultChatTransport({
+  api: "/api/chat?tool=integration",
+})
+
 export function IntegrationChat() {
   const { messages, sendMessage, status, setMessages, error } = useChat({
-    api: "/api/chat?tool=integration",
+    transport: integrationTransport,
   })
 
   const [input, setInput] = useState("")
