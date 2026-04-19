@@ -52,6 +52,12 @@ This redesign is grounded in five evidence-based approaches. Each contributes a 
 
 - Longitudinal progress report across multiple sessions ($19–29)
 - Report generation via second LLM call over stored summaries
+- **Psilocybin Companion Suite** — a dedicated set of tools for people working with psilocybin experiences, deliberately kept separate from the three general tools (Reset, Belief Inquiry, Integration) so that users not open to psychedelic topics are never confronted with them. Entry point is a link from the relevant book page(s) under `/books/[slug]` — not from `/tools`. The suite comprises four components, each of which will receive its own detailed design spec:
+  - **Guided Psilocybin Integration** — an AI-led integration conversation tool, similar in architecture to the general Integration tool but with psilocybin-specific prompts, safety language (non-promotion, post-experience framing, redirect for users in active states), and referral pathways to licensed integration specialists. Same $9.99 PDF monetization.
+  - **Journaling** — structured pre-experience (intention-setting), post-experience (immediate notes), and integration-phase (days/weeks later) journaling. Requires persistent user state, so it depends on Phase 2 accounts/storage infrastructure.
+  - **Music** — curated external playlist links (lowest legal/licensing risk) for journey and integration phases. Could expand to licensed embedded audio later. Zero infrastructure required for v1.
+  - **Report** — longitudinal journey report summarizing multiple experiences and their integration arcs. Depends on Phase 2 storage and possibly the general Phase 3 report generator.
+- **Legal posture:** the suite is content and reflection support only. It does not advise on, recommend, or facilitate substance use. All copy will include jurisdictional disclaimers and post-experience framing. Detailed legal review required before launch.
 
 **Explicit non-goals for Phase 1:** no accounts, no persistent message storage, no user dashboard, no history view, no subscription. Revenue path is transactional only (one checkout per PDF).
 
