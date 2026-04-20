@@ -15,33 +15,13 @@ The issues below are **editorial, not structural.** Most are quick fixes. Some r
 
 ---
 
-## CRITICAL ISSUE #1 — Character encoding
+## Note on the source file
 
-**The single most important thing to fix before anything else.**
-
-The `.txt` file has systemic encoding damage. Hundreds of `�` replacement characters appear where the original source had:
-
-- **Em dashes (—)** — in nearly every chapter: `hold space-being present` should be `hold space — being present`
-- **En dashes (–)** — in numeric ranges: `4�6 hours` should be `4–6 hours`, `1.8�3.2%` should be `1.8–3.2%`
-- **Curly quotes (" " ' ')** — throughout dialogue and quoted material
-- **Greek letters and subscripts** — in the chemical formula (line 150): `C??H??N?O?P` should be `C₁₂H₁₇N₂O₄P`
-- **Bullet points (•)** — in headers: `Rewire Your Mind � Release Fears � Heal Traumas`
-- **Mar�a Sabina, teonan�catl** — Spanish characters lost
-- **Copyright symbol (©)** — line 32 shows plain "©" as "�"
-
-**Root cause:** The file was saved as ANSI/Windows-1252 or opened with the wrong encoding, converting non-ASCII characters to `?` or `�`. Your original Word/Google Doc manuscript is almost certainly intact — this damage happened at export.
-
-**Fix:**
-1. Re-export the manuscript from your source (Word, Google Docs, Scrivener) as **UTF-8**, not ANSI
-2. In Word: File → Save As → Encoded Text → Other encoding → Unicode (UTF-8)
-3. In Google Docs: File → Download → Plain text (.txt) — Google always exports UTF-8
-4. After re-export, every `�` should be gone
-
-**Do not try to fix `�` manually in the corrupted file.** You'll spend hours and miss cases. Fix at the source.
+*(Updated: Maya confirmed the `.txt` file was a plain-text export for my review only. The `�` characters in my source file are an artifact of that export — the original manuscript (ebook / print-ready file) has the correct characters. **The encoding is not an actual issue in her manuscript.** I've removed that section from the review. All remaining findings below stand.)*
 
 ---
 
-## CRITICAL ISSUE #2 — ISBN mismatch
+## CRITICAL ISSUE — ISBN mismatch
 
 Your book's copyright page (line 38) lists:
 > **ISBN: 979-8-9941488-5-3**
@@ -231,14 +211,25 @@ Not an editorial issue — but worth noting for your book designer if you haven'
 
 ## PRIORITY ACTION LIST
 
-1. **Re-export the manuscript as UTF-8** from Word/Google Docs to fix all `�` characters at once. *(15 minutes. This is the one thing that unlocks everything else.)*
-2. **Verify and reconcile the ISBN** (manuscript says `-5-3`, Open Library form says `-3-9`). *(10 minutes.)*
-3. **Fix the Chapter 3 title inconsistency** ("Dosage & Safety" vs "Dosage and Administration"). *(2 minutes.)*
+1. **Verify and reconcile the ISBN** (manuscript says `-5-3`, Open Library form had `-3-9`). *(10 minutes.)*
+2. **Fix the Chapter 3 title inconsistency** ("Dosage & Safety" vs "Dosage and Administration"). *(2 minutes.)*
+3. **Fix the Appendix B title inconsistency** ("Legal Landscape" vs "Legal Considerations"). *(2 minutes.)*
 4. **Fix specific line-level grammar issues** from the list above (~10 items). *(20 minutes.)*
-5. **Hire a proofreader** for the final pass. Budget $300-$800, 1-2 week turnaround. *(Outside your direct time.)*
-6. **Optional:** rename the "Maya" example character in Appendix D to avoid reader confusion. *(1 minute.)*
+5. **Hire a proofreader** for the final pass. Budget $300-$800, 1-2 week turnaround. A proofreader will catch plenty more line-level items I didn't flag on a sampling pass. *(Outside your direct time.)*
+6. **Optional:** rename the "Maya" example character in Appendix D to avoid reader/author confusion. *(1 minute.)*
 
-**Total your-time investment: ~50 minutes to prepare a clean manuscript for a proofreader.**
+**Total your-time investment: ~30-40 minutes to prepare a clean manuscript for a proofreader.**
+
+## If you send me the ebook, I can do a deeper pass
+
+My review above is based on a sampling read of the plain-text export. Send me the ebook (EPUB or PDF, both readable) and I can:
+
+- Verify specific line-level claims that might have been distorted by the .txt export
+- Check typography and layout (page breaks, widow/orphan lines, heading hierarchy)
+- Catch additional small issues I didn't see in sampling
+- Produce a line-by-line markup if useful
+
+Not urgent — the ISBN, chapter-title, and grammar items above are enough to make progress. But the offer stands.
 
 ---
 
