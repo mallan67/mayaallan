@@ -48,6 +48,9 @@ export function Footer() {
               <Link href="/contact" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
                 Contact
               </Link>
+              <Link href="/methods" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                Methods &amp; Attributions
+              </Link>
               <Link href="/legal#privacy" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
                 Privacy
               </Link>
