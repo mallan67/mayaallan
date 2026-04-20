@@ -5,6 +5,14 @@ import { DefaultChatTransport } from "ai"
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Send, RotateCcw, Sparkles } from "lucide-react"
 import type { UIMessage } from "ai"
+import {
+  trackToolViewed,
+  trackToolStarted,
+  trackTurnReached,
+  trackSessionCompleted,
+  trackTimeToFirstMessage,
+  type AnalyticsTool,
+} from "@/lib/analytics"
 
 const integrationTransport = new DefaultChatTransport({
   api: "/api/chat?tool=integration",
@@ -32,14 +40,55 @@ export function IntegrationChat() {
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLInputElement>(null)
 
+  const TOOL: AnalyticsTool = "integration"
+  const viewedTrackedRef = useRef(false)
+  const startedTrackedRef = useRef(false)
+  const pageLoadTimeRef = useRef(Date.now())
+  const turnThresholdsFiredRef = useRef<Set<number>>(new Set())
+  const completedTrackedRef = useRef(false)
+
   const isStreaming = status === "streaming" || status === "submitted"
+
+  useEffect(() => {
+    if (!viewedTrackedRef.current) {
+      trackToolViewed(TOOL)
+      viewedTrackedRef.current = true
+    }
+  }, [])
 
   useEffect(() => {
     const container = messagesContainerRef.current
     if (container && messages.length > 0) {
       container.scrollTop = container.scrollHeight
     }
+
+    const userMessages = messages.filter((m) => m.role === "user").length
+
+    if (userMessages > 0 && !startedTrackedRef.current) {
+      trackToolStarted(TOOL)
+      trackTimeToFirstMessage(TOOL, Date.now() - pageLoadTimeRef.current)
+      startedTrackedRef.current = true
+    }
+
+    const assistantMessages = messages.filter((m) => m.role === "assistant").length
+    const turns = Math.min(userMessages, assistantMessages)
+    ;[3, 6, 10].forEach((threshold) => {
+      if (turns >= threshold && !turnThresholdsFiredRef.current.has(threshold)) {
+        trackTurnReached(TOOL, threshold as 3 | 6 | 10)
+        turnThresholdsFiredRef.current.add(threshold)
+      }
+    })
   }, [messages, status])
+
+  useEffect(() => {
+    return () => {
+      const userMessages = messages.filter((m) => m.role === "user").length
+      if (userMessages >= 6 && !completedTrackedRef.current) {
+        trackSessionCompleted(TOOL, userMessages)
+        completedTrackedRef.current = true
+      }
+    }
+  }, [messages])
 
   useEffect(() => {
     if (!input && textareaRef.current) {
