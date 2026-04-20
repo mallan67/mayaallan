@@ -32,6 +32,34 @@
 4. Under "Author Page": link your website
 5. **Done.** Every future book buyer on Amazon now sees your website in your author profile.
 
+### B2. Other author-profile platforms (55 min total, all one-time, all free)
+
+These are "set up and forget" — they work in the background forever once set up. Each is a backlink to mayaallan.com and a way readers find you.
+
+**Goodreads Author Program** (20 min) — Largest book community online (~90M readers).
+1. [goodreads.com/author/program](https://www.goodreads.com/author/program) → Apply
+2. Claim your book profile
+3. Add bio, photo, link to mayaallan.com, link to Substack (when you have it)
+4. Approval in a few days
+
+**BookBub Author Profile** (15 min + 1-2 week approval) — 15M+ reader newsletter.
+1. [partners.bookbub.com](https://partners.bookbub.com) → Apply as Author
+2. Submit your book's Amazon ASIN for verification
+3. Add bio, photo, website
+4. **Important:** free profile only. Don't pay for Featured Deals yet — they're $150-$2000 and only worth it at scale.
+
+**Open Library** (10 min) — Internet Archive's catalog. High-authority SEO backlink.
+1. [openlibrary.org/account/create](https://openlibrary.org/account/create)
+2. Search for your book → click author name → Edit author page
+3. Add bio + photo + website + links to your other books
+
+**LibraryThing** (10 min) — Smaller but dedicated reader community.
+1. [librarything.com/signup.php](https://www.librarything.com/signup.php)
+2. Claim your author page
+3. Same drill: bio, photo, website link
+
+**Why bother with all five?** Each is a one-time 10-20 min effort that drives traffic forever. Readers browsing *any* of these platforms find you. Collectively they build domain authority for mayaallan.com in Google's eyes. Zero ongoing work after setup.
+
 ### C. Pinterest account (10 min — optional but worth it for your niche)
 
 Pinterest has huge long-tail traffic for "journaling prompts," "inner work," "shadow work," "nervous system regulation" — your exact territory.
