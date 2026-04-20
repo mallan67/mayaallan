@@ -7,7 +7,8 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "eval:prompts": "node scripts/eval-prompts.mjs"
+    "eval:prompts": "node scripts/eval-prompts.mjs",
+    "publish:medium": "node scripts/publish-to-medium.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.33",

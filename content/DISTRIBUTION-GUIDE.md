@@ -128,6 +128,51 @@ Only worth doing AFTER you have 5-10 published posts and ~100 subscribers. Not n
 
 ---
 
+## Medium cross-posting (wired, ready to use)
+
+Every blog post on your site can now be auto-copied to Medium as a **draft** (with a canonical link pointing back to mayaallan.com, so Google treats your site as the original). You review in Medium's editor, hit Publish when ready.
+
+### One-time setup (5 min)
+
+1. **Create a Medium account** at [medium.com](https://medium.com) if you don't have one
+2. **Generate an integration token**: [medium.com/me/settings/security](https://medium.com/me/settings/security) → Integration tokens → enter description like "mayaallan-cross-post" → Get token
+3. **Copy the token** — it's only shown once. Looks like `2abc...` (long string).
+4. **Add to your shell env** (or prefix on each command):
+   - Windows PowerShell: `$env:MEDIUM_INTEGRATION_TOKEN = "your-token-here"`
+   - Mac/Linux: `export MEDIUM_INTEGRATION_TOKEN="your-token-here"`
+
+### To cross-post a post (one command per post)
+
+From the project directory:
+
+```bash
+pnpm publish:medium audit-is-the-wrong-word
+```
+
+The slug is everything after the number prefix in the filename. `01-audit-is-the-wrong-word.md` → slug is `audit-is-the-wrong-word`.
+
+The script:
+1. Reads the markdown file
+2. Posts to Medium via their API as a **draft**
+3. Sets canonical URL to `https://www.mayaallan.com/blog/audit-is-the-wrong-word` (so your site keeps the SEO)
+4. Prints the Medium draft URL for you to open and review
+
+### To publish immediately instead of as draft
+
+```bash
+pnpm publish:medium audit-is-the-wrong-word --public
+```
+
+I'd recommend always using the default (draft mode) and doing a quick review in Medium's editor before publishing. Takes ~2 min.
+
+### Important notes
+
+- Medium's API has been known to rate-limit. Don't cross-post more than 1-2 posts in quick succession.
+- If Medium changes their API terms or revokes your integration token (rare but possible), you can always fall back to manual copy-paste. The `content/posts/` files are always your source of truth.
+- For Substack, you still copy-paste manually — Substack has no official publishing API.
+
+---
+
 ## What AI can keep doing for you
 
 When you're ready for more content, just ask:
