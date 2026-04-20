@@ -22,6 +22,16 @@ const nextConfig = {
         destination: "https://www.mayaallan.com/:path*",
         permanent: true,
       },
+      {
+        source: "/beliefaudit",
+        destination: "/belief-inquiry",
+        permanent: true,
+      },
+      {
+        source: "/beliefaudit/:path*",
+        destination: "/belief-inquiry/:path*",
+        permanent: true,
+      },
     ];
   },
 };
