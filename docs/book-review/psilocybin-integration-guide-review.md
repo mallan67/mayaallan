@@ -21,22 +21,17 @@ The issues below are **editorial, not structural.** Most are quick fixes. Some r
 
 ---
 
-## CRITICAL ISSUE — ISBN mismatch
+## Note on ISBN / ASIN identifiers
 
-Your book's copyright page (line 38) lists:
-> **ISBN: 979-8-9941488-5-3**
+*(Updated: Maya clarified that each format has its own identifier. Not a mismatch.)*
 
-But the Open Library form you were filling in has:
-> **979-8-9941488-3-9**
+Your manuscript's copyright page lists `979-8-9941488-5-3` — that's one format (likely the primary print edition). The `979-8-9941488-3-9` that appeared in the Open Library form is probably a different format (hardcover/paperback/ebook). Both legitimate; each format of a book gets its own ISBN-13, and the Kindle edition additionally gets an Amazon ASIN (`B0...`).
 
-**These are different books.** The one you typed into Open Library (ending `-3-9`) is NOT the ISBN printed in this manuscript (ending `-5-3`).
+**Actions when cataloging on Open Library / Goodreads / BookBub:**
 
-**Action:** Before finalizing Open Library, Goodreads, BookBub, etc., verify which ISBN is correct. Check:
-- Your Amazon book detail page
-- The printed book itself (last page or back cover)
-- Your ISBN purchase records (Bowker if US)
-
-Whichever is authoritative — update the other. Having the wrong ISBN live across retailer pages causes sales tracking issues and reader confusion.
+- **Match the ISBN to the specific edition** you're cataloging. Each edition (paperback, hardcover, ebook) is a separate Open Library record. If you have a print-primary book and an ebook, both can live on Open Library as linked editions of the same work.
+- **Keep a simple reference table** somewhere in your own records so you know which ISBN goes with which format. Helpful for retailer listings, royalty reconciliation, and future updates.
+- **Amazon ASIN ≠ ISBN**, though for paperbacks Amazon often auto-assigns the print ISBN-10 as the ASIN. For Kindle, the ASIN is always separately assigned by Amazon.
 
 ---
 
@@ -211,14 +206,15 @@ Not an editorial issue — but worth noting for your book designer if you haven'
 
 ## PRIORITY ACTION LIST
 
-1. **Verify and reconcile the ISBN** (manuscript says `-5-3`, Open Library form had `-3-9`). *(10 minutes.)*
-2. **Fix the Chapter 3 title inconsistency** ("Dosage & Safety" vs "Dosage and Administration"). *(2 minutes.)*
-3. **Fix the Appendix B title inconsistency** ("Legal Landscape" vs "Legal Considerations"). *(2 minutes.)*
-4. **Fix specific line-level grammar issues** from the list above (~10 items). *(20 minutes.)*
+1. **Fix the Chapter 3 title inconsistency** ("Dosage & Safety" vs "Dosage and Administration"). *(2 minutes.)*
+2. **Fix the Appendix B title inconsistency** ("Legal Landscape" vs "Legal Considerations"). *(2 minutes.)*
+3. **Fix specific line-level grammar issues** from the list above (~10 items). *(20 minutes.)*
+4. **Verify legal claims in Appendix B** (Colorado, Brazil, Czech specifics) — worth a quick check against a primary source before print. *(15 minutes.)*
 5. **Hire a proofreader** for the final pass. Budget $300-$800, 1-2 week turnaround. A proofreader will catch plenty more line-level items I didn't flag on a sampling pass. *(Outside your direct time.)*
 6. **Optional:** rename the "Maya" example character in Appendix D to avoid reader/author confusion. *(1 minute.)*
+7. **Optional:** keep a small reference table of which ISBN / ASIN goes with which edition for your own records — saves headaches at retailer re-uploads. *(5 minutes.)*
 
-**Total your-time investment: ~30-40 minutes to prepare a clean manuscript for a proofreader.**
+**Total your-time investment: ~30-45 minutes to prepare a clean manuscript for a proofreader.**
 
 ## If you send me the ebook, I can do a deeper pass
 
