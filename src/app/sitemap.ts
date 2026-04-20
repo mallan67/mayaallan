@@ -1,9 +1,11 @@
 import type { MetadataRoute } from "next"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { listPosts } from "@/lib/posts"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.mayaallan.com"
   const currentDate = new Date()
+  const posts = await listPosts()
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
@@ -85,7 +87,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.7,
     },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
   ]
+
+  const blogPostPages: MetadataRoute.Sitemap = posts.map((post) => {
+    const parsed = new Date(post.date)
+    const lastModified = isNaN(parsed.getTime()) ? currentDate : parsed
+    return {
+      url: `${baseUrl}/blog/${post.slug}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }
+  })
 
   let bookPages: MetadataRoute.Sitemap = []
   let eventPages: MetadataRoute.Sitemap = []
@@ -143,5 +162,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn("Sitemap dynamic content fetch failed:", error)
   }
 
-  return [...staticPages, ...bookPages, ...eventPages, ...mediaPages]
+  return [...staticPages, ...bookPages, ...eventPages, ...mediaPages, ...blogPostPages]
 }
