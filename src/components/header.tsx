@@ -5,7 +5,7 @@ import { HeaderClient } from "./header-client"
 const fallbackNavItems = [
   { href: "/", label: "Home" },
   { href: "/books", label: "Books" },
-  { href: "/beliefaudit", label: "Belief Audit" },
+  { href: "/tools", label: "Tools" },
   { href: "/reset", label: "Nervous System Reset" },
   { href: "/events", label: "Events" },
   { href: "/media", label: "Media" },
