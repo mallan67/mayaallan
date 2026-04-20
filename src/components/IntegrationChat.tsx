@@ -13,6 +13,8 @@ import {
   trackTimeToFirstMessage,
   type AnalyticsTool,
 } from "@/lib/analytics"
+import { ExportCta } from "@/components/ExportCta"
+import { SessionFeedback } from "@/components/SessionFeedback"
 
 const integrationTransport = new DefaultChatTransport({
   api: "/api/chat?tool=integration",
@@ -125,6 +127,16 @@ export function IntegrationChat() {
 
   const isRateLimited = error?.message?.includes("Daily limit reached")
 
+  const userTurns = messages.filter((m) => m.role === "user").length
+  const showExportCta = userTurns >= 4 && !isStreaming
+
+  const exportMessages = messages
+    .map((m) => ({
+      role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+      text: getMessageText(m),
+    }))
+    .filter((m) => m.text.length > 0)
+
   return (
     <div className="flex flex-col h-full min-h-0">
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-5 min-h-0">
@@ -202,6 +214,12 @@ export function IntegrationChat() {
             </div>
           </div>
         )}
+
+        {showExportCta && (
+          <ExportCta tool={TOOL} messages={exportMessages} />
+        )}
+
+        <SessionFeedback tool={TOOL} userTurnCount={userTurns} />
       </div>
 
       <div className="shrink-0 border-t border-[#E8ECF0]/40 px-4 sm:px-6 pt-1.5 sm:pt-3 pb-1 sm:pb-3">

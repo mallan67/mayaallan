@@ -13,6 +13,8 @@ import {
   trackTimeToFirstMessage,
   type AnalyticsTool,
 } from "@/lib/analytics"
+import { ExportCta } from "@/components/ExportCta"
+import { SessionFeedback } from "@/components/SessionFeedback"
 
 const inquiryTransport = new DefaultChatTransport({
   api: "/api/chat?tool=belief_inquiry",
@@ -127,6 +129,16 @@ export function InquiryChat() {
 
   const isRateLimited = error?.message?.includes("Daily limit reached")
 
+  const userTurns = messages.filter((m) => m.role === "user").length
+  const showExportCta = userTurns >= 4 && !isStreaming
+
+  const exportMessages = messages
+    .map((m) => ({
+      role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+      text: getMessageText(m),
+    }))
+    .filter((m) => m.text.length > 0)
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* ── Messages Area ──────────────────────────────────── */}
@@ -210,6 +222,12 @@ export function InquiryChat() {
             </div>
           </div>
         )}
+
+        {showExportCta && (
+          <ExportCta tool={TOOL} messages={exportMessages} />
+        )}
+
+        <SessionFeedback tool={TOOL} userTurnCount={userTurns} />
 
       </div>
 
