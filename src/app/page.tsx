@@ -608,18 +608,18 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Belief Systems Audit */}
+            {/* Belief Inquiry */}
             <Link href="/belief-inquiry" className="block">
               <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
                 <div className="w-14 h-14 rounded-[14px] bg-gold-wash flex items-center justify-center mb-6 text-gold-deep">
                   <ListChecks className="w-[26px] h-[26px]" />
                 </div>
-                <h3 className="font-serif text-[1.15rem] font-medium mb-3.5">Belief Systems Audit</h3>
+                <h3 className="font-serif text-[1.15rem] font-medium mb-3.5">Belief Inquiry</h3>
                 <p className="text-[0.9rem] text-charcoal-mid leading-[1.8] mb-5">
                   A self-guided framework for examining the narratives running your life. Most of what we believe was installed before we had a say. Clarity starts with seeing it.
                 </p>
                 <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[0.68rem] font-bold tracking-[0.1em] uppercase text-liquid-blue bg-liquid-blue-wash border border-liquid-blue/20 rounded-full">
-                  Start Your Belief Audit <ArrowRight className="w-3 h-3" />
+                  Start Your Inquiry <ArrowRight className="w-3 h-3" />
                 </span>
               </article>
             </Link>
