@@ -2,237 +2,172 @@
 
 **Reviewer:** Claude (AI pairing, not a published editor)
 **Date:** 2026-04-19
-**Source file:** `C:\Users\MayaAllan\Desktop\Psilocybin Integration Guide Maya Allan.txt`
-**Status:** NOT FOR PUBLICATION — this is an editorial pass for Maya's private use.
+**Source:** `Psilocybin Integration Guide Maya Allan.docx` (11.5 MB, 2,229 paragraphs, hard-cover edition)
+**Status:** NOT FOR PUBLICATION — editorial feedback for Maya's private use.
 
 ---
 
 ## Overall assessment
 
-Structurally the book is **solid and publishable.** The three-part architecture (Preparation & Basics → The Journey by path → Deepening & Integration) is strong. The 40-scenario framework across Guided/Solo/Group contexts is a genuine differentiator in a crowded genre. Research citations are accurate and well-placed (Carhart-Harris, Griffiths, Johnson, Grob, Davis, Carbonaro, Watts, Barrett, Ecker). Legal disclaimers are thorough. Appendices are practically useful.
+**The book is structurally publishable and thoughtfully written.** The voice is consistent, warm but not precious; the research citations are accurate (Carhart-Harris, Griffiths, Johnson, Grob, Davis, Carbonaro, Watts, Barrett, Ecker); the 40-scenario framework across Guided/Solo/Group is a genuine differentiator in a crowded genre. Chapter 8 (Inner Child) is a standout — the trauma-informed language is careful, non-re-traumatizing, and explicitly names survivor self-blame in a way that will matter deeply to some readers.
 
-The issues below are **editorial, not structural.** Most are quick fixes. Some require a single pass by you; a few need a proofreader.
-
----
-
-## Note on the source file
-
-*(Updated: Maya confirmed the `.txt` file was a plain-text export for my review only. The `�` characters in my source file are an artifact of that export — the original manuscript (ebook / print-ready file) has the correct characters. **The encoding is not an actual issue in her manuscript.** I've removed that section from the review. All remaining findings below stand.)*
+The issues below are polish, not foundations. A proofreader plus a focused you-pass is enough.
 
 ---
 
-## Note on ISBN / ASIN identifiers
+## ISBN / format identifiers
 
-*(Updated: Maya clarified that each format has its own identifier. Not a mismatch.)*
+*Not an issue — confirmed earlier.* Each format (paperback, hardcover, ebook) gets its own ISBN, and the Kindle edition gets a separate Amazon ASIN. When cataloging on Open Library / Goodreads / BookBub, match the ISBN to the specific edition you're adding.
 
-Your manuscript's copyright page lists `979-8-9941488-5-3` — that's one format (likely the primary print edition). The `979-8-9941488-3-9` that appeared in the Open Library form is probably a different format (hardcover/paperback/ebook). Both legitimate; each format of a book gets its own ISBN-13, and the Kindle edition additionally gets an Amazon ASIN (`B0...`).
-
-**Actions when cataloging on Open Library / Goodreads / BookBub:**
-
-- **Match the ISBN to the specific edition** you're cataloging. Each edition (paperback, hardcover, ebook) is a separate Open Library record. If you have a print-primary book and an ebook, both can live on Open Library as linked editions of the same work.
-- **Keep a simple reference table** somewhere in your own records so you know which ISBN goes with which format. Helpful for retailer listings, royalty reconciliation, and future updates.
-- **Amazon ASIN ≠ ISBN**, though for paperbacks Amazon often auto-assigns the print ISBN-10 as the ASIN. For Kindle, the ASIN is always separately assigned by Amazon.
+A small personal reference table (format → ISBN → retailer ID) saves headaches at re-upload time.
 
 ---
 
-## STRUCTURAL INCONSISTENCIES
+## CONFIRMED — consistency issues
 
-### Chapter 3 title is inconsistent
+### Chapter 3 title
 
-- Part I intro (line 137): **"Chapter 3: Dosage & Safety"**
-- Actual chapter header (line 222): **"Chapter 3: Dosage and Administration"**
-- Table of Contents (line 86): **"Chapter 3: Dosage and Administration"**
+- Part I chapter listing (line 117 of docx extraction): **"Chapter 3: Dosage & Safety"**
+- Actual chapter header (line 193) and Table of Contents: **"Chapter 3: Dosage and Administration"**
 
-Pick one. I'd recommend `Dosage, Safety & Administration` if all three are covered, or keep `Dosage and Administration` and update the Part I intro.
+Pick one, update the other. Body of the chapter covers dosage, safety, and administration — so either title is defensible. I'd lean **"Dosage and Administration"** because that matches the TOC and the actual chapter header; you'd just update the Part I intro list.
 
-### Part titles in TOC vs. actual
+### Appendix B title
 
-- TOC line 83: **"PART I — PREPARATION & BASICS"**
-- Part I header line 132: **"PART I — PREPARATION & BASICS"** ✓
+Appearances in the docx text:
+- Table of Contents: **"Appendix B: Legal Considerations"**
+- Mid-book index (Appendices opening): **"Appendix B: Legal Landscape"**
+- Actual Appendix B header: **"Appendix B: Legal Considerations"**
 
-Match. Fine.
+The mid-book index is the odd one out. Update it to match TOC.
 
-- TOC line 92: **"PART III — DEEPENING & INTEGRATION"**
-- Check whether the PART III header (somewhere after Chapter 7 ends) uses identical wording.
+### Em dash vs. hyphen inconsistency
 
-### Appendix names inconsistent between TOC and actual
+The docx contains **both** styles for interrupting clauses:
+- Em dash with spaces: `PART I — PREPARATION & BASICS` (proper typographic em dash)
+- Hyphen with spaces: `an inner pilgrimage - a return to truth` (line 101)
 
-- TOC line 98: **"Appendix A: Glossary of Terms"**
-- Body line 2261: **"Appendix A: Glossary of Terms"** ✓
+Both appear throughout. This is a common manuscript issue — it happens when Word autocorrects some hyphens to em dashes but not others, or when pasted-in text carries different conventions.
 
-- TOC line 99: **"Appendix B: Legal Considerations"**
-- Mid-book header line 2247: **"Appendix B: Legal Landscape"** ← different name
-- Actual chapter line 2273: **"Appendix B: Legal Considerations"** ✓
-
-The internal mid-book index (around line 2247) uses "Legal Landscape" but TOC and chapter use "Legal Considerations." Fix the mid-book index.
+**Fix:** Find-and-replace ` - ` (space-hyphen-space) → ` — ` (space-em-dash-space) for the entire manuscript. Optional but it elevates the typography. Your proofreader can do this in 5 minutes.
 
 ---
 
-## SPECIFIC GRAMMAR / COPY ISSUES
+## CONFIRMED — specific line items
 
-These are the ones I caught on a sampling pass. A professional proofreader will find more.
+### Author Bio (line 56 of extraction)
 
-### Line 68 (Author Bio):
+> "Her mission is both simple and profound to remind every seeker that the power to awaken..."
 
-> "Her mission is both simple and profound to remind every seeker..."
+Missing colon after "profound":
 
-Missing colon. Read:
+> "Her mission is both simple and profound: to remind every seeker that the power to awaken..."
 
-> "Her mission is both simple and profound: to remind every seeker..."
+### Chapter 1, Line 139
 
-### Line 150 (Chapter 1):
+> "Modern research has begun to validate many traditional claims about psilocybin's benefits. For Example:"
 
-> "Psilocybin (C??H??N?O?P) is a naturally occurring psychedelic compound..."
+**"Example" should be lowercase:** `For example:`
 
-Chemical formula is mangled. Should be: **C₁₂H₁₇N₂O₄P**
+### Chapter 1, Line 128
 
-### Line 265, 270, 275, 280 (Chapter 4):
+> "...which binds to serotonin receptors - especially 5-HT2A - in the brain."
 
-> "As psilocybin takes effect, changes begin subtly"
-> "The effects deepen as brain chemistry shifts"
-> "This is often the most intense and insightful part of the journey"
-> "Gradually, the intensity diminishes as psilocin is metabolized"
+Hyphens where em dashes belong (see em dash note above):
 
-Each of these is followed by a bullet list. Each is missing terminal punctuation — add a **colon** before the list, not a period. This pattern repeats throughout the book wherever a sentence introduces bullets.
+> "...which binds to serotonin receptors — especially 5-HT2A — in the brain."
 
-### Line 325 (Chapter 5):
+### Appendix D, Example at line 2155
 
-> "Can they offer gentle touch (hand- holding on request)?"
+> "Before her first journey, **Maya** used this checklist to prepare. She wrote her intention ("I seek clarity on my career path"), chose her bedroom as her setting..."
 
-Stray space: `hand- holding` → `hand-holding`
+Using **your own name** for a fictional example is confusing to the reader — *is this the author's actual story? Is it hypothetical?* Consider any other name (Elena, Rachel, Sophia — the rest of the book uses diverse names). One-word change, meaningful payoff for reader trust.
 
-### Line 322 (Chapter 5):
+### Risks & Drawbacks section (around line 2137 per your earlier txt export)
 
-> "The guide's role is to hold space-being present without directing."
+> "Around 10–15% of guided sessions report a 'bad trip' segment. While often ultimately transformative, these moments can be extremely difficult as they unfold can be extremely difficult in the moment (Carbonaro et al., 2016)."
 
-Hyphen where em dash belongs:
+**Doubled phrase — accidental duplication.** Suggested read:
 
-> "The guide's role is to hold space — being present without directing."
+> "Around 10–15% of guided sessions report a 'bad trip' segment. While often ultimately transformative, these moments can be extremely difficult in the moment (Carbonaro et al., 2016)."
 
-### Line 414 (shadow scenario):
-
-> "It reveals issues You may have ignored."
-
-`You` incorrectly capitalized mid-sentence.
-
-### Line 2209 (Benefits/Risks, Challenging Trips):
-
-> "these moments can be extremely difficult as they unfold can be extremely difficult in the moment"
-
-**Doubled phrase — accidental duplication.** Read cleaner as:
-
-> "these moments can be extremely difficult as they unfold, though they are often ultimately transformative (Carbonaro et al., 2016)."
-
-### Line 2305 (Appendix D, Pre-Journey Checklist):
+### Appendix D, Pre-Journey Checklist (line 2114 area)
 
 > "Setting clear intentions help guide your experience..."
 
-Subject-verb agreement. `Setting` (singular gerund) → `helps`:
+Subject-verb agreement — `Setting` is a singular gerund:
 
 > "Setting clear intentions helps guide your experience..."
 
-### Legal disclaimer (line 20, 21):
+### Copyright page — possible layout issue (verify in the rendered PDF)
 
-> "Their possession, use, distribution, or cultivation may be illegal and may involve significant physical, psychological, and legal risks."
+My extraction pulled the copyright page as a single run. The rendered book may lay it out correctly, but **verify** that these three items appear on separate lines in the printed/PDF version:
+- Published by Maya Allan
+- First Edition: December 2025
+- ISBN: 979-8-9941488-5-3
 
-Fine as-is. But immediately after:
-
-> "This guide does not offer medical, psychological, therapeutic, or legal advice. The author does not provide diagnosis, treatment, or professional services of any kind.  Always consult..."
-
-**Double space** between "kind." and "Always." Find-and-replace double spaces → single across the book. There are probably many.
-
-### Line 32 (Copyright):
-
-> "Copyright � 2025 Maya Allan."
-
-Should be `©` — same encoding issue.
-
-### Line 34 (Copyright page):
-
-> "Visit www.mayaallan.com for more resources, updates, and integration tools."
-
-Consider adding: `, including the free Integration companion tool at www.mayaallan.com/integration.` Good cross-reference for the reader + marketing hook.
+If they're all crammed onto one line, the designer needs to fix it.
 
 ---
 
-## CONTENT NOTES (optional, your call)
+## Content accuracy — Appendix B
 
-These are substantive, not grammatical. Take or leave:
+Appendix B (Legal Considerations) contains several specific claims about 2025 legal status that are worth verifying against primary sources before print. Legal facts age fast and inaccuracies attract criticism:
 
-### Appendix B (Legal Landscape, lines 2274-2278)
+- "Colorado has launched regulated healing centers and issued pardons for simple possession offenses as of June 2025." — Verify the June 2025 date and the wording around pardons (state-level pardons are governor-specific).
+- "Brazil decriminalized small personal amounts in 2025." — **Verify this specific claim.** Brazil's drug laws are nuanced; I'd want a primary source confirming psilocybin specifically was decriminalized in 2025 vs. general personal-use precedent.
+- "Czech Republic passed legislation legalizing personal possession and use for adults, effective in 2026, with cultivation regulated." — Confirm the status and effective date.
+- "Australia has allowed prescription use of psilocybin for treatment-resistant depression since 2023." — Correct. Worth noting: the allowance is specifically for authorized psychiatrists under the TGA.
 
-This reads as of December 2025. Good accuracy for snapshot date. But:
-
-- **Consider adding a "last updated" footnote** so future readers know the state of play as of your writing and expect laws to change.
-- Line 2275 mentions "Colorado has launched regulated healing centers and issued pardons for simple possession offenses as of June 2025" — verify the specific wording. Colorado's Natural Medicine Health Act program opened in 2024, and state-level pardons are governor-specific. Make sure this is accurate as written.
-- Line 2277 says "Brazil decriminalized small personal amounts in 2025" — I'd double-check this specific legal claim before it's in print. Brazil has complex drug laws; decriminalization of psilocybin specifically should be verified against a primary source.
-
-Legal facts in print age fast and can attract criticism. A one-line footnote saying "For current legal status, please verify with a licensed attorney in your jurisdiction. See mayaallan.com for updates." protects you and helps readers.
-
-### Chapter 1 (Science of Psilocybin, line 156)
-
-Citations are good: Carhart-Harris et al. (2012), Griffiths et al. (2006), Davis et al. (2021), Grob et al. (2011), Johnson et al. (2014).
-
-Minor suggestion: for the 2021 Davis depression study (line 165), the citation in context reads "approximately 70%". The study's actual primary endpoint number is often reported as "71% response" at week 4 and "54% remission" — make sure the number matches the claim you're making. "70%" is a good round number for a reader, but if a clinician reviews the book, they may want the specific figure.
-
-### "Maya" as example name (Appendix D, line 2347)
-
-> "Before her first journey, Maya used this checklist to prepare."
-
-Using **your own name** for a fictional example is distracting to the reader — *is this the author's actual experience? Is this hypothetical? Which?* Consider a different name (Elena, Rachel, Sarah — any other name) to avoid confusion.
+**Recommendation:** Add a one-line note: *"Laws change rapidly. For current legal status, verify with a licensed attorney in your jurisdiction. Updates posted at mayaallan.com."* This protects you and serves the reader.
 
 ---
 
-## TYPOGRAPHY / DESIGN (for print edition)
+## Stylistic pattern — bullet list intros
 
-Not an editorial issue — but worth noting for your book designer if you haven't done layout yet:
+Several section intros across the book end without terminal punctuation before a bullet list. E.g.:
 
-- Drop-cap first letters of each chapter look elegant in this kind of book
-- Part title pages benefit from a small symbol/glyph (a mushroom? a moon? consistent across parts)
-- Scenario headings throughout Chapters 5–7 are structurally repetitive (Description / Cause / Navigation / Lesson / Example) — a sidebar or box design treatment helps readers skim and reference. Talk to your designer about this.
+> "Common effects of psilocybin include
+> Visual phenomena: Enhanced colors…"
+
+This is a stylistic choice (common in design-forward books) but inconsistent — elsewhere the intros end with colons. Pick one convention:
+
+- Colon-before-list: "Common effects of psilocybin include:" (most common in nonfiction)
+- No punctuation: "Common effects of psilocybin include"
+
+Your proofreader will flag and standardize this. Low-stakes, easy fix.
 
 ---
 
-## WHAT A PROFESSIONAL PROOFREADER WILL CATCH THAT I COULDN'T
+## Positives worth preserving
 
-- Print-level typographic conventions (widow/orphan lines, spacing around em dashes per your house style)
-- Consistent capitalization of concepts that get repeated (is it *Default Mode Network* or *default mode network*?)
-- Citation formatting consistency (APA? Chicago? Your call — but pick one and stick to it)
-- Hundreds of micro-issues (double spaces, stray commas, capitalization of headings)
+Things NOT to change during editing:
 
-**Recommendation:** After you fix the encoding issue, hire a **proofreader** (not a developmental editor — the book's already developed). Proofreaders charge $300-$800 for a book this length. Google "book proofreading" or post on Reedsy. Cheaper than a copyeditor, exactly what this book needs now.
+- **The "Description / Cause / Navigation / Lesson / Example" structure** for each of the 40 scenarios is excellent. Readers can skim or read deeply; either way they get value.
+- **The tone of Chapter 8** (Inner Child). Survivor-aware, non-coercive, explicit about self-blame being a trauma response. This is the chapter that will earn you the most reader trust. Don't soften it.
+- **The "Speaking to the Inner Child After the Journey" section** — the line *"That someone, now, is you."* is a perfect closing note.
+- **The balance of scientific citation and spiritual framing.** Neither tips into dry clinical prose nor into floaty guru-speak. This is hard to do well, and you did.
+- **The explicit "seek professional help" signposting** in trauma-adjacent sections. Legally protective AND reader-caring.
 
 ---
 
 ## PRIORITY ACTION LIST
 
-1. **Fix the Chapter 3 title inconsistency** ("Dosage & Safety" vs "Dosage and Administration"). *(2 minutes.)*
-2. **Fix the Appendix B title inconsistency** ("Legal Landscape" vs "Legal Considerations"). *(2 minutes.)*
-3. **Fix specific line-level grammar issues** from the list above (~10 items). *(20 minutes.)*
-4. **Verify legal claims in Appendix B** (Colorado, Brazil, Czech specifics) — worth a quick check against a primary source before print. *(15 minutes.)*
-5. **Hire a proofreader** for the final pass. Budget $300-$800, 1-2 week turnaround. A proofreader will catch plenty more line-level items I didn't flag on a sampling pass. *(Outside your direct time.)*
-6. **Optional:** rename the "Maya" example character in Appendix D to avoid reader/author confusion. *(1 minute.)*
-7. **Optional:** keep a small reference table of which ISBN / ASIN goes with which edition for your own records — saves headaches at retailer re-uploads. *(5 minutes.)*
+1. **Chapter 3 title** — update Part I intro to match ("Dosage and Administration"). *(2 min)*
+2. **Appendix B title** — update mid-book index to match TOC ("Legal Considerations"). *(2 min)*
+3. **Appendix D example character** — rename "Maya" → any other name. *(1 min)*
+4. **Specific line items** — author bio colon, "For example" casing, doubled "difficult" phrase, "intentions help/helps" subject-verb. *(10 min)*
+5. **Em dash find-and-replace** — ` - ` → ` — ` across the manuscript. *(5 min; let your proofreader do it to be safe)*
+6. **Verify Appendix B legal claims** against primary sources. *(20 min)*
+7. **Add the "laws change rapidly" footnote** to Appendix B. *(2 min)*
+8. **Hire a proofreader** for the final pass. $300-$800, 1-2 week turnaround. They'll catch more line-level items than I can on a sampling read. *(Outside your direct time.)*
 
-**Total your-time investment: ~30-45 minutes to prepare a clean manuscript for a proofreader.**
-
-## If you send me the ebook, I can do a deeper pass
-
-My review above is based on a sampling read of the plain-text export. Send me the ebook (EPUB or PDF, both readable) and I can:
-
-- Verify specific line-level claims that might have been distorted by the .txt export
-- Check typography and layout (page breaks, widow/orphan lines, heading hierarchy)
-- Catch additional small issues I didn't see in sampling
-- Produce a line-by-line markup if useful
-
-Not urgent — the ISBN, chapter-title, and grammar items above are enough to make progress. But the offer stands.
+**Your time: ~45 minutes to prepare a clean manuscript for a proofreader.**
 
 ---
 
-## The bigger picture
+## Bottom line
 
-You have a book people will find useful. The structure works, the research is there, the voice is clear. The issues above are polish, not foundations.
+This is a good book. The structure works, the research is sound, Chapter 8 is exceptional, and the framework distinguishes it from every other psilocybin integration book I know of. The polish items are small and mostly mechanical.
 
-Do the encoding fix first. Then the other small items. Then send to a proofreader. Then re-upload everywhere (Amazon KDP allows revised manuscripts).
-
-This is not nothing — but it's a weekend, not a month.
+Do the priority list, send to a proofreader, and re-upload revised files to retailers (Amazon KDP and your print distributor both allow revised manuscripts). You're much closer to a clean second edition than you might feel.
