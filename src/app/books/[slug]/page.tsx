@@ -375,6 +375,29 @@ export default async function BookPage({ params }: BookPageProps) {
             </div>
           )}
 
+          {book.slug === "psilocybin-integration-guide" && (
+            <section className="my-10 sm:my-14 p-6 sm:p-8 rounded-2xl bg-[#F0F7FF]/40 border border-[#D6E8FA]/50">
+              <h2 className="font-serif text-xl sm:text-2xl font-semibold text-charcoal mb-3">
+                After your journey — Integration
+              </h2>
+              <p className="text-charcoal-soft text-sm sm:text-base leading-relaxed mb-5">
+                When an experience opens something new, there&apos;s the work of letting it settle.
+                The Integration tool is a free, AI-guided reflection session built to help you
+                hold a new experience alongside an old pattern, so the shift has a chance to land.
+                It&apos;s a natural companion to the work in this guide.
+              </p>
+              <Link
+                href="/integration"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-liquid-blue text-white font-medium text-sm hover:bg-liquid-blue-bright transition-colors"
+              >
+                Open the Integration tool
+              </Link>
+              <p className="text-charcoal-soft/60 text-xs mt-3">
+                Free to use. Save a session as a PDF for $9.99 if you want to keep it.
+              </p>
+            </section>
+          )}
+
           {/* Soft divider */}
           <div className="section-divider">
             <div className="diamond" />
