@@ -9,6 +9,7 @@ const fallbackNavItems = [
   { href: "/reset", label: "Nervous System Reset" },
   { href: "/events", label: "Events" },
   { href: "/media", label: "Media" },
+  { href: "/blog", label: "Writing" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ]
