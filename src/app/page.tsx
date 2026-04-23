@@ -641,18 +641,20 @@ export default async function HomePage() {
             </Link>
 
             {/* Integration Reflections */}
-            <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
-              <div className="w-14 h-14 rounded-[14px] bg-gold-wash flex items-center justify-center mb-6 text-gold-deep">
-                <PenLine className="w-[26px] h-[26px]" />
-              </div>
-              <h3 className="font-serif text-[1.15rem] font-medium mb-3.5">Integration Reflections</h3>
-              <p className="text-[0.9rem] text-charcoal-mid leading-[1.8] mb-5">
-                Guided journaling for making meaning after transformative experiences — of any kind. Writing as a way to process, understand, and move forward.
-              </p>
-              <span className="inline-block px-4 py-1.5 text-[0.68rem] font-bold tracking-[0.1em] uppercase text-gold-deep bg-gold-wash border border-[rgba(200,155,60,0.2)] rounded-full">
-                Coming Soon
-              </span>
-            </article>
+            <Link href="/integration" className="block">
+              <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
+                <div className="w-14 h-14 rounded-[14px] bg-gold-wash flex items-center justify-center mb-6 text-gold-deep">
+                  <PenLine className="w-[26px] h-[26px]" />
+                </div>
+                <h3 className="font-serif text-[1.15rem] font-medium mb-3.5">Integration Reflections</h3>
+                <p className="text-[0.9rem] text-charcoal-mid leading-[1.8] mb-5">
+                  Guided journaling for making meaning after transformative experiences — of any kind. Writing as a way to process, understand, and move forward.
+                </p>
+                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[0.68rem] font-bold tracking-[0.1em] uppercase text-gold-deep bg-gold-wash border border-[rgba(200,155,60,0.2)] rounded-full">
+                  Start Reflecting <ArrowRight className="w-3 h-3" />
+                </span>
+              </article>
+            </Link>
           </div>
         </div>
       </section>
