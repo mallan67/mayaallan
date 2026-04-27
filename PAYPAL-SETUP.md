@@ -186,6 +186,55 @@ That gets you back where we are now in seconds.
 
 ---
 
+## Security review (done 2026-04-27)
+
+### ✅ Confirmed: PDF cannot be downloaded before payment
+
+The PDF is generated and emailed in exactly one place — the webhook
+handler — and only after two gates:
+
+1. **PayPal signature verification** via PayPal's verify-webhook-signature
+   API endpoint (not a local hash check, so an attacker can't fake it
+   without compromising PayPal infrastructure)
+2. **Event type check** for `PAYMENT.CAPTURE.COMPLETED` — the funds
+   have actually moved to your balance, not just been authorized
+
+The success page (`/export/success`) is a static thank-you with no
+download link, no auto-fetch, and no session data. Visiting it directly
+without paying gives you the thank-you message and nothing else.
+
+The blob staged before checkout contains the raw conversation JSON
+(not the PDF). The PDF doesn't exist anywhere until the webhook fires.
+
+### ✅ Fixed: Origin-header injection
+
+`/api/export/route.ts` previously used `req.headers.get("origin")` to
+build the PayPal `return_url`. The Origin header is client-controlled,
+so an attacker could spoof it to redirect themselves to a phishing site
+after paying (self-pwn, but still bad form). Now derived purely from
+`new URL(req.url).origin` which the server controls.
+
+### Open hardening items (not blocking, do later)
+
+- **Upgrade `@vercel/blob` to a version with private access mode.** As
+  of v2.0.0 the SDK only supports `access: "public"`. The blob URL is
+  unguessable (UUID) and never exposed to the client, so the practical
+  risk is near-zero — but private blobs would be belt-and-suspenders.
+  Recheck Vercel Blob's release notes when convenient.
+- **Add a TTL or cleanup cron for orphaned blobs.** If a user starts
+  checkout but abandons, the blob sits forever. No leak, just waste.
+- **Add rate limiting on `/api/export`.** Defense against spam. Not
+  critical at low traffic.
+- **Capture-ID-based idempotency dedup.** Currently the blob-deletion
+  check catches sequential webhook retries; this only matters if PayPal
+  ever delivers the same event twice in parallel (rare).
+
+### Not a security issue: NY sales tax
+
+(Already covered above — PDF is not taxable in NY, no tax to collect.)
+
+---
+
 ## Loose ends not part of the PayPal pivot
 
 These are uncommitted in your work tree, leftover from prior sessions:

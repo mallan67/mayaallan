@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Could not stage session" }, { status: 500 })
   }
 
-  const origin = req.headers.get("origin") ?? new URL(req.url).origin
+  const origin = new URL(req.url).origin
   let checkout: { url: string; orderId: string }
   try {
     checkout = await createSessionExportOrder({
