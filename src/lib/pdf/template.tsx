@@ -170,7 +170,7 @@ export function SessionPdf(props: PdfProps) {
             988 Suicide &amp; Crisis Lifeline — call or text 988.
           </Text>
           <Text style={{ marginTop: 4 }}>
-            © Maya Allan — mayaallan.com — Payment processed by Lemon Squeezy, Merchant of Record.
+            © Maya Allan — mayaallan.com — Payment processed via PayPal.
           </Text>
         </View>
       </Page>

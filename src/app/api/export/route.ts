@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { put } from "@vercel/blob"
-import { createSessionExportCheckout } from "@/lib/lemonsqueezy"
+import { createSessionExportOrder } from "@/lib/paypal"
 
 export const runtime = "nodejs"
 
@@ -77,16 +77,16 @@ export async function POST(req: NextRequest) {
   }
 
   const origin = req.headers.get("origin") ?? new URL(req.url).origin
-  let checkout: { url: string }
+  let checkout: { url: string; orderId: string }
   try {
-    checkout = await createSessionExportCheckout({
+    checkout = await createSessionExportOrder({
       blobKey,
       customerEmail: body.email,
       tool: body.tool,
       siteUrl: origin,
     })
   } catch (err) {
-    console.error("LS checkout creation failed:", err)
+    console.error("PayPal order creation failed:", err)
     return NextResponse.json({ error: "Could not create checkout" }, { status: 500 })
   }
 

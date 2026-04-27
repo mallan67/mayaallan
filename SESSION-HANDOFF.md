@@ -1,10 +1,12 @@
 # Session Handoff — Belief Inquiry redesign + content system
 
-**Last session date:** 2026-04-19
+**Last session date:** 2026-04-27 (PayPal pivot)
 **Branch:** `belief-inquiry-phase-1`
 **Remote:** pushed to GitHub at `origin/belief-inquiry-phase-1`
-**Total commits:** 47
 **Main branch / live site:** untouched (still on previous `main` state)
+
+> **2026-04-27 update:** Lemon Squeezy did not approve the account. Pivoted the
+> $9.99 PDF flow to PayPal (Business). Code, tests, and docs below are updated.
 
 ---
 
@@ -28,13 +30,13 @@ Each prompt has few-shot DO/DO-NOT examples to prevent AI drift. All routed thro
 - `/export/success` — post-purchase landing page
 - Psilocybin Integration Guide book page now has a cross-link card to `/integration` (conditional on slug only)
 
-### 3. $9.99 PDF monetization (code written, not yet live)
+### 3. $9.99 PDF monetization (code written, not yet live — PayPal as of 2026-04-27)
 
-- Vercel Blob staging → Lemon Squeezy checkout → webhook → PDF via `@react-pdf/renderer` → Resend email → blob deleted
+- Vercel Blob staging → PayPal Orders v2 checkout → webhook → PDF via `@react-pdf/renderer` → Resend email → blob deleted
 - Stateless; no backend database
 - Components: `ExportCta`, `SessionFeedback` (1-in-3 emoji), success page
-- **Pending from Maya:** LS account approval (was under review) + env vars (`LEMONSQUEEZY_API_KEY`, `LEMONSQUEEZY_STORE_ID`, `LEMONSQUEEZY_WEBHOOK_SECRET`, `LEMONSQUEEZY_PRODUCT_ID`) + `RESEND_API_KEY`
-- **Stripe fallback:** if LS doesn't approve, switching to Stripe is a ~30 min code change
+- **Pending from Maya:** PayPal product/webhook setup + env vars: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_ENV` (`sandbox` or `live`), `RESEND_API_KEY`
+- **Note on tax:** PayPal is a payment processor, not a Merchant of Record. Sales tax / VAT obligations are now Maya's responsibility (low risk at single-product low-volume scale; revisit if revenue grows or EU sales spike)
 
 ### 4. Analytics (live on branch)
 
@@ -82,21 +84,22 @@ All in `content/`:
 
 ### Already done by Maya
 - [x] Added `AI_GATEWAY_API_KEY` to Vercel env vars
-- [x] Signed up for Lemon Squeezy (account was under review as of 2026-04-19)
+- [x] Lemon Squeezy did not approve — pivoted to PayPal (account opened, ready)
 
 ### To do next
-- [ ] Wait for Lemon Squeezy approval (1-2 days expected; otherwise pivot to Stripe)
 - [ ] Verify which ISBN (`-5-3` or `-3-9`) is the correct print vs. ebook identifier
 - [ ] Complete Open Library book record (field-by-field help is in `content/BOOK-METADATA.md`)
 - [ ] Set up Amazon Author Central, Goodreads, BookBub, LibraryThing (all guided in `content/DISTRIBUTION-GUIDE.md`)
 - [ ] Create Substack account, set up as described in DISTRIBUTION-GUIDE (10 min)
 - [ ] Act on book editorial review items (~45 min) — then send to a proofreader
 
-### When LS approval lands (or Stripe decision)
-- [ ] Add env vars to Vercel: `LEMONSQUEEZY_API_KEY`, `LEMONSQUEEZY_STORE_ID`, `LEMONSQUEEZY_WEBHOOK_SECRET`, `LEMONSQUEEZY_PRODUCT_ID`, `RESEND_API_KEY`
-- [ ] Create LS product ("Save Your Session (PDF)" at $9.99, fulfillment "None")
-- [ ] Add LS webhook pointing to `/api/export/webhook`
-- [ ] End-to-end test on preview (use test card `4242 4242 4242 4242`)
+### Wire up PayPal
+- [ ] Create PayPal app in the **sandbox** developer dashboard → grab Client ID + Secret
+- [ ] In sandbox, create a webhook pointing to `https://<vercel-preview-url>/api/export/webhook` subscribed to event `PAYMENT.CAPTURE.COMPLETED` → grab the Webhook ID
+- [ ] Add env vars to Vercel (Preview env first): `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_ENV=sandbox`, `RESEND_API_KEY`
+- [ ] End-to-end test on preview using a sandbox personal-account buyer login from PayPal dev dashboard
+- [ ] Repeat the app + webhook creation in **live** mode → grab live credentials
+- [ ] Add live env vars to Vercel Production env (same keys, with `PAYPAL_ENV=live`)
 - [ ] Merge branch to main when satisfied
 
 ---
@@ -110,7 +113,7 @@ All in `content/`:
 | Book editorial review | `docs/book-review/psilocybin-integration-guide-review.md` |
 | Content (posts + guides) | `content/` |
 | AI prompts | `src/app/api/chat/route.ts` |
-| PDF flow code | `src/app/api/export/` + `src/lib/pdf/template.tsx` + `src/lib/lemonsqueezy.ts` |
+| PDF flow code | `src/app/api/export/` + `src/lib/pdf/template.tsx` + `src/lib/paypal.ts` |
 | Medium integration | `src/lib/medium.ts` + `scripts/publish-to-medium.mjs` |
 | Analytics helpers | `src/lib/analytics.ts` |
 

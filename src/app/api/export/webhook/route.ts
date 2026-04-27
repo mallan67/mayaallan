@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import { head, del } from "@vercel/blob"
 import { renderToBuffer } from "@react-pdf/renderer"
 import { Resend } from "resend"
-import { verifyLemonSqueezySignature } from "@/lib/lemonsqueezy"
+import {
+  decodeCustomId,
+  extractWebhookHeaders,
+  verifyPaypalWebhook,
+} from "@/lib/paypal"
 import { SessionPdf, type PdfMessage } from "@/lib/pdf/template"
 
 export const runtime = "nodejs"
@@ -21,35 +25,68 @@ const TOOL_DISPLAY = {
   integration: "Integration",
 } as const
 
+type CaptureResource = {
+  custom_id?: string
+  supplementary_data?: {
+    related_ids?: { order_id?: string }
+  }
+}
+
+type OrderApprovedResource = {
+  purchase_units?: Array<{ custom_id?: string }>
+}
+
+function extractCustomId(eventName: string, resource: unknown): string | null {
+  if (!resource || typeof resource !== "object") return null
+  if (eventName === "PAYMENT.CAPTURE.COMPLETED") {
+    return (resource as CaptureResource).custom_id ?? null
+  }
+  if (eventName === "CHECKOUT.ORDER.APPROVED") {
+    const units = (resource as OrderApprovedResource).purchase_units
+    return units?.[0]?.custom_id ?? null
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   const rawBody = await req.text()
-  const signature = req.headers.get("x-signature")
+  const headers = extractWebhookHeaders(req)
 
-  if (!verifyLemonSqueezySignature(rawBody, signature)) {
+  let verified = false
+  try {
+    verified = await verifyPaypalWebhook(headers, rawBody)
+  } catch (err) {
+    console.error("PayPal webhook verification error:", err)
+  }
+  if (!verified) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
   }
 
-  let event: Record<string, unknown>
+  let event: { event_type?: string; resource?: unknown }
   try {
     event = JSON.parse(rawBody)
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
   }
 
-  const meta = (event as { meta?: { event_name?: string; custom_data?: Record<string, string> } }).meta
-  const eventName = meta?.event_name
-  if (eventName !== "order_created") {
+  const eventName = event.event_type
+  if (eventName !== "PAYMENT.CAPTURE.COMPLETED") {
     return NextResponse.json({ received: true, ignored: eventName })
   }
 
-  const custom = meta?.custom_data ?? {}
-  const blobKey = custom.blob_key
-  const tool = custom.tool as BlobPayload["tool"] | undefined
-
-  if (!blobKey || !tool) {
-    console.error("Webhook missing blob_key/tool in custom_data")
-    return NextResponse.json({ error: "Missing custom data" }, { status: 400 })
+  const customId = extractCustomId(eventName, event.resource)
+  if (!customId) {
+    console.error("Webhook missing custom_id on resource")
+    return NextResponse.json({ error: "Missing custom_id" }, { status: 400 })
   }
+
+  const decoded = decodeCustomId(customId)
+  if (!decoded) {
+    console.error("Webhook custom_id failed to decode:", customId)
+    return NextResponse.json({ error: "Invalid custom_id" }, { status: 400 })
+  }
+
+  const { blobKey, tool } = decoded
 
   let payload: BlobPayload
   try {
@@ -58,8 +95,17 @@ export async function POST(req: NextRequest) {
     if (!res.ok) throw new Error(`blob fetch ${res.status}`)
     payload = (await res.json()) as BlobPayload
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes("not found") || msg.includes("BlobNotFound") || msg.includes("404")) {
+      console.log("Blob already processed (idempotent), acknowledging:", blobKey)
+      return NextResponse.json({ ok: true, idempotent: true })
+    }
     console.error("Blob fetch failed:", err)
     return NextResponse.json({ error: "Session data not available" }, { status: 500 })
+  }
+
+  if (payload.tool !== tool) {
+    console.error("Tool mismatch between custom_id and blob:", { customId: tool, blob: payload.tool })
   }
 
   let pdfBuffer: Buffer

@@ -87,8 +87,8 @@ export function ExportCta({ tool, messages }: Props) {
       )}
 
       <p className="text-charcoal-soft/60 text-[11px] mt-3">
-        Payment processed by Lemon Squeezy (Merchant of Record). Your PDF will be emailed
-        to you after checkout. This is a reflection aid, not therapy.
+        Payment processed via PayPal. Your PDF will be emailed to you after checkout.
+        This is a reflection aid, not therapy.
       </p>
     </div>
   )
