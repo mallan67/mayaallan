@@ -1,29 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { head, del } from "@vercel/blob"
-import { renderToBuffer } from "@react-pdf/renderer"
-import { Resend } from "resend"
 import {
   decodeCustomId,
   extractWebhookHeaders,
   verifyPaypalWebhook,
 } from "@/lib/paypal"
-import { SessionPdf, type PdfMessage } from "@/lib/pdf/template"
+import {
+  renderAndEmailSessionPdf,
+  type SessionPayload as BlobPayload,
+} from "@/lib/deliver-pdf"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
-
-type BlobPayload = {
-  tool: "reset" | "belief_inquiry" | "integration"
-  messages: PdfMessage[]
-  email: string
-  sessionDate: string
-}
-
-const TOOL_DISPLAY = {
-  reset: "Nervous System Reset",
-  belief_inquiry: "Belief Inquiry",
-  integration: "Integration",
-} as const
 
 type CaptureResource = {
   custom_id?: string
@@ -108,44 +96,11 @@ export async function POST(req: NextRequest) {
     console.error("Tool mismatch between custom_id and blob:", { customId: tool, blob: payload.tool })
   }
 
-  let pdfBuffer: Buffer
   try {
-    pdfBuffer = await renderToBuffer(
-      SessionPdf({
-        tool: payload.tool,
-        messages: payload.messages,
-        sessionDate: payload.sessionDate,
-      })
-    )
+    await renderAndEmailSessionPdf(payload)
   } catch (err) {
-    console.error("PDF render failed:", err)
-    return NextResponse.json({ error: "PDF generation failed" }, { status: 500 })
-  }
-
-  const resendKey = process.env.RESEND_API_KEY
-  if (!resendKey) {
-    console.error("RESEND_API_KEY not set")
-    return NextResponse.json({ error: "Email service unavailable" }, { status: 500 })
-  }
-
-  const resend = new Resend(resendKey)
-  const displayName = TOOL_DISPLAY[payload.tool]
-  try {
-    await resend.emails.send({
-      from: "Maya Allan <hello@mayaallan.com>",
-      to: payload.email,
-      subject: `Your ${displayName} session keepsake`,
-      text: `Hi,\n\nThank you for keeping your ${displayName} session. Your PDF is attached.\n\nWith care,\nMaya`,
-      attachments: [
-        {
-          filename: `${payload.tool}-session.pdf`,
-          content: pdfBuffer.toString("base64"),
-        },
-      ],
-    })
-  } catch (err) {
-    console.error("Email send failed:", err)
-    return NextResponse.json({ error: "Email failed" }, { status: 500 })
+    console.error("PDF render/email failed:", err)
+    return NextResponse.json({ error: "Delivery failed" }, { status: 500 })
   }
 
   try {
