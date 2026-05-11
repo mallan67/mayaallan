@@ -55,10 +55,10 @@ export function ExportCta({ tool, messages }: Props) {
         </div>
         <div>
           <h3 className="font-serif text-base font-semibold text-charcoal">
-            Want to keep this session?
+            Want a copy you can print?
           </h3>
           <p className="text-charcoal-soft text-sm mt-0.5">
-            Save a beautifully-formatted PDF for <strong>$9.99</strong>.
+            We&apos;ll email you a beautifully-formatted PDF you can print or keep — <strong>$9.99</strong>.
           </p>
         </div>
       </div>
@@ -78,7 +78,7 @@ export function ExportCta({ tool, messages }: Props) {
           disabled={loading || !email.trim()}
           className="px-5 h-10 rounded-xl bg-liquid-blue text-white text-sm font-medium hover:bg-liquid-blue-bright transition-colors disabled:opacity-50"
         >
-          {loading ? "Preparing..." : "Save for $9.99"}
+          {loading ? "Preparing..." : "Email me the PDF — $9.99"}
         </button>
       </form>
 
