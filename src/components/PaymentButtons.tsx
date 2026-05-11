@@ -4,39 +4,12 @@ import { useState } from "react"
 
 interface PaymentButtonsProps {
   bookId: number
-  hasStripe: boolean
   hasPayPal: boolean
 }
 
-export function PaymentButtons({ bookId, hasStripe, hasPayPal }: PaymentButtonsProps) {
-  const [loadingStripe, setLoadingStripe] = useState(false)
+export function PaymentButtons({ bookId, hasPayPal }: PaymentButtonsProps) {
   const [loadingPayPal, setLoadingPayPal] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const handleStripeCheckout = async () => {
-    setLoadingStripe(true)
-    setError(null)
-
-    try {
-      const response = await fetch("/api/checkout/stripe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok && data.url) {
-        window.location.href = data.url
-      } else {
-        setError(data.error || "Failed to create checkout session")
-        setLoadingStripe(false)
-      }
-    } catch (err) {
-      setError("Something went wrong. Please try again.")
-      setLoadingStripe(false)
-    }
-  }
 
   const handlePayPalCheckout = async () => {
     setLoadingPayPal(true)
@@ -66,20 +39,10 @@ export function PaymentButtons({ bookId, hasStripe, hasPayPal }: PaymentButtonsP
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
-        {hasStripe && (
-          <button
-            onClick={handleStripeCheckout}
-            disabled={loadingStripe || loadingPayPal}
-            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-center bg-black text-white rounded-xl hover:bg-slate-800 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-          >
-            <span>💳</span>
-            {loadingStripe ? "Processing..." : "Pay with Card"}
-          </button>
-        )}
         {hasPayPal && (
           <button
             onClick={handlePayPalCheckout}
-            disabled={loadingStripe || loadingPayPal}
+            disabled={loadingPayPal}
             className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-center bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
           >
             <span>🅿️</span>

@@ -450,7 +450,7 @@ export default async function BookPage({ params }: BookPageProps) {
               {showDirectSale && (
                 <div className="p-6 border-2 border-blue-200 rounded-2xl bg-gradient-to-br from-blue-50 to-white">
                   <h3 className="text-base font-bold text-slate-900 mb-4">Buy Direct</h3>
-                  <PaymentButtons bookId={book.id} hasStripe={true} hasPayPal={true} />
+                  <PaymentButtons bookId={book.id} hasPayPal={true} />
                 </div>
               )}
 

@@ -355,11 +355,11 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL) {
     ],
     url: `${siteUrl}/books/${book.slug}`,
     ...(book.allowDirectSale &&
-      book.stripePaymentLink && {
+      book.paypalPaymentLink && {
         offers: {
           "@type": "Offer",
           availability: "https://schema.org/InStock",
-          url: book.stripePaymentLink,
+          url: book.paypalPaymentLink,
         },
       }),
   }
