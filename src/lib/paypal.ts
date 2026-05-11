@@ -45,6 +45,14 @@ async function getAccessToken(): Promise<string> {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "")
+    console.error("PayPal OAuth failed", {
+      httpStatus: res.status,
+      apiBase: apiBase(),
+      paypalEnv: process.env.PAYPAL_ENV ?? "sandbox",
+      hasClientId: !!process.env.PAYPAL_CLIENT_ID,
+      hasClientSecret: !!process.env.PAYPAL_CLIENT_SECRET,
+      responseBody: text.slice(0, 2000),
+    })
     throw new Error(`PayPal OAuth failed: ${res.status} ${text}`)
   }
 
@@ -117,6 +125,14 @@ export async function createSessionExportOrder(args: {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "")
+    console.error("PayPal order creation failed", {
+      httpStatus: res.status,
+      apiBase: apiBase(),
+      paypalEnv: process.env.PAYPAL_ENV ?? "sandbox",
+      hasClientId: !!process.env.PAYPAL_CLIENT_ID,
+      hasClientSecret: !!process.env.PAYPAL_CLIENT_SECRET,
+      responseBody: text.slice(0, 2000),
+    })
     throw new Error(`PayPal order creation failed: ${res.status} ${text}`)
   }
 
