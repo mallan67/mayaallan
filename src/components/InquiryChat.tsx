@@ -130,7 +130,7 @@ export function InquiryChat() {
   const isRateLimited = error?.message?.includes("Daily limit reached")
 
   const userTurns = messages.filter((m) => m.role === "user").length
-  const showExportCta = userTurns >= 4 && !isStreaming
+  const showExportCta = userTurns >= 7 && !isStreaming
 
   const exportMessages = messages
     .map((m) => ({
