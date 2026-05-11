@@ -3,7 +3,8 @@
  *
  * Env vars:
  *   PAYPAL_CLIENT_ID
- *   PAYPAL_CLIENT_SECRET
+ *   PAYPAL_CLIENT_SECRET (or PAYPAL_SECRET — both names accepted for compatibility
+ *                         with the older book-checkout flow which uses PAYPAL_SECRET)
  *   PAYPAL_WEBHOOK_ID
  *   PAYPAL_ENV          "sandbox" | "live"  (defaults to "sandbox")
  */
@@ -11,6 +12,14 @@
 function ensureEnv(name: string): string {
   const value = process.env[name]
   if (!value) throw new Error(`Missing required env var: ${name}`)
+  return value
+}
+
+function getPaypalClientSecret(): string {
+  const value = process.env.PAYPAL_CLIENT_SECRET ?? process.env.PAYPAL_SECRET
+  if (!value) {
+    throw new Error("Missing required env var: PAYPAL_CLIENT_SECRET (or PAYPAL_SECRET)")
+  }
   return value
 }
 
@@ -31,7 +40,7 @@ async function getAccessToken(): Promise<string> {
   }
 
   const clientId = ensureEnv("PAYPAL_CLIENT_ID")
-  const clientSecret = ensureEnv("PAYPAL_CLIENT_SECRET")
+  const clientSecret = getPaypalClientSecret()
   const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
 
   const res = await fetch(`${apiBase()}/v1/oauth2/token`, {
@@ -50,7 +59,7 @@ async function getAccessToken(): Promise<string> {
       apiBase: apiBase(),
       paypalEnv: process.env.PAYPAL_ENV ?? "sandbox",
       hasClientId: !!process.env.PAYPAL_CLIENT_ID,
-      hasClientSecret: !!process.env.PAYPAL_CLIENT_SECRET,
+      hasClientSecret: !!(process.env.PAYPAL_CLIENT_SECRET ?? process.env.PAYPAL_SECRET),
       responseBody: text.slice(0, 2000),
     })
     throw new Error(`PayPal OAuth failed: ${res.status} ${text}`)
@@ -130,7 +139,7 @@ export async function createSessionExportOrder(args: {
       apiBase: apiBase(),
       paypalEnv: process.env.PAYPAL_ENV ?? "sandbox",
       hasClientId: !!process.env.PAYPAL_CLIENT_ID,
-      hasClientSecret: !!process.env.PAYPAL_CLIENT_SECRET,
+      hasClientSecret: !!(process.env.PAYPAL_CLIENT_SECRET ?? process.env.PAYPAL_SECRET),
       responseBody: text.slice(0, 2000),
     })
     throw new Error(`PayPal order creation failed: ${res.status} ${text}`)
