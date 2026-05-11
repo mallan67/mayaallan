@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport } from "ai"
 import { useState, useRef, useEffect, useCallback } from "react"
-import { Send, RotateCcw, Sparkles } from "lucide-react"
+import { Send, RotateCcw, Sparkles, Printer } from "lucide-react"
 import type { UIMessage } from "ai"
 import {
   trackToolViewed,
@@ -26,11 +26,17 @@ const STARTER_PROMPTS = [
   "I want to hold a new experience alongside an old belief",
 ]
 
-function getMessageText(message: UIMessage): string {
+const SESSION_COMPLETE_MARKER = "[SESSION_COMPLETE]"
+
+function getRawMessageText(message: UIMessage): string {
   return message.parts
     .filter((part): part is { type: "text"; text: string } => part.type === "text")
     .map((part) => part.text)
     .join("")
+}
+
+function getMessageText(message: UIMessage): string {
+  return getRawMessageText(message).replace(SESSION_COMPLETE_MARKER, "").trim()
 }
 
 export function IntegrationChat() {
@@ -39,6 +45,8 @@ export function IntegrationChat() {
   })
 
   const [input, setInput] = useState("")
+  const [sessionComplete, setSessionComplete] = useState(false)
+  const [userRequestedExport, setUserRequestedExport] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLInputElement>(null)
 
@@ -128,7 +136,18 @@ export function IntegrationChat() {
   const isRateLimited = error?.message?.includes("Daily limit reached")
 
   const userTurns = messages.filter((m) => m.role === "user").length
-  const showExportCta = userTurns >= 7 && !isStreaming
+
+  useEffect(() => {
+    if (sessionComplete) return
+    const hit = messages.some(
+      (m) => m.role === "assistant" && getRawMessageText(m).includes(SESSION_COMPLETE_MARKER)
+    )
+    if (hit) setSessionComplete(true)
+  }, [messages, sessionComplete])
+
+  const fallbackThresholdReached = userTurns >= 15
+  const showExportCta =
+    (sessionComplete || userRequestedExport || fallbackThresholdReached) && !isStreaming
 
   const exportMessages = messages
     .map((m) => ({
@@ -246,15 +265,26 @@ export function IntegrationChat() {
         </div>
 
         <div className="flex items-center justify-between gap-3 mt-2 sm:mt-3 max-w-3xl mx-auto">
-          {messages.length > 0 && (
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-2 text-charcoal-soft/60 hover:text-charcoal-mid text-xs transition-colors"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              Start Over
-            </button>
-          )}
+          <div className="flex items-center gap-4">
+            {messages.length > 0 && (
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-2 text-charcoal-soft/60 hover:text-charcoal-mid text-xs transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Start Over
+              </button>
+            )}
+            {messages.length > 0 && !showExportCta && (
+              <button
+                onClick={() => setUserRequestedExport(true)}
+                className="flex items-center gap-2 text-charcoal-soft/60 hover:text-liquid-blue text-xs transition-colors"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Print this session — $9.99
+              </button>
+            )}
+          </div>
           <p className="hidden sm:block text-charcoal-soft/50 text-xs text-right ml-auto">
             This is not therapy. If you need support, please reach out to a licensed professional.
           </p>
