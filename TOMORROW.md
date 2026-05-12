@@ -44,15 +44,30 @@ Then redeploy (Deployments → top → `...` → Redeploy) so it loads.
 - If yes: emails are ready to flow. Both PayPal-paid PDFs and promo-redeemed PDFs will arrive in customer inboxes.
 - If still pending: wait. Up to 4 hours was the estimate; could be less.
 
-### 3. Restore AI Gateway billing (token issue you hit)
+### 3. Pick an AI provider mode — paid Gateway *or* free direct Google
 
-The chat went silent because Vercel AI Gateway hit a free-tier ceiling. To prevent that happening to real users:
+The chat went silent today because Vercel AI Gateway credits ran out. **AI Gateway is billed separately from Vercel Pro** — they're different products. You now have two paths:
 
-- https://vercel.com/maya/~/ai → **Billing** (or Plan)
-- Add a payment method
-- Set a soft cap if you want (e.g. $25/month) so it can't run away
+**Option A — Buy Gateway credits** (recommended for production traffic):
+- https://vercel.com/maya/~/ai → Billing / Buy Credits
+- $25 covers thousands of sessions (Gemini Flash is ~$0.50–$1.50 per 100 sessions)
+- Most reliable, includes observability and fallback chains
+- Default behavior — no code/env changes needed
 
-Without this, the chat will go dark again when the next free quota window resets.
+**Option B — Use direct Google AI Studio (free)**:
+- Free tier: ~1,500 requests/day, 15 req/min, 1M TPM on Gemini 2.5 Flash
+- No Vercel credits consumed
+- Errors out under higher traffic — best for dev/light usage
+- Already wired in: set Vercel env var `AI_PROVIDER=direct` and redeploy
+- Requires `GOOGLE_GENERATIVE_AI_API_KEY` env var (you already have this from earlier setup)
+
+**Option C — Hybrid (recommended right now)**:
+- Set `AI_PROVIDER=direct` for now to use the free Google tier while traffic is low
+- Buy $25 of Gateway credits as a fallback safety net
+- When traffic grows past 1,500 sessions/day, flip to `AI_PROVIDER=gateway` for reliability
+- You can flip the env var anytime — no code change required
+
+To flip the switch, edit the env var in Vercel and redeploy. Whichever value is active on the latest deploy is what's running.
 
 ### 4. End-to-end test (~3 min, once 1+2+3 are done)
 

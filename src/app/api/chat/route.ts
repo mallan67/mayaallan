@@ -1,7 +1,31 @@
-import { streamText, convertToModelMessages } from "ai"
+import { streamText, convertToModelMessages, type LanguageModel } from "ai"
+import { google } from "@ai-sdk/google"
 
-// Route through Vercel AI Gateway — swap providers by changing this string
-const MODEL = "google/gemini-2.5-flash"
+/**
+ * Model resolution — supports two providers:
+ *
+ *   AI_PROVIDER=gateway  → Vercel AI Gateway (paid, uses AI_GATEWAY_API_KEY).
+ *                          Most reliable, supports model fallbacks, observability,
+ *                          billing through Vercel credits.
+ *
+ *   AI_PROVIDER=direct   → Direct Google AI Studio (free up to ~1500 req/day,
+ *                          15 req/min, 1M TPM on Gemini 2.5 Flash).
+ *                          Uses GOOGLE_GENERATIVE_AI_API_KEY. No Vercel credits
+ *                          consumed. Errors out (rate limit / quota) under
+ *                          higher traffic — useful for dev / light usage to
+ *                          conserve Gateway credits.
+ *
+ * Default (unset) is "gateway" — preserves prior behavior. Flip to "direct"
+ * via Vercel env var when you want to use free Google quota instead.
+ */
+function getModel(): LanguageModel {
+  const provider = (process.env.AI_PROVIDER ?? "gateway").toLowerCase()
+  if (provider === "direct") {
+    return google("gemini-2.5-flash")
+  }
+  // Gateway syntax — the bare string activates Vercel AI Gateway routing.
+  return "google/gemini-2.5-flash"
+}
 
 // ── Rate-limit state (in-memory, resets on cold start) ──────────────
 const GLOBAL_DAILY_CAP = 1000
@@ -585,7 +609,7 @@ export async function POST(req: Request) {
     const modelMessages = await convertToModelMessages(trimmedMessages)
 
     const result = streamText({
-      model: MODEL,
+      model: getModel(),
       system: systemPrompt,
       messages: modelMessages,
       maxOutputTokens: 1200,
