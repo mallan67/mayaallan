@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getSession } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
@@ -19,6 +20,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     if (error) throw error
 
+    revalidatePath("/", "layout")
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Failed to delete navigation item:", error)

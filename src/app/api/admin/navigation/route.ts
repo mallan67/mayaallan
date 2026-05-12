@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { getSession } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
+    revalidatePath("/", "layout")
     return NextResponse.json(mapToUI(newItem))
   } catch (error) {
     console.error("Failed to create navigation item:", error)
@@ -112,6 +114,7 @@ export async function PATCH(request: Request) {
       }),
     )
 
+    revalidatePath("/", "layout")
     return NextResponse.json(updated.map(mapToUI))
   } catch (error) {
     console.error("Failed to update navigation items:", error)
