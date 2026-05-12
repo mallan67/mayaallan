@@ -1,15 +1,16 @@
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { HeaderClient } from "./header-client"
 
-// Fallback navigation items for build time or when DB is unavailable
+// Fallback navigation items for build time or when DB is unavailable.
+// Live nav comes from the navigation_items table; admin can edit via /admin/navigation.
 const fallbackNavItems = [
   { href: "/", label: "Home" },
   { href: "/books", label: "Books" },
-  { href: "/tools", label: "Tools" },
+  { href: "/belief-inquiry", label: "Belief Audit" },
   { href: "/reset", label: "Nervous System Reset" },
-  { href: "/events", label: "Events" },
+  { href: "/integration", label: "Integration" },
   { href: "/media", label: "Media" },
-  { href: "/blog", label: "Writing" },
+  { href: "/events", label: "Events" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ]
