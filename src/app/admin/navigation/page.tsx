@@ -74,6 +74,54 @@ export default function AdminNavigationPage() {
     setItems(newItems)
   }
 
+  const handleAddItem = async () => {
+    setSaving(true)
+    setMessage("")
+    try {
+      const nextOrder = items.length > 0 ? Math.max(...items.map((i) => i.order)) + 1 : 1
+      const res = await fetch("/api/admin/navigation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          label: "New item",
+          href: "/",
+          order: nextOrder,
+          isVisible: true,
+        }),
+      })
+      if (res.ok) {
+        const newItem = (await res.json()) as NavigationItem
+        setItems([...items, newItem])
+        setMessage("Added — edit the label and path, then click Save Navigation.")
+      } else {
+        setMessage("Failed to add item")
+      }
+    } catch (error) {
+      setMessage("Error adding item")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDeleteItem = async (id: number) => {
+    if (!confirm("Delete this navigation item? This cannot be undone.")) return
+    setSaving(true)
+    setMessage("")
+    try {
+      const res = await fetch(`/api/admin/navigation/${id}`, { method: "DELETE" })
+      if (res.ok) {
+        setItems(items.filter((i) => i.id !== id))
+        setMessage("Item deleted.")
+      } else {
+        setMessage("Failed to delete item")
+      }
+    } catch (error) {
+      setMessage("Error deleting item")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="p-6">
@@ -146,11 +194,28 @@ export default function AdminNavigationPage() {
                 />
                 <span className="text-sm text-slate-700">Visible</span>
               </label>
+
+              <button
+                onClick={() => handleDeleteItem(item.id)}
+                disabled={saving}
+                className="text-xs text-red-600 hover:text-red-800 disabled:opacity-30 px-2 py-1"
+                title="Delete this item"
+              >
+                Delete
+              </button>
             </div>
           ))}
         </div>
       </div>
       )}
+
+      <button
+        onClick={handleAddItem}
+        disabled={saving}
+        className="mt-4 w-full px-6 py-3 border-2 border-dashed border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition disabled:opacity-50"
+      >
+        + Add new navigation item
+      </button>
 
       {message && (
         <div
