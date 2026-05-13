@@ -3,14 +3,19 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js"
 
 /**
  * Server-side Supabase client with admin/service role privileges.
- * Uses SUPABASE_SERVICE_ROLE_KEY for full database access.
+ *
+ * Prefers the new `sb_secret_*` key (env: SUPABASE_SECRET_KEY) and falls back
+ * to the legacy JWT service_role key (env: SUPABASE_SERVICE_ROLE_KEY) so the
+ * app keeps working during the Supabase key-format migration. When the legacy
+ * JWT keys are disabled, only SUPABASE_SECRET_KEY is needed.
  *
  * IMPORTANT: Only use this on the server (API routes, server components).
- * Never expose SUPABASE_SERVICE_ROLE_KEY to the client.
+ * Never expose either key to the client.
  */
 
 const supabaseUrl = process.env.SUPABASE_URL
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseSecretKey =
+  process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 
 // Create client only if environment variables are available
 // This allows the build to succeed even without env vars
@@ -19,11 +24,11 @@ let _supabaseAdmin: SupabaseClient | null = null
 function getSupabaseAdmin(): SupabaseClient {
   if (_supabaseAdmin) return _supabaseAdmin
 
-  if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variable")
+  if (!supabaseUrl || !supabaseSecretKey) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SECRET_KEY/SUPABASE_SERVICE_ROLE_KEY environment variable")
   }
 
-  _supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+  _supabaseAdmin = createClient(supabaseUrl, supabaseSecretKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,

@@ -118,10 +118,11 @@ export async function POST(request: Request) {
   // Step 3: Insert into database
   try {
     // Verify Supabase is configured
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (!process.env.SUPABASE_URL || !(process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)) {
       console.error("Missing Supabase env vars:", {
         hasUrl: !!process.env.SUPABASE_URL,
-        hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+        hasSecret: !!process.env.SUPABASE_SECRET_KEY,
+        hasLegacyServiceRole: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       })
       return NextResponse.json({ error: "Server config error: Missing database credentials" }, { status: 500 })
     }
