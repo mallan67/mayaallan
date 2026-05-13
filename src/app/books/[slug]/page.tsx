@@ -490,55 +490,70 @@ export default async function BookPage({ params }: BookPageProps) {
               {/* ---------------------------------------- */}
               {/* DIRECT SALE SECTION */}
               {/* ---------------------------------------- */}
-              {showDirectSale && (
-                <div className="p-6 border-2 border-blue-200 rounded-2xl bg-gradient-to-br from-blue-50 to-white">
-                  <h3 className="text-base font-bold text-slate-900 mb-1">
-                    Buy the Ebook — Direct from Maya
-                  </h3>
-                  <p className="text-xs text-slate-600 mb-4">
-                    Instant PDF download — link emailed after payment. {hasRetailerLinks ? "For paperback, hardcover, or audiobook, scroll to the retailers below." : ""}
-                  </p>
-                  <PaymentButtons
-                    bookId={book.id}
-                    hasPayPal={true}
-                    formatLabel="Ebook"
-                    priceLabel={book.ebookPrice ? `$${Number(book.ebookPrice).toFixed(2)}` : undefined}
-                  />
-                </div>
-              )}
-
-              {/* ---------------------------------------- */}
-              {/* RETAILER LINKS SECTION */}
-              {/* ---------------------------------------- */}
-              {showRetailerSale && (
+              {(showDirectSale || showRetailerSale) && (
                 <div className="p-6 border-2 border-slate-200 rounded-2xl bg-gradient-to-br from-slate-50 to-white">
-                  <h3 className="text-base font-bold text-slate-900 mb-4">
-                    Buy from Retailers
-                  </h3>
+                  <h3 className="text-base font-bold text-slate-900 mb-1">Buy this book</h3>
+                  <p className="text-xs text-slate-600 mb-5">
+                    Choose your format. Direct purchase delivers instantly by email; retailer links open in a new tab.
+                  </p>
 
-                  {Object.entries(retailersByFormat).map(([formatType, links]) => (
-                    <div key={formatType} className="mb-5 last:mb-0">
-                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 capitalize">
-                        {formatType}
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {(links as any[]).map((link: any) => (
-                          <a
-                            key={link.id}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer nofollow sponsored"
-                            className="inline-flex items-center gap-3 px-5 py-3 border-2 border-slate-200 rounded-xl bg-white hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all text-sm font-semibold group"
-                          >
-                            <RetailerIcon name={link.retailer.name} className="w-5 h-5 text-slate-600 group-hover:text-slate-900 transition-colors" />
-                            <span className="truncate">
-                              {link.retailer.name}
-                            </span>
-                          </a>
-                        ))}
+                  {formats.map((format) => {
+                    const formatRetailers = (retailersByFormat[format.key] ?? []) as any[]
+                    const isEbookDirect = format.key === "ebook" && showDirectSale
+                    if (!isEbookDirect && formatRetailers.length === 0) return null
+
+                    return (
+                      <div
+                        key={format.key}
+                        className="mb-6 last:mb-0 pb-5 last:pb-0 border-b last:border-b-0 border-slate-200"
+                      >
+                        <div className="flex items-baseline gap-3 mb-3">
+                          <h4 className="text-sm font-bold text-slate-900 capitalize">{format.label}</h4>
+                          {format.price && Number(format.price) > 0 && (
+                            <span className="text-sm text-slate-600">${Number(format.price).toFixed(2)}</span>
+                          )}
+                        </div>
+
+                        {isEbookDirect && (
+                          <div className="mb-3">
+                            <div className="inline-flex items-center gap-2 px-2 py-0.5 mb-2 rounded-full bg-blue-100 text-blue-800 text-[10px] font-bold uppercase tracking-wider">
+                              Direct from Maya · instant download
+                            </div>
+                            <PaymentButtons
+                              bookId={book.id}
+                              hasPayPal={true}
+                              formatLabel="Ebook"
+                              priceLabel={book.ebookPrice ? `$${Number(book.ebookPrice).toFixed(2)}` : undefined}
+                            />
+                          </div>
+                        )}
+
+                        {formatRetailers.length > 0 && (
+                          <div className={isEbookDirect ? "mt-4" : ""}>
+                            {isEbookDirect && (
+                              <p className="text-[11px] text-slate-500 mb-2 uppercase tracking-wider font-semibold">
+                                — or buy from a retailer —
+                              </p>
+                            )}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {formatRetailers.map((link: any) => (
+                                <a
+                                  key={link.id}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer nofollow sponsored"
+                                  className="inline-flex items-center gap-3 px-5 py-3 border-2 border-slate-200 rounded-xl bg-white hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all text-sm font-semibold group"
+                                >
+                                  <RetailerIcon name={link.retailer.name} className="w-5 h-5 text-slate-600 group-hover:text-slate-900 transition-colors" />
+                                  <span className="truncate">{link.retailer.name}</span>
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
 
