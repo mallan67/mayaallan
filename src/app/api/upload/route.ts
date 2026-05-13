@@ -1,8 +1,14 @@
 import { put, del } from "@vercel/blob"
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 export async function POST(request: Request) {
+  // CSRF guard runs before body parsing or auth check. Same-origin
+  // protection for admin-only capability routes outside /api/admin/**.
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -86,6 +92,9 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
