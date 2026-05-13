@@ -69,8 +69,6 @@ export async function POST(request: Request) {
       updatedAt: now,
     }
 
-    console.log("Creating event with data:", insertData)
-
     const { data: event, error } = await supabaseAdmin
       .from(Tables.events)
       .insert(insertData)
@@ -88,7 +86,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log("Event created successfully:", event)
     return NextResponse.json(event, { status: 201 })
   } catch (error: any) {
     console.error("Error creating event:", error)

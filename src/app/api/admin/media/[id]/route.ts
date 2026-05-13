@@ -79,7 +79,6 @@ export async function PUT(
 
   try {
     const body = await request.json()
-    console.log("Media PUT - ID:", id, "Body:", JSON.stringify(body))
 
     // Verify media exists
     const { data: existingMedia, error: fetchError } = await supabaseAdmin
@@ -109,8 +108,6 @@ export async function PUT(
     if (body.seoTitle !== undefined) updateData.seo_title = body.seoTitle || null
     if (body.seoDescription !== undefined) updateData.seo_description = body.seoDescription || null
     if (body.publishedAt !== undefined) updateData.published_at = body.publishedAt || null
-
-    console.log("Update data:", updateData)
 
     const { data: media, error: updateError } = await supabaseAdmin
       .from(Tables.mediaItems)
@@ -147,7 +144,6 @@ export async function PUT(
       createdAt: media.created_at,
     }
 
-    console.log("Media updated successfully")
     return NextResponse.json(mappedMedia)
   } catch (error: any) {
     console.error("Error updating media:", error)

@@ -154,8 +154,6 @@ export async function PUT(
     if (body.backCoverUrl !== undefined) updateData.back_cover_url = body.backCoverUrl || null
 
     // Debug logging for cover_url
-    console.log("Book update - coverUrl received:", body.coverUrl)
-    console.log("Book update - cover_url to save:", updateData.cover_url)
     if (body.ebookFileUrl !== undefined) updateData.ebook_file_url = body.ebookFileUrl || null
     if (body.seoTitle !== undefined) updateData.seo_title = body.seoTitle || null
     if (body.seoDescription !== undefined) updateData.seo_description = body.seoDescription || null
@@ -199,13 +197,6 @@ export async function PUT(
     }
 
     // Debug logging
-    console.log("Updating book with data:", {
-      id: bookId,
-      allowDirectSale: updateData.allow_direct_sale,
-      stripePaymentLink: updateData.stripe_payment_link,
-      paypalPaymentLink: updateData.paypal_payment_link,
-      allowRetailerSale: updateData.allow_retailer_sale,
-    })
 
     // Perform update
     const { data: updatedBook, error: updateError } = await supabaseAdmin

@@ -60,7 +60,6 @@ export async function PUT(
 
   try {
     const body = await request.json()
-    console.log("Event PUT - ID:", id, "Body:", JSON.stringify(body))
 
     // Verify event exists
     const { data: existingEvent, error: fetchError } = await supabaseAdmin
@@ -93,8 +92,6 @@ export async function PUT(
     if (body.seoTitle !== undefined) updateData.seoTitle = body.seoTitle || null
     if (body.seoDescription !== undefined) updateData.seoDescription = body.seoDescription || null
 
-    console.log("Update data:", updateData)
-
     const { data: event, error: updateError } = await supabaseAdmin
       .from(Tables.events)
       .update(updateData)
@@ -113,7 +110,6 @@ export async function PUT(
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
-    console.log("Event updated successfully")
     return NextResponse.json(event)
   } catch (error: any) {
     console.error("Error updating event:", error)

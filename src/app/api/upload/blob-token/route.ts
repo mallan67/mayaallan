@@ -52,8 +52,11 @@ export async function POST(request: Request): Promise<NextResponse> {
         }
       },
       onUploadCompleted: async ({ blob }) => {
-        // Hook for post-upload bookkeeping (not used yet).
-        console.log("[upload/blob-token] ebook uploaded:", blob.pathname, blob.url)
+        // Hook for post-upload bookkeeping (not used yet). We deliberately
+        // log only the pathname — the full blob.url is a long-lived public
+        // handle to the file and shouldn't appear in Vercel function logs
+        // where anyone with log access could fetch it.
+        console.log("[upload/blob-token] ebook upload completed:", blob.pathname)
       },
     })
     return NextResponse.json(jsonResponse)
