@@ -3,31 +3,24 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { alertAdmin } from "@/lib/alert-admin"
 
 /**
- * DOWNLOAD ROUTE — atomic + streamed ebook delivery
+ * DOWNLOAD ROUTE — atomic + streamed + counter-safe ebook delivery
  *
  * Flow:
  *   1. Atomic conditional increment via Postgres RPC `increment_download_count`.
  *      The RPC takes a row lock (FOR UPDATE), checks expires_at, checks the
- *      download_count vs max_downloads cap, then increments — all in one
- *      statement. This replaces the previous read-then-update pattern which
- *      had a TOCTOU race that let concurrent requests bypass the cap.
- *   2. The RPC returns a `status` discriminator and the linked order_id /
- *      book_id. We branch on status for the 401/403/404/410 responses.
- *   3. If status='ok', we fetch the order + book rows (we have the IDs from
- *      the RPC) to validate completion + locate the ebook file.
- *   4. The file is STREAMED through the function with Content-Disposition:
- *      attachment and Cache-Control: private, no-store. The customer never
- *      sees the underlying Vercel Blob URL, so it can't leak via browser
- *      history, referrer logs, or shared link.
+ *      cap, and increments — all in one statement.
+ *   2. After 'ok', look up the order + book using the IDs the RPC returned.
+ *   3. Stream the file through the function with Content-Disposition: attachment.
  *
- * Anything that looks like an infra failure (DB error other than "no rows",
- * RPC unexpected error, blob fetch failure) is alerted via alertAdmin with a
- * dedup key, and the customer gets a 503 "try again" rather than a misleading
- * 404 that makes them think their valid token is invalid.
+ * Counter compensation (PR B):
+ *   The RPC increments BEFORE we fetch the blob. If ANYTHING fails AFTER
+ *   a successful increment (DB lookups, missing file URL, blob fetch error,
+ *   unexpected throw), the customer is owed a refund of one download attempt.
+ *   `decrement_download_count` is called on every such path. If the
+ *   compensation itself fails, alertAdmin fires so Maya can restore manually.
  *
- * Maximum streamed size is governed by Vercel's response body limit for the
- * runtime; with the streaming pattern (passing res.body directly) the limit
- * is far higher than the 4.5 MB request-body limit.
+ *   User-caused statuses (not_found / expired / maxed / no_order) DID NOT
+ *   increment in the first place, so they are NOT decremented.
  */
 
 export const runtime = "nodejs"
@@ -40,11 +33,58 @@ function buildDownloadFilename(bookTitle: string | null, fileUrl: string): strin
     .replace(/^-+|-+$/g, "")
     .slice(0, 80) || "ebook"
 
-  // Strip query/hash, then take the last path segment's extension.
   const urlPath = fileUrl.split(/[?#]/)[0] ?? fileUrl
   const ext = urlPath.match(/\.([a-z0-9]{2,5})$/i)?.[1]?.toLowerCase() ?? "pdf"
 
   return `${safeTitle}.${ext}`
+}
+
+/**
+ * Restore one download attempt after a post-increment failure. Returns
+ * silently on success; alerts on failure (the customer's counter is then
+ * burnt and Maya needs to manually decrement or extend).
+ */
+async function compensateDecrement(token: string, context: { reason: string; orderId?: number | null; bookId?: number | null }) {
+  const { data, error } = await supabaseAdmin.rpc("decrement_download_count", {
+    p_token: token,
+  })
+
+  // Compensation failed at the RPC layer — DB unreachable or function not deployed.
+  if (error) {
+    console.error("decrement_download_count failed:", error)
+    await alertAdmin({
+      severity: "critical",
+      subject: "Download counter compensation FAILED — customer download attempt burned",
+      body:
+        "After increment_download_count succeeded, a downstream failure forced the " +
+        "compensating decrement_download_count call. That compensation call ALSO " +
+        "failed. The paying customer has lost one of their 5 download attempts and " +
+        "no automated retry will restore it. Bump the download_count back manually:\n\n" +
+        "  UPDATE public.download_tokens SET download_count = download_count - 1 " +
+        "WHERE token = '<see details>' AND download_count > 0;",
+      details: {
+        ...context,
+        compensationErrorCode: error.code,
+        compensationErrorMessage: error.message,
+      },
+      dedupKey: "download:compensation-failed",
+    })
+    return
+  }
+
+  const result = Array.isArray(data) ? data[0] : data
+  // 'at_zero' or 'no_token' means there was nothing to compensate (counter
+  // already 0, or the row was deleted between increment and decrement).
+  // 'ok' is the happy path. Anything else is unexpected.
+  if (result && result.status !== "ok" && result.status !== "at_zero" && result.status !== "no_token") {
+    await alertAdmin({
+      severity: "warning",
+      subject: "Download counter compensation returned unexpected status",
+      body: `decrement_download_count returned an unexpected status: ${result.status}`,
+      details: context,
+      dedupKey: "download:compensation-unknown-status",
+    })
+  }
 }
 
 export async function GET(
@@ -57,6 +97,10 @@ export async function GET(
     return NextResponse.json({ error: "Missing token" }, { status: 400 })
   }
 
+  // Once `incrementSucceeded` is true, every failure path MUST call
+  // compensateDecrement before returning.
+  let incrementSucceeded = false
+
   try {
     // ------------------------------------------------------------------
     // 1) Atomic conditional increment via RPC
@@ -67,8 +111,6 @@ export async function GET(
     )
 
     if (rpcError) {
-      // Real infrastructure error — DB unreachable, function not deployed,
-      // permission revoked. DON'T tell the customer their token is invalid.
       console.error("increment_download_count RPC failed:", rpcError)
       await alertAdmin({
         severity: "error",
@@ -76,8 +118,7 @@ export async function GET(
         body:
           "The increment_download_count RPC errored. Paid customers cannot " +
           "download their book until this is resolved. Confirm the function " +
-          "is deployed (supabase/pr-a-critical-fixes.sql) and the service role " +
-          "has EXECUTE permission.",
+          "is deployed and the service role has EXECUTE permission.",
         details: { errorCode: rpcError.code, errorMessage: rpcError.message },
         dedupKey: "download:rpc-failed",
       })
@@ -87,12 +128,10 @@ export async function GET(
       )
     }
 
-    // The RPC returns SETOF with one row.
     const result = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows
 
     if (!result) {
-      // Defensive — RPC returned no rows. Shouldn't happen.
-      console.error("increment_download_count returned no rows for token")
+      console.error("increment_download_count returned no rows")
       await alertAdmin({
         severity: "error",
         subject: "Download route: counter RPC returned no rows",
@@ -115,6 +154,7 @@ export async function GET(
       case "no_order":
         return NextResponse.json({ error: "Payment not completed" }, { status: 402 })
       case "ok":
+        incrementSucceeded = true
         break
       default:
         await alertAdmin({
@@ -129,19 +169,18 @@ export async function GET(
         )
     }
 
-    // ------------------------------------------------------------------
-    // 2) Look up order + book using the IDs the RPC returned
-    // ------------------------------------------------------------------
     const orderId = result.order_id as number
     const bookId = result.book_id as number
 
+    // ------------------------------------------------------------------
+    // From here every failure must compensate.
+    // ------------------------------------------------------------------
     const { data: order, error: orderError } = await supabaseAdmin
       .from(Tables.orders)
       .select("id, status")
       .eq("id", orderId)
       .single()
 
-    // Real DB error vs "no rows": only PGRST116 is the legit 404 case.
     if (orderError && orderError.code !== "PGRST116") {
       console.error("Order lookup failed:", orderError)
       await alertAdmin({
@@ -153,6 +192,7 @@ export async function GET(
         details: { orderId, errorCode: orderError.code, errorMessage: orderError.message },
         dedupKey: "download:order-lookup-failed",
       })
+      await compensateDecrement(tokenParam, { reason: "order-lookup-failed", orderId, bookId })
       return NextResponse.json(
         { error: "Service temporarily unavailable. Please try again in a moment." },
         { status: 503 }
@@ -160,6 +200,11 @@ export async function GET(
     }
 
     if (!order || order.status !== "completed") {
+      // User-state issue, but the increment already ran. The customer has
+      // a token and they shouldn't have been able to reach 'ok' status
+      // from the RPC if the order didn't exist — this is anomalous. Refund
+      // the attempt so they're not punished.
+      await compensateDecrement(tokenParam, { reason: "order-not-completed", orderId, bookId })
       return NextResponse.json({ error: "Payment not completed" }, { status: 402 })
     }
 
@@ -178,6 +223,7 @@ export async function GET(
         details: { bookId, errorCode: bookError.code, errorMessage: bookError.message },
         dedupKey: "download:book-lookup-failed",
       })
+      await compensateDecrement(tokenParam, { reason: "book-lookup-failed", orderId, bookId })
       return NextResponse.json(
         { error: "Service temporarily unavailable. Please try again in a moment." },
         { status: 503 }
@@ -185,8 +231,6 @@ export async function GET(
     }
 
     if (!book || !book.ebook_file_url) {
-      // Order is paid but the admin hasn't uploaded the file. Alert so it
-      // gets fixed; tell the customer to contact us.
       await alertAdmin({
         severity: "critical",
         subject: "Download route: paid order has no ebook_file_url",
@@ -197,6 +241,7 @@ export async function GET(
         details: { orderId, bookId },
         dedupKey: `download:no-file-url:${bookId}`,
       })
+      await compensateDecrement(tokenParam, { reason: "no-ebook-file-url", orderId, bookId })
       return NextResponse.json(
         { error: "Ebook file not available. Please contact support." },
         { status: 500 }
@@ -204,23 +249,59 @@ export async function GET(
     }
 
     // ------------------------------------------------------------------
-    // 3) Stream the file through the function with Content-Disposition.
-    //    Customer never sees the underlying Blob URL.
+    // 2) Stream the file through the function with Content-Disposition.
     // ------------------------------------------------------------------
-    const upstream = await fetch(book.ebook_file_url)
+    let upstream: Response
+    try {
+      upstream = await fetch(book.ebook_file_url)
+    } catch (fetchErr) {
+      console.error("Blob fetch threw:", fetchErr)
+      await alertAdmin({
+        severity: "critical",
+        subject: "Download route: upstream blob fetch THREW",
+        body:
+          "The fetch() to Vercel Blob threw before returning a Response. The customer's " +
+          "download attempt has been compensated. Confirm the blob URL is still valid.",
+        details: {
+          bookId,
+          errorMessage: fetchErr instanceof Error ? fetchErr.message : String(fetchErr),
+        },
+        dedupKey: `download:blob-fetch-threw:${bookId}`,
+      })
+      await compensateDecrement(tokenParam, { reason: "blob-fetch-threw", orderId, bookId })
+      return NextResponse.json(
+        { error: "Download temporarily unavailable. Please try again in a moment." },
+        { status: 502 }
+      )
+    }
 
-    if (!upstream.ok || !upstream.body) {
-      console.error("Blob fetch failed:", upstream.status, upstream.statusText)
+    if (!upstream.ok) {
+      console.error("Blob fetch non-OK:", upstream.status, upstream.statusText)
       await alertAdmin({
         severity: "critical",
         subject: "Download route: upstream blob fetch failed",
         body:
-          "Fetching the ebook file from Vercel Blob failed. Paid customer cannot " +
-          "complete their download. Confirm the blob URL is still valid and the " +
-          "file hasn't been deleted from storage.",
+          "Fetching the ebook file from Vercel Blob returned a non-OK status. " +
+          "The customer's download attempt has been compensated.",
         details: { bookId, status: upstream.status, statusText: upstream.statusText },
         dedupKey: `download:blob-fetch-failed:${bookId}`,
       })
+      await compensateDecrement(tokenParam, { reason: "blob-fetch-non-ok", orderId, bookId })
+      return NextResponse.json(
+        { error: "Download temporarily unavailable. Please try again in a moment." },
+        { status: 502 }
+      )
+    }
+
+    if (!upstream.body) {
+      await alertAdmin({
+        severity: "critical",
+        subject: "Download route: blob fetch returned no body",
+        body: "The upstream fetch was OK but the response had no body. Investigate.",
+        details: { bookId, status: upstream.status },
+        dedupKey: `download:blob-no-body:${bookId}`,
+      })
+      await compensateDecrement(tokenParam, { reason: "blob-no-body", orderId, bookId })
       return NextResponse.json(
         { error: "Download temporarily unavailable. Please try again in a moment." },
         { status: 502 }
@@ -233,9 +314,8 @@ export async function GET(
 
     const headers: Record<string, string> = {
       "Content-Type": contentType,
-      "Content-Disposition": `attachment; filename="${filename}"`,
-      // Don't let intermediaries or the browser cache this — every download
-      // should go back through the function so the counter is enforced.
+      // RFC-5987 form for non-ASCII filenames + a quoted ASCII fallback.
+      "Content-Disposition": `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
       "Cache-Control": "private, no-store, no-cache, must-revalidate",
       "X-Content-Type-Options": "nosniff",
     }
@@ -247,10 +327,13 @@ export async function GET(
     await alertAdmin({
       severity: "error",
       subject: "Download route: handler threw unexpectedly",
-      body: "The download handler threw. Paid customer cannot get their file.",
-      details: { errorMessage: err?.message ?? String(err) },
+      body: "The download handler threw. If increment had succeeded, the counter has been compensated.",
+      details: { errorMessage: err?.message ?? String(err), incrementSucceeded },
       dedupKey: "download:handler-threw",
     })
+    if (incrementSucceeded) {
+      await compensateDecrement(tokenParam, { reason: "handler-threw-after-increment" })
+    }
     return NextResponse.json(
       { error: "Service temporarily unavailable. Please try again in a moment." },
       { status: 503 }
