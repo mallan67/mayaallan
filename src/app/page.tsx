@@ -132,9 +132,12 @@ export default async function HomePage() {
     locationText: string | null
   }[] = []
 
-  // Fetch featured book
-  try {
-    const { data, error } = await supabaseAdmin
+  // Run all three independent Supabase queries in parallel. Promise.allSettled
+  // means a single slow / failed query doesn't stall the other two, and per-query
+  // fallbacks (null / empty array) are preserved exactly as in the original
+  // sequential implementation.
+  const [featuredBookResult, authorInfoResult, upcomingEventsResult] = await Promise.allSettled([
+    supabaseAdmin
       .from(Tables.books)
       .select("*")
       .eq("is_featured", true)
@@ -142,15 +145,27 @@ export default async function HomePage() {
       .eq("is_visible", true)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single()
+      .single(),
+    supabaseAdmin
+      .from(Tables.siteSettings)
+      .select("authorName, authorBio, authorPhotoUrl")
+      .limit(1)
+      .single(),
+    supabaseAdmin
+      .from(Tables.events)
+      .select("id, slug, title, description, startsAt, locationText")
+      .eq("isVisible", true)
+      .order("startsAt", { ascending: true })
+      .limit(3),
+  ])
 
+  // Featured book
+  if (featuredBookResult.status === "fulfilled") {
+    const { data, error } = featuredBookResult.value
     if (error) {
-      // Supabase can return both an error (warning) and data on the same call.
-      // Log but don't drop valid data.
       console.error("Homepage featured book query error:", error.message, error.code, error.details)
     }
     if (data) {
-      console.log("Homepage found featured book:", data.title, data.slug)
       featuredBook = {
         id: data.id,
         slug: data.slug,
@@ -172,21 +187,14 @@ export default async function HomePage() {
         hardcoverPrice: data.hardcover_price,
         audiobookPrice: data.audiobook_price ?? null,
       }
-    } else {
-      console.log("Homepage: No featured book found matching criteria (is_featured=true, is_published=true, is_visible=true)")
     }
-  } catch (error: any) {
-    console.error("Homepage featured book fetch failed:", error?.message || error)
+  } else {
+    console.error("Homepage featured book fetch failed:", featuredBookResult.reason)
   }
 
-  // Fetch author info from SiteSettings
-  try {
-    const { data } = await supabaseAdmin
-      .from(Tables.siteSettings)
-      .select("authorName, authorBio, authorPhotoUrl")
-      .limit(1)
-      .single()
-
+  // Author info
+  if (authorInfoResult.status === "fulfilled") {
+    const { data } = authorInfoResult.value
     if (data) {
       authorInfo = {
         authorName: data.authorName,
@@ -194,25 +202,19 @@ export default async function HomePage() {
         authorPhotoUrl: data.authorPhotoUrl,
       }
     }
-  } catch (err) {
-    console.error("Homepage authorInfo fetch failed:", err)
+  } else {
+    console.error("Homepage authorInfo fetch failed:", authorInfoResult.reason)
     // Fallback handled in rendering
   }
 
-  // Fetch upcoming events
-  try {
-    const { data } = await supabaseAdmin
-      .from(Tables.events)
-      .select("id, slug, title, description, startsAt, locationText")
-      .eq("isVisible", true)
-      .order("startsAt", { ascending: true })
-      .limit(3)
-
+  // Upcoming events
+  if (upcomingEventsResult.status === "fulfilled") {
+    const { data } = upcomingEventsResult.value
     if (data && data.length > 0) {
       upcomingEvents = data
     }
-  } catch (err) {
-    console.error("Homepage upcomingEvents fetch failed:", err)
+  } else {
+    console.error("Homepage upcomingEvents fetch failed:", upcomingEventsResult.reason)
     // Events section won't render if empty
   }
 
