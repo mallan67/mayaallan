@@ -123,7 +123,6 @@ END;
 $$;
 
 -- Grant execute to the service role so supabaseAdmin can call it.
--- (RLS is bypassed by service role; this is belt-and-braces.)
 GRANT EXECUTE ON FUNCTION public.increment_download_count(TEXT)
   TO service_role;
 
