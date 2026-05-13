@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 /**
  * BOOK API ROUTE (Issue #3A Fix):
@@ -115,6 +116,9 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   const authed = await isAuthenticated()
   if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
@@ -297,6 +301,9 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   const authed = await isAuthenticated()
   if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 

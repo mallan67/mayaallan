@@ -2,8 +2,12 @@ import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { getSession } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   const session = await getSession()
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

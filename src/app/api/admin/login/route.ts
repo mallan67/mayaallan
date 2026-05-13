@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs"
 import { getAdminSession } from "@/lib/session"
 import { rateLimit, clearRateLimit, getClientIp } from "@/lib/rate-limit"
 import { alertAdmin } from "@/lib/alert-admin"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 const Body = z.object({
   email: z.string().email(),
@@ -13,6 +14,9 @@ const Body = z.object({
 const RATE_LIMIT_SCOPE = "admin-login"
 
 export async function POST(req: Request) {
+  const guard = assertAdminSameOrigin(req)
+  if (!guard.ok) return guard.response
+
   const ip = getClientIp(req)
 
   const limit = rateLimit({

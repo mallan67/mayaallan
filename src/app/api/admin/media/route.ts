@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 /**
  * MEDIA API ROUTES
@@ -53,6 +54,9 @@ export async function GET(request: Request) {
 
 // POST create new media
 export async function POST(request: Request) {
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
