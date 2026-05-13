@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { ShareButtons } from "@/components/share-buttons"
+import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
 
 const SITE_URL = "https://www.mayaallan.com"
@@ -99,13 +100,22 @@ export default async function MediaPage() {
 
               {item.coverUrl && (
                 <div className="relative w-full h-48 mb-3 rounded-lg overflow-hidden bg-slate-100">
-                  <Image
-                    src={item.coverUrl}
-                    alt={item.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover"
-                  />
+                  {isOptimizableImageHost(item.coverUrl) ? (
+                    <Image
+                      src={item.coverUrl}
+                      alt={item.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover"
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.coverUrl}
+                      alt={item.title}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </div>
               )}
 
@@ -135,13 +145,22 @@ export default async function MediaPage() {
               {/* Image Display */}
               {item.kind === "image" && item.fileUrl && !item.coverUrl && (
                 <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden bg-slate-100">
-                  <Image
-                    src={item.fileUrl}
-                    alt={item.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-contain"
-                  />
+                  {isOptimizableImageHost(item.fileUrl) ? (
+                    <Image
+                      src={item.fileUrl}
+                      alt={item.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-contain"
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.fileUrl}
+                      alt={item.title}
+                      className="w-full h-full object-contain"
+                    />
+                  )}
                 </div>
               )}
 

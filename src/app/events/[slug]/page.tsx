@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
 
 const SITE_URL = "https://www.mayaallan.com"
@@ -102,13 +103,22 @@ export default async function EventPage({ params }: EventPageProps) {
           {event.eventImageUrl && (
             <div className="flex-shrink-0">
               <div className="relative w-full md:w-48 h-48 rounded-lg overflow-hidden bg-slate-100">
-                <Image
-                  src={event.eventImageUrl}
-                  alt={event.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 192px"
-                  className="object-cover"
-                />
+                {isOptimizableImageHost(event.eventImageUrl) ? (
+                  <Image
+                    src={event.eventImageUrl}
+                    alt={event.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 192px"
+                    className="object-cover"
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={event.eventImageUrl}
+                    alt={event.title}
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
             </div>
           )}

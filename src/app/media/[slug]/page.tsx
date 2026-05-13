@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
 
 const SITE_URL = "https://www.mayaallan.com"
@@ -104,14 +105,23 @@ export default async function MediaItemPage({ params }: MediaPageProps) {
 
         {item.cover_url && (
           <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden bg-slate-100">
-            <Image
-              src={item.cover_url}
-              alt={item.title}
-              fill
-              sizes="(max-width: 768px) 100vw, 768px"
-              className="object-cover"
-              priority
-            />
+            {isOptimizableImageHost(item.cover_url) ? (
+              <Image
+                src={item.cover_url}
+                alt={item.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 768px"
+                className="object-cover"
+                priority
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.cover_url}
+                alt={item.title}
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
         )}
 
@@ -141,14 +151,23 @@ export default async function MediaItemPage({ params }: MediaPageProps) {
         {/* Image Display */}
         {item.kind === "image" && item.file_url && !item.cover_url && (
           <div className="relative w-full h-96 mb-6 rounded-lg overflow-hidden bg-slate-100">
-            <Image
-              src={item.file_url}
-              alt={item.title}
-              fill
-              sizes="(max-width: 768px) 100vw, 768px"
-              className="object-contain"
-              priority
-            />
+            {isOptimizableImageHost(item.file_url) ? (
+              <Image
+                src={item.file_url}
+                alt={item.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 768px"
+                className="object-contain"
+                priority
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.file_url}
+                alt={item.title}
+                className="w-full h-full object-contain"
+              />
+            )}
           </div>
         )}
 
