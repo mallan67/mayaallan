@@ -4,9 +4,19 @@ import nodemailer from "nodemailer"
 import { z } from "zod"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { alertAdmin } from "@/lib/alert-admin"
+import { resolveOperatorRecipient } from "@/lib/operator-email"
 
+/**
+ * Newsletter subscribe: stricter validation + honeypot + centralized recipient.
+ *
+ * Validation (PR D tightening):
+ *   - email     trim, lowercase, valid email, max 254
+ *   - company   honeypot. If present + non-empty, return success without
+ *               storing or emailing.
+ */
 const subscribeSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().toLowerCase().email().max(254),
+  company: z.string().optional(),
 })
 
 const HTML_ENTITIES: Record<string, string> = {
@@ -44,7 +54,13 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { email } = subscribeSchema.parse(body)
+    const parsed = subscribeSchema.parse(body)
+    const { email } = parsed
+
+    // Honeypot — pretend success, don't write to DB, don't send email.
+    if (parsed.company && parsed.company.trim().length > 0) {
+      return NextResponse.json({ success: true, message: "Subscribed successfully" })
+    }
 
     // Use upsert to avoid duplicate email errors
     const { error } = await supabaseAdmin
@@ -61,12 +77,13 @@ export async function POST(request: Request) {
 
     // Send emails asynchronously (don't await - return response immediately)
     if (transporter) {
-      // Notification to Maya. Customer response is already in flight; this
-      // is a fire-and-forget send. Failure is alerted (dedup'd) so SMTP
+      const recipient = resolveOperatorRecipient("newsletter")
+
+      // Notification to operator. Failure is alerted (dedup'd) so SMTP
       // credential rot doesn't silently drop signups.
       transporter.sendMail({
         from: `"Website Newsletter" <${process.env.SMTP_USER}>`,
-        to: "maya@mayaallan.com",
+        to: recipient.email,
         subject: "New Newsletter Subscriber",
         html: `
           <h2>New Newsletter Subscriber</h2>
@@ -80,10 +97,14 @@ export async function POST(request: Request) {
           severity: "error",
           subject: "SMTP send failed: newsletter signup notification",
           body:
-            "A newsletter signup landed in the database but the notification email " +
-            "to maya@mayaallan.com could not be sent. The subscriber row is still " +
+            "A newsletter signup landed in the database but the operator " +
+            "notification email could not be sent. The subscriber row is still " +
             "saved. Verify Porkbun SMTP credentials and connectivity.",
-          details: { subscriberEmail: email, errorMessage: err?.message ?? String(err) },
+          details: {
+            subscriberEmail: email,
+            recipientSource: recipient.source,
+            errorMessage: err?.message ?? String(err),
+          },
           dedupKey: "smtp:subscribe-notification-failed",
         })
       })

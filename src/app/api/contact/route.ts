@@ -4,12 +4,30 @@ import nodemailer from "nodemailer"
 import { z } from "zod"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { alertAdmin } from "@/lib/alert-admin"
+import { resolveOperatorRecipient } from "@/lib/operator-email"
 
+/**
+ * Contact form: stricter validation + honeypot + centralized recipient.
+ *
+ * Validation (PR D tightening):
+ *   - name      trim, 1-120
+ *   - email     trim, lowercase, valid email, max 254 (RFC 5321 path-local limit)
+ *   - subject   trim, max 160, nullable
+ *   - message   trim, 1-5000
+ *   - company   honeypot. If present + non-empty, return success without
+ *               storing or emailing. Real humans don't fill hidden fields;
+ *               most bots do.
+ *
+ * Rate-limit + alertAdmin behavior unchanged from PR B.
+ */
 const ContactSchema = z.object({
-  name: z.string().min(1),
-  email: z.string().email(),
-  message: z.string().min(1),
-  subject: z.string().optional().nullable(),
+  name: z.string().trim().min(1).max(120),
+  email: z.string().trim().toLowerCase().email().max(254),
+  message: z.string().trim().min(1).max(5000),
+  subject: z.string().trim().max(160).optional().nullable(),
+  // Honeypot — hidden field on the form. Bots will populate it; we
+  // return success but do nothing.
+  company: z.string().optional(),
 })
 
 const HTML_ENTITIES: Record<string, string> = {
@@ -50,6 +68,11 @@ export async function POST(request: Request) {
     const body = await request.json()
     const data = ContactSchema.parse(body)
 
+    // Honeypot — pretend success, don't write to DB, don't send email.
+    if (data.company && data.company.trim().length > 0) {
+      return NextResponse.json({ success: true, message: "Message sent successfully" })
+    }
+
     // Save to database
     const { error } = await supabaseAdmin
       .from(Tables.contactSubmissions)
@@ -67,9 +90,10 @@ export async function POST(request: Request) {
 
     // Send email notification asynchronously (don't await - return response immediately)
     if (transporter) {
+      const recipient = resolveOperatorRecipient("contact")
       transporter.sendMail({
         from: `"Website Contact" <${process.env.SMTP_USER}>`,
-        to: "maya@mayaallan.com",
+        to: recipient.email,
         subject: `New Contact Form Submission from ${escapeHtml(data.name)}`,
         html: `
           <h2>New Contact Form Submission</h2>
@@ -86,10 +110,14 @@ export async function POST(request: Request) {
           subject: "SMTP send failed: contact form notification",
           body:
             "A contact form submission landed in the database but the notification " +
-            "email to maya@mayaallan.com could not be sent. The submission row is " +
-            "still saved. Verify Porkbun SMTP credentials and connectivity, then " +
-            "read the submission in the admin panel.",
-          details: { submitterEmail: data.email, errorMessage: err?.message ?? String(err) },
+            "email could not be sent. The submission row is still saved. Verify " +
+            "Porkbun SMTP credentials and connectivity, then read the submission " +
+            "in the admin panel.",
+          details: {
+            submitterEmail: data.email,
+            recipientSource: recipient.source,
+            errorMessage: err?.message ?? String(err),
+          },
           dedupKey: "smtp:contact-notification-failed",
         })
       })
@@ -100,8 +128,6 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 })
     }
-    // Log full detail server-side; return generic message to client to avoid
-    // leaking schema/constraint hints from Supabase or other internals.
     console.error("Contact submission error:", error)
     return NextResponse.json({ error: "Failed to send message. Please try again." }, { status: 500 })
   }
