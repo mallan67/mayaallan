@@ -157,7 +157,13 @@ export async function POST(request: Request) {
             // Show "Pay Now" (not "Continue") so the customer knows clicking
             // commits the charge.
             user_action: "PAY_NOW",
-            return_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/books/${book.slug}?payment=success`,
+            // IMPORTANT: PayPal redirects here AFTER the customer approves the
+            // order. The order is APPROVED but NOT captured at this point —
+            // /api/checkout/paypal/return captures it (calling PayPal's capture
+            // endpoint) and then sends the customer to the friendly success
+            // page on the book detail route. PayPal appends &token=<orderId>
+            // &PayerID=<...> to this URL automatically.
+            return_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/checkout/paypal/return?bookSlug=${encodeURIComponent(book.slug)}`,
             cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/books/${book.slug}?payment=cancelled`,
           },
         }),
