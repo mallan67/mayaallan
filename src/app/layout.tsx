@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import MarketingAttributionClient from "@/components/MarketingAttributionClient"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structured-data"
 
@@ -178,6 +179,7 @@ export default function RootLayout({
         </main>
         <Footer />
         <Analytics />
+        <MarketingAttributionClient />
       </body>
     </html>
   )

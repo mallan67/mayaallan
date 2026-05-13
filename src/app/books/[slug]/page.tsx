@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ShareButtons } from "@/components/share-buttons"
 import { PaymentButtons } from "@/components/PaymentButtons"
+import BookViewTracker from "@/components/BookViewTracker"
 import { RetailerIcon } from "@/lib/retailer-icons"
 import type { Metadata } from "next"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
@@ -320,6 +321,13 @@ export default async function BookPage({ params }: BookPageProps) {
   // ============================================
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+      <BookViewTracker
+        bookId={book.id}
+        slug={book.slug}
+        title={book.title}
+        hasDirectSale={!!book.allowDirectSale}
+        ebookPrice={book.ebookPrice ?? null}
+      />
       {/* Book Schema JSON-LD for SEO */}
       <script
         type="application/ld+json"

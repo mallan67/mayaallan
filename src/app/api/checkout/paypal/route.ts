@@ -27,6 +27,7 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, getAccessToken, safePaypalEnvLabel } from "@/lib/paypal"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { trackMarketingEvent } from "@/lib/marketing-events"
 import { createHash } from "node:crypto"
 import { z } from "zod"
 
@@ -243,6 +244,27 @@ export async function POST(request: Request) {
         dedupKey: "paypal:checkout-no-approval-url",
       })
       return NextResponse.json({ error: "Failed to get PayPal checkout URL" }, { status: 500 })
+    }
+
+    // Track checkout_started AFTER the money path has succeeded. Wrapped
+    // in try/catch despite trackMarketingEvent's own swallowing — the
+    // checkout response must not be affected by any analytics failure.
+    try {
+      await trackMarketingEvent({
+        request,
+        eventName: "checkout_started",
+        path: "/api/checkout/paypal",
+        properties: {
+          book_id: bookId,
+          slug: book.slug,
+          title: typeof book.title === "string" ? book.title.slice(0, 128) : null,
+          price: Number(book.ebook_price),
+          format: "ebook",
+          paypal_order_id: paypalOrderId,
+        },
+      })
+    } catch (trackErr) {
+      console.error("[checkout] tracking failed:", trackErr)
     }
 
     return NextResponse.json({ url: approvalUrl })

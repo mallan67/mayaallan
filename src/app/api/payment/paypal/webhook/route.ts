@@ -4,6 +4,7 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { Resend } from "resend"
 import { alertAdmin } from "@/lib/alert-admin"
 import { extractWebhookHeaders, verifyPaypalWebhook } from "@/lib/paypal"
+import { trackMarketingEvent } from "@/lib/marketing-events"
 import crypto from "crypto"
 
 /**
@@ -635,6 +636,30 @@ export async function POST(request: Request) {
             },
             dedupKey: "paypal:email-sent-update-failed",
           })
+        }
+
+        // Track conversion. Webhooks don't carry the buyer's browser cookies
+        // (PayPal posts server-to-server), so visitor_id / utm_* on this row
+        // will be null — the join back to the originating session lives in
+        // the checkout_started event keyed on paypal_order_id. The admin
+        // dashboard reconstructs the funnel by joining on that.
+        try {
+          await trackMarketingEvent({
+            request: null,
+            eventName: "purchase_completed",
+            path: "/api/payment/paypal/webhook",
+            properties: {
+              order_id: order.id,
+              paypal_order_id: paypalOrderId,
+              amount: typeof amount === "number" ? amount : null,
+              currency: typeof currency === "string" ? currency : null,
+              book_id: typeof book?.id === "number" ? book.id : null,
+              title: typeof book?.title === "string" ? book.title.slice(0, 128) : null,
+              fulfillment_status: "completed",
+            },
+          })
+        } catch (trackErr) {
+          console.error("[webhook] purchase tracking failed:", trackErr)
         }
 
         return NextResponse.json({
