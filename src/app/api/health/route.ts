@@ -1,14 +1,21 @@
 /**
  * Public health endpoint — used by GitHub Actions scheduled monitor.
  *
- * Returns HTTP 200 + status:"ok" when every dependency is reachable.
- * Returns HTTP 503 + status:"degraded" when any check fails.
+ * Default (cheap) mode is appropriate for high-frequency monitors:
+ *   - Database: one indexed-PK row read (no count, no scan)
+ *   - Resend / Blob / PayPal / session / admin: env-var presence checks
+ *     (env presence is what would BREAK if the Vercel integration drops a
+ *     variable; deeper API probes every 15 min would burn rate limits)
  *
- * The body is intentionally non-secret; it does not leak credentials,
- * row counts, or internal hints — only "ok/error" booleans + a generic
- * error message per check.
+ * Deep mode (`?deep=1`) is appropriate for manual debugging or ad-hoc audits:
+ *   - Performs real API reachability for Resend (auth probe) and PayPal
+ *     (OAuth token exchange). Not used by the cron monitor.
+ *
+ * Response body never includes raw upstream error text — those can leak schema
+ * names, constraint hints, internal endpoints. Errors are logged server-side
+ * with full detail and surfaced to the client as a short generic string.
  */
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 export const runtime = "nodejs"
@@ -23,37 +30,105 @@ type CheckResult = {
 async function checkDatabase(): Promise<CheckResult> {
   const t0 = Date.now()
   try {
+    // Single-row PK read — fast, no count/scan, exercises auth and connectivity.
     const { error } = await supabaseAdmin
       .from(Tables.books)
-      .select("id", { head: true, count: "exact" })
+      .select("id")
       .limit(1)
     const latencyMs = Date.now() - t0
-    if (error) return { ok: false, error: error.message, latencyMs }
+    if (error) {
+      console.error("[health] database probe failed:", error.message, error.code, error.details)
+      return { ok: false, error: "Database unreachable", latencyMs }
+    }
     return { ok: true, latencyMs }
   } catch (err: any) {
-    return { ok: false, error: err?.message ?? String(err), latencyMs: Date.now() - t0 }
+    console.error("[health] database probe threw:", err)
+    return { ok: false, error: "Database unreachable", latencyMs: Date.now() - t0 }
   }
 }
 
-function checkEnvVar(name: string): CheckResult {
-  return process.env[name] ? { ok: true } : { ok: false, error: `${name} not configured` }
+function checkEnvPresent(name: string): CheckResult {
+  return process.env[name]
+    ? { ok: true }
+    : { ok: false, error: `${name} not configured` }
 }
 
-function checkPaypal(): CheckResult {
+function checkPaypalEnv(): CheckResult {
   const missing = ["PAYPAL_CLIENT_ID", "PAYPAL_SECRET", "PAYPAL_WEBHOOK_ID"].filter((k) => !process.env[k])
   if (missing.length === 0) return { ok: true }
   return { ok: false, error: `Missing: ${missing.join(", ")}` }
 }
 
-export async function GET() {
-  const [database] = await Promise.all([checkDatabase()])
-  const resend = checkEnvVar("RESEND_API_KEY")
-  const blob = checkEnvVar("BLOB_READ_WRITE_TOKEN")
-  const paypal = checkPaypal()
-  const session = checkEnvVar("SESSION_SECRET")
-  const admin = process.env.ADMIN_EMAIL && (process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD)
-    ? { ok: true as const }
-    : { ok: false as const, error: "ADMIN_EMAIL or ADMIN_PASSWORD_HASH missing" }
+function checkAdminEnv(): CheckResult {
+  if (!process.env.ADMIN_EMAIL) {
+    return { ok: false, error: "ADMIN_EMAIL not configured" }
+  }
+  if (!(process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD)) {
+    return { ok: false, error: "ADMIN_PASSWORD_HASH (or legacy ADMIN_PASSWORD) not configured" }
+  }
+  return { ok: true }
+}
+
+// Deep checks — only run when ?deep=1. Use sparingly (real API calls).
+async function deepResend(): Promise<CheckResult> {
+  const t0 = Date.now()
+  const key = process.env.RESEND_API_KEY
+  if (!key) return { ok: false, error: "RESEND_API_KEY not configured" }
+  try {
+    const r = await fetch("https://api.resend.com/domains", {
+      headers: { Authorization: `Bearer ${key}` },
+    })
+    const latencyMs = Date.now() - t0
+    if (!r.ok) {
+      console.error("[health] deep resend probe failed:", r.status)
+      return { ok: false, error: `Resend API HTTP ${r.status}`, latencyMs }
+    }
+    return { ok: true, latencyMs }
+  } catch (err: any) {
+    console.error("[health] deep resend probe threw:", err)
+    return { ok: false, error: "Resend API unreachable", latencyMs: Date.now() - t0 }
+  }
+}
+
+async function deepPaypal(): Promise<CheckResult> {
+  const t0 = Date.now()
+  const clientId = process.env.PAYPAL_CLIENT_ID
+  const clientSecret = process.env.PAYPAL_SECRET
+  const apiBase = process.env.PAYPAL_API_BASE || "https://api-m.sandbox.paypal.com"
+  if (!clientId || !clientSecret) {
+    return { ok: false, error: "PAYPAL_CLIENT_ID / PAYPAL_SECRET not configured" }
+  }
+  try {
+    const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
+    const r = await fetch(`${apiBase}/v1/oauth2/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: "grant_type=client_credentials",
+    })
+    const latencyMs = Date.now() - t0
+    if (!r.ok) {
+      console.error("[health] deep paypal probe failed:", r.status)
+      return { ok: false, error: `PayPal API HTTP ${r.status}`, latencyMs }
+    }
+    return { ok: true, latencyMs }
+  } catch (err: any) {
+    console.error("[health] deep paypal probe threw:", err)
+    return { ok: false, error: "PayPal API unreachable", latencyMs: Date.now() - t0 }
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const deep = req.nextUrl.searchParams.get("deep") === "1"
+
+  const database = await checkDatabase()
+  const resend = deep ? await deepResend() : checkEnvPresent("RESEND_API_KEY")
+  const blob = checkEnvPresent("BLOB_READ_WRITE_TOKEN")
+  const paypal = deep ? await deepPaypal() : checkPaypalEnv()
+  const session = checkEnvPresent("SESSION_SECRET")
+  const admin = checkAdminEnv()
 
   const checks = { database, resend, blob, paypal, session, admin }
   const allOk = Object.values(checks).every((c) => c.ok)
@@ -62,6 +137,7 @@ export async function GET() {
     {
       status: allOk ? "ok" : "degraded",
       timestamp: new Date().toISOString(),
+      mode: deep ? "deep" : "cheap",
       checks,
       version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || "local",
       env: process.env.VERCEL_ENV || "development",

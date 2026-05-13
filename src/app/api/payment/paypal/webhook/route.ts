@@ -184,6 +184,16 @@ export async function POST(request: Request) {
   const isVerified = await verifyPayPalWebhook(bodyText, headersList)
   if (!isVerified) {
     console.error("PayPal webhook verification failed")
+    // Dedup heavily — bots probe webhook endpoints constantly; we want one
+    // alert per hour at most, not one per probe.
+    await alertAdmin({
+      severity: "critical",
+      subject: "PayPal webhook signature verification failed",
+      body:
+        "An incoming PayPal webhook failed signature verification. Either an attacker is probing the endpoint, or PAYPAL_WEBHOOK_ID / PAYPAL_SECRET / PAYPAL_CLIENT_ID is misconfigured. " +
+        "Check Vercel logs for the source IP and frequency.",
+      dedupKey: "paypal:signature-failure",
+    })
     return NextResponse.json({ error: "Invalid webhook signature" }, { status: 401 })
   }
 
@@ -282,6 +292,26 @@ export async function POST(request: Request) {
 
       if (orderError || !order) {
         console.error("Failed to create order:", orderError)
+        // CRITICAL — customer money captured by PayPal, but we have no order row.
+        // PayPal will retry the webhook; the alert flags the incident so an
+        // operator can reconcile manually if retries don't recover.
+        await alertAdmin({
+          severity: "critical",
+          subject: "PayPal: payment received but order INSERT failed",
+          body:
+            `A PayPal payment came in but writing the order row to Supabase failed. ` +
+            `PayPal will retry the webhook automatically; if retries don't succeed, ` +
+            `the payment is in PayPal with no order record on our side. Reconcile manually.`,
+          details: {
+            paypalOrderId,
+            bookId,
+            customerEmail,
+            amount,
+            currency,
+            errorCode: orderError?.code,
+          },
+          dedupKey: `paypal:order-insert-failed:${paypalOrderId}`,
+        })
         return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
       }
 
@@ -374,9 +404,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true })
   } catch (error: any) {
     console.error("PayPal webhook error:", error)
-    return NextResponse.json({
-      error: "Webhook processing failed",
-      details: error.message
-    }, { status: 400 })
+    // Top-level catch — code threw mid-flight after signature passed.
+    // The payment may or may not be reflected as an order. Surface for review.
+    await alertAdmin({
+      severity: "critical",
+      subject: "PayPal webhook handler threw an unexpected error",
+      body:
+        "The PayPal webhook handler threw after signature verification succeeded. " +
+        "Customer money may have been captured; order/token may or may not exist. " +
+        "Check Vercel function logs immediately and reconcile against PayPal.",
+      details: { errorMessage: error?.message ?? String(error) },
+      dedupKey: "paypal:handler-threw",
+    })
+    // Don't leak error.message back over the wire — log server-side only.
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 })
   }
 }

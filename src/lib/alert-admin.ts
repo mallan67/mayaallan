@@ -30,13 +30,46 @@ const HTML_ENTITIES: Record<string, string> = {
 }
 const escapeHtml = (s: string) => s.replace(/[<>&"']/g, (c) => HTML_ENTITIES[c]!)
 
+// Per-instance dedup: suppress repeats of the same alert key within the window.
+// In-memory only — resets on serverless cold start. That's acceptable: at worst
+// a fresh instance sends one duplicate, vs a storm of dozens during a real
+// incident. For tighter guarantees, swap for a tiny KV store later.
+const DEFAULT_DEDUP_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+const recentAlerts = new Map<string, number>()
+
+function shouldSuppress(dedupKey: string, windowMs: number): boolean {
+  const now = Date.now()
+  // Opportunistic eviction (avoid unbounded growth on a long-lived instance)
+  if (recentAlerts.size > 256) {
+    for (const [k, ts] of recentAlerts) {
+      if (now - ts > windowMs) recentAlerts.delete(k)
+    }
+  }
+  const last = recentAlerts.get(dedupKey)
+  if (last && now - last < windowMs) return true
+  recentAlerts.set(dedupKey, now)
+  return false
+}
+
 export async function alertAdmin(opts: {
   subject: string
   body: string
   severity?: AlertSeverity
   details?: Record<string, unknown>
-}): Promise<{ ok: true; id?: string } | { ok: false; error: string }> {
+  /** Override the dedup key; defaults to severity + subject. */
+  dedupKey?: string
+  /** Override the dedup window (ms); defaults to 1 hour. */
+  dedupWindowMs?: number
+}): Promise<{ ok: true; id?: string } | { ok: false; error: string; suppressed?: boolean }> {
   const severity = opts.severity ?? "warning"
+  const dedupKey = opts.dedupKey ?? `${severity}::${opts.subject}`
+  const dedupWindowMs = opts.dedupWindowMs ?? DEFAULT_DEDUP_WINDOW_MS
+
+  if (shouldSuppress(dedupKey, dedupWindowMs)) {
+    console.warn(`[alertAdmin] suppressed (dedup) within ${Math.round(dedupWindowMs / 60_000)}min: ${opts.subject}`)
+    return { ok: false, error: "Suppressed by dedup", suppressed: true }
+  }
+
   const resendKey = process.env.RESEND_API_KEY
   const adminEmail = process.env.ADMIN_EMAIL
 
