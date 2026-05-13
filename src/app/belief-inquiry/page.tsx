@@ -3,7 +3,8 @@ import { InquiryChat } from "@/components/InquiryChat"
 import { ListChecks } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Belief Inquiry — A Curious Exploration of Limiting Beliefs | Maya Allan",
+  // Don't append "| Maya Allan" — root layout title.template adds it once.
+  title: "Belief Inquiry — A Curious Exploration of Limiting Beliefs",
   description:
     "An AI-guided self-inquiry tool that uses curiosity, not evaluation, to help you explore inherited beliefs. Based on Clean Language and Coherence Therapy research. Free. No signup.",
   keywords: [
@@ -34,8 +35,10 @@ export default function BeliefInquiryPage() {
       <style>{`
         footer { display: none !important; }
         @media (min-width: 640px) {
-          body { overflow: hidden; height: 100dvh; height: 100vh; }
-          @supports (height: 100dvh) { body { height: 100dvh; } }
+          /* Cap viewport height for chat layout but DO NOT trap scroll on body —
+             the chat container manages its own internal overflow. */
+          html, body { height: 100dvh; max-height: 100dvh; }
+          @supports (height: 100dvh) { html, body { height: 100dvh; max-height: 100dvh; } }
           main { display: flex; flex-direction: column; min-height: 0; flex: 1; }
         }
       `}</style>

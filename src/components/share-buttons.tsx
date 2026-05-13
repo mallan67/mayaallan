@@ -117,7 +117,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
           href={shareLinks.facebook}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-full hover:bg-blue-50 transition group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-blue-50 transition group"
           aria-label="Share on Facebook"
           title="Share on Facebook"
         >
@@ -129,7 +129,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
           href={shareLinks.x}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-full hover:bg-slate-100 transition group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-slate-100 transition group"
           aria-label="Share on X"
           title="Share on X"
         >
@@ -141,7 +141,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
           href={shareLinks.linkedin}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-full hover:bg-blue-50 transition group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-blue-50 transition group"
           aria-label="Share on LinkedIn"
           title="Share on LinkedIn"
         >
@@ -153,7 +153,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
           href={shareLinks.whatsapp}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-full hover:bg-green-50 transition group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-green-50 transition group"
           aria-label="Share on WhatsApp"
           title="Share on WhatsApp"
         >
@@ -165,7 +165,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
           href={shareLinks.telegram}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-full hover:bg-blue-50 transition group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-blue-50 transition group"
           aria-label="Share on Telegram"
           title="Share on Telegram"
         >
@@ -177,7 +177,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
           href={shareLinks.reddit}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-full hover:bg-orange-50 transition group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-orange-50 transition group"
           aria-label="Share on Reddit"
           title="Share on Reddit"
         >
@@ -189,7 +189,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
           href={shareLinks.pinterest}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-full hover:bg-red-50 transition group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-red-50 transition group"
           aria-label="Share on Pinterest"
           title="Share on Pinterest"
         >
@@ -201,7 +201,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
           href={shareLinks.tiktok}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 rounded-full hover:bg-slate-100 transition group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-slate-100 transition group"
           aria-label="Share on TikTok"
           title="Share on TikTok"
         >
@@ -211,7 +211,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
         {/* Instagram */}
         <button
           onClick={copyForInstagram}
-          className="p-2 rounded-full hover:bg-pink-50 transition relative group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-pink-50 transition relative group"
           aria-label="Share on Instagram"
           title="Copy for Instagram"
         >
@@ -226,7 +226,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
         {/* Email */}
         <a
           href={shareLinks.email}
-          className="p-2 rounded-full hover:bg-slate-100 transition group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-slate-100 transition group"
           aria-label="Share via Email"
           title="Share via Email"
         >
@@ -236,7 +236,7 @@ export function ShareButtons({ url, title, description, hashtags, imageUrl, clas
         {/* Copy Link */}
         <button
           onClick={copyToClipboard}
-          className="p-2 rounded-full hover:bg-slate-100 transition relative group"
+          className="inline-flex items-center justify-center min-w-touch min-h-touch p-2.5 rounded-full hover:bg-slate-100 transition relative group"
           aria-label="Copy link"
           title="Copy link"
         >

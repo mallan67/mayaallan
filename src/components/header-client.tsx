@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -16,6 +16,9 @@ interface HeaderClientProps {
 export function HeaderClient({ navItems }: HeaderClientProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
+  const hamburgerRef = useRef<HTMLButtonElement | null>(null)
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
 
   // Close menu when route changes
   useEffect(() => {
@@ -31,6 +34,42 @@ export function HeaderClient({ navItems }: HeaderClientProps) {
     }
     return () => {
       document.body.style.overflow = ""
+    }
+  }, [isMenuOpen])
+
+  // Mobile menu = modal dialog: focus trap + ESC + focus restore
+  useEffect(() => {
+    if (!isMenuOpen) return
+
+    // Move focus into the panel on open
+    closeButtonRef.current?.focus()
+
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setIsMenuOpen(false)
+        return
+      }
+      if (e.key !== "Tab" || !panelRef.current) return
+      const focusables = panelRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener("keydown", handleKey)
+    return () => {
+      document.removeEventListener("keydown", handleKey)
+      // Restore focus to the hamburger when menu closes
+      hamburgerRef.current?.focus()
     }
   }, [isMenuOpen])
 
@@ -71,13 +110,15 @@ export function HeaderClient({ navItems }: HeaderClientProps) {
 
             {/* Mobile Menu Button */}
             <button
+              ref={hamburgerRef}
               type="button"
               className="md:hidden flex items-center justify-center w-11 h-11 -mr-2 rounded-lg hover:bg-white/[0.08] transition-colors text-white"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-expanded={isMenuOpen}
+              aria-controls="mobile-menu-panel"
               aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
-              <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-[22px] h-[22px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24">
                 {isMenuOpen ? (
                   <path d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -102,18 +143,26 @@ export function HeaderClient({ navItems }: HeaderClientProps) {
             />
 
             {/* Menu Panel */}
-            <div className="fixed top-0 right-0 bottom-0 w-[300px] bg-navy z-50 md:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.3)]">
+            <div
+              ref={panelRef}
+              id="mobile-menu-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Site navigation"
+              className="fixed top-0 right-0 bottom-0 w-[300px] bg-navy z-50 md:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.3)]"
+            >
               <div className="flex flex-col h-full">
                 {/* Menu Header */}
                 <div className="flex items-center justify-between h-[68px] px-6 border-b border-white/10">
                   <span className="font-sans text-base font-semibold text-white">Menu</span>
                   <button
+                    ref={closeButtonRef}
                     type="button"
-                    className="flex items-center justify-center w-11 h-11 -mr-2 rounded-lg text-white/60 hover:text-white"
+                    className="flex items-center justify-center w-11 h-11 -mr-2 rounded-lg text-white hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
                     onClick={() => setIsMenuOpen(false)}
                     aria-label="Close menu"
                   >
-                    <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24">
                       <line x1="4" y1="4" x2="14" y2="14" />
                       <line x1="14" y1="4" x2="4" y2="14" />
                     </svg>

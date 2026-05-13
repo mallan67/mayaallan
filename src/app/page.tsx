@@ -32,10 +32,20 @@ async function getFeaturedBookForMetadata() {
 export async function generateMetadata(): Promise<Metadata> {
   const featuredBook = await getFeaturedBookForMetadata()
 
-  const title = "Maya Allan | Author"
+  // Use absolute title (no template suffix) to control exact SERP wording
+  const title = { absolute: "Maya Allan — Author of the Psilocybin Integration Guide" }
+
+  // Truncate at the last whole word boundary so descriptions don't cut mid-word.
+  const truncateAtWord = (str: string, max = 155) => {
+    if (str.length <= max) return str
+    const slice = str.slice(0, max)
+    const lastSpace = slice.lastIndexOf(" ")
+    return slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…"
+  }
+
   const description = featuredBook?.blurb
-    ? `${featuredBook.blurb.substring(0, 150)}...`
-    : "Official website of Maya Allan - Author, Speaker, and Wellness Advocate. Discover books, events, and resources for integration and transformation."
+    ? truncateAtWord(featuredBook.blurb, 155)
+    : "Maya Allan — author and integration guide. Practical, research-informed writing on belief work, nervous-system regulation, and psilocybin integration."
 
   // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
   // The dynamic image generator creates properly sized images that work on Facebook, LinkedIn, etc.
@@ -46,7 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     openGraph: {
-      title,
+      title: title.absolute,
       description,
       url: SITE_URL,
       type: "website",
@@ -62,7 +72,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: title.absolute,
       description,
       images: [imageUrl],
     },
@@ -100,9 +110,11 @@ export default async function HomePage() {
     hasEbook: boolean
     hasPaperback: boolean
     hasHardcover: boolean
+    hasAudiobook: boolean
     ebookPrice: number | null
     paperbackPrice: number | null
     hardcoverPrice: number | null
+    audiobookPrice: number | null
   } | null = null
 
   let authorInfo: {
@@ -133,9 +145,11 @@ export default async function HomePage() {
       .single()
 
     if (error) {
+      // Supabase can return both an error (warning) and data on the same call.
+      // Log but don't drop valid data.
       console.error("Homepage featured book query error:", error.message, error.code, error.details)
     }
-    if (!error && data) {
+    if (data) {
       console.log("Homepage found featured book:", data.title, data.slug)
       featuredBook = {
         id: data.id,
@@ -152,11 +166,13 @@ export default async function HomePage() {
         hasEbook: data.has_ebook,
         hasPaperback: data.has_paperback,
         hasHardcover: data.has_hardcover,
+        hasAudiobook: data.has_audiobook ?? false,
         ebookPrice: data.ebook_price,
         paperbackPrice: data.paperback_price,
         hardcoverPrice: data.hardcover_price,
+        audiobookPrice: data.audiobook_price ?? null,
       }
-    } else if (!data) {
+    } else {
       console.log("Homepage: No featured book found matching criteria (is_featured=true, is_published=true, is_visible=true)")
     }
   } catch (error: any) {
@@ -178,7 +194,8 @@ export default async function HomePage() {
         authorPhotoUrl: data.authorPhotoUrl,
       }
     }
-  } catch {
+  } catch (err) {
+    console.error("Homepage authorInfo fetch failed:", err)
     // Fallback handled in rendering
   }
 
@@ -194,7 +211,8 @@ export default async function HomePage() {
     if (data && data.length > 0) {
       upcomingEvents = data
     }
-  } catch {
+  } catch (err) {
+    console.error("Homepage upcomingEvents fetch failed:", err)
     // Events section won't render if empty
   }
 
@@ -222,6 +240,7 @@ export default async function HomePage() {
       featuredBook.hasEbook ? featuredBook.ebookPrice : null,
       featuredBook.hasPaperback ? featuredBook.paperbackPrice : null,
       featuredBook.hasHardcover ? featuredBook.hardcoverPrice : null,
+      featuredBook.hasAudiobook ? featuredBook.audiobookPrice : null,
     ].filter((p): p is number => p !== null && p > 0)
     return prices.length > 0 ? Math.min(...prices) : null
   }
@@ -258,10 +277,11 @@ export default async function HomePage() {
           <div className="hidden md:block absolute right-0 top-0 bottom-0 w-[45%]">
             <Image
               src={authorInfo.authorPhotoUrl}
-              alt="Maya Allan"
+              alt=""
               fill
               className="object-cover object-top"
               priority
+              sizes="(max-width: 768px) 0px, 45vw"
             />
             {/* Gradient overlay — starts blending well before the face */}
             <div className="absolute inset-0 bg-gradient-to-r from-navy via-navy/50 via-[35%] to-transparent" />
@@ -409,6 +429,7 @@ export default async function HomePage() {
                         fill
                         className="object-cover"
                         priority
+                        sizes="(max-width: 768px) 260px, 480px"
                       />
                     </div>
                   </Link>
@@ -462,6 +483,11 @@ export default async function HomePage() {
                   {featuredBook.hasHardcover && (
                     <span className="px-4 py-1.5 text-[0.78rem] font-semibold tracking-[0.02em] text-charcoal-body bg-surface border border-[#CDCDD2] rounded-full">
                       Hardcover
+                    </span>
+                  )}
+                  {featuredBook.hasAudiobook && (
+                    <span className="px-4 py-1.5 text-[0.78rem] font-semibold tracking-[0.02em] text-charcoal-body bg-surface border border-[#CDCDD2] rounded-full">
+                      Audiobook
                     </span>
                   )}
                 </div>
@@ -540,25 +566,25 @@ export default async function HomePage() {
               {/* Pillars */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-7">
                 <div className="p-5 bg-white/5 rounded-xl border border-white/[0.08]">
-                  <h4 className="font-sans text-[0.85rem] font-semibold text-gold tracking-[0.02em] mb-1.5">
+                  <h3 className="font-sans text-[0.85rem] font-semibold text-gold tracking-[0.02em] mb-1.5">
                     Belief Systems
-                  </h4>
+                  </h3>
                   <p className="text-[0.82rem] text-white/75 leading-relaxed">
                     The stories we believe dictate the lives we lead.
                   </p>
                 </div>
                 <div className="p-5 bg-white/5 rounded-xl border border-white/[0.08]">
-                  <h4 className="font-sans text-[0.85rem] font-semibold text-gold tracking-[0.02em] mb-1.5">
+                  <h3 className="font-sans text-[0.85rem] font-semibold text-gold tracking-[0.02em] mb-1.5">
                     Ancestry &amp; Memory
-                  </h4>
+                  </h3>
                   <p className="text-[0.82rem] text-white/75 leading-relaxed">
                     How the past shapes our present choices and biology.
                   </p>
                 </div>
                 <div className="p-5 bg-white/5 rounded-xl border border-white/[0.08]">
-                  <h4 className="font-sans text-[0.85rem] font-semibold text-gold tracking-[0.02em] mb-1.5">
+                  <h3 className="font-sans text-[0.85rem] font-semibold text-gold tracking-[0.02em] mb-1.5">
                     Mental Reshaping
-                  </h4>
+                  </h3>
                   <p className="text-[0.82rem] text-white/75 leading-relaxed">
                     How the mind forms, and how it can be reshaped.
                   </p>

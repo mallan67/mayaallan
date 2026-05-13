@@ -149,6 +149,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${fraunces.variable}`}>
       <head>
+        {/* Preconnect to image origins so cache-miss image requests don't pay the TLS handshake cost. */}
+        <link rel="preconnect" href="https://yaqhbuvjnaq0ur0v.public.blob.vercel-storage.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://yaqhbuvjnaq0ur0v.public.blob.vercel-storage.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -163,8 +166,14 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col bg-white text-charcoal antialiased">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-charcoal focus:text-white focus:rounded-lg focus:font-semibold focus:outline-none focus:ring-2 focus:ring-gold"
+        >
+          Skip to content
+        </a>
         <Header />
-        <main className="flex-1">
+        <main id="main" className="flex-1">
           {children}
         </main>
         <Footer />

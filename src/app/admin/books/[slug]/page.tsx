@@ -46,6 +46,8 @@ interface Book {
   hasEbook: boolean
   hasPaperback: boolean
   hasHardcover: boolean
+  hasAudiobook: boolean
+  audiobookPrice: number | null
   ebookPrice: number | null
   paperbackPrice: number | null
   hardcoverPrice: number | null
@@ -79,6 +81,8 @@ const defaultBook: Book = {
   hasEbook: true,
   hasPaperback: false,
   hasHardcover: false,
+  hasAudiobook: false,
+  audiobookPrice: null,
   ebookPrice: null,
   paperbackPrice: null,
   hardcoverPrice: null,
@@ -597,6 +601,35 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
                     className="w-32 border rounded px-3 py-2"
                     placeholder="29.99"
                   />
+                </div>
+              )}
+            </div>
+
+            <div className={`p-4 border rounded-lg ${book.hasAudiobook ? "border-amber-300 bg-amber-50" : ""}`}>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={book.hasAudiobook}
+                  onChange={(e) => setBook({ ...book, hasAudiobook: e.target.checked })}
+                  className="w-5 h-5"
+                />
+                <span className="font-medium">🎧 Audiobook</span>
+              </label>
+              {book.hasAudiobook && (
+                <div className="mt-3 ml-8">
+                  <label className="block text-sm mb-1">Price ($) — optional</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={book.audiobookPrice ?? ""}
+                    onChange={(e) =>
+                      setBook({ ...book, audiobookPrice: e.target.value ? parseFloat(e.target.value) : null })
+                    }
+                    className="w-32 border rounded px-3 py-2"
+                    placeholder="Leave blank to omit"
+                  />
+                  <p className="text-xs text-slate-500 mt-2">Add Audiobook retailer links in the Retailer Links section below.</p>
                 </div>
               )}
             </div>

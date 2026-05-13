@@ -2,10 +2,16 @@ import { NextResponse } from "next/server"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import nodemailer from "nodemailer"
 import { z } from "zod"
+import { rateLimit, getClientIp } from "@/lib/rate-limit"
 
 const subscribeSchema = z.object({
   email: z.string().email(),
 })
+
+const HTML_ENTITIES: Record<string, string> = {
+  "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;",
+}
+const escapeHtml = (s: string) => s.replace(/[<>&"']/g, (c) => HTML_ENTITIES[c]!)
 
 // Create SMTP transporter for Porkbun
 const transporter = process.env.SMTP_USER && process.env.SMTP_PASS
@@ -21,6 +27,20 @@ const transporter = process.env.SMTP_USER && process.env.SMTP_PASS
   : null
 
 export async function POST(request: Request) {
+  const limit = rateLimit({
+    scope: "subscribe",
+    ip: getClientIp(request),
+    windowMs: 60 * 60 * 1000,
+    maxAttempts: 10,
+    lockoutMs: 60 * 60 * 1000,
+  })
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds ?? 3600) } },
+    )
+  }
+
   try {
     const body = await request.json()
     const { email } = subscribeSchema.parse(body)
@@ -48,7 +68,7 @@ export async function POST(request: Request) {
         html: `
           <h2>New Newsletter Subscriber</h2>
           <p>Someone just subscribed to your newsletter:</p>
-          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Email:</strong> ${escapeHtml(email)}</p>
         `,
         replyTo: email,
       }).catch((err) => console.error("Notification email error:", err))
@@ -71,8 +91,8 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid email address" }, { status: 400 })
     }
-    const errorMessage = error instanceof Error ? error.message : String(error)
+    // Log full detail server-side; return generic message to client.
     console.error("Subscription error:", error)
-    return NextResponse.json({ error: "Subscription failed", details: errorMessage }, { status: 500 })
+    return NextResponse.json({ error: "Subscription failed. Please try again." }, { status: 500 })
   }
 }

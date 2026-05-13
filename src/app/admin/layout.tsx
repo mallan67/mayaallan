@@ -1,6 +1,17 @@
 import type React from "react"
+import type { Metadata } from "next"
 import AdminAuthGuard from "./AdminAuthGuard"
 import AdminLayoutClient from "./AdminLayoutClient"
+
+// Keep all admin pages (including /admin/login) out of search engines.
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: { index: false, follow: false },
+  },
+}
 
 /**
  * Admin Layout with Server-Side Authentication

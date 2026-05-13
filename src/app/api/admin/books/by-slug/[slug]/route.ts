@@ -19,6 +19,8 @@ export async function GET(
   const decodedSlug = decodeURIComponent(slug)
 
   try {
+    // Use .eq() (parameterised) instead of .or() interpolation — slug is user input from
+    // the URL path and cannot be safely concatenated into a PostgREST filter expression.
     const { data: book, error } = await supabaseAdmin
       .from(Tables.books)
       .select(`
@@ -28,7 +30,7 @@ export async function GET(
           retailer:retailers (*)
         )
       `)
-      .or(`slug.eq.${decodedSlug},slug.eq.${slug}`)
+      .eq("slug", decodedSlug)
       .single()
 
     if (error || !book) {
@@ -53,9 +55,11 @@ export async function GET(
       hasEbook: book.has_ebook,
       hasPaperback: book.has_paperback,
       hasHardcover: book.has_hardcover,
+      hasAudiobook: book.has_audiobook ?? false,
       ebookPrice: book.ebook_price,
       paperbackPrice: book.paperback_price,
       hardcoverPrice: book.hardcover_price,
+      audiobookPrice: book.audiobook_price ?? null,
       isFeatured: book.is_featured,
       isPublished: book.is_published,
       isVisible: book.is_visible,

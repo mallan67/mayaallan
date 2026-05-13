@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { Resend } from "resend"
 import crypto from "crypto"
 
 /**
@@ -61,8 +62,12 @@ async function verifyPayPalWebhook(
   const apiBase = process.env.PAYPAL_API_BASE || "https://api-m.sandbox.paypal.com"
 
   if (!webhookId) {
-    console.warn("⚠️ PAYPAL_WEBHOOK_ID not set - skipping verification (dev only)")
-    return true // Allow in dev, but log warning
+    if (process.env.NODE_ENV === "production") {
+      console.error("PAYPAL_WEBHOOK_ID required in production — rejecting webhook")
+      return false
+    }
+    console.warn("⚠️ PAYPAL_WEBHOOK_ID not set — skipping verification (dev only)")
+    return true
   }
 
   const accessToken = await getPayPalAccessToken()
@@ -111,6 +116,62 @@ async function verifyPayPalWebhook(
   } catch (error) {
     console.error("PayPal webhook verification error:", error)
     return false
+  }
+}
+
+/**
+ * Send purchase confirmation email with download link via Resend.
+ * Returns { ok: true } or { ok: false, error: string } — never throws.
+ */
+async function sendPurchaseEmail(args: {
+  customerEmail: string
+  customerName: string | null
+  bookTitle: string
+  downloadUrl: string
+  expiresAt: Date
+  maxDownloads: number
+}): Promise<{ ok: true; id?: string } | { ok: false; error: string }> {
+  const resendKey = process.env.RESEND_API_KEY
+  if (!resendKey) {
+    return { ok: false, error: "RESEND_API_KEY not configured" }
+  }
+
+  const resend = new Resend(resendKey)
+  const greeting = args.customerName ? `Hi ${args.customerName.split(" ")[0]}` : "Hi"
+  const expiryStr = args.expiresAt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+  const escape = (s: string) => s.replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c]!))
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "Maya Allan <maya@mayaallan.com>",
+      to: args.customerEmail,
+      subject: `Your purchase from mayaallan.com — ${args.bookTitle}`,
+      html: `
+        <div style="font-family: Georgia, serif; max-width: 560px; line-height: 1.55; color: #14110d;">
+          <p>${escape(greeting)},</p>
+          <p>Thank you for your purchase. Your download link for <strong>${escape(args.bookTitle)}</strong> is below.</p>
+          <p style="margin: 32px 0;">
+            <a href="${args.downloadUrl}"
+               style="display: inline-block; padding: 14px 32px; background: #0A0A0D; color: white; text-decoration: none; border-radius: 999px; font-weight: 600;">
+              Download ${escape(args.bookTitle)}
+            </a>
+          </p>
+          <p style="font-size: 13px; color: #6B665E;">
+            This link is valid for up to <strong>${args.maxDownloads} downloads</strong> and expires on <strong>${expiryStr}</strong>.
+          </p>
+          <p style="font-size: 13px; color: #6B665E;">
+            Trouble downloading? Reply to this email and I'll send a fresh link.
+          </p>
+          <p style="margin-top: 32px;">With care,<br/>Maya</p>
+        </div>
+      `,
+    })
+    if (error) {
+      return { ok: false, error: error.message ?? String(error) }
+    }
+    return { ok: true, id: data?.id }
+  } catch (err: any) {
+    return { ok: false, error: err?.message ?? String(err) }
   }
 }
 
@@ -229,7 +290,7 @@ export async function POST(request: Request) {
       if (book.ebook_file_url) {
         const token = crypto.randomBytes(32).toString("hex")
         const expiresAt = new Date()
-        expiresAt.setDate(expiresAt.getDate() + 30) // 30 days from now
+        expiresAt.setDate(expiresAt.getDate() + 30)
 
         const { data: downloadToken, error: tokenError } = await supabaseAdmin
           .from(Tables.downloadTokens)
@@ -243,32 +304,51 @@ export async function POST(request: Request) {
           .select()
           .single()
 
-        if (tokenError) {
-          console.error("Failed to create download token:", tokenError)
-        } else {
-          console.log("Download token created:", downloadToken.token)
+        if (tokenError || !downloadToken) {
+          // Customer paid but we cannot give them the file. Surface as 500 for ops.
+          console.error("Token creation failed for order", order.id, "-", tokenError)
+          return NextResponse.json({
+            error: "Order completed but download token creation failed. Manual fulfillment required.",
+            orderId: order.id,
+          }, { status: 500 })
+        }
 
-          const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/download/${token}`
+        console.log("Download token created:", downloadToken.token)
+        const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/download/${token}`
 
-          // TODO: Send email with download link
-          // For now, just log it
-          console.log("Email should be sent to:", customerEmail)
-          console.log("Download URL:", downloadUrl)
-          console.log("Book:", book.title)
+        const emailResult = await sendPurchaseEmail({
+          customerEmail,
+          customerName,
+          bookTitle: book.title,
+          downloadUrl,
+          expiresAt,
+          maxDownloads: 5,
+        })
 
+        if (!emailResult.ok) {
+          // Order + token are valid; only delivery email failed. Don't tell PayPal to retry
+          // (the order succeeded), but flag for manual follow-up.
+          console.error("Purchase email failed for order", order.id, ":", emailResult.error)
           return NextResponse.json({
             success: true,
             orderId: order.id,
-            downloadUrl
+            warning: `Order completed and token created but delivery email failed (${emailResult.error}). Manual send required.`,
           })
         }
+
+        return NextResponse.json({
+          success: true,
+          orderId: order.id,
+          downloadUrl,
+        })
       }
 
-      // No ebook file - just confirm order
+      // No ebook file — just confirm order
+      console.warn("Order", order.id, "completed but book", book.id, "has no ebook_file_url — nothing to deliver")
       return NextResponse.json({
         success: true,
         orderId: order.id,
-        warning: "No ebook file URL set for this book"
+        warning: "No ebook file URL set for this book",
       })
     }
 

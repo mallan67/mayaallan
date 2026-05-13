@@ -3,11 +3,14 @@ import Link from "next/link"
 import { listPosts } from "@/lib/posts"
 
 export const metadata: Metadata = {
-  title: "Blog — Research-backed writing on belief work, nervous system regulation, and integration | Maya Allan",
+  title: "Writing — Belief work, nervous-system regulation, integration",
   description:
     "Essays by Maya Allan on belief systems, inherited patterns, somatic regulation, and psilocybin integration — drawing on IFS, Clean Language, Coherence Therapy, and memory reconsolidation research.",
+  alternates: {
+    canonical: "https://www.mayaallan.com/blog",
+  },
   openGraph: {
-    title: "Blog — Maya Allan",
+    title: "Writing — Maya Allan",
     description: "Research-backed writing on belief work and integration.",
     url: "https://www.mayaallan.com/blog",
     siteName: "Maya Allan",

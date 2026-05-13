@@ -163,7 +163,15 @@ export function InquiryChat() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* ── Messages Area ──────────────────────────────────── */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-5 min-h-0">
+      <div
+        ref={messagesContainerRef}
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+        aria-atomic="false"
+        aria-label="Belief Inquiry conversation"
+        className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-5 min-h-0"
+      >
         {/* Empty state with starter prompts */}
         {messages.length === 0 && !isStreaming && (
           <div className="flex flex-col items-center justify-center py-4 sm:py-20">
@@ -219,7 +227,7 @@ export function InquiryChat() {
 
         {/* Typing indicator */}
         {status === "submitted" && (
-          <div className="flex justify-start">
+          <div className="flex justify-start" role="status" aria-label="Assistant is typing">
             <div className="bg-white/90 border border-[#E8ECF0]/50 rounded-2xl rounded-bl-md px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
               <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-liquid-blue block mb-2">
                 Belief Inquiry
@@ -235,7 +243,7 @@ export function InquiryChat() {
 
         {/* Error display */}
         {error && (
-          <div className="flex justify-center">
+          <div className="flex justify-center" role="alert">
             <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-3 text-red-600 text-sm text-center max-w-md">
               {isRateLimited
                 ? "Daily limit reached. Come back tomorrow."
@@ -262,10 +270,11 @@ export function InquiryChat() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Share what's on your mind..."
+            aria-label="Your message"
             disabled={isStreaming}
             className="flex-1 bg-white border border-[#B8BCC0] rounded-2xl px-4 py-3 h-12
               text-charcoal text-[0.9rem] sm:text-base placeholder:text-charcoal-soft
-              focus:outline-none focus:border-liquid-blue/50 focus:ring-2 focus:ring-liquid-blue/15
+              focus:outline-none focus-visible:border-liquid-blue focus-visible:ring-2 focus-visible:ring-liquid-blue focus-visible:ring-offset-2
               disabled:opacity-50 transition-colors shadow-sm"
           />
           <button
@@ -287,7 +296,7 @@ export function InquiryChat() {
             {messages.length > 0 && (
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 text-charcoal-soft/60 hover:text-charcoal-mid text-xs transition-colors"
+                className="flex items-center gap-2 text-charcoal-mid hover:text-charcoal text-xs transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 Start Over
@@ -296,14 +305,14 @@ export function InquiryChat() {
             {messages.length > 0 && !showExportCta && (
               <button
                 onClick={() => setUserRequestedExport(true)}
-                className="flex items-center gap-2 text-charcoal-soft/60 hover:text-liquid-blue text-xs transition-colors"
+                className="flex items-center gap-2 text-charcoal-mid hover:text-liquid-blue text-xs transition-colors"
               >
                 <Printer className="w-3.5 h-3.5" />
                 Print this session — $9.99
               </button>
             )}
           </div>
-          <p className="hidden sm:block text-charcoal-soft/50 text-xs text-right ml-auto">
+          <p className="text-charcoal-mid text-xs text-right ml-auto">
             This is not therapy. If you need support, please reach out to a licensed professional.
           </p>
         </div>

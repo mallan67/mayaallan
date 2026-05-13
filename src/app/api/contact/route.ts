@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import nodemailer from "nodemailer"
 import { z } from "zod"
+import { rateLimit, getClientIp } from "@/lib/rate-limit"
 
 const ContactSchema = z.object({
   name: z.string().min(1),
@@ -9,6 +10,11 @@ const ContactSchema = z.object({
   message: z.string().min(1),
   subject: z.string().optional().nullable(),
 })
+
+const HTML_ENTITIES: Record<string, string> = {
+  "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;",
+}
+const escapeHtml = (s: string) => s.replace(/[<>&"']/g, (c) => HTML_ENTITIES[c]!)
 
 // Create SMTP transporter for Porkbun
 const transporter = process.env.SMTP_USER && process.env.SMTP_PASS
@@ -24,6 +30,21 @@ const transporter = process.env.SMTP_USER && process.env.SMTP_PASS
   : null
 
 export async function POST(request: Request) {
+  // Throttle to 5 submissions per IP per hour to deter form spam.
+  const limit = rateLimit({
+    scope: "contact",
+    ip: getClientIp(request),
+    windowMs: 60 * 60 * 1000,
+    maxAttempts: 5,
+    lockoutMs: 60 * 60 * 1000,
+  })
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many submissions. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds ?? 3600) } },
+    )
+  }
+
   try {
     const body = await request.json()
     const data = ContactSchema.parse(body)
@@ -48,13 +69,13 @@ export async function POST(request: Request) {
       transporter.sendMail({
         from: `"Website Contact" <${process.env.SMTP_USER}>`,
         to: "maya@mayaallan.com",
-        subject: `New Contact Form Submission from ${data.name}`,
+        subject: `New Contact Form Submission from ${escapeHtml(data.name)}`,
         html: `
           <h2>New Contact Form Submission</h2>
-          <p><strong>Name:</strong> ${data.name}</p>
-          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Name:</strong> ${escapeHtml(data.name)}</p>
+          <p><strong>Email:</strong> ${escapeHtml(data.email)}</p>
           <p><strong>Message:</strong></p>
-          <p>${data.message.replace(/\n/g, "<br>")}</p>
+          <p>${escapeHtml(data.message).replace(/\n/g, "<br>")}</p>
         `,
         replyTo: data.email,
       }).catch((err) => console.error("Contact email error:", err))
@@ -63,10 +84,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, message: "Message sent successfully" })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid data", details: error.issues }, { status: 400 })
+      return NextResponse.json({ error: "Invalid data" }, { status: 400 })
     }
-    const errorMessage = error instanceof Error ? error.message : String(error)
+    // Log full detail server-side; return generic message to client to avoid
+    // leaking schema/constraint hints from Supabase or other internals.
     console.error("Contact submission error:", error)
-    return NextResponse.json({ error: "Failed to send message", details: errorMessage }, { status: 500 })
+    return NextResponse.json({ error: "Failed to send message. Please try again." }, { status: 500 })
   }
 }

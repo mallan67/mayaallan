@@ -19,6 +19,26 @@ interface BookPageProps {
 
 export const revalidate = 300 // 5 minutes
 
+/**
+ * Pre-render all known book slugs at build time so they're served from
+ * the edge cache (HIT) instead of being dynamically rendered every request.
+ * New books published after build will fall back to on-demand SSR + ISR
+ * thanks to dynamicParams default = true.
+ */
+export async function generateStaticParams() {
+  try {
+    const { data } = await supabaseAdmin
+      .from(Tables.books)
+      .select("slug")
+      .eq("is_published", true)
+      .eq("is_visible", true)
+    return (data ?? []).map((b: { slug: string }) => ({ slug: b.slug }))
+  } catch (err) {
+    console.warn("generateStaticParams (books) failed — falling back to dynamic rendering:", err)
+    return []
+  }
+}
+
 export async function generateMetadata({ params }: BookPageProps): Promise<Metadata> {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
@@ -49,6 +69,10 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
     const twitterImageUrl = `https://www.mayaallan.com/books/${slug}/twitter-image`
 
     const fullTitle = `${book.title}${subtitles ? ` - ${subtitles}` : ""}`
+    // OG titles cap usefully around 60-70 chars; longer reads as keyword spam in social shares.
+    const ogTitle = book.subtitle1
+      ? `${book.title} — ${book.subtitle1}`.slice(0, 90)
+      : book.title
 
     // Truncate description for social (recommended max ~200 chars)
     const socialDescription = description.length > 200
@@ -82,7 +106,7 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
         canonical: bookUrl,
       },
       openGraph: {
-        title: fullTitle,
+        title: ogTitle,
         description: socialDescription,
         url: bookUrl,
         siteName: "Maya Allan",
@@ -103,7 +127,7 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
         card: "summary_large_image",
         site: "@mayaallan",
         creator: "@mayaallan",
-        title: fullTitle,
+        title: ogTitle,
         description: socialDescription,
         images: [twitterImageUrl],
       },
@@ -128,6 +152,7 @@ export default async function BookPage({ params }: BookPageProps) {
   const decodedSlug = decodeURIComponent(slug)
 
   let book = null
+  let dbErrorOccurred = false
 
   try {
     // Find the book - must be published to view
@@ -152,7 +177,14 @@ export default async function BookPage({ params }: BookPageProps) {
       .limit(1)
       .single()
 
-    if (!error && data) {
+    // Distinguish "no rows" (real 404) from infrastructure errors (transient).
+    // PGRST116 = "no rows found" (single() with no match). Anything else is a real failure.
+    if (error && error.code !== "PGRST116") {
+      console.error("Book detail query error:", error.code, error.message, error.details)
+      dbErrorOccurred = true
+    }
+
+    if (data) {
       book = {
         id: data.id,
         slug: data.slug,
@@ -166,9 +198,11 @@ export default async function BookPage({ params }: BookPageProps) {
         hasEbook: data.has_ebook,
         hasPaperback: data.has_paperback,
         hasHardcover: data.has_hardcover,
+        hasAudiobook: data.has_audiobook ?? false,
         ebookPrice: data.ebook_price,
         paperbackPrice: data.paperback_price,
         hardcoverPrice: data.hardcover_price,
+        audiobookPrice: data.audiobook_price ?? null,
         isComingSoon: data.is_coming_soon,
         allowDirectSale: data.allow_direct_sale,
         allowRetailerSale: data.allow_retailer_sale,
@@ -194,10 +228,17 @@ export default async function BookPage({ params }: BookPageProps) {
       }
     }
   } catch (error) {
-    console.warn("Book fetch failed:", error)
+    console.error("Book fetch failed:", error)
+    dbErrorOccurred = true
   }
 
   if (!book) {
+    // Real 404 only when no DB error occurred. Transient infrastructure failures
+    // throw so Next renders the error boundary (5xx) instead of permanent 404 — this
+    // prevents Google from deindexing real pages during a Supabase blip.
+    if (dbErrorOccurred) {
+      throw new Error("Book detail page failed to load due to a database error")
+    }
     notFound()
   }
 
@@ -271,6 +312,7 @@ export default async function BookPage({ params }: BookPageProps) {
     { key: "ebook", label: "Ebook", available: book.hasEbook, price: book.ebookPrice },
     { key: "paperback", label: "Paperback", available: book.hasPaperback, price: book.paperbackPrice },
     { key: "hardcover", label: "Hardcover", available: book.hasHardcover, price: book.hardcoverPrice },
+    { key: "audiobook", label: "Audiobook", available: book.hasAudiobook, price: book.audiobookPrice },
   ].filter((f) => f.available)
 
   // ============================================
@@ -315,6 +357,7 @@ export default async function BookPage({ params }: BookPageProps) {
                 fill
                 className="object-cover"
                 priority
+                sizes="(max-width: 768px) 320px, (max-width: 1024px) 340px, 400px"
               />
             </div>
           ) : (
@@ -409,7 +452,7 @@ export default async function BookPage({ params }: BookPageProps) {
           {formats.length > 0 && !book.isComingSoon && (
             <div className="p-6 border-2 border-slate-200 rounded-2xl bg-gradient-to-br from-slate-50 to-white">
               <h3 className="text-base font-bold text-slate-900 mb-4">Available Formats</h3>
-              <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
                 {formats.map((f) => (
                   <div
                     key={f.key}
@@ -474,7 +517,7 @@ export default async function BookPage({ params }: BookPageProps) {
                             key={link.id}
                             href={link.url}
                             target="_blank"
-                            rel="noopener noreferrer"
+                            rel="noopener noreferrer nofollow sponsored"
                             className="inline-flex items-center gap-3 px-5 py-3 border-2 border-slate-200 rounded-xl bg-white hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all text-sm font-semibold group"
                           >
                             <RetailerIcon name={link.retailer.name} className="w-5 h-5 text-slate-600 group-hover:text-slate-900 transition-colors" />

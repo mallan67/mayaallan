@@ -12,9 +12,11 @@ interface Book {
   hasEbook: boolean
   hasPaperback: boolean
   hasHardcover: boolean
+  hasAudiobook: boolean
   ebookPrice: number | null
   paperbackPrice: number | null
   hardcoverPrice: number | null
+  audiobookPrice: number | null
   isFeatured: boolean
   isPublished: boolean
   isVisible: boolean
@@ -278,6 +280,9 @@ export default function AdminBooksPage() {
                     )}
                     {book.hasHardcover && (
                       <span className="px-2 py-0.5 text-xs rounded bg-slate-100 text-slate-600">Hardcover</span>
+                    )}
+                    {book.hasAudiobook && (
+                      <span className="px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-800">Audiobook</span>
                     )}
                   </div>
 

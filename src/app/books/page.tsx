@@ -41,6 +41,7 @@ export const revalidate = 300 // 5 minutes
  */
 export default async function BooksPage() {
   let books: any[] = []
+  let dbErrorOccurred = false
 
   try {
     // Get books with retailer links
@@ -66,9 +67,10 @@ export default async function BooksPage() {
 
     if (error) {
       console.error("Books page query error:", error.message, error.code, error.details)
+      dbErrorOccurred = true
     }
     console.log("Books page: Found", booksData?.length || 0, "books matching criteria")
-    if (!error && booksData) {
+    if (booksData) {
       books = booksData.map((book) => ({
         id: book.id,
         slug: book.slug,
@@ -80,9 +82,11 @@ export default async function BooksPage() {
         hasEbook: book.has_ebook,
         hasPaperback: book.has_paperback,
         hasHardcover: book.has_hardcover,
+        hasAudiobook: book.has_audiobook ?? false,
         ebookPrice: book.ebook_price,
         paperbackPrice: book.paperback_price,
         hardcoverPrice: book.hardcover_price,
+        audiobookPrice: book.audiobook_price ?? null,
         isComingSoon: book.is_coming_soon,
         retailers: (book.book_retailer_links || [])
           .filter((link: any) => link.is_active)
@@ -100,8 +104,9 @@ export default async function BooksPage() {
       }))
     }
   } catch (error) {
-    // During build or if DB unavailable, show empty state
-    console.warn("Books fetch failed:", error)
+    // During build or if DB unavailable
+    console.error("Books fetch failed:", error)
+    dbErrorOccurred = true
   }
 
   // AEO: Breadcrumb Schema for navigation context
@@ -121,7 +126,13 @@ export default async function BooksPage() {
           }}
         />
         <h1 className="font-serif text-3xl font-semibold mb-4">Books</h1>
-        <p className="text-slate-600">No books available yet. Check back soon!</p>
+        {dbErrorOccurred ? (
+          <p className="text-red-700 bg-red-50 border border-red-200 rounded-lg px-6 py-4 inline-block">
+            We&rsquo;re having trouble loading books right now. Please refresh in a moment.
+          </p>
+        ) : (
+          <p className="text-slate-600">No books available yet. Check back soon!</p>
+        )}
       </div>
     )
   }
@@ -156,6 +167,7 @@ export default async function BooksPage() {
             book.hasEbook && book.ebookPrice ? Number(book.ebookPrice) : null,
             book.hasPaperback && book.paperbackPrice ? Number(book.paperbackPrice) : null,
             book.hasHardcover && book.hardcoverPrice ? Number(book.hardcoverPrice) : null,
+            book.hasAudiobook && book.audiobookPrice ? Number(book.audiobookPrice) : null,
           ].filter((p): p is number => p !== null && p > 0)
 
           const lowestPrice = prices.length > 0 ? Math.min(...prices) : null
@@ -165,6 +177,7 @@ export default async function BooksPage() {
             book.hasEbook && { label: "Ebook", price: book.ebookPrice },
             book.hasPaperback && { label: "Paperback", price: book.paperbackPrice },
             book.hasHardcover && { label: "Hardcover", price: book.hardcoverPrice },
+            book.hasAudiobook && { label: "Audiobook", price: book.audiobookPrice },
           ].filter(Boolean) as { label: string; price: any }[]
 
           return (
@@ -178,9 +191,10 @@ export default async function BooksPage() {
                 {book.coverUrl ? (
                   <Image
                     src={book.coverUrl}
-                    alt={book.title}
+                    alt=""
                     fill
                     className="object-cover"
+                    sizes="(max-width: 768px) 280px, 360px"
                   />
                 ) : (
                   <div className="w-full h-full bg-slate-100 flex items-center justify-center">

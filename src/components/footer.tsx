@@ -62,7 +62,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Row */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[0.78rem] text-white/35">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[0.78rem] text-white/70">
           <span>&copy; {currentYear} Maya Allan. All rights reserved.</span>
         </div>
       </div>

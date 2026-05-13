@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Honor user's OS-level "reduce motion" preference. Disables CSS animations,
+   transitions, and transforms for users with vestibular sensitivity. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

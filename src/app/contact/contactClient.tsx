@@ -47,51 +47,74 @@ export default function ContactClient() {
       </p>
 
       {status === "success" && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-sm text-green-800">
+        <div role="status" aria-live="polite" className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-sm text-green-800">
           Thank you! Your message has been sent successfully.
         </div>
       )}
 
       {status === "error" && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
+        <div role="alert" id="contact-error" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-800">
           Error: {errorMessage}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-[0.2em] mb-1">Name</label>
+          <label htmlFor="contact-name" className="block text-xs font-semibold uppercase tracking-[0.2em] mb-1">
+            Name<span aria-hidden="true"> *</span>
+          </label>
           <input
+            id="contact-name"
+            name="name"
             type="text"
+            autoComplete="name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
-            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"
+            aria-required="true"
+            aria-invalid={status === "error" ? true : undefined}
+            aria-describedby={status === "error" ? "contact-error" : undefined}
+            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-liquid-blue focus-visible:ring-offset-2"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-[0.2em] mb-1">Email</label>
+          <label htmlFor="contact-email" className="block text-xs font-semibold uppercase tracking-[0.2em] mb-1">
+            Email<span aria-hidden="true"> *</span>
+          </label>
           <input
+            id="contact-email"
+            name="email"
             type="email"
+            autoComplete="email"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
-            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm"
+            aria-required="true"
+            aria-invalid={status === "error" ? true : undefined}
+            aria-describedby={status === "error" ? "contact-error" : undefined}
+            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-liquid-blue focus-visible:ring-offset-2"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-[0.2em] mb-1">Message</label>
+          <label htmlFor="contact-message" className="block text-xs font-semibold uppercase tracking-[0.2em] mb-1">
+            Message<span aria-hidden="true"> *</span>
+          </label>
           <textarea
+            id="contact-message"
+            name="message"
             value={formData.message}
             onChange={(e) => setFormData({ ...formData, message: e.target.value })}
             required
-            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm min-h-[120px]"
+            aria-required="true"
+            aria-invalid={status === "error" ? true : undefined}
+            aria-describedby={status === "error" ? "contact-error" : undefined}
+            className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm min-h-[120px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-liquid-blue focus-visible:ring-offset-2"
           />
         </div>
         <button
           type="submit"
           disabled={status === "sending"}
-          className="px-5 py-2.5 text-sm font-semibold border border-black/70 bg-black/80 text-white rounded-full hover:bg-black/60 transition disabled:opacity-50"
+          className="px-5 py-2.5 text-sm font-semibold border border-black/70 bg-black text-white rounded-full hover:bg-black/80 transition disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-liquid-blue focus-visible:ring-offset-2"
         >
           {status === "sending" ? "Sending..." : "Send"}
         </button>

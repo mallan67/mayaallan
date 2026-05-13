@@ -38,7 +38,7 @@ export async function renderAndEmailSessionPdf(payload: SessionPayload): Promise
   const resend = new Resend(resendKey)
   const displayName = TOOL_DISPLAY[payload.tool]
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: "Maya Allan <hello@mayaallan.com>",
     to: payload.email,
     subject: `Your ${displayName} session keepsake`,
@@ -50,6 +50,12 @@ export async function renderAndEmailSessionPdf(payload: SessionPayload): Promise
       },
     ],
   })
+
+  if (error) {
+    console.error("Session PDF email failed for", payload.email, "-", error)
+    throw new Error(`Resend send failed: ${error.message ?? String(error)}`)
+  }
+  console.log("Session PDF email sent — Resend id:", data?.id)
 }
 
 /**

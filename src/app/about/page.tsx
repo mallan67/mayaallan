@@ -9,14 +9,13 @@ import {
   generateBreadcrumbSchema,
   AUTHOR_FAQS,
 } from "@/lib/structured-data"
-import { unstable_noStore as noStore } from "next/cache"
-
 const SITE_URL = "https://www.mayaallan.com"
 
-async function getAuthorInfo() {
-  // Disable caching to ensure fresh data on every request
-  noStore()
+// Cache author bio for 5 min (admin edits in Settings will revalidate
+// the page automatically when they save).
+export const revalidate = 300
 
+async function getAuthorInfo() {
   try {
     // Order by id to ensure we get the same row as admin settings
     const { data: settings, error } = await supabaseAdmin
@@ -43,9 +42,18 @@ export async function generateMetadata(): Promise<Metadata> {
   const author = await getAuthorInfo()
 
   const title = "About"
+
+  // Truncate at the last whole word so we don't ship "...inherited narratives an..."
+  const truncateAtWord = (str: string, max = 155) => {
+    if (str.length <= max) return str
+    const slice = str.slice(0, max)
+    const lastSpace = slice.lastIndexOf(" ")
+    return slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…"
+  }
+
   const description = author?.authorBio
-    ? `${author.authorBio.substring(0, 155)}...`
-    : "Learn more about Maya Allan - author, speaker, and wellness advocate dedicated to helping readers navigate transformation."
+    ? truncateAtWord(author.authorBio, 155)
+    : "Learn more about Maya Allan — author, speaker, and wellness advocate dedicated to helping readers navigate transformation."
   // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
   // Author photos may not be the correct aspect ratio for social sharing
   const imageUrl = `${SITE_URL}/opengraph-image`

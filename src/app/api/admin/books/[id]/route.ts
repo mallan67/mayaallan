@@ -67,9 +67,11 @@ export async function GET(
       hasEbook: book.has_ebook,
       hasPaperback: book.has_paperback,
       hasHardcover: book.has_hardcover,
+      hasAudiobook: book.has_audiobook ?? false,
       ebookPrice: book.ebook_price,
       paperbackPrice: book.paperback_price,
       hardcoverPrice: book.hardcover_price,
+      audiobookPrice: book.audiobook_price ?? null,
       isFeatured: book.is_featured,
       isPublished: book.is_published,
       isVisible: book.is_visible,
@@ -162,6 +164,7 @@ export async function PUT(
     if (body.hasEbook !== undefined) updateData.has_ebook = Boolean(body.hasEbook)
     if (body.hasPaperback !== undefined) updateData.has_paperback = Boolean(body.hasPaperback)
     if (body.hasHardcover !== undefined) updateData.has_hardcover = Boolean(body.hasHardcover)
+    if (body.hasAudiobook !== undefined) updateData.has_audiobook = Boolean(body.hasAudiobook)
     if (body.isFeatured !== undefined) updateData.is_featured = Boolean(body.isFeatured)
     if (body.isPublished !== undefined) updateData.is_published = Boolean(body.isPublished)
     if (body.isVisible !== undefined) updateData.is_visible = Boolean(body.isVisible)
@@ -182,6 +185,11 @@ export async function PUT(
     if (body.paperbackPrice !== undefined) {
       updateData.paperback_price = body.paperbackPrice !== null && body.paperbackPrice !== ""
         ? parseFloat(body.paperbackPrice)
+        : null
+    }
+    if (body.audiobookPrice !== undefined) {
+      updateData.audiobook_price = body.audiobookPrice !== null && body.audiobookPrice !== ""
+        ? parseFloat(body.audiobookPrice)
         : null
     }
     if (body.hardcoverPrice !== undefined) {
@@ -241,9 +249,11 @@ export async function PUT(
       hasEbook: updatedBook.has_ebook,
       hasPaperback: updatedBook.has_paperback,
       hasHardcover: updatedBook.has_hardcover,
+      hasAudiobook: updatedBook.has_audiobook ?? false,
       ebookPrice: updatedBook.ebook_price,
       paperbackPrice: updatedBook.paperback_price,
       hardcoverPrice: updatedBook.hardcover_price,
+      audiobookPrice: updatedBook.audiobook_price ?? null,
       isFeatured: updatedBook.is_featured,
       isPublished: updatedBook.is_published,
       isVisible: updatedBook.is_visible,
