@@ -173,10 +173,3 @@ CREATE INDEX IF NOT EXISTS idx_books_is_featured ON public.books(is_featured);
 CREATE INDEX IF NOT EXISTS idx_book_retailer_links_book_id ON public.book_retailer_links(book_id);
 CREATE INDEX IF NOT EXISTS idx_orders_customer_email ON public.orders(customer_email);
 CREATE INDEX IF NOT EXISTS idx_download_tokens_token ON public.download_tokens(token);
-
--- Enable Row Level Security (RLS) - ENABLED FOR SECURITY
--- Service role key (used by admin routes) bypasses RLS, so admin operations continue to work
--- See enable-rls-policies.sql for the complete RLS configuration
-
--- Note: The complete RLS policies are in enable-rls-policies.sql
--- Run that file in your Supabase SQL Editor to enable all security policies
