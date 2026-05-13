@@ -91,10 +91,44 @@ export function apiBase(): string {
 }
 
 /**
- * Returns 'live' | 'sandbox'. Useful for logging and admin alerts.
+ * Returns 'live' | 'sandbox'.
+ *
+ * WARNING: this calls apiBase() and therefore THROWS on invalid PAYPAL_ENV
+ * / PAYPAL_API_BASE in production. Do NOT call from catch blocks that are
+ * handling PayPal env failures — the second throw will skip the intended
+ * alert and surface a generic function error. Use `safePaypalEnvLabel()`
+ * inside alert details / logging paths instead.
  */
 export function paypalEnvLabel(): "live" | "sandbox" {
   return apiBase() === "https://api-m.paypal.com" ? "live" : "sandbox"
+}
+
+/**
+ * Non-throwing variant of paypalEnvLabel for use in alert details and
+ * any other context where you can't tolerate a second throw.
+ *
+ *   "live"          — PAYPAL_ENV=live OR PAYPAL_API_BASE=<live url>
+ *   "sandbox"       — PAYPAL_ENV=sandbox OR PAYPAL_API_BASE=<sandbox url>
+ *   "invalid"       — PAYPAL_ENV or PAYPAL_API_BASE is set to a value that
+ *                     doesn't match either of the above (the cause of the
+ *                     production throw apiBase() would otherwise raise)
+ *   "unconfigured"  — neither env var is set
+ */
+export function safePaypalEnvLabel(): "live" | "sandbox" | "invalid" | "unconfigured" {
+  const envRaw = process.env.PAYPAL_ENV
+  if (envRaw !== undefined && envRaw !== "") {
+    const env = envRaw.trim().toLowerCase()
+    if (env === "live") return "live"
+    if (env === "sandbox") return "sandbox"
+    return "invalid"
+  }
+  const baseRaw = process.env.PAYPAL_API_BASE?.trim()
+  if (baseRaw) {
+    if (baseRaw === KNOWN_LIVE_BASE) return "live"
+    if (baseRaw === KNOWN_SANDBOX_BASE) return "sandbox"
+    return "invalid"
+  }
+  return "unconfigured"
 }
 
 type CachedToken = { token: string; expiresAt: number }

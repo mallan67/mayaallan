@@ -25,7 +25,7 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { alertAdmin } from "@/lib/alert-admin"
-import { apiBase, getAccessToken, paypalEnvLabel } from "@/lib/paypal"
+import { apiBase, getAccessToken, safePaypalEnvLabel } from "@/lib/paypal"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { createHash } from "node:crypto"
 import { z } from "zod"
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
           "until this is resolved. Could be a PayPal outage, expired/invalid " +
           "credentials, or rate-limit. Verify PAYPAL_CLIENT_ID / " +
           "PAYPAL_CLIENT_SECRET (or legacy PAYPAL_SECRET) in Vercel env vars.",
-        details: { paypalEnv: paypalEnvLabel(), errorMessage: err instanceof Error ? err.message : String(err) },
+        details: { paypalEnv: safePaypalEnvLabel(), errorMessage: err instanceof Error ? err.message : String(err) },
         dedupKey: "paypal:checkout-token-failed",
       })
       return NextResponse.json({ error: "PayPal authentication failed" }, { status: 503 })
@@ -167,7 +167,7 @@ export async function POST(request: Request) {
         body:
           "PayPal rejected the create-order request. Customers cannot complete " +
           "a checkout until this is resolved.",
-        details: { status: orderResponse.status, bookId, paypalEnv: paypalEnvLabel(), errorName: (errorData as any)?.name },
+        details: { status: orderResponse.status, bookId, paypalEnv: safePaypalEnvLabel(), errorName: (errorData as any)?.name },
         dedupKey: "paypal:checkout-create-order-failed",
       })
       return NextResponse.json({ error: "Failed to create PayPal order" }, { status: 500 })
@@ -184,7 +184,7 @@ export async function POST(request: Request) {
         body:
           "PayPal returned a successful create-order but no `id` field. " +
           "PayPal may have changed their response shape — investigate.",
-        details: { bookId, paypalEnv: paypalEnvLabel() },
+        details: { bookId, paypalEnv: safePaypalEnvLabel() },
         dedupKey: "paypal:checkout-no-order-id",
       })
       return NextResponse.json({ error: "Failed to get PayPal order id" }, { status: 500 })

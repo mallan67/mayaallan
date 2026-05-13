@@ -30,7 +30,7 @@
  */
 import { NextResponse, type NextRequest } from "next/server"
 import { alertAdmin } from "@/lib/alert-admin"
-import { apiBase, getAccessToken, paypalEnvLabel } from "@/lib/paypal"
+import { apiBase, getAccessToken, safePaypalEnvLabel } from "@/lib/paypal"
 import { supabaseAdmin } from "@/lib/supabaseAdmin"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { createHash } from "node:crypto"
@@ -222,7 +222,7 @@ export async function GET(request: NextRequest) {
         "looking at our site right now wondering what happened. Verify PAYPAL_CLIENT_ID and " +
         "PAYPAL_CLIENT_SECRET / PAYPAL_SECRET in Vercel env vars, then capture manually from " +
         "the PayPal dashboard.",
-      details: { paypalOrderId: orderId, bookSlug: pending.book_slug, paypalEnv: paypalEnvLabel(), errorMessage: err instanceof Error ? err.message : String(err) },
+      details: { paypalOrderId: orderId, bookSlug: pending.book_slug, paypalEnv: safePaypalEnvLabel(), errorMessage: err instanceof Error ? err.message : String(err) },
       dedupKey: "paypal:return-token-failed",
     })
     return redirectToBook(pending.book_slug, "error")
@@ -258,7 +258,7 @@ export async function GET(request: NextRequest) {
         body:
           "The capture POST to PayPal exceeded 20 seconds. The customer's payment may or may " +
           "not have been captured. Verify in the PayPal dashboard and reconcile manually if needed.",
-        details: { paypalOrderId: orderId, bookSlug: pending.book_slug, paypalEnv: paypalEnvLabel() },
+        details: { paypalOrderId: orderId, bookSlug: pending.book_slug, paypalEnv: safePaypalEnvLabel() },
         dedupKey: `paypal:return-capture-timeout:${orderId}`,
       })
     } else {
@@ -340,7 +340,7 @@ export async function GET(request: NextRequest) {
         status: captureResponse.status,
         paypalErrorName: body?.name,
         paypalDetails: body?.details,
-        paypalEnv: paypalEnvLabel(),
+        paypalEnv: safePaypalEnvLabel(),
       },
       dedupKey: `paypal:return-capture-failed:${orderId}`,
     })
