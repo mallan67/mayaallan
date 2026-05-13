@@ -273,49 +273,128 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "No customer email" }, { status: 400 })
       }
 
-      // Create Order record
-      const { data: order, error: orderError } = await supabaseAdmin
-        .from(Tables.orders)
-        .insert({
-          email: customerEmail,
-          customer_name: customerName || null,
-          paypal_order_id: paypalOrderId,
-          book_id: book.id,
-          format_type: "ebook", // Assume ebook for direct sales
-          amount: amount,
-          currency: currency,
-          status: "completed",
-          completed_at: new Date().toISOString(),
-        })
-        .select()
-        .single()
+      // ----------------------------------------------------------------
+      // IDEMPOTENCY — pre-check for an existing order with this paypal_order_id.
+      // PayPal retries webhooks up to 25× over 3 days on any 5xx or slow ACK,
+      // so the SAME webhook payload arriving twice is a normal-operations event,
+      // not an edge case. Without this guard the customer gets two emails and
+      // two download tokens for one purchase.
+      //
+      // Three paths fall out of the pre-check:
+      //   1. No existing order → INSERT (backstopped by uq_orders_paypal_order_id)
+      //   2. Order exists AND token exists → fully fulfilled; dedup and return
+      //   3. Order exists but NO token → previous webhook crashed mid-flight;
+      //      resume fulfillment using the existing order row
+      // ----------------------------------------------------------------
+      let order: any
+      let resumingExistingOrder = false
 
-      if (orderError || !order) {
-        console.error("Failed to create order:", orderError)
-        // CRITICAL — customer money captured by PayPal, but we have no order row.
-        // PayPal will retry the webhook; the alert flags the incident so an
-        // operator can reconcile manually if retries don't recover.
-        await alertAdmin({
-          severity: "critical",
-          subject: "PayPal: payment received but order INSERT failed",
-          body:
-            `A PayPal payment came in but writing the order row to Supabase failed. ` +
-            `PayPal will retry the webhook automatically; if retries don't succeed, ` +
-            `the payment is in PayPal with no order record on our side. Reconcile manually.`,
-          details: {
-            paypalOrderId,
-            bookId,
-            customerEmail,
-            amount,
-            currency,
-            errorCode: orderError?.code,
-          },
-          dedupKey: `paypal:order-insert-failed:${paypalOrderId}`,
-        })
-        return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
+      const { data: existingOrder } = await supabaseAdmin
+        .from(Tables.orders)
+        .select("*")
+        .eq("paypal_order_id", paypalOrderId)
+        .maybeSingle()
+
+      if (existingOrder) {
+        const { data: existingToken } = await supabaseAdmin
+          .from(Tables.downloadTokens)
+          .select("id")
+          .eq("order_id", existingOrder.id)
+          .maybeSingle()
+
+        if (existingToken) {
+          // Identical retry — already fully fulfilled. Don't re-email the
+          // customer; don't mint a new token; just 200 PayPal so they stop retrying.
+          return NextResponse.json({
+            received: true,
+            deduplicated: true,
+            orderId: existingOrder.id,
+          })
+        }
+
+        // Order row exists but token never made it — resume from where the
+        // previous attempt failed. Re-using existingOrder avoids creating a
+        // duplicate order row in this race.
+        resumingExistingOrder = true
+        order = existingOrder
+      } else {
+        const { data: insertedOrder, error: orderError } = await supabaseAdmin
+          .from(Tables.orders)
+          .insert({
+            email: customerEmail,
+            customer_name: customerName || null,
+            paypal_order_id: paypalOrderId,
+            book_id: book.id,
+            format_type: "ebook", // Direct sales are ebook-only — see /api/checkout/paypal
+            amount: amount,
+            currency: currency,
+            status: "completed",
+            completed_at: new Date().toISOString(),
+          })
+          .select()
+          .single()
+
+        if (orderError || !insertedOrder) {
+          // 23505 = postgres unique_violation. Means a concurrent webhook just
+          // inserted the same paypal_order_id between our pre-check and our
+          // INSERT. Re-select and let the dedup path handle it.
+          if (orderError?.code === "23505") {
+            const { data: racedOrder } = await supabaseAdmin
+              .from(Tables.orders)
+              .select("*")
+              .eq("paypal_order_id", paypalOrderId)
+              .maybeSingle()
+            if (racedOrder) {
+              return NextResponse.json({
+                received: true,
+                deduplicated: true,
+                raced: true,
+                orderId: racedOrder.id,
+              })
+            }
+          }
+
+          console.error("Failed to create order:", orderError)
+          // CRITICAL — customer money captured by PayPal, but we have no order row.
+          await alertAdmin({
+            severity: "critical",
+            subject: "PayPal: payment received but order INSERT failed",
+            body:
+              `A PayPal payment came in but writing the order row to Supabase failed. ` +
+              `PayPal will retry the webhook automatically; if retries don't succeed, ` +
+              `the payment is in PayPal with no order record on our side. Reconcile manually.`,
+            details: {
+              paypalOrderId,
+              bookId,
+              customerEmail,
+              amount,
+              currency,
+              errorCode: orderError?.code,
+            },
+            dedupKey: `paypal:order-insert-failed:${paypalOrderId}`,
+          })
+          return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
+        }
+
+        order = insertedOrder
       }
 
-      console.log("Order created:", order.id)
+      if (resumingExistingOrder) {
+        // Worth a warning-level alert — this means an earlier webhook attempt
+        // crashed somewhere between order INSERT and token creation. Once is
+        // forgivable; if it recurs, something is wrong with token creation
+        // or email delivery.
+        await alertAdmin({
+          severity: "warning",
+          subject: "PayPal webhook: resuming previously-failed fulfillment",
+          body:
+            "An order row already existed for this PayPal order but no download " +
+            "token was created — the previous webhook attempt crashed mid-flight. " +
+            "Resuming token creation + email delivery now.",
+          details: { orderId: order.id, paypalOrderId, customerEmail },
+          dedupKey: `paypal:resume-fulfillment:${paypalOrderId}`,
+        })
+      }
 
       // Generate download token if ebook file exists
       if (book.ebook_file_url) {
@@ -350,7 +429,8 @@ export async function POST(request: Request) {
           }, { status: 500 })
         }
 
-        console.log("Download token created:", downloadToken.token)
+        // NEVER log the token value — anyone with read access to Vercel function
+        // logs could otherwise fulfill the download by hitting /download/<token>.
         const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/download/${token}`
 
         const emailResult = await sendPurchaseEmail({
