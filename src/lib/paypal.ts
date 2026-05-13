@@ -23,17 +23,50 @@ function getPaypalClientSecret(): string {
   return value
 }
 
-function apiBase(): string {
-  const env = (process.env.PAYPAL_ENV ?? "sandbox").toLowerCase()
-  return env === "live"
-    ? "https://api-m.paypal.com"
-    : "https://api-m.sandbox.paypal.com"
+/**
+ * Resolve PayPal's API base from one canonical env var.
+ *
+ * The history here is messy: older route code reads PAYPAL_API_BASE
+ * directly (and falls back to sandbox), while this lib uses PAYPAL_ENV.
+ * If both are misconfigured the checkout, return-capture, and webhook
+ * routes can drift onto different environments — e.g. checkout creates
+ * a live order, return route tries to capture it on sandbox → 422 on
+ * every customer. PR B unifies on PAYPAL_ENV with a soft fallback to
+ * PAYPAL_API_BASE so existing Vercel envs keep working without a
+ * rotation.
+ */
+export function apiBase(): string {
+  const env = process.env.PAYPAL_ENV?.toLowerCase()
+  if (env === "live") return "https://api-m.paypal.com"
+  if (env === "sandbox") return "https://api-m.sandbox.paypal.com"
+
+  // Backward-compat: derive from PAYPAL_API_BASE if PAYPAL_ENV is unset.
+  // Match exact known values; anything else falls through to sandbox so
+  // a malformed env never silently sends production traffic to live.
+  const base = process.env.PAYPAL_API_BASE?.trim()
+  if (base === "https://api-m.paypal.com") return "https://api-m.paypal.com"
+  return "https://api-m.sandbox.paypal.com"
+}
+
+/**
+ * Returns 'live' | 'sandbox'. Useful for logging and admin alerts.
+ */
+export function paypalEnvLabel(): "live" | "sandbox" {
+  return apiBase() === "https://api-m.paypal.com" ? "live" : "sandbox"
 }
 
 type CachedToken = { token: string; expiresAt: number }
 let cachedToken: CachedToken | null = null
 
-async function getAccessToken(): Promise<string> {
+/**
+ * Get a cached OAuth access token. Cached in-memory until ~30s before
+ * expiry. Throws on failure (callers catch + alertAdmin).
+ *
+ * Exported so the book-checkout / return-capture / webhook-verification
+ * routes can all share a single OAuth call instead of each hand-rolling
+ * their own.
+ */
+export async function getAccessToken(): Promise<string> {
   const now = Date.now()
   if (cachedToken && cachedToken.expiresAt > now + 30_000) {
     return cachedToken.token
