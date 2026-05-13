@@ -1,72 +1,96 @@
 /**
  * GET /api/checkout/paypal/return — PayPal post-approval landing.
  *
- * The hole this plugs:
- *   Our checkout/create flow uses Orders v2 with intent: "CAPTURE". The customer
- *   is redirected to PayPal's approval URL; once they click "Pay Now" the order
- *   is APPROVED but NOT yet captured. With the redirect (server-side) flow,
- *   the merchant MUST explicitly call /v2/checkout/orders/<id>/capture for the
- *   payment to actually move. Without this call the customer's card is never
- *   charged, no PAYMENT.CAPTURE.COMPLETED webhook fires, and no order row /
- *   download token / email is ever created.
+ * The customer is sent here by PayPal after they approve the order
+ * (?token=<orderId>&PayerID=<...>). The order is APPROVED but NOT yet
+ * captured — this route calls /v2/checkout/orders/<id>/capture to actually
+ * move the money, then sends the customer to /books/<slug>?payment=success.
  *
- *   PayPal redirects here on approval with ?token=<ORDER_ID>&PayerID=<...>.
- *   This route captures the order and then bounces the customer to the
- *   book page with ?payment=success. The webhook does the rest (idempotent;
- *   it dedupes by paypal_order_id from PR #6).
- *
- * Why GET (not POST):
- *   PayPal's return_url is opened by the customer's browser as a navigation,
- *   which is always GET. We cannot change that.
+ * Security gates (in order):
+ *   1. Per-IP rate-limit blocks scripted capture spam.
+ *   2. The ?token is looked up in pending_paypal_orders. Unknown / consumed /
+ *      expired tokens are refused without ever calling PayPal. Defeats the
+ *      replay attack where an attacker tries to force-capture another
+ *      customer's APPROVED order.
+ *   3. Soft binding: ip_hash + user_agent_hash mismatches do NOT block (real
+ *      users can switch networks/devices mid-flow) but DO fire a warning
+ *      alert so we can spot anomalies.
+ *   4. AbortSignal.timeout(20_000) on the capture fetch — without this a
+ *      hanging PayPal API call lets Vercel kill the function (504) before
+ *      our catch runs, leaving the customer with a generic Vercel error and
+ *      no alert.
+ *   5. Coarse dedup keys on capture-abuse paths (one alert per IP per hour,
+ *      not one per attempted orderId) so a brute-force probe can't flood
+ *      the admin inbox.
  *
  * Idempotency:
- *   If the customer reloads this URL after a successful capture, PayPal
- *   responds with ORDER_ALREADY_CAPTURED. We treat that as success and
- *   redirect normally — the webhook already fired (or will), and the
- *   webhook handler itself dedupes on paypal_order_id.
+ *   PayPal returns 422 ORDER_ALREADY_CAPTURED if we re-attempt the same
+ *   order. We treat that as success — the webhook itself dedupes by
+ *   paypal_order_id (PR A).
  */
 import { NextResponse, type NextRequest } from "next/server"
 import { alertAdmin } from "@/lib/alert-admin"
+import { apiBase, getAccessToken, paypalEnvLabel } from "@/lib/paypal"
+import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { createHash } from "node:crypto"
 
-const PAYPAL_API_BASE = process.env.PAYPAL_API_BASE || "https://api-m.sandbox.paypal.com"
+export const runtime = "nodejs"
 
-async function getPayPalAccessToken(): Promise<string | null> {
-  const clientId = process.env.PAYPAL_CLIENT_ID
-  const clientSecret = process.env.PAYPAL_SECRET
-  if (!clientId || !clientSecret) return null
-
-  try {
-    const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
-    const res = await fetch(`${PAYPAL_API_BASE}/v1/oauth2/token`, {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: "grant_type=client_credentials",
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.access_token ?? null
-  } catch {
-    return null
-  }
-}
+/** Window (ms) within which a pending_paypal_orders row is considered fresh. */
+const PENDING_ORDER_TTL_MS = 60 * 60 * 1000 // 1 hour
 
 function siteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
 }
 
-function redirectToBook(bookSlug: string | null, status: "success" | "cancelled" | "error"): NextResponse {
-  // If bookSlug is missing for any reason, bounce home rather than 404.
-  const path = bookSlug ? `/books/${encodeURIComponent(bookSlug)}` : "/"
-  return NextResponse.redirect(`${siteUrl()}${path}?payment=${status}`, { status: 303 })
+function safeSlug(s: string | null): string | null {
+  if (!s) return null
+  // Allowlist-style validation — only lowercase alnum + hyphens. Stops any
+  // open-redirect / path-injection cuteness via the bookSlug query param.
+  return /^[a-z0-9][a-z0-9-]{0,80}$/.test(s) ? s : null
+}
+
+function hashForBinding(value: string | null | undefined): string | null {
+  if (!value) return null
+  return createHash("sha256").update(value).digest("hex").slice(0, 64)
+}
+
+function redirectToBook(
+  bookSlug: string | null,
+  status: "success" | "cancelled" | "error",
+): NextResponse {
+  const validSlug = safeSlug(bookSlug)
+  const path = validSlug ? `/books/${validSlug}` : "/"
+  const res = NextResponse.redirect(`${siteUrl()}${path}?payment=${status}`, { status: 303 })
+  // Don't let any intermediary cache the 303 — the token in the URL is single-use.
+  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate")
+  return res
 }
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request)
+
+  // Rate-limit BEFORE we look anything up — defends against scripted capture
+  // probes that try to brute-force valid order IDs.
+  const limit = rateLimit({
+    scope: "paypal-return",
+    ip,
+    windowMs: 15 * 60 * 1000,
+    maxAttempts: 20,
+    lockoutMs: 30 * 60 * 1000,
+  })
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again in a few minutes." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds ?? 60) } },
+    )
+  }
+
   const { searchParams } = request.nextUrl
   const orderId = searchParams.get("token") // PayPal calls the order ID "token" in the return URL
-  const bookSlug = searchParams.get("bookSlug")
+  const bookSlugParam = searchParams.get("bookSlug")
+  const bookSlug = safeSlug(bookSlugParam) // null if invalid
 
   if (!orderId) {
     // PayPal didn't pass back an order ID — most likely the customer hit the
@@ -75,70 +99,217 @@ export async function GET(request: NextRequest) {
     return redirectToBook(bookSlug, "cancelled")
   }
 
-  const accessToken = await getPayPalAccessToken()
-  if (!accessToken) {
+  // ----------------------------------------------------------------------
+  // GATE: the orderId must be a row we created in pending_paypal_orders and
+  // it must still be 'pending'. This is the primary defense against
+  // third-party capture replay.
+  // ----------------------------------------------------------------------
+  const { data: pending, error: pendingFetchError } = await supabaseAdmin
+    .from("pending_paypal_orders")
+    .select("id, paypal_order_id, book_id, book_slug, status, created_at, ip_hash, user_agent_hash")
+    .eq("paypal_order_id", orderId)
+    .maybeSingle()
+
+  if (pendingFetchError) {
+    console.error("pending_paypal_orders lookup failed:", pendingFetchError)
+    await alertAdmin({
+      severity: "error",
+      subject: "PayPal return: pending order lookup failed",
+      body:
+        "Looking up pending_paypal_orders for an incoming return failed with a non-PGRST116 error. " +
+        "Capture cannot proceed safely until this is resolved.",
+      details: { paypalOrderId: orderId, errorCode: pendingFetchError.code },
+      dedupKey: "paypal:return-pending-lookup-failed",
+    })
+    return redirectToBook(bookSlug, "error")
+  }
+
+  if (!pending) {
+    // Unknown orderId — either an attacker is probing, or our pending insert
+    // failed earlier and the customer is genuinely stuck. Either way, refuse
+    // to capture. Use a COARSE dedup key so probe spam doesn't flood the inbox.
+    console.warn("Unknown PayPal orderId on return", { orderId })
+    await alertAdmin({
+      severity: "warning",
+      subject: "PayPal return: unknown order id (possible replay attempt)",
+      body:
+        "An incoming /api/checkout/paypal/return ?token did not match any row in " +
+        "pending_paypal_orders. This is most likely a third party attempting to " +
+        "capture an order they didn't create, but could also indicate a stuck legitimate " +
+        "customer whose pending-order INSERT failed earlier. Check Vercel logs.",
+      details: { paypalOrderId: orderId },
+      // COARSE dedup: one alert per hour regardless of how many bogus IDs are tried.
+      dedupKey: "paypal:return-unknown-order",
+    })
+    return redirectToBook(bookSlug, "error")
+  }
+
+  // Already consumed — likely a customer reloading the success page after
+  // PayPal already captured. Treat as benign success (the webhook is what
+  // creates the order row + token + email; that path is idempotent on its
+  // own end via paypal_order_id from PR A).
+  if (pending.status === "consumed") {
+    return redirectToBook(pending.book_slug, "success")
+  }
+
+  if (pending.status === "expired") {
+    // The pending row was reaped before the customer returned.
+    await alertAdmin({
+      severity: "info",
+      subject: "PayPal return: capture attempted on expired pending order",
+      body:
+        "A customer returned from PayPal with an order id that we had marked expired. " +
+        "Either the user took >1h to approve, or they returned to an old approval URL. " +
+        "Refusing to capture.",
+      details: { paypalOrderId: orderId, createdAt: pending.created_at },
+      dedupKey: "paypal:return-expired-order",
+    })
+    return redirectToBook(pending.book_slug, "error")
+  }
+
+  // Soft TTL check — anything older than PENDING_ORDER_TTL_MS gets refused.
+  const createdAtMs = pending.created_at ? new Date(pending.created_at).getTime() : 0
+  if (Number.isFinite(createdAtMs) && Date.now() - createdAtMs > PENDING_ORDER_TTL_MS) {
+    // Mark it expired so subsequent probes hit the 'expired' branch above
+    // (which is dedup'd separately from unknown-order alerts).
+    await supabaseAdmin
+      .from("pending_paypal_orders")
+      .update({ status: "expired" })
+      .eq("id", pending.id)
+
+    return redirectToBook(pending.book_slug, "error")
+  }
+
+  // Soft binding warning: IP / UA mismatch is suspicious but not blocking
+  // (mobile users switch networks; some users have multiple tabs/devices).
+  const currentIpHash = hashForBinding(ip)
+  const currentUaHash = hashForBinding(request.headers.get("user-agent"))
+  if (
+    (pending.ip_hash && currentIpHash && pending.ip_hash !== currentIpHash) ||
+    (pending.user_agent_hash && currentUaHash && pending.user_agent_hash !== currentUaHash)
+  ) {
+    await alertAdmin({
+      severity: "warning",
+      subject: "PayPal return: IP/UA mismatch on capture (soft warning)",
+      body:
+        "The IP or user-agent on the capture-return request does not match the values " +
+        "captured at create-order time. This is often legitimate (mobile networks, multi-device " +
+        "flows, VPN toggles) but is worth noting. Proceeding with capture; review if pattern recurs.",
+      details: {
+        paypalOrderId: orderId,
+        ipMatch: pending.ip_hash === currentIpHash,
+        uaMatch: pending.user_agent_hash === currentUaHash,
+      },
+      // COARSE dedup — one alert per hour total, not one per orderId.
+      dedupKey: "paypal:return-binding-mismatch",
+    })
+    // No early return — we proceed with capture.
+  }
+
+  // ----------------------------------------------------------------------
+  // OAuth token
+  // ----------------------------------------------------------------------
+  let accessToken: string
+  try {
+    accessToken = await getAccessToken()
+  } catch (err) {
     await alertAdmin({
       severity: "critical",
       subject: "PayPal return: could not get access token to capture order",
       body:
         "A customer approved a PayPal payment but we could not get an OAuth token to capture it. " +
-        "The payment is sitting in APPROVED state on PayPal's side, NOT captured. The customer is " +
+        "The payment is sitting APPROVED on PayPal's side, NOT captured. The customer is " +
         "looking at our site right now wondering what happened. Verify PAYPAL_CLIENT_ID and " +
-        "PAYPAL_SECRET in Vercel env vars, then capture manually from the PayPal dashboard.",
-      details: { paypalOrderId: orderId, bookSlug },
+        "PAYPAL_CLIENT_SECRET / PAYPAL_SECRET in Vercel env vars, then capture manually from " +
+        "the PayPal dashboard.",
+      details: { paypalOrderId: orderId, bookSlug: pending.book_slug, paypalEnv: paypalEnvLabel(), errorMessage: err instanceof Error ? err.message : String(err) },
       dedupKey: "paypal:return-token-failed",
     })
-    return redirectToBook(bookSlug, "error")
+    return redirectToBook(pending.book_slug, "error")
   }
 
+  // ----------------------------------------------------------------------
+  // Capture (with timeout — Vercel's function timeout will otherwise eat the
+  // catch and we lose the alert)
+  // ----------------------------------------------------------------------
   let captureResponse: Response
   try {
     captureResponse = await fetch(
-      `${PAYPAL_API_BASE}/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`,
+      `${apiBase()}/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`,
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
-          // PayPal requires a unique request id only if we want idempotency
-          // on retries; since we treat ORDER_ALREADY_CAPTURED as success
-          // we can leave this off and rely on PayPal's natural dedup.
         },
-      }
+        // 20s — well below the Vercel function timeout but generous for PayPal.
+        signal: AbortSignal.timeout(20_000),
+      },
     )
   } catch (err) {
-    await alertAdmin({
-      severity: "critical",
-      subject: "PayPal return: capture request THREW",
-      body:
-        "The capture POST to PayPal threw before returning. The customer's payment may or may not " +
-        "have been captured. Manual reconciliation required — verify in PayPal dashboard.",
-      details: { paypalOrderId: orderId, bookSlug, errorMessage: err instanceof Error ? err.message : String(err) },
-      dedupKey: `paypal:return-capture-threw:${orderId}`,
-    })
-    return redirectToBook(bookSlug, "error")
+    const isTimeout =
+      err instanceof DOMException && err.name === "TimeoutError"
+        ? true
+        : err instanceof Error && /aborted|timeout/i.test(err.message)
+    if (isTimeout) {
+      await alertAdmin({
+        severity: "critical",
+        subject: "PayPal return: capture request TIMED OUT",
+        body:
+          "The capture POST to PayPal exceeded 20 seconds. The customer's payment may or may " +
+          "not have been captured. Verify in the PayPal dashboard and reconcile manually if needed.",
+        details: { paypalOrderId: orderId, bookSlug: pending.book_slug, paypalEnv: paypalEnvLabel() },
+        dedupKey: `paypal:return-capture-timeout:${orderId}`,
+      })
+    } else {
+      await alertAdmin({
+        severity: "critical",
+        subject: "PayPal return: capture request THREW",
+        body:
+          "The capture POST to PayPal threw before returning. The customer's payment may or may " +
+          "not have been captured. Verify in the PayPal dashboard and reconcile manually if needed.",
+        details: {
+          paypalOrderId: orderId,
+          bookSlug: pending.book_slug,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+        dedupKey: `paypal:return-capture-threw:${orderId}`,
+      })
+    }
+    return redirectToBook(pending.book_slug, "error")
   }
 
-  // Idempotency: if the customer reloads this route after a successful capture
-  // PayPal returns 422 with name=UNPROCESSABLE_ENTITY and issue=ORDER_ALREADY_CAPTURED.
-  // That's our "everything is fine" signal — the webhook already fired (or will).
+  // Idempotency: if the customer reloads this route after a successful
+  // capture PayPal returns 422 with name=UNPROCESSABLE_ENTITY and
+  // issue=ORDER_ALREADY_CAPTURED. That's our "everything is fine" signal.
   if (captureResponse.status === 422) {
-    const body = await captureResponse.json().catch(() => ({} as any))
-    const alreadyCaptured = (body?.details ?? []).some(
-      (d: any) => d?.issue === "ORDER_ALREADY_CAPTURED"
+    const body = await captureResponse.json().catch(() => null)
+    const detailsArray = body && Array.isArray((body as any).details) ? (body as any).details : []
+    const alreadyCaptured = detailsArray.some(
+      (d: any) => d?.issue === "ORDER_ALREADY_CAPTURED",
     )
     if (alreadyCaptured) {
-      return redirectToBook(bookSlug, "success")
+      // Mark consumed (idempotent). Don't alert.
+      await supabaseAdmin
+        .from("pending_paypal_orders")
+        .update({ status: "consumed", consumed_at: new Date().toISOString() })
+        .eq("id", pending.id)
+      return redirectToBook(pending.book_slug, "success")
     }
-    // Some other 422 — fall through to error path below
     await alertAdmin({
       severity: "error",
-      subject: "PayPal return: capture rejected with 422",
-      body: "PayPal rejected the capture request with a 422. Customer's payment is not captured.",
-      details: { paypalOrderId: orderId, bookSlug, paypalIssue: body?.name, details: body?.details },
+      subject: "PayPal return: capture rejected with 422 (not already-captured)",
+      body: "PayPal rejected the capture request with a 422 that wasn't ORDER_ALREADY_CAPTURED.",
+      details: {
+        paypalOrderId: orderId,
+        bookSlug: pending.book_slug,
+        paypalIssue: (body as any)?.name,
+        details: detailsArray,
+        bodyParseFailed: body === null,
+      },
       dedupKey: `paypal:return-capture-422:${orderId}`,
     })
-    return redirectToBook(bookSlug, "error")
+    return redirectToBook(pending.book_slug, "error")
   }
 
   if (!captureResponse.ok) {
@@ -148,23 +319,28 @@ export async function GET(request: NextRequest) {
       subject: "PayPal return: capture FAILED — customer didn't get charged",
       body:
         "A customer approved a payment on PayPal but the subsequent capture call failed. " +
-        "The customer's card was NOT charged. They're now sitting on the book page wondering " +
-        "what happened. Investigate the PayPal response in the details below.",
+        "The customer's card was NOT charged. Investigate the PayPal response in the details below.",
       details: {
         paypalOrderId: orderId,
-        bookSlug,
+        bookSlug: pending.book_slug,
         status: captureResponse.status,
         paypalErrorName: body?.name,
         paypalDetails: body?.details,
+        paypalEnv: paypalEnvLabel(),
       },
       dedupKey: `paypal:return-capture-failed:${orderId}`,
     })
-    return redirectToBook(bookSlug, "error")
+    return redirectToBook(pending.book_slug, "error")
   }
 
-  // Success path — PayPal captured the money. The PAYMENT.CAPTURE.COMPLETED
-  // webhook will fire (or has already fired) and our webhook handler does the
-  // order row + token + email work. Send the customer to the friendly success
-  // landing page on the book detail route.
-  return redirectToBook(bookSlug, "success")
+  // SUCCESS — PayPal captured. Mark the pending row consumed so reload of
+  // this URL doesn't re-attempt. The webhook handler does the real
+  // fulfillment work (creating the orders row, download_token row, email)
+  // and dedupes idempotently on its own end via paypal_order_id (PR A).
+  await supabaseAdmin
+    .from("pending_paypal_orders")
+    .update({ status: "consumed", consumed_at: new Date().toISOString() })
+    .eq("id", pending.id)
+
+  return redirectToBook(pending.book_slug, "success")
 }
