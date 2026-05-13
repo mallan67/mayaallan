@@ -3,6 +3,7 @@
  * Generates a 1200x630 image with book cover and information
  */
 import { ImageResponse } from "next/og"
+import { OG_CACHE_HEADERS, logOgDataFailure } from "@/lib/og-image-helpers"
 
 export const runtime = "edge"
 
@@ -12,6 +13,8 @@ export const size = {
   height: 630,
 }
 export const contentType = "image/png"
+
+const OG_SOURCE = "twitter:book"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -41,7 +44,8 @@ async function getBookData(slug: string) {
 
     const data = await response.json()
     return data?.[0] || null
-  } catch {
+  } catch (err) {
+    logOgDataFailure(OG_SOURCE, err)
     return null
   }
 }
@@ -79,7 +83,7 @@ export default async function Image({ params }: Props) {
           <p style={{ fontSize: "32px", color: "#64748b" }}>Author</p>
         </div>
       ),
-      { ...size }
+      { ...size, headers: OG_CACHE_HEADERS }
     )
   }
 
@@ -250,6 +254,7 @@ export default async function Image({ params }: Props) {
     ),
     {
       ...size,
+      headers: OG_CACHE_HEADERS,
     }
   )
 }

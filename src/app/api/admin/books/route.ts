@@ -109,7 +109,6 @@ export async function POST(request: Request) {
   let body: any
   try {
     body = await request.json()
-    console.log("Creating book with payload:", { title: body.title, slug: body.slug })
   } catch (parseError: any) {
     console.error("Body parse failed:", parseError)
     return NextResponse.json({ error: "Invalid JSON body", details: parseError?.message }, { status: 400 })

@@ -24,7 +24,6 @@ export async function GET() {
       throw error
     }
 
-    console.log("Settings loaded:", settings ? `id=${settings.id}` : "none")
     return NextResponse.json(settings || {})
   } catch (error) {
     console.error("Error fetching settings:", error)
@@ -40,7 +39,6 @@ export async function PATCH(request: Request) {
 
   try {
     const data = await request.json()
-    console.log("Saving settings - authorName:", data.authorName, "authorBio length:", data.authorBio?.length)
 
     // Check if settings exist - order by id for consistency
     const { data: existing, error: fetchError } = await supabaseAdmin
@@ -82,10 +80,8 @@ export async function PATCH(request: Request) {
         console.error("Error updating settings:", error.message, error.code)
         throw error
       }
-      console.log("Settings updated - id:", updated?.id)
       settings = updated
     } else {
-      console.log("No existing settings found, creating new...")
       const { data: created, error } = await supabaseAdmin
         .from(Tables.siteSettings)
         .insert(settingsData)
@@ -96,7 +92,6 @@ export async function PATCH(request: Request) {
         console.error("Error creating settings:", error.message, error.code)
         throw error
       }
-      console.log("Settings created - id:", created?.id)
       settings = created
     }
 
