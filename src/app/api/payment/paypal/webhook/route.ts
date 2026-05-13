@@ -135,7 +135,32 @@ export async function POST(request: Request) {
       if (body.event_type === "PAYMENT.CAPTURE.COMPLETED") {
         // Modern checkout flow - capture completed
         bookId = resource.custom_id ? parseInt(resource.custom_id) : null
-        paypalOrderId = resource.id
+        // CRITICAL: for PAYMENT.CAPTURE.COMPLETED, resource.id is the CAPTURE id,
+        // not the order id. Using it as paypal_order_id would create a different
+        // dedup key than a CHECKOUT.ORDER.COMPLETED event for the same purchase,
+        // breaking idempotency across both webhook subscriptions. The canonical
+        // order id lives in supplementary_data.related_ids.order_id.
+        paypalOrderId = resource.supplementary_data?.related_ids?.order_id ?? null
+        if (!paypalOrderId) {
+          // Missing related_ids.order_id on a modern PAYMENT.CAPTURE.COMPLETED
+          // is anomalous — PayPal v2 should always include it. Ignore the
+          // event rather than fall back to capture.id (which would create a
+          // duplicate fulfillment path) and alert so we can investigate.
+          await alertAdmin({
+            severity: "critical",
+            subject: "PayPal webhook: PAYMENT.CAPTURE.COMPLETED missing related_ids.order_id",
+            body:
+              "A PAYMENT.CAPTURE.COMPLETED event arrived with no " +
+              "supplementary_data.related_ids.order_id. We refuse to use resource.id " +
+              "(which is the capture id, not the order id) because that would create a " +
+              "different dedup key than a CHECKOUT.ORDER.COMPLETED for the same purchase " +
+              "and risk double-fulfillment. Investigate the PayPal payload and reconcile " +
+              "manually.",
+            details: { captureId: resource.id, eventType: body.event_type },
+            dedupKey: "paypal:capture-missing-order-id",
+          })
+          return NextResponse.json({ received: true, ignored: "missing-order-id" })
+        }
         amount = parseFloat(resource.amount?.value || "0")
         currency = resource.amount?.currency_code?.toLowerCase() || "usd"
         // Note: payer info may be in supplementary_data for captures
@@ -458,8 +483,83 @@ export async function POST(request: Request) {
           })
         }
 
-        // NEVER log the token value — anyone with read access to Vercel function
-        // logs could otherwise fulfill the download by hitting /download/<token>.
+        // ----------------------------------------------------------------
+        // ATOMIC EMAIL-SEND CLAIM
+        //
+        // Multiple concurrent webhook workers may all reach this point with
+        // email_sent_at still NULL. Without an atomic claim, they would all
+        // call Resend and the customer would get one email per worker.
+        //
+        // The claim RPC takes a row lock, checks both email_sent_at and
+        // email_send_claimed_at, and either grants the claim ('ok') or
+        // refuses ('claimed_by_other' / 'already_sent'). Only the worker
+        // that gets 'ok' calls Resend.
+        // ----------------------------------------------------------------
+        const workerId = `vercel:${process.env.VERCEL_DEPLOYMENT_ID ?? "local"}:${crypto.randomBytes(8).toString("hex")}`
+
+        const { data: claimRows, error: claimError } = await supabaseAdmin.rpc(
+          "claim_download_email_send",
+          { p_token: tokenValue, p_worker_id: workerId, p_stale_timeout_seconds: 600 },
+        )
+
+        if (claimError) {
+          await alertAdmin({
+            severity: "critical",
+            subject: "PayPal webhook: email-send claim RPC failed",
+            body:
+              "claim_download_email_send errored. Cannot safely send the delivery email without " +
+              "the claim — risk of duplicate emails under concurrent retries. Returning 500 so " +
+              "PayPal retries.",
+            details: { orderId: order.id, errorCode: claimError.code, errorMessage: claimError.message },
+            dedupKey: "paypal:claim-rpc-failed",
+          })
+          return NextResponse.json({
+            error: "Service temporarily unavailable. PayPal will retry.",
+            orderId: order.id,
+          }, { status: 500 })
+        }
+
+        const claimResult = Array.isArray(claimRows) ? claimRows[0] : claimRows
+
+        if (!claimResult || claimResult.status === "not_found") {
+          // Token row vanished between the SELECT we did earlier and the claim.
+          // Anomalous — alert and fail so PayPal retries.
+          await alertAdmin({
+            severity: "critical",
+            subject: "PayPal webhook: token row vanished before email claim",
+            body: "Claim RPC reports no row for the token we just inserted/looked up. Investigate.",
+            details: { orderId: order.id, tokenRowId },
+            dedupKey: "paypal:claim-no-row",
+          })
+          return NextResponse.json({
+            error: "Service temporarily unavailable. PayPal will retry.",
+            orderId: order.id,
+          }, { status: 500 })
+        }
+
+        if (claimResult.status === "already_sent") {
+          // Some other path already marked email_sent_at — dedupe cleanly.
+          return NextResponse.json({
+            received: true,
+            deduplicated: true,
+            orderId: order.id,
+          })
+        }
+
+        if (claimResult.status === "claimed_by_other") {
+          // Another concurrent worker holds a fresh claim and is sending now.
+          // Return 500 so PayPal retries; by the time it retries, the
+          // claimant will have either set email_sent_at (next attempt
+          // dedupes) or released the claim (next attempt resends).
+          // Don't alert — this is normal under concurrent retries.
+          return NextResponse.json({
+            error: "Concurrent fulfillment in progress. PayPal will retry.",
+            orderId: order.id,
+          }, { status: 500 })
+        }
+
+        // claimResult.status === "ok" — we are the sole worker authorized
+        // to send the email for this token. NEVER log the token value.
         const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/download/${tokenValue}`
 
         const emailResult = await sendPurchaseEmail({
@@ -472,30 +572,25 @@ export async function POST(request: Request) {
         })
 
         if (!emailResult.ok) {
-          // Order + token are valid; only delivery email failed. We did NOT
-          // set email_sent_at, so PayPal's next webhook retry (or a manual
-          // re-fire) will re-enter the resume branch and try the email again
-          // with this same token. The customer eventually gets exactly one
-          // working email or — if Resend stays down — Maya gets the alert
-          // and can resend manually.
-          //
-          // Important: we 500 PayPal here so they DO retry. Previously this
-          // returned 200 (because order + token were valid), which silenced
-          // PayPal's auto-retry and stranded the customer if email kept failing.
+          // Release the claim so a future retry can re-acquire it. If the
+          // release itself fails the claim will stale-timeout in 10 min.
+          await supabaseAdmin.rpc("release_download_email_claim", {
+            p_token: tokenValue,
+            p_worker_id: workerId,
+          })
+
           console.error("Purchase email failed for order", order.id, ":", emailResult.error)
           await alertAdmin({
             severity: "error",
             subject: "PayPal: order completed but delivery email failed",
             body:
-              "Order + token are valid but the buyer never received the download link. " +
-              "Returning 500 so PayPal retries the webhook; the resume path will reuse the " +
-              "existing token. If Resend remains down, send the link manually.",
+              "Order + token are valid but Resend rejected the send. Claim released so the next " +
+              "PayPal retry (or a manual resend) can try again. If Resend remains down, send the " +
+              "link manually.",
             details: {
               orderId: order.id,
               customerEmail,
               bookTitle: book.title,
-              // Don't include the raw resendError in the response back to PayPal,
-              // but include in the alert email for Maya.
               resendError: emailResult.error,
             },
             dedupKey: `paypal:email-failed:${paypalOrderId}`,
@@ -506,26 +601,33 @@ export async function POST(request: Request) {
           }, { status: 500 })
         }
 
-        // Email confirmed delivered by Resend — record it so a future retry
-        // (or PayPal duplicate webhook) will dedupe instead of re-sending.
-        const sentAt = new Date().toISOString()
+        // Email confirmed delivered by Resend — record it AND clear the claim
+        // columns (they served their purpose; clearing keeps the row clean).
         const { error: sentUpdateError } = await supabaseAdmin
           .from(Tables.downloadTokens)
-          .update({ email_sent_at: sentAt })
+          .update({
+            email_sent_at: new Date().toISOString(),
+            email_send_claimed_at: null,
+            email_send_claimed_by: null,
+          })
           .eq("id", tokenRowId)
 
         if (sentUpdateError) {
           // Non-fatal — the customer already has their email. But a future
           // webhook retry will think the email wasn't sent and try to send
-          // it again (resulting in a duplicate). Alert so we know.
+          // it again. The claim is still in place though, so the duplicate
+          // attempt would see 'claimed_by_other' and (correctly) wait until
+          // the claim staleness expires (10 min) before retrying. Net effect:
+          // possible duplicate email after 10 min if PayPal keeps retrying.
           console.error("Failed to set email_sent_at:", sentUpdateError)
           await alertAdmin({
             severity: "warning",
             subject: "PayPal webhook: email delivered but email_sent_at update failed",
             body:
               "The download link email was successfully delivered, but the email_sent_at " +
-              "column on download_tokens couldn't be updated. If PayPal retries the webhook " +
-              "the customer may receive a duplicate email.",
+              "column on download_tokens couldn't be updated. The claim is still held so " +
+              "duplicate sends are blocked for 10 minutes; after that a PayPal retry could " +
+              "send a duplicate email.",
             details: {
               orderId: order.id,
               tokenRowId,

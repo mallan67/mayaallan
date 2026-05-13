@@ -58,13 +58,127 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_download_tokens_order_id
 
 
 -- ----------------------------------------------------------------------------
--- 3) Track which orders had their delivery email confirmed-sent. The webhook
---    handler uses this to distinguish "fully fulfilled, dedupe the retry"
---    from "token exists but email failed, retry the send instead of
---    returning deduplicated:true".
+-- 3) Track email delivery state. Three columns work together to prevent
+--    duplicate emails under concurrent webhook workers:
+--
+--    email_sent_at         — Resend confirmed delivery for this token. The
+--                            webhook handler dedupes when this is non-null.
+--    email_send_claimed_at — A worker has claimed the right to call Resend
+--                            and is currently sending. Claims expire after
+--                            a stale timeout (default 10 minutes) so a
+--                            crashed worker doesn't block forever.
+--    email_send_claimed_by — Opaque worker identifier for forensics.
+--
+--    Without the claim columns, two concurrent webhook workers can BOTH
+--    observe email_sent_at IS NULL, BOTH call Resend, and the customer
+--    gets two copies of the same email. The claim columns let exactly one
+--    worker (the one whose UPDATE acquires the claim) call Resend.
 -- ----------------------------------------------------------------------------
 ALTER TABLE public.download_tokens
   ADD COLUMN IF NOT EXISTS email_sent_at TIMESTAMPTZ;
+ALTER TABLE public.download_tokens
+  ADD COLUMN IF NOT EXISTS email_send_claimed_at TIMESTAMPTZ;
+ALTER TABLE public.download_tokens
+  ADD COLUMN IF NOT EXISTS email_send_claimed_by TEXT;
+
+
+-- ----------------------------------------------------------------------------
+-- 3a) Atomic email-send claim. Returns one of:
+--       'ok'              -> claim acquired; caller MAY call Resend
+--       'already_sent'    -> email_sent_at IS NOT NULL; caller MUST skip send
+--       'claimed_by_other'-> another worker holds a fresh claim; caller MUST
+--                            NOT send (return retryable response to PayPal)
+--       'not_found'       -> no row with that token
+--
+--    Stale claims (older than p_stale_timeout_seconds) are stolen — covers
+--    the case where a worker crashed mid-send. Default 600s = 10 minutes
+--    which is far longer than Resend's typical RTT but short enough that
+--    a crash doesn't strand the email for hours.
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.claim_download_email_send(
+  p_token                   TEXT,
+  p_worker_id               TEXT,
+  p_stale_timeout_seconds   INTEGER DEFAULT 600
+)
+RETURNS TABLE (
+  status     TEXT,
+  token_id   BIGINT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_id           BIGINT;
+  v_sent_at      TIMESTAMPTZ;
+  v_claim_at     TIMESTAMPTZ;
+  v_stale_before TIMESTAMPTZ;
+BEGIN
+  v_stale_before := NOW() - (p_stale_timeout_seconds || ' seconds')::INTERVAL;
+
+  SELECT id, email_sent_at, email_send_claimed_at
+    INTO v_id, v_sent_at, v_claim_at
+    FROM public.download_tokens
+   WHERE token = p_token
+   FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RETURN QUERY SELECT 'not_found'::TEXT, NULL::BIGINT;
+    RETURN;
+  END IF;
+
+  IF v_sent_at IS NOT NULL THEN
+    RETURN QUERY SELECT 'already_sent'::TEXT, v_id;
+    RETURN;
+  END IF;
+
+  -- Fresh claim held by another worker — refuse.
+  IF v_claim_at IS NOT NULL AND v_claim_at > v_stale_before THEN
+    RETURN QUERY SELECT 'claimed_by_other'::TEXT, v_id;
+    RETURN;
+  END IF;
+
+  -- Acquire the claim. Either no prior claim, or the prior claim is stale
+  -- (worker likely crashed) and we steal it.
+  UPDATE public.download_tokens
+     SET email_send_claimed_at = NOW(),
+         email_send_claimed_by = p_worker_id
+   WHERE id = v_id;
+
+  RETURN QUERY SELECT 'ok'::TEXT, v_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.claim_download_email_send(TEXT, TEXT, INTEGER)
+  TO service_role;
+
+
+-- ----------------------------------------------------------------------------
+-- 3b) Release a previously-acquired claim WITHOUT marking email_sent_at.
+--     Used when Resend rejects the send — the next webhook retry (or a
+--     manual resend) should be allowed to try again. Idempotent.
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.release_download_email_claim(
+  p_token     TEXT,
+  p_worker_id TEXT
+)
+RETURNS VOID
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  UPDATE public.download_tokens
+     SET email_send_claimed_at = NULL,
+         email_send_claimed_by = NULL
+   WHERE token = p_token
+     -- Only the original claimant can release. A stale-claim stealer would
+     -- have a different worker_id and shouldn't clobber the new claim.
+     AND email_send_claimed_by = p_worker_id
+     AND email_sent_at IS NULL;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.release_download_email_claim(TEXT, TEXT)
+  TO service_role;
 
 
 -- ----------------------------------------------------------------------------
