@@ -27,6 +27,7 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, getAccessToken, safePaypalEnvLabel } from "@/lib/paypal"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { trackMarketingEvent, snapshotAttributionFromRequest } from "@/lib/marketing-events"
 import { createHash } from "node:crypto"
 import { z } from "zod"
 
@@ -190,11 +191,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to get PayPal order id" }, { status: 500 })
     }
 
+    // Snapshot the buyer's attribution from their cookies BEFORE we hand
+    // them off to PayPal. The webhook (server-to-server) has no cookies of
+    // its own to read; this snapshot is how purchase_completed events get
+    // their UTM values and how campaigns get credited for revenue.
+    const attribution = snapshotAttributionFromRequest(request)
+
     // Persist the pending order so /api/checkout/paypal/return can validate
     // the returning ?token=<orderId> against a row we actually created. The
     // ip_hash + ua_hash are soft signals only (legitimate users can switch
     // networks/devices between create-order and approve-order); the hard
     // gate is status='pending' on a row keyed by paypal_order_id.
+    //
+    // Attribution snapshot is written to the same row so the webhook can
+    // look it up by paypal_order_id.
     const { error: pendingInsertError } = await supabaseAdmin
       .from("pending_paypal_orders")
       .insert({
@@ -204,6 +214,15 @@ export async function POST(request: Request) {
         ip_hash: hashForBinding(ip),
         user_agent_hash: hashForBinding(request.headers.get("user-agent")),
         status: "pending",
+        visitor_id: attribution.visitorId,
+        session_id: attribution.sessionId,
+        utm_source: attribution.utmSource,
+        utm_medium: attribution.utmMedium,
+        utm_campaign: attribution.utmCampaign,
+        utm_content: attribution.utmContent,
+        utm_term: attribution.utmTerm,
+        landing_page: attribution.landingPage,
+        referrer: attribution.referrer,
       })
 
     if (pendingInsertError) {
@@ -243,6 +262,27 @@ export async function POST(request: Request) {
         dedupKey: "paypal:checkout-no-approval-url",
       })
       return NextResponse.json({ error: "Failed to get PayPal checkout URL" }, { status: 500 })
+    }
+
+    // Track checkout_started AFTER the money path has succeeded. Wrapped
+    // in try/catch despite trackMarketingEvent's own swallowing — the
+    // checkout response must not be affected by any analytics failure.
+    try {
+      await trackMarketingEvent({
+        request,
+        eventName: "checkout_started",
+        path: "/api/checkout/paypal",
+        properties: {
+          book_id: bookId,
+          slug: book.slug,
+          title: typeof book.title === "string" ? book.title.slice(0, 128) : null,
+          price: Number(book.ebook_price),
+          format: "ebook",
+          paypal_order_id: paypalOrderId,
+        },
+      })
+    } catch (trackErr) {
+      console.error("[checkout] tracking failed:", trackErr)
     }
 
     return NextResponse.json({ url: approvalUrl })

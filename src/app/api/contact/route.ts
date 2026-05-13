@@ -5,6 +5,7 @@ import { z } from "zod"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { alertAdmin } from "@/lib/alert-admin"
 import { resolveOperatorRecipient } from "@/lib/operator-email"
+import { trackMarketingEvent, emailDomainOnly, messageLengthBucket } from "@/lib/marketing-events"
 
 /**
  * Contact form: stricter validation + honeypot + centralized recipient.
@@ -86,6 +87,23 @@ export async function POST(request: Request) {
     if (error) {
       console.error("Supabase insert error:", error.message, error.code, error.details)
       throw error
+    }
+
+    // Track conversion.
+    try {
+      await trackMarketingEvent({
+        request,
+        eventName: "contact_submitted",
+        path: "/api/contact",
+        properties: {
+          email_domain: emailDomainOnly(data.email),
+          subject_present: !!(data.subject && data.subject.length > 0),
+          message_length: messageLengthBucket(data.message),
+          honeypot: false,
+        },
+      })
+    } catch (trackErr) {
+      console.error("[contact] tracking failed:", trackErr)
     }
 
     // Send email notification asynchronously (don't await - return response immediately)

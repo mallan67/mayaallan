@@ -4,6 +4,7 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { Resend } from "resend"
 import { alertAdmin } from "@/lib/alert-admin"
 import { extractWebhookHeaders, verifyPaypalWebhook } from "@/lib/paypal"
+import { trackMarketingEvent } from "@/lib/marketing-events"
 import crypto from "crypto"
 
 /**
@@ -635,6 +636,98 @@ export async function POST(request: Request) {
             },
             dedupKey: "paypal:email-sent-update-failed",
           })
+        }
+
+        // Track conversion. Webhooks don't carry the buyer's browser cookies
+        // (PayPal posts server-to-server), so we look up the attribution
+        // snapshot the checkout route persisted to pending_paypal_orders
+        // (keyed on paypal_order_id) and use it for both the event row's
+        // utm_* columns and the orders.* attribution columns.
+        try {
+          type CheckoutAttribution = {
+            visitor_id: string | null
+            session_id: string | null
+            utm_source: string | null
+            utm_medium: string | null
+            utm_campaign: string | null
+            utm_content: string | null
+            utm_term: string | null
+            landing_page: string | null
+            referrer: string | null
+          }
+          let attribution: CheckoutAttribution | null = null
+
+          const { data: pendingRow } = await supabaseAdmin
+            .from("pending_paypal_orders")
+            .select(
+              "visitor_id, session_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, landing_page, referrer",
+            )
+            .eq("paypal_order_id", paypalOrderId)
+            .maybeSingle()
+
+          if (pendingRow) attribution = pendingRow as unknown as CheckoutAttribution
+
+          // INSERT marketing_events with the attribution columns populated.
+          // We hand-write the insert instead of using trackMarketingEvent
+          // because that helper only reads from request cookies (which
+          // don't exist on a server-to-server webhook).
+          const { error: eventInsertError } = await supabaseAdmin
+            .from("marketing_events")
+            .insert({
+              visitor_id: attribution?.visitor_id ?? null,
+              session_id: attribution?.session_id ?? null,
+              event_name: "purchase_completed",
+              path: "/api/payment/paypal/webhook",
+              referrer: attribution?.referrer ?? null,
+              utm_source: attribution?.utm_source ?? null,
+              utm_medium: attribution?.utm_medium ?? null,
+              utm_campaign: attribution?.utm_campaign ?? null,
+              utm_content: attribution?.utm_content ?? null,
+              utm_term: attribution?.utm_term ?? null,
+              properties: {
+                order_id: order.id,
+                paypal_order_id: paypalOrderId,
+                amount: typeof amount === "number" ? amount : null,
+                currency: typeof currency === "string" ? currency : null,
+                book_id: typeof book?.id === "number" ? book.id : null,
+                title: typeof book?.title === "string" ? book.title.slice(0, 128) : null,
+                fulfillment_status: "completed",
+              },
+            })
+          if (eventInsertError) {
+            console.error(
+              "[webhook] purchase_completed event insert failed:",
+              eventInsertError.message,
+              eventInsertError.code,
+            )
+          }
+
+          // Also denormalize the attribution onto the orders row so the
+          // admin dashboard / CSV exports / future joins don't need to
+          // touch marketing_events for basic revenue-by-campaign.
+          if (attribution) {
+            const { error: orderUpdateError } = await supabaseAdmin
+              .from(Tables.orders)
+              .update({
+                visitor_id: attribution.visitor_id,
+                session_id: attribution.session_id,
+                utm_source: attribution.utm_source,
+                utm_medium: attribution.utm_medium,
+                utm_campaign: attribution.utm_campaign,
+                landing_page: attribution.landing_page,
+                referrer: attribution.referrer,
+              })
+              .eq("id", order.id)
+            if (orderUpdateError) {
+              console.error(
+                "[webhook] orders attribution update failed:",
+                orderUpdateError.message,
+                orderUpdateError.code,
+              )
+            }
+          }
+        } catch (trackErr) {
+          console.error("[webhook] purchase tracking failed:", trackErr)
         }
 
         return NextResponse.json({

@@ -5,6 +5,7 @@ import { z } from "zod"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { alertAdmin } from "@/lib/alert-admin"
 import { resolveOperatorRecipient } from "@/lib/operator-email"
+import { trackMarketingEvent, emailDomainOnly } from "@/lib/marketing-events"
 
 /**
  * Newsletter subscribe: stricter validation + honeypot + centralized recipient.
@@ -73,6 +74,23 @@ export async function POST(request: Request) {
     if (error) {
       console.error("Supabase insert error:", error.message, error.code, error.details)
       throw error
+    }
+
+    // Track conversion. Wrapped — trackMarketingEvent itself never throws,
+    // but defense-in-depth keeps any future edit from breaking signup.
+    try {
+      await trackMarketingEvent({
+        request,
+        eventName: "newsletter_subscribed",
+        path: "/api/subscribe",
+        properties: {
+          email_domain: emailDomainOnly(email),
+          source: typeof (body as any)?.source === "string" ? String((body as any).source).slice(0, 64) : null,
+          honeypot: false,
+        },
+      })
+    } catch (trackErr) {
+      console.error("[subscribe] tracking failed:", trackErr)
     }
 
     // Send emails asynchronously (don't await - return response immediately)
