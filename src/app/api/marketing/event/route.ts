@@ -22,6 +22,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { trackMarketingEvent, ALLOWED_EVENT_NAMES, type MarketingEventName } from "@/lib/marketing-events"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { isAllowedMarketingOrigin } from "@/lib/marketing-origin"
 
 export const runtime = "nodejs"
 
@@ -32,23 +33,10 @@ const EventSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  // Lenient same-origin gate (analytics doesn't get full CSRF treatment).
-  const origin = request.headers.get("origin") || ""
-  const allowedOrigins = [
-    "https://www.mayaallan.com",
-    "https://mayaallan.com",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-  ]
-  const isPreviewOrigin = (() => {
-    try {
-      const u = new URL(origin)
-      return u.hostname.endsWith(".vercel.app")
-    } catch {
-      return false
-    }
-  })()
-  if (origin && !allowedOrigins.includes(origin) && !isPreviewOrigin) {
+  // Production: only mayaallan.com origins write. Preview/dev: + *.vercel.app
+  // + localhost. Mismatch returns { ok: true } silently so a client's
+  // fire-and-forget fetch resolves cleanly.
+  if (!isAllowedMarketingOrigin(request)) {
     return NextResponse.json({ ok: true })
   }
 

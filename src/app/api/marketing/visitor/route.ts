@@ -20,6 +20,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin"
 import { alertAdmin } from "@/lib/alert-admin"
 import { hashForAttribution } from "@/lib/marketing-events"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { isAllowedMarketingOrigin } from "@/lib/marketing-origin"
 
 export const runtime = "nodejs"
 
@@ -40,26 +41,10 @@ const VisitorSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  // Same-origin protection: stop random external scripts from spamming
-  // the visitor table. This is best-effort — analytics endpoints don't
-  // need to be as strict as money paths.
-  const origin = request.headers.get("origin") || ""
-  const allowedOrigins = [
-    "https://www.mayaallan.com",
-    "https://mayaallan.com",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-  ]
-  const isPreviewOrigin = (() => {
-    try {
-      const u = new URL(origin)
-      return u.hostname.endsWith(".vercel.app")
-    } catch {
-      return false
-    }
-  })()
-  if (origin && !allowedOrigins.includes(origin) && !isPreviewOrigin) {
-    // Return 200 to avoid revealing the origin check to crawlers; do nothing.
+  // Production: only mayaallan.com origins write. Preview/dev: + *.vercel.app
+  // + localhost. Mismatch returns { ok: true } silently so the client's
+  // keepalive fetch resolves cleanly.
+  if (!isAllowedMarketingOrigin(request)) {
     return NextResponse.json({ ok: true })
   }
 
@@ -90,39 +75,64 @@ export async function POST(request: Request) {
   try {
     const ipHash = hashForAttribution(ip)
     const uaHash = hashForAttribution(request.headers.get("user-agent"))
+    const nowIso = new Date().toISOString()
 
-    // ON CONFLICT (visitor_id) DO UPDATE — refresh last_seen_at; never
-    // clobber the first-touch fields once they're set.
-    const { error } = await supabaseAdmin
+    // Two-step upsert so we can preserve first_* fields on conflict while
+    // still refreshing last_seen_at + the latest hashed IP/UA.
+    //
+    // INSERT first. If it succeeds the row is brand new and we're done.
+    // If it returns a unique-violation (23505) the visitor already exists;
+    // we follow up with an UPDATE that touches ONLY last_seen_at + hashes
+    // — never first_* fields.
+    const { error: insertError } = await supabaseAdmin
       .from("marketing_visitors")
-      .upsert(
-        {
-          visitor_id: visitorId,
-          first_seen_at: new Date().toISOString(),
-          last_seen_at: new Date().toISOString(),
-          first_landing_page: firstTouch?.landing_page ?? null,
-          first_referrer: firstTouch?.referrer ?? null,
-          first_utm_source: firstTouch?.utm_source ?? null,
-          first_utm_medium: firstTouch?.utm_medium ?? null,
-          first_utm_campaign: firstTouch?.utm_campaign ?? null,
-          first_utm_content: firstTouch?.utm_content ?? null,
-          first_utm_term: firstTouch?.utm_term ?? null,
+      .insert({
+        visitor_id: visitorId,
+        first_seen_at: nowIso,
+        last_seen_at: nowIso,
+        first_landing_page: firstTouch?.landing_page ?? null,
+        first_referrer: firstTouch?.referrer ?? null,
+        first_utm_source: firstTouch?.utm_source ?? null,
+        first_utm_medium: firstTouch?.utm_medium ?? null,
+        first_utm_campaign: firstTouch?.utm_campaign ?? null,
+        first_utm_content: firstTouch?.utm_content ?? null,
+        first_utm_term: firstTouch?.utm_term ?? null,
+        user_agent_hash: uaHash,
+        ip_hash: ipHash,
+      })
+
+    if (insertError && insertError.code === "23505") {
+      // Returning visitor — update last_seen_at + refresh hashes. First-touch
+      // columns are deliberately omitted so they remain immutable.
+      const { error: updateError } = await supabaseAdmin
+        .from("marketing_visitors")
+        .update({
+          last_seen_at: nowIso,
           user_agent_hash: uaHash,
           ip_hash: ipHash,
-        },
-        { onConflict: "visitor_id", ignoreDuplicates: true },
-      )
+        })
+        .eq("visitor_id", visitorId)
 
-    if (error) {
-      console.error("[marketing-visitor] upsert failed:", error.message, error.code)
+      if (updateError) {
+        console.error("[marketing-visitor] last_seen update failed:", updateError.message, updateError.code)
+        await alertAdmin({
+          severity: "warning",
+          subject: "Marketing attribution: visitor last_seen update failed",
+          body: "Returning visitors' last_seen_at can't be refreshed.",
+          details: { errorCode: updateError.code, errorMessage: updateError.message },
+          dedupKey: "marketing:visitor-last-seen-failed",
+        })
+      }
+    } else if (insertError) {
+      console.error("[marketing-visitor] insert failed:", insertError.message, insertError.code)
       await alertAdmin({
         severity: "warning",
-        subject: "Marketing attribution: visitor upsert failed",
+        subject: "Marketing attribution: visitor insert failed",
         body:
-          "marketing_visitors upsert is failing. Visitor identification continues " +
+          "marketing_visitors insert is failing. Visitor identification continues " +
           "via cookies, but the visitors table won't reflect new arrivals. Check " +
           "supabase / schema.",
-        details: { errorCode: error.code, errorMessage: error.message },
+        details: { errorCode: insertError.code, errorMessage: insertError.message },
         dedupKey: "marketing:visitor-upsert-failed",
       })
     }

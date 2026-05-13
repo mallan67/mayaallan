@@ -107,6 +107,10 @@ export async function GET(request: Request) {
         "properties",
       ],
       rows,
+      // UTM values come from URL query strings — attacker-controllable.
+      // Prefix any =,+,-,@-leading value with ' so spreadsheets treat
+      // it as a string, not a formula.
+      { formulaSafe: true },
     )
 
     const filename = `marketing-events-${fromIso.slice(0, 10)}-to-${toIso.slice(0, 10)}${eventFilter ? `-${eventFilter}` : ""}.csv`

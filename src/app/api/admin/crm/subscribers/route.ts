@@ -24,8 +24,9 @@ export async function GET(_request: Request) {
     s.created_at ? new Date(s.created_at).toISOString() : "",
   ])
 
-  // RFC 4180 — quotes any value containing commas / quotes / newlines.
-  const csv = buildCsv(["email", "source", "created_at"], rows)
+  // RFC 4180 quoting + formula-safe leading-char prefix for the email
+  // and source columns (attacker-controllable).
+  const csv = buildCsv(["email", "source", "created_at"], rows, { formulaSafe: true })
 
   return new NextResponse(csv, {
     status: 200,

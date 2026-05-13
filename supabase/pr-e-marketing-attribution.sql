@@ -92,3 +92,110 @@ ALTER TABLE public.orders
 CREATE INDEX IF NOT EXISTS idx_orders_utm_campaign
   ON public.orders (utm_campaign)
   WHERE utm_campaign IS NOT NULL;
+
+
+-- ----------------------------------------------------------------------------
+-- 4) Attribution bridge on pending_paypal_orders
+-- ----------------------------------------------------------------------------
+-- The checkout flow has the customer's cookies (visitor_id, utm_*) on its
+-- inbound request. The PayPal webhook does NOT — it's server-to-server
+-- with no cookies. To attribute purchases to campaigns we need to bridge
+-- the two halves of the flow.
+--
+-- The bridge: the checkout writes the attribution snapshot onto the
+-- pending_paypal_orders row it already creates (keyed by paypal_order_id).
+-- The webhook looks up that row by paypal_order_id and:
+--   (a) populates the purchase_completed event with the snapshotted utm_*
+--   (b) writes utm_* into the orders.* attribution columns
+--
+-- All columns are nullable. Existing pending rows from before PR E remain
+-- valid; they simply don't carry attribution.
+ALTER TABLE public.pending_paypal_orders
+  ADD COLUMN IF NOT EXISTS visitor_id      TEXT,
+  ADD COLUMN IF NOT EXISTS session_id      TEXT,
+  ADD COLUMN IF NOT EXISTS utm_source      TEXT,
+  ADD COLUMN IF NOT EXISTS utm_medium      TEXT,
+  ADD COLUMN IF NOT EXISTS utm_campaign    TEXT,
+  ADD COLUMN IF NOT EXISTS utm_content     TEXT,
+  ADD COLUMN IF NOT EXISTS utm_term        TEXT,
+  ADD COLUMN IF NOT EXISTS landing_page    TEXT,
+  ADD COLUMN IF NOT EXISTS referrer        TEXT;
+
+
+-- ----------------------------------------------------------------------------
+-- 5) Aggregate RPCs for the admin /admin/analytics dashboard
+-- ----------------------------------------------------------------------------
+-- Supabase REST returns at most ~1000 rows by default. Counting events
+-- in-memory in the Node handler silently undercounts once traffic grows.
+-- These RPCs do the GROUP BY in Postgres and return tiny result sets.
+--
+-- Both RPCs accept a since-timestamp; the dashboard calls them three
+-- times for the 7/30/90-day windows.
+-- ----------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION public.marketing_event_counts_since(
+  p_since TIMESTAMPTZ
+)
+RETURNS TABLE (
+  event_name TEXT,
+  n          BIGINT
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT event_name, COUNT(*)::BIGINT AS n
+    FROM public.marketing_events
+   WHERE created_at >= p_since
+   GROUP BY event_name
+   ORDER BY n DESC;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.marketing_event_counts_since(TIMESTAMPTZ)
+  TO service_role;
+
+
+-- Per-campaign rollup. Counts events, checkouts, purchases, and sums
+-- the amount from purchase_completed properties. p_limit caps the
+-- result so the dashboard doesn't render hundreds of long-tail UTMs.
+CREATE OR REPLACE FUNCTION public.marketing_campaign_summary_since(
+  p_since TIMESTAMPTZ,
+  p_limit INTEGER DEFAULT 10
+)
+RETURNS TABLE (
+  campaign     TEXT,
+  events       BIGINT,
+  checkouts    BIGINT,
+  purchases    BIGINT,
+  revenue      NUMERIC
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT
+    utm_campaign AS campaign,
+    COUNT(*)::BIGINT                                                  AS events,
+    COUNT(*) FILTER (WHERE event_name = 'checkout_started')::BIGINT   AS checkouts,
+    COUNT(*) FILTER (WHERE event_name = 'purchase_completed')::BIGINT AS purchases,
+    COALESCE(
+      SUM(
+        CASE
+          WHEN event_name = 'purchase_completed'
+            AND (properties ->> 'amount') ~ '^[0-9]+(\.[0-9]+)?$'
+          THEN ((properties ->> 'amount')::NUMERIC)
+          ELSE 0
+        END
+      ),
+      0
+    )::NUMERIC AS revenue
+  FROM public.marketing_events
+  WHERE created_at >= p_since
+    AND utm_campaign IS NOT NULL
+  GROUP BY utm_campaign
+  ORDER BY events DESC
+  LIMIT GREATEST(COALESCE(p_limit, 10), 1);
+$$;
+
+GRANT EXECUTE ON FUNCTION public.marketing_campaign_summary_since(TIMESTAMPTZ, INTEGER)
+  TO service_role;

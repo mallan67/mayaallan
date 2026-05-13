@@ -153,24 +153,29 @@ export default function MarketingAttributionClient() {
       }
 
       // ----------------------------------------------------------------
-      // 4. visitor upsert (only on a fresh visitor)
+      // 4. visitor upsert — fired on EVERY page bootstrap, not just new
+      // visitors. The endpoint inserts if missing and updates last_seen_at
+      // (+ hashes) if the row already exists; first-touch fields stay
+      // immutable. Returning visitors thus get a fresh last_seen_at.
       // ----------------------------------------------------------------
       // Fire-and-forget. We don't await — even if the network call
       // fails the user's page experience is unaffected.
-      if (visitorWasNew) {
-        fetch("/api/marketing/visitor", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          // Use keepalive so the request survives a fast page nav-away.
-          keepalive: true,
-          body: JSON.stringify({
-            visitorId,
-            firstTouch: existingFirst || currentTouch,
-          }),
-        }).catch(() => {
-          // Silent — analytics failures must not surface to users.
-        })
-      }
+      // (visitorWasNew kept available for any future per-new-visitor side
+      // effect; right now we treat new and returning identically on the
+      // wire, the server distinguishes via 23505.)
+      void visitorWasNew
+      fetch("/api/marketing/visitor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Use keepalive so the request survives a fast page nav-away.
+        keepalive: true,
+        body: JSON.stringify({
+          visitorId,
+          firstTouch: existingFirst || currentTouch,
+        }),
+      }).catch(() => {
+        // Silent — analytics failures must not surface to users.
+      })
     } catch {
       // Swallow everything. Tracking is best-effort.
     }

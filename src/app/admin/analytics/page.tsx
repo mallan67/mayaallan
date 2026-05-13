@@ -33,28 +33,32 @@ function isoDaysAgo(days: number): string {
 }
 
 async function countEventsByName(sinceIso: string): Promise<EventCounts> {
-  // Pull event_name only — small payload even on millions of rows. We
-  // count in-memory because Supabase REST doesn't expose GROUP BY directly
-  // without an RPC, and for this volume an in-memory tally is fine.
-  const { data, error } = await supabaseAdmin
-    .from("marketing_events")
-    .select("event_name", { count: "exact", head: false })
-    .gte("created_at", sinceIso)
+  // Aggregated in Postgres via marketing_event_counts_since RPC. This
+  // returns at most one row per distinct event_name (currently 11), so
+  // we never hit the supabase REST default row cap of 1000.
+  const { data, error } = await supabaseAdmin.rpc("marketing_event_counts_since", { p_since: sinceIso })
 
-  if (error || !data) return {}
+  if (error || !data) {
+    if (error) console.error("[admin/analytics] event-counts RPC failed:", error.message, error.code)
+    return {}
+  }
   const out: EventCounts = {}
-  for (const row of data as Array<{ event_name: string }>) {
-    out[row.event_name] = (out[row.event_name] ?? 0) + 1
+  for (const row of data as Array<{ event_name: string; n: number }>) {
+    out[row.event_name] = Number(row.n) || 0
   }
   return out
 }
 
 async function revenueAndOrderCount(sinceIso: string): Promise<{ orders: number; revenue: number }> {
+  // Orders are bounded in volume; a direct query with explicit limit is
+  // sufficient and avoids needing a fifth RPC. If volume grows we can
+  // add an RPC later.
   const { data, error } = await supabaseAdmin
     .from("orders")
     .select("id, amount, status")
     .eq("status", "completed")
     .gte("created_at", sinceIso)
+    .limit(10_000)
 
   if (error || !data) return { orders: 0, revenue: 0 }
   let revenue = 0
@@ -71,25 +75,33 @@ async function topCampaigns(sinceIso: string, limit = 10): Promise<Array<{
   events: number
   checkouts: number
   purchases: number
+  revenue: number
 }>> {
-  const { data, error } = await supabaseAdmin
-    .from("marketing_events")
-    .select("utm_campaign, event_name")
-    .gte("created_at", sinceIso)
-    .not("utm_campaign", "is", null)
+  // Aggregated in Postgres via marketing_campaign_summary_since RPC.
+  // Revenue is summed inside the function from purchase_completed
+  // properties so the dashboard isn't dependent on streaming event rows.
+  const { data, error } = await supabaseAdmin.rpc("marketing_campaign_summary_since", {
+    p_since: sinceIso,
+    p_limit: limit,
+  })
 
-  if (error || !data) return []
-  const buckets: Record<string, { campaign: string; events: number; checkouts: number; purchases: number }> = {}
-  for (const row of data as Array<{ utm_campaign: string; event_name: string }>) {
-    const c = row.utm_campaign
-    if (!buckets[c]) buckets[c] = { campaign: c, events: 0, checkouts: 0, purchases: 0 }
-    buckets[c].events += 1
-    if (row.event_name === "checkout_started") buckets[c].checkouts += 1
-    if (row.event_name === "purchase_completed") buckets[c].purchases += 1
+  if (error || !data) {
+    if (error) console.error("[admin/analytics] campaign-summary RPC failed:", error.message, error.code)
+    return []
   }
-  return Object.values(buckets)
-    .sort((a, b) => b.events - a.events)
-    .slice(0, limit)
+  return (data as Array<{
+    campaign: string
+    events: number
+    checkouts: number
+    purchases: number
+    revenue: string | number | null
+  }>).map((row) => ({
+    campaign: row.campaign,
+    events: Number(row.events) || 0,
+    checkouts: Number(row.checkouts) || 0,
+    purchases: Number(row.purchases) || 0,
+    revenue: Number(row.revenue) || 0,
+  }))
 }
 
 function fmtNum(n: number): string {
@@ -180,6 +192,7 @@ async function RangeSection({ days, label }: { days: number; label: RangeKey }) 
                 <th className="py-2 text-right">Events</th>
                 <th className="py-2 text-right">Checkouts</th>
                 <th className="py-2 text-right">Purchases</th>
+                <th className="py-2 text-right">Revenue</th>
               </tr>
             </thead>
             <tbody>
@@ -189,6 +202,7 @@ async function RangeSection({ days, label }: { days: number; label: RangeKey }) 
                   <td className="py-2 text-right">{fmtNum(c.events)}</td>
                   <td className="py-2 text-right">{fmtNum(c.checkouts)}</td>
                   <td className="py-2 text-right">{fmtNum(c.purchases)}</td>
+                  <td className="py-2 text-right">{fmtUSD(c.revenue)}</td>
                 </tr>
               ))}
             </tbody>

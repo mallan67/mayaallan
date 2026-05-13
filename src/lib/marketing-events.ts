@@ -246,6 +246,8 @@ export function snapshotAttributionFromRequest(request: Request | null | undefin
   utmSource: string | null
   utmMedium: string | null
   utmCampaign: string | null
+  utmContent: string | null
+  utmTerm: string | null
   landingPage: string | null
   referrer: string | null
 } {
@@ -257,6 +259,8 @@ export function snapshotAttributionFromRequest(request: Request | null | undefin
     utmSource: touch?.utm_source ?? null,
     utmMedium: touch?.utm_medium ?? null,
     utmCampaign: touch?.utm_campaign ?? null,
+    utmContent: touch?.utm_content ?? null,
+    utmTerm: touch?.utm_term ?? null,
     landingPage: touch?.landing_page ?? null,
     referrer: touch?.referrer ?? null,
   }
