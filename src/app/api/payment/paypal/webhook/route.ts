@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { Resend } from "resend"
+import { alertAdmin } from "@/lib/alert-admin"
 import crypto from "crypto"
 
 /**
@@ -305,8 +306,14 @@ export async function POST(request: Request) {
           .single()
 
         if (tokenError || !downloadToken) {
-          // Customer paid but we cannot give them the file. Surface as 500 for ops.
+          // Customer paid but we cannot give them the file. Alert + surface as 500.
           console.error("Token creation failed for order", order.id, "-", tokenError)
+          await alertAdmin({
+            severity: "critical",
+            subject: "PayPal order completed but token creation FAILED",
+            body: `A customer paid but download-token creation failed. Manual fulfillment required.`,
+            details: { orderId: order.id, customerEmail, bookTitle: book.title, error: tokenError },
+          })
           return NextResponse.json({
             error: "Order completed but download token creation failed. Manual fulfillment required.",
             orderId: order.id,
@@ -327,8 +334,20 @@ export async function POST(request: Request) {
 
         if (!emailResult.ok) {
           // Order + token are valid; only delivery email failed. Don't tell PayPal to retry
-          // (the order succeeded), but flag for manual follow-up.
+          // (the order succeeded), but alert + flag for manual follow-up.
           console.error("Purchase email failed for order", order.id, ":", emailResult.error)
+          await alertAdmin({
+            severity: "error",
+            subject: "PayPal: order completed but delivery email failed",
+            body: `Order + token are valid but the buyer never received the download link. Resend the link manually.`,
+            details: {
+              orderId: order.id,
+              customerEmail,
+              bookTitle: book.title,
+              downloadUrl,
+              resendError: emailResult.error,
+            },
+          })
           return NextResponse.json({
             success: true,
             orderId: order.id,

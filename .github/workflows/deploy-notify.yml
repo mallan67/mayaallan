@@ -1,0 +1,63 @@
+name: Deploy notify
+
+# Triggers whenever Vercel reports a deployment status to GitHub
+# (success / failure / error). Opens an issue on failure and runs a
+# post-deploy health probe on success.
+#
+# Vercel automatically posts deployment_status events to the GitHub
+# integration — no additional setup needed once the Vercel + GitHub
+# integration is connected on the project.
+
+on:
+  deployment_status:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  on-success:
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post-deploy health probe
+        run: |
+          DEPLOY_URL="${{ github.event.deployment_status.target_url }}"
+          echo "Deploy: $DEPLOY_URL"
+          # Probe production health a few seconds after deploy lands
+          sleep 8
+          status=$(curl -sS -m 30 -o /dev/null -w "%{http_code}" "https://www.mayaallan.com/api/health" || echo "000")
+          echo "Production /api/health: HTTP $status"
+          if [ "$status" != "200" ]; then
+            echo "::warning title=Post-deploy health probe failed::HTTP $status"
+            exit 1
+          fi
+
+  on-failure:
+    if: github.event.deployment_status.state == 'failure' || github.event.deployment_status.state == 'error'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open issue on deploy failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ds = context.payload.deployment_status
+            const d = context.payload.deployment
+            const ts = new Date().toISOString()
+            const title = `🔴 Deploy ${ds.state} — ${d.ref ?? 'unknown ref'}`
+            const body = [
+              `**Deploy ${ds.state}** at ${ts}`,
+              ``,
+              `- Ref: \`${d.ref ?? '?'}\``,
+              `- Sha: \`${(d.sha ?? '').slice(0, 7)}\``,
+              `- Environment: \`${d.environment ?? '?'}\``,
+              `- Description: ${ds.description ?? '(none)'}`,
+              `- Inspect: ${ds.target_url ?? ds.log_url ?? '(no link)'}`,
+            ].join('\n')
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              labels: ['deploy-failure'],
+              body,
+            })

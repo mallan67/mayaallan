@@ -1,0 +1,167 @@
+name: Health check
+
+# Pings /api/health every 15 minutes. On failure, opens (or updates) a GitHub
+# issue with the failure details. On recovery, closes the open incident issue.
+#
+# GitHub cron jobs have a minimum interval of 5 min and can be skipped during
+# repo inactivity — they are a soft SLA, not a hard one. For tighter monitoring
+# point an uptime service (UptimeRobot / BetterUptime / Vercel Monitoring) at
+# the same /api/health URL.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 minutes
+  workflow_dispatch:          # also manually runnable from the Actions tab
+
+permissions:
+  issues: write               # so the workflow can open/comment/close incident issues
+  contents: read
+
+concurrency:
+  group: health-check
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      HEALTH_URL: https://www.mayaallan.com/api/health
+      INCIDENT_LABEL: health-incident
+    steps:
+      - name: Probe /api/health
+        id: probe
+        continue-on-error: true
+        run: |
+          set +e
+          response=$(curl -sS -m 30 -w "\n__STATUS__%{http_code}" "$HEALTH_URL")
+          curl_exit=$?
+          set -e
+          # Split response body and status code (status is on its own line: __STATUS__200)
+          body="${response%__STATUS__*}"
+          status_code="${response##*__STATUS__}"
+          if [ -z "$status_code" ] || [ "$status_code" = "$response" ]; then
+            status_code="000"
+            body="curl failed (exit $curl_exit)"
+          fi
+
+          echo "status_code=$status_code" >> "$GITHUB_OUTPUT"
+          {
+            echo 'body<<HEALTHCHECK_EOF'
+            echo "$body"
+            echo 'HEALTHCHECK_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+          echo "::group::Probe result"
+          echo "Status: $status_code"
+          echo "Body:"
+          echo "$body"
+          echo "::endgroup::"
+
+          if [ "$status_code" != "200" ]; then
+            echo "::error title=Health check failed::HTTP $status_code"
+            exit 1
+          fi
+
+      - name: Open or update incident issue on failure
+        if: steps.probe.outcome == 'failure'
+        uses: actions/github-script@v7
+        env:
+          STATUS_CODE: ${{ steps.probe.outputs.status_code }}
+          BODY: ${{ steps.probe.outputs.body }}
+          HEALTH_URL: ${{ env.HEALTH_URL }}
+          INCIDENT_LABEL: ${{ env.INCIDENT_LABEL }}
+        with:
+          script: |
+            const { STATUS_CODE, BODY, HEALTH_URL, INCIDENT_LABEL } = process.env
+            const ts = new Date().toISOString()
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+
+            // Find an open incident issue first
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: INCIDENT_LABEL,
+              per_page: 1,
+            })
+
+            const failureBlock = [
+              `**Failure at ${ts}**`,
+              ``,
+              `- URL: ${HEALTH_URL}`,
+              `- HTTP: \`${STATUS_CODE}\``,
+              `- Workflow run: ${runUrl}`,
+              ``,
+              `<details><summary>Response body</summary>`,
+              ``,
+              '```json',
+              (BODY || '(no body)').slice(0, 6000),
+              '```',
+              ``,
+              `</details>`,
+            ].join('\n')
+
+            if (issues.length > 0) {
+              // Existing open incident — add a comment so frequency is visible.
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body: failureBlock,
+              })
+              console.log(`Commented on incident #${issues[0].number}`)
+            } else {
+              // First failure in this incident — open a new issue.
+              const { data: created } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🚨 Health check failing (HTTP ${STATUS_CODE})`,
+                labels: [INCIDENT_LABEL],
+                body: [
+                  `The scheduled health-check workflow detected a failure.`,
+                  ``,
+                  `Each subsequent failed run will add a comment here.`,
+                  `When the health endpoint returns 200 again, this issue is closed automatically.`,
+                  ``,
+                  `---`,
+                  ``,
+                  failureBlock,
+                ].join('\n'),
+              })
+              console.log(`Opened incident #${created.number}`)
+            }
+
+      - name: Close incident issues on recovery
+        if: steps.probe.outcome == 'success'
+        uses: actions/github-script@v7
+        env:
+          INCIDENT_LABEL: ${{ env.INCIDENT_LABEL }}
+        with:
+          script: |
+            const { INCIDENT_LABEL } = process.env
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: INCIDENT_LABEL,
+              per_page: 20,
+            })
+            if (issues.length === 0) return
+            const ts = new Date().toISOString()
+            for (const issue of issues) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `✅ Health check passing again at ${ts}. Closing.`,
+              })
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'completed',
+              })
+              console.log(`Closed incident #${issue.number}`)
+            }
