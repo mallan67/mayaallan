@@ -79,7 +79,11 @@ export async function alertAdmin(opts: {
   }
 
   const { emoji, color } = SEVERITY_META[severity]
-  const subject = `${emoji} [${severity.toUpperCase()}] ${opts.subject}`
+  // Tag every subject with the project name so Maya can disambiguate this
+  // from alerts coming from other projects that land in the same inbox.
+  // Override via ALERT_PROJECT_TAG env var if you ever rename the site.
+  const projectTag = process.env.ALERT_PROJECT_TAG || "mayaallan.com"
+  const subject = `${emoji} [${projectTag}] [${severity.toUpperCase()}] ${opts.subject}`
 
   const detailsBlock = opts.details
     ? `<pre style="background:#F4F4F5;padding:14px;margin-top:18px;border-radius:6px;font-size:12px;line-height:1.55;overflow-x:auto;white-space:pre-wrap;word-break:break-word;">${escapeHtml(
