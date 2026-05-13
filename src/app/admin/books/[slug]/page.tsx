@@ -1,6 +1,7 @@
 "use client"
 
 import ImageUpload from "@/components/ImageUpload"
+import EbookUpload from "@/components/EbookUpload"
 import { useEffect, useState, use } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -442,7 +443,7 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
         <section className="border border-slate-200 rounded-xl p-6 bg-white">
           <h2 className="font-semibold text-lg mb-4">Ebook File</h2>
 
-          <ImageUpload
+          <EbookUpload
             label="PDF / EPUB"
             currentUrl={book.ebookFileUrl}
             accept=".pdf,.epub"
