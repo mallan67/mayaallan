@@ -491,9 +491,26 @@ export default async function BookPage({ params }: BookPageProps) {
               {/* DIRECT SALE SECTION */}
               {/* ---------------------------------------- */}
               {showDirectSale && (
-                <div className="p-6 border-2 border-blue-200 rounded-2xl bg-gradient-to-br from-blue-50 to-white">
-                  <h3 className="text-base font-bold text-slate-900 mb-4">Buy Direct</h3>
-                  <PaymentButtons bookId={book.id} hasPayPal={true} />
+                <div className="p-4 border border-blue-200 rounded-xl bg-blue-50/60">
+                  <div className="flex items-baseline justify-between gap-3 mb-1">
+                    <h3 className="text-sm font-bold text-slate-900">
+                      Buy Direct <span className="text-slate-500 font-normal">— Ebook only</span>
+                    </h3>
+                    {book.ebookPrice && Number(book.ebookPrice) > 0 && (
+                      <span className="text-sm font-semibold text-slate-900">
+                        ${Number(book.ebookPrice).toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-600 mb-3">
+                    Ebook (PDF) · instant download emailed after payment. Paperback, hardcover and audiobook via retailers below.
+                  </p>
+                  <PaymentButtons
+                    bookId={book.id}
+                    hasPayPal={true}
+                    formatLabel="Ebook"
+                    priceLabel={book.ebookPrice ? `$${Number(book.ebookPrice).toFixed(2)}` : undefined}
+                  />
                 </div>
               )}
 

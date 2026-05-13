@@ -116,16 +116,47 @@ export async function POST(request: Request) {
           intent: "CAPTURE",
           purchase_units: [
             {
-              description: book.title,
-              custom_id: String(bookId), // Pass bookId in custom_id (webhook reads it back)
+              // Description shows as the order summary on PayPal's pre-pay screen
+              // (60-char limit; we keep it human-readable).
+              description: `${book.title} — Ebook`.slice(0, 127),
+              // custom_id flows through to the webhook so we know which book
+              // got paid for. Kept simple (just the bookId).
+              custom_id: String(bookId),
+              // items[] surfaces a proper itemized line on PayPal's UI so the
+              // customer clearly sees what they're buying. Without this PayPal
+              // shows only a generic "Maya Allan" charge with no product.
+              items: [
+                {
+                  name: (book.title || "Ebook").slice(0, 127),
+                  description: (book.subtitle1 || "Ebook — instant download after payment").slice(0, 127),
+                  quantity: "1",
+                  category: "DIGITAL_GOODS",
+                  unit_amount: {
+                    currency_code: "USD",
+                    value: Number(book.ebook_price).toFixed(2),
+                  },
+                },
+              ],
               amount: {
                 currency_code: "USD",
                 value: Number(book.ebook_price).toFixed(2),
+                // PayPal requires breakdown.item_total when items[] is present.
+                breakdown: {
+                  item_total: {
+                    currency_code: "USD",
+                    value: Number(book.ebook_price).toFixed(2),
+                  },
+                },
               },
             },
           ],
           application_context: {
             brand_name: "Maya Allan",
+            // Digital goods — skip the shipping-address step entirely.
+            shipping_preference: "NO_SHIPPING",
+            // Show "Pay Now" (not "Continue") so the customer knows clicking
+            // commits the charge.
+            user_action: "PAY_NOW",
             return_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/books/${book.slug}?payment=success`,
             cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/books/${book.slug}?payment=cancelled`,
           },
