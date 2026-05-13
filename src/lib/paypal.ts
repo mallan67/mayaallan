@@ -23,17 +23,126 @@ function getPaypalClientSecret(): string {
   return value
 }
 
-function apiBase(): string {
-  const env = (process.env.PAYPAL_ENV ?? "sandbox").toLowerCase()
-  return env === "live"
-    ? "https://api-m.paypal.com"
-    : "https://api-m.sandbox.paypal.com"
+/**
+ * Resolve PayPal's API base from one canonical env var.
+ *
+ * Strict precedence:
+ *   1. PAYPAL_ENV (preferred). Must be exactly "live" or "sandbox".
+ *      Any other value (e.g. "liv", "production", "test") THROWS in
+ *      production so a typo doesn't silently send live traffic to
+ *      sandbox or vice versa.
+ *   2. PAYPAL_API_BASE (legacy fallback). Must be exactly the live or
+ *      sandbox API URL. Any other value THROWS in production.
+ *   3. Neither set: falls back to sandbox in non-production; THROWS in
+ *      production (we never want unconfigured PayPal in prod).
+ *
+ * In non-production environments (dev / preview), invalid values
+ * fall back to sandbox with a console warning so local development
+ * isn't blocked by a typo.
+ *
+ * Callers (checkout, return, webhook) already wrap getAccessToken() in
+ * try/catch + alertAdmin. A throw here propagates through that path,
+ * so an invalid PAYPAL_ENV in production surfaces as a critical alert
+ * rather than silent sandbox/live drift.
+ */
+const KNOWN_LIVE_BASE = "https://api-m.paypal.com"
+const KNOWN_SANDBOX_BASE = "https://api-m.sandbox.paypal.com"
+
+function isProductionEnv(): boolean {
+  return process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production"
+}
+
+export function apiBase(): string {
+  const envRaw = process.env.PAYPAL_ENV
+  if (envRaw !== undefined && envRaw !== "") {
+    const env = envRaw.trim().toLowerCase()
+    if (env === "live") return KNOWN_LIVE_BASE
+    if (env === "sandbox") return KNOWN_SANDBOX_BASE
+
+    const msg = `Invalid PAYPAL_ENV value: ${JSON.stringify(envRaw)} (expected "live" or "sandbox")`
+    if (isProductionEnv()) {
+      throw new Error(msg)
+    }
+    console.warn(`[paypal] ${msg} — falling back to sandbox (non-production only)`)
+    return KNOWN_SANDBOX_BASE
+  }
+
+  const baseRaw = process.env.PAYPAL_API_BASE?.trim()
+  if (baseRaw) {
+    if (baseRaw === KNOWN_LIVE_BASE) return KNOWN_LIVE_BASE
+    if (baseRaw === KNOWN_SANDBOX_BASE) return KNOWN_SANDBOX_BASE
+
+    const msg = `Invalid PAYPAL_API_BASE value: ${JSON.stringify(baseRaw)} (expected ${KNOWN_LIVE_BASE} or ${KNOWN_SANDBOX_BASE})`
+    if (isProductionEnv()) {
+      throw new Error(msg)
+    }
+    console.warn(`[paypal] ${msg} — falling back to sandbox (non-production only)`)
+    return KNOWN_SANDBOX_BASE
+  }
+
+  // Neither env var set.
+  if (isProductionEnv()) {
+    throw new Error(
+      "PayPal is not configured for production: set PAYPAL_ENV=live (or =sandbox for testing). " +
+      "PAYPAL_API_BASE is also accepted as a legacy fallback."
+    )
+  }
+  return KNOWN_SANDBOX_BASE
+}
+
+/**
+ * Returns 'live' | 'sandbox'.
+ *
+ * WARNING: this calls apiBase() and therefore THROWS on invalid PAYPAL_ENV
+ * / PAYPAL_API_BASE in production. Do NOT call from catch blocks that are
+ * handling PayPal env failures — the second throw will skip the intended
+ * alert and surface a generic function error. Use `safePaypalEnvLabel()`
+ * inside alert details / logging paths instead.
+ */
+export function paypalEnvLabel(): "live" | "sandbox" {
+  return apiBase() === "https://api-m.paypal.com" ? "live" : "sandbox"
+}
+
+/**
+ * Non-throwing variant of paypalEnvLabel for use in alert details and
+ * any other context where you can't tolerate a second throw.
+ *
+ *   "live"          — PAYPAL_ENV=live OR PAYPAL_API_BASE=<live url>
+ *   "sandbox"       — PAYPAL_ENV=sandbox OR PAYPAL_API_BASE=<sandbox url>
+ *   "invalid"       — PAYPAL_ENV or PAYPAL_API_BASE is set to a value that
+ *                     doesn't match either of the above (the cause of the
+ *                     production throw apiBase() would otherwise raise)
+ *   "unconfigured"  — neither env var is set
+ */
+export function safePaypalEnvLabel(): "live" | "sandbox" | "invalid" | "unconfigured" {
+  const envRaw = process.env.PAYPAL_ENV
+  if (envRaw !== undefined && envRaw !== "") {
+    const env = envRaw.trim().toLowerCase()
+    if (env === "live") return "live"
+    if (env === "sandbox") return "sandbox"
+    return "invalid"
+  }
+  const baseRaw = process.env.PAYPAL_API_BASE?.trim()
+  if (baseRaw) {
+    if (baseRaw === KNOWN_LIVE_BASE) return "live"
+    if (baseRaw === KNOWN_SANDBOX_BASE) return "sandbox"
+    return "invalid"
+  }
+  return "unconfigured"
 }
 
 type CachedToken = { token: string; expiresAt: number }
 let cachedToken: CachedToken | null = null
 
-async function getAccessToken(): Promise<string> {
+/**
+ * Get a cached OAuth access token. Cached in-memory until ~30s before
+ * expiry. Throws on failure (callers catch + alertAdmin).
+ *
+ * Exported so the book-checkout / return-capture / webhook-verification
+ * routes can all share a single OAuth call instead of each hand-rolling
+ * their own.
+ */
+export async function getAccessToken(): Promise<string> {
   const now = Date.now()
   if (cachedToken && cachedToken.expiresAt > now + 30_000) {
     return cachedToken.token

@@ -44,8 +44,6 @@ export async function PUT(
     const body = await request.json()
     const links: RetailerLinkInput[] = body.links || []
 
-    console.log(`Processing ${links.length} retailer links for book ${bookId}`)
-
     // Verify book exists
     const { data: book, error: bookError } = await supabaseAdmin
       .from(Tables.books)
@@ -58,16 +56,17 @@ export async function PUT(
     }
 
     // Delete existing links
-    const { count: deleted } = await supabaseAdmin
+    await supabaseAdmin
       .from(Tables.bookRetailerLinks)
       .delete()
       .eq("book_id", bookId)
 
-    console.log(`Deleted ${deleted || 0} existing links`)
-
     // Process each new link
     const createdLinks: any[] = []
     const errors: string[] = []
+
+    // Whitelist for format_type to stop arbitrary strings reaching the DB.
+    const ALLOWED_FORMATS = new Set(["ebook", "paperback", "hardcover", "audiobook"])
 
     for (const link of links) {
       // Skip empty retailer names
@@ -75,22 +74,56 @@ export async function PUT(
         continue
       }
 
-      const retailerName = link.retailerName.trim()
+      // Validate / sanitize each field BEFORE it touches the query layer.
+      // Previously, retailerName was interpolated raw into a PostgREST
+      // `.or(slug.eq.X,name.ilike.Y)` filter, which let any name containing
+      // a comma, paren, dot, or PostgREST operator reshape the OR clause.
+      const retailerName = link.retailerName.trim().slice(0, 200)
       const retailerSlug = retailerName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "")
+        .slice(0, 100)
+
+      // Skip rows whose slug normalizes to empty (e.g. name was all punctuation).
+      if (!retailerSlug) {
+        errors.push(`Skipped (invalid name): ${retailerName}`)
+        continue
+      }
+
+      const formatType = ALLOWED_FORMATS.has(String(link.formatType || "ebook"))
+        ? String(link.formatType || "ebook")
+        : "ebook"
+
+      const linkUrl = typeof link.url === "string" ? link.url.trim().slice(0, 2000) : ""
 
       try {
-        // Find or create retailer
-        let { data: retailer, error: findError } = await supabaseAdmin
+        // Find existing retailer by slug FIRST (slug is normalized, safe to
+        // pass through .eq()). If not found, fall back to a case-insensitive
+        // name search. Two separate queries replace the previous unsafe
+        // .or() string interpolation.
+        let retailer: any = null
+
+        const { data: bySlug } = await supabaseAdmin
           .from(Tables.retailers)
           .select("*")
-          .or(`slug.eq.${retailerSlug},name.ilike.${retailerName}`)
+          .eq("slug", retailerSlug)
           .limit(1)
-          .single()
+          .maybeSingle()
 
-        if (findError || !retailer) {
+        if (bySlug) {
+          retailer = bySlug
+        } else {
+          const { data: byName } = await supabaseAdmin
+            .from(Tables.retailers)
+            .select("*")
+            .ilike("name", retailerName) // .ilike() with a value param is parameterized — safe even for arbitrary chars
+            .limit(1)
+            .maybeSingle()
+          if (byName) retailer = byName
+        }
+
+        if (!retailer) {
           // Create new retailer
           const { data: newRetailer, error: createError } = await supabaseAdmin
             .from(Tables.retailers)
@@ -104,7 +137,6 @@ export async function PUT(
 
           if (createError) throw createError
           retailer = newRetailer
-          console.log(`Created new retailer: ${retailerName} (id: ${retailer.id})`)
         } else if (!retailer.name || retailer.name.trim() === "") {
           // Fix retailer with empty name
           const { data: updated, error: updateError } = await supabaseAdmin
@@ -116,7 +148,6 @@ export async function PUT(
 
           if (updateError) throw updateError
           retailer = updated
-          console.log(`Fixed retailer name: ${retailerName} (id: ${retailer.id})`)
         }
 
         // Create the book-retailer link
@@ -125,8 +156,8 @@ export async function PUT(
           .insert({
             book_id: bookId,
             retailer_id: retailer.id,
-            url: link.url || "",
-            format_type: link.formatType || "ebook",
+            url: linkUrl,
+            format_type: formatType,
             is_active: true,
           })
           .select(`
@@ -144,13 +175,10 @@ export async function PUT(
           url: newLink.url,
         })
 
-        console.log(`Created link: ${retailerName} - ${link.formatType}`)
-
       } catch (linkError: any) {
         // Handle unique constraint violation
         if (linkError?.code === "23505") {
-          errors.push(`Duplicate: ${retailerName} - ${link.formatType}`)
-          console.warn(`Skipped duplicate: ${retailerName} - ${link.formatType}`)
+          errors.push(`Duplicate: ${retailerName} - ${formatType}`)
         } else {
           throw linkError
         }
@@ -165,9 +193,11 @@ export async function PUT(
     })
 
   } catch (error: any) {
+    // Log the full error server-side; return a generic message to the
+    // client so internal DB hints / constraint names don't leak.
     console.error("Error saving retailer links:", error)
     return NextResponse.json(
-      { error: error.message || "Failed to save retailer links" },
+      { error: "Failed to save retailer links" },
       { status: 500 }
     )
   }

@@ -17,6 +17,7 @@
  */
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { apiBase as paypalApiBase } from "@/lib/paypal"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic" // never cache — must reflect real-time state
@@ -54,7 +55,12 @@ function checkEnvPresent(name: string): CheckResult {
 }
 
 function checkPaypalEnv(): CheckResult {
-  const missing = ["PAYPAL_CLIENT_ID", "PAYPAL_SECRET", "PAYPAL_WEBHOOK_ID"].filter((k) => !process.env[k])
+  const missing: string[] = []
+  if (!process.env.PAYPAL_CLIENT_ID) missing.push("PAYPAL_CLIENT_ID")
+  if (!(process.env.PAYPAL_CLIENT_SECRET ?? process.env.PAYPAL_SECRET)) {
+    missing.push("PAYPAL_CLIENT_SECRET (or legacy PAYPAL_SECRET)")
+  }
+  if (!process.env.PAYPAL_WEBHOOK_ID) missing.push("PAYPAL_WEBHOOK_ID")
   if (missing.length === 0) return { ok: true }
   return { ok: false, error: `Missing: ${missing.join(", ")}` }
 }
@@ -93,14 +99,13 @@ async function deepResend(): Promise<CheckResult> {
 async function deepPaypal(): Promise<CheckResult> {
   const t0 = Date.now()
   const clientId = process.env.PAYPAL_CLIENT_ID
-  const clientSecret = process.env.PAYPAL_SECRET
-  const apiBase = process.env.PAYPAL_API_BASE || "https://api-m.sandbox.paypal.com"
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET ?? process.env.PAYPAL_SECRET
   if (!clientId || !clientSecret) {
-    return { ok: false, error: "PAYPAL_CLIENT_ID / PAYPAL_SECRET not configured" }
+    return { ok: false, error: "PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET not configured" }
   }
   try {
     const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
-    const r = await fetch(`${apiBase}/v1/oauth2/token`, {
+    const r = await fetch(`${paypalApiBase()}/v1/oauth2/token`, {
       method: "POST",
       headers: {
         Authorization: `Basic ${auth}`,

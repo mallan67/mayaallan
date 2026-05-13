@@ -3,6 +3,7 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import nodemailer from "nodemailer"
 import { z } from "zod"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { alertAdmin } from "@/lib/alert-admin"
 
 const ContactSchema = z.object({
   name: z.string().min(1),
@@ -78,7 +79,20 @@ export async function POST(request: Request) {
           <p>${escapeHtml(data.message).replace(/\n/g, "<br>")}</p>
         `,
         replyTo: data.email,
-      }).catch((err) => console.error("Contact email error:", err))
+      }).catch(async (err) => {
+        console.error("Contact email error:", err)
+        await alertAdmin({
+          severity: "error",
+          subject: "SMTP send failed: contact form notification",
+          body:
+            "A contact form submission landed in the database but the notification " +
+            "email to maya@mayaallan.com could not be sent. The submission row is " +
+            "still saved. Verify Porkbun SMTP credentials and connectivity, then " +
+            "read the submission in the admin panel.",
+          details: { submitterEmail: data.email, errorMessage: err?.message ?? String(err) },
+          dedupKey: "smtp:contact-notification-failed",
+        })
+      })
     }
 
     return NextResponse.json({ success: true, message: "Message sent successfully" })
