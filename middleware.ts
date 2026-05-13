@@ -20,11 +20,15 @@ export function middleware(request: NextRequest) {
     // CRITICAL: If admin auth is not configured, BLOCK ALL ACCESS
     const hasSessionSecret = !!process.env.SESSION_SECRET
     const hasAdminEmail = !!process.env.ADMIN_EMAIL
-    const hasAdminPassword = !!process.env.ADMIN_PASSWORD
+    // Either form of the admin credential is acceptable: ADMIN_PASSWORD_HASH
+    // (bcrypt hash, preferred) or legacy ADMIN_PASSWORD (plaintext, deprecated).
+    // Without this OR, rotating to hash-only locks the admin out of their own site.
+    const hasAdminCredential =
+      !!process.env.ADMIN_PASSWORD_HASH || !!process.env.ADMIN_PASSWORD
 
     // EMERGENCY BLOCK: If environment variables are missing, redirect to login
     // (AdminAuthGuard will show the error message)
-    if (!hasSessionSecret || !hasAdminEmail || !hasAdminPassword) {
+    if (!hasSessionSecret || !hasAdminEmail || !hasAdminCredential) {
       return NextResponse.redirect(new URL("/admin/login", request.url))
     }
 
