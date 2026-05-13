@@ -492,8 +492,18 @@ export default async function BookPage({ params }: BookPageProps) {
               {/* ---------------------------------------- */}
               {showDirectSale && (
                 <div className="p-6 border-2 border-blue-200 rounded-2xl bg-gradient-to-br from-blue-50 to-white">
-                  <h3 className="text-base font-bold text-slate-900 mb-4">Buy Direct</h3>
-                  <PaymentButtons bookId={book.id} hasPayPal={true} />
+                  <h3 className="text-base font-bold text-slate-900 mb-1">
+                    Buy the Ebook — Direct from Maya
+                  </h3>
+                  <p className="text-xs text-slate-600 mb-4">
+                    Instant PDF download — link emailed after payment. {hasRetailerLinks ? "For paperback, hardcover, or audiobook, scroll to the retailers below." : ""}
+                  </p>
+                  <PaymentButtons
+                    bookId={book.id}
+                    hasPayPal={true}
+                    formatLabel="Ebook"
+                    priceLabel={book.ebookPrice ? `$${Number(book.ebookPrice).toFixed(2)}` : undefined}
+                  />
                 </div>
               )}
 
