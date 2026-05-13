@@ -3,6 +3,7 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import nodemailer from "nodemailer"
 import { z } from "zod"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { alertAdmin } from "@/lib/alert-admin"
 
 const subscribeSchema = z.object({
   email: z.string().email(),
@@ -60,7 +61,9 @@ export async function POST(request: Request) {
 
     // Send emails asynchronously (don't await - return response immediately)
     if (transporter) {
-      // Notification to Maya
+      // Notification to Maya. Customer response is already in flight; this
+      // is a fire-and-forget send. Failure is alerted (dedup'd) so SMTP
+      // credential rot doesn't silently drop signups.
       transporter.sendMail({
         from: `"Website Newsletter" <${process.env.SMTP_USER}>`,
         to: "maya@mayaallan.com",
@@ -71,7 +74,19 @@ export async function POST(request: Request) {
           <p><strong>Email:</strong> ${escapeHtml(email)}</p>
         `,
         replyTo: email,
-      }).catch((err) => console.error("Notification email error:", err))
+      }).catch(async (err) => {
+        console.error("Notification email error:", err)
+        await alertAdmin({
+          severity: "error",
+          subject: "SMTP send failed: newsletter signup notification",
+          body:
+            "A newsletter signup landed in the database but the notification email " +
+            "to maya@mayaallan.com could not be sent. The subscriber row is still " +
+            "saved. Verify Porkbun SMTP credentials and connectivity.",
+          details: { subscriberEmail: email, errorMessage: err?.message ?? String(err) },
+          dedupKey: "smtp:subscribe-notification-failed",
+        })
+      })
 
       // Welcome email to subscriber
       transporter.sendMail({
@@ -83,7 +98,18 @@ export async function POST(request: Request) {
           <p>You've been added to the newsletter. You'll receive updates about new releases, events, and more.</p>
           <p>Best,<br>Maya Allan</p>
         `,
-      }).catch((err) => console.error("Welcome email error:", err))
+      }).catch(async (err) => {
+        console.error("Welcome email error:", err)
+        await alertAdmin({
+          severity: "error",
+          subject: "SMTP send failed: newsletter welcome email",
+          body:
+            "Welcome email to a new subscriber failed to send. The subscriber row " +
+            "is still saved in the database. Send a manual welcome if needed.",
+          details: { subscriberEmail: email, errorMessage: err?.message ?? String(err) },
+          dedupKey: "smtp:subscribe-welcome-failed",
+        })
+      })
     }
 
     return NextResponse.json({ success: true, message: "Subscribed successfully" })
