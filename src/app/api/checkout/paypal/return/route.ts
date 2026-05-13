@@ -289,11 +289,25 @@ export async function GET(request: NextRequest) {
       (d: any) => d?.issue === "ORDER_ALREADY_CAPTURED",
     )
     if (alreadyCaptured) {
-      // Mark consumed (idempotent). Don't alert.
-      await supabaseAdmin
+      // Mark consumed (idempotent). Alert if the update itself fails so
+      // we don't silently leave the row in 'pending' — a stale row could
+      // make a future legitimate retry look like a probe.
+      const { error: consumedUpdateError } = await supabaseAdmin
         .from("pending_paypal_orders")
         .update({ status: "consumed", consumed_at: new Date().toISOString() })
         .eq("id", pending.id)
+      if (consumedUpdateError) {
+        await alertAdmin({
+          severity: "warning",
+          subject: "PayPal return: consumed-state update failed (already-captured path)",
+          body:
+            "PayPal reported ORDER_ALREADY_CAPTURED so capture is fine, but updating " +
+            "pending_paypal_orders.status to 'consumed' failed. A reload of this URL " +
+            "may produce inconsistent alert state. Customer still gets payment=success.",
+          details: { paypalOrderId: orderId, errorCode: consumedUpdateError.code },
+          dedupKey: "paypal:consumed-update-failed-422",
+        })
+      }
       return redirectToBook(pending.book_slug, "success")
     }
     await alertAdmin({
@@ -337,10 +351,25 @@ export async function GET(request: NextRequest) {
   // this URL doesn't re-attempt. The webhook handler does the real
   // fulfillment work (creating the orders row, download_token row, email)
   // and dedupes idempotently on its own end via paypal_order_id (PR A).
-  await supabaseAdmin
+  const { error: consumedUpdateError } = await supabaseAdmin
     .from("pending_paypal_orders")
     .update({ status: "consumed", consumed_at: new Date().toISOString() })
     .eq("id", pending.id)
+  if (consumedUpdateError) {
+    // Customer still got their capture; don't fail their session over it.
+    // Alert so we don't silently leave lifecycle state inconsistent.
+    await alertAdmin({
+      severity: "warning",
+      subject: "PayPal return: consumed-state update failed after successful capture",
+      body:
+        "Capture succeeded but updating pending_paypal_orders.status to 'consumed' " +
+        "failed. The customer was redirected to ?payment=success. A reload of the " +
+        "return URL may produce noisy alerts (the row will look 'pending' until the " +
+        "expired TTL kicks in).",
+      details: { paypalOrderId: orderId, errorCode: consumedUpdateError.code },
+      dedupKey: "paypal:consumed-update-failed-success",
+    })
+  }
 
   return redirectToBook(pending.book_slug, "success")
 }

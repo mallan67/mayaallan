@@ -14,13 +14,28 @@ import { alertAdmin } from "@/lib/alert-admin"
  *
  * Counter compensation (PR B):
  *   The RPC increments BEFORE we fetch the blob. If ANYTHING fails AFTER
- *   a successful increment (DB lookups, missing file URL, blob fetch error,
- *   unexpected throw), the customer is owed a refund of one download attempt.
+ *   a successful increment but BEFORE we begin streaming the response
+ *   (DB lookups, missing file URL, blob fetch error, unexpected throw),
+ *   the customer is owed a refund of one download attempt.
  *   `decrement_download_count` is called on every such path. If the
  *   compensation itself fails, alertAdmin fires so Maya can restore manually.
  *
  *   User-caused statuses (not_found / expired / maxed / no_order) DID NOT
  *   increment in the first place, so they are NOT decremented.
+ *
+ * KNOWN REMAINING RISK — mid-stream failure NOT compensated:
+ *   Once we return `new NextResponse(upstream.body, ...)` and the 200
+ *   response begins, the function has no further opportunity to run
+ *   compensation logic. If the network breaks mid-stream (customer's
+ *   Wi-Fi drops at byte 200_000 of a 6MB PDF), the counter HAS been
+ *   incremented but the customer didn't get the full file. They've lost
+ *   one of their 5 attempts to a transient network blip.
+ *
+ *   Acceptable trade-off for now: ebooks are small (typically <30MB),
+ *   download times are short, the cap is generous (5 attempts), and
+ *   customers can always email Maya for a manual reissue. A future
+ *   reserve/commit RPC pair would close this gap by deferring the
+ *   increment until the stream finishes — out of scope for PR B.
  */
 
 export const runtime = "nodejs"
