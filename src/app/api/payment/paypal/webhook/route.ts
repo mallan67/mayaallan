@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { Resend } from "resend"
 import { alertAdmin } from "@/lib/alert-admin"
+import { extractWebhookHeaders, verifyPaypalWebhook } from "@/lib/paypal"
 import crypto from "crypto"
 
 /**
@@ -10,115 +11,21 @@ import crypto from "crypto"
  *
  * When a PayPal payment succeeds:
  * 1. Verify webhook signature (CRITICAL for security)
- * 2. Create Order record
+ * 2. Create Order record (idempotent by paypal_order_id)
  * 3. Generate secure DownloadToken (expires in 30 days, 5 max downloads)
- * 4. Send email with download link
+ * 4. Send email with download link, then mark email_sent_at
  *
  * Required env vars:
  * - PAYPAL_CLIENT_ID
- * - PAYPAL_SECRET (also called PAYPAL_CLIENT_SECRET)
+ * - PAYPAL_CLIENT_SECRET (or legacy PAYPAL_SECRET — both names accepted)
  * - PAYPAL_WEBHOOK_ID (from PayPal Dashboard > Webhooks)
- * - PAYPAL_API_BASE (optional, defaults to sandbox)
+ * - PAYPAL_ENV          "sandbox" | "live"  (preferred)
+ * - PAYPAL_API_BASE     (legacy fallback)
+ *
+ * Signature verification + OAuth token fetching are delegated to the
+ * shared helper in src/lib/paypal.ts so this route and /api/export/webhook
+ * stay on the same env conventions.
  */
-
-async function getPayPalAccessToken(): Promise<string | null> {
-  const clientId = process.env.PAYPAL_CLIENT_ID
-  const clientSecret = process.env.PAYPAL_SECRET
-  const apiBase = process.env.PAYPAL_API_BASE || "https://api-m.sandbox.paypal.com"
-
-  if (!clientId || !clientSecret) {
-    console.error("PayPal credentials not configured")
-    return null
-  }
-
-  try {
-    const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
-    const response = await fetch(`${apiBase}/v1/oauth2/token`, {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: "grant_type=client_credentials",
-    })
-
-    if (!response.ok) {
-      console.error("Failed to get PayPal access token:", await response.text())
-      return null
-    }
-
-    const data = await response.json()
-    return data.access_token
-  } catch (error) {
-    console.error("PayPal auth error:", error)
-    return null
-  }
-}
-
-async function verifyPayPalWebhook(
-  body: string,
-  headersList: Headers
-): Promise<boolean> {
-  const webhookId = process.env.PAYPAL_WEBHOOK_ID
-  const apiBase = process.env.PAYPAL_API_BASE || "https://api-m.sandbox.paypal.com"
-
-  if (!webhookId) {
-    if (process.env.NODE_ENV === "production") {
-      console.error("PAYPAL_WEBHOOK_ID required in production — rejecting webhook")
-      return false
-    }
-    console.warn("⚠️ PAYPAL_WEBHOOK_ID not set — skipping verification (dev only)")
-    return true
-  }
-
-  const accessToken = await getPayPalAccessToken()
-  if (!accessToken) {
-    return false
-  }
-
-  try {
-    // Get required headers from PayPal webhook request
-    const transmissionId = headersList.get("paypal-transmission-id")
-    const transmissionTime = headersList.get("paypal-transmission-time")
-    const certUrl = headersList.get("paypal-cert-url")
-    const transmissionSig = headersList.get("paypal-transmission-sig")
-    const authAlgo = headersList.get("paypal-auth-algo")
-
-    if (!transmissionId || !transmissionTime || !certUrl || !transmissionSig || !authAlgo) {
-      console.error("Missing PayPal webhook headers")
-      return false
-    }
-
-    // Verify with PayPal API
-    const verifyResponse = await fetch(`${apiBase}/v1/notifications/verify-webhook-signature`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        auth_algo: authAlgo,
-        cert_url: certUrl,
-        transmission_id: transmissionId,
-        transmission_sig: transmissionSig,
-        transmission_time: transmissionTime,
-        webhook_id: webhookId,
-        webhook_event: JSON.parse(body),
-      }),
-    })
-
-    if (!verifyResponse.ok) {
-      console.error("PayPal verification request failed:", await verifyResponse.text())
-      return false
-    }
-
-    const verifyData = await verifyResponse.json()
-    return verifyData.verification_status === "SUCCESS"
-  } catch (error) {
-    console.error("PayPal webhook verification error:", error)
-    return false
-  }
-}
 
 /**
  * Send purchase confirmation email with download link via Resend.
@@ -180,8 +87,15 @@ export async function POST(request: Request) {
   const bodyText = await request.text()
   const headersList = await headers()
 
-  // Verify webhook signature in production
-  const isVerified = await verifyPayPalWebhook(bodyText, headersList)
+  // Verify webhook signature via the shared helper. In dev where
+  // PAYPAL_WEBHOOK_ID isn't set, verifyPaypalWebhook returns false on missing
+  // headers / config — we still alert so a misconfigured prod gets flagged.
+  let isVerified = false
+  try {
+    isVerified = await verifyPaypalWebhook(extractWebhookHeaders({ headers: headersList }), bodyText)
+  } catch (verifyErr) {
+    console.error("verifyPaypalWebhook threw:", verifyErr)
+  }
   if (!isVerified) {
     console.error("PayPal webhook verification failed")
     // Dedup heavily — bots probe webhook endpoints constantly; we want one
@@ -295,16 +209,22 @@ export async function POST(request: Request) {
         .eq("paypal_order_id", paypalOrderId)
         .maybeSingle()
 
+      // The token we'll email the customer. If a previous attempt already
+      // created a token row but failed before email send, we reuse it
+      // (don't mint a second token).
+      let reusableToken: { id: number; token: string; expires_at: string; max_downloads: number | null; email_sent_at: string | null } | null = null
+
       if (existingOrder) {
         const { data: existingToken } = await supabaseAdmin
           .from(Tables.downloadTokens)
-          .select("id")
+          .select("id, token, expires_at, max_downloads, email_sent_at")
           .eq("order_id", existingOrder.id)
           .maybeSingle()
 
-        if (existingToken) {
-          // Identical retry — already fully fulfilled. Don't re-email the
-          // customer; don't mint a new token; just 200 PayPal so they stop retrying.
+        if (existingToken && existingToken.email_sent_at) {
+          // Identical retry of a fully fulfilled order — token exists AND
+          // the email was confirmed sent. Don't re-mint, don't re-email,
+          // just 200 PayPal so they stop retrying.
           return NextResponse.json({
             received: true,
             deduplicated: true,
@@ -312,9 +232,17 @@ export async function POST(request: Request) {
           })
         }
 
-        // Order row exists but token never made it — resume from where the
-        // previous attempt failed. Re-using existingOrder avoids creating a
-        // duplicate order row in this race.
+        if (existingToken) {
+          // Token exists but email_sent_at IS NULL — the previous attempt
+          // failed AFTER token INSERT, BEFORE Resend confirmed delivery.
+          // Reuse the existing token and resume email delivery instead of
+          // returning deduplicated:true (which would silently strand the
+          // customer with no email).
+          reusableToken = existingToken
+        }
+
+        // Order row exists — resume from where the previous attempt failed.
+        // Don't insert a duplicate order row.
         resumingExistingOrder = true
         order = existingOrder
       } else {
@@ -335,9 +263,11 @@ export async function POST(request: Request) {
           .single()
 
         if (orderError || !insertedOrder) {
-          // 23505 = postgres unique_violation. Means a concurrent webhook just
-          // inserted the same paypal_order_id between our pre-check and our
-          // INSERT. Re-select and let the dedup path handle it.
+          // 23505 = postgres unique_violation. A concurrent webhook attempt
+          // just inserted the same paypal_order_id between our pre-check and
+          // our INSERT. Re-select; then verify the winning attempt also got
+          // the email out. If not, resume email delivery using the winner's
+          // token row instead of blindly returning deduplicated.
           if (orderError?.code === "23505") {
             const { data: racedOrder } = await supabaseAdmin
               .from(Tables.orders)
@@ -345,38 +275,60 @@ export async function POST(request: Request) {
               .eq("paypal_order_id", paypalOrderId)
               .maybeSingle()
             if (racedOrder) {
-              return NextResponse.json({
-                received: true,
-                deduplicated: true,
-                raced: true,
-                orderId: racedOrder.id,
-              })
+              const { data: racedToken } = await supabaseAdmin
+                .from(Tables.downloadTokens)
+                .select("id, token, expires_at, max_downloads, email_sent_at")
+                .eq("order_id", racedOrder.id)
+                .maybeSingle()
+
+              if (racedToken && racedToken.email_sent_at) {
+                // Winner did it all — safe to dedupe.
+                return NextResponse.json({
+                  received: true,
+                  deduplicated: true,
+                  raced: true,
+                  orderId: racedOrder.id,
+                })
+              }
+
+              if (racedToken) {
+                // Winner created the token but never sent the email — resume.
+                reusableToken = racedToken
+              }
+              // Either way, continue with the raced order row + (maybe) the
+              // raced token; don't return early.
+              resumingExistingOrder = true
+              order = racedOrder
+              // Skip the alertAdmin + 500 below because we recovered.
             }
           }
 
-          console.error("Failed to create order:", orderError)
-          // CRITICAL — customer money captured by PayPal, but we have no order row.
-          await alertAdmin({
-            severity: "critical",
-            subject: "PayPal: payment received but order INSERT failed",
-            body:
-              `A PayPal payment came in but writing the order row to Supabase failed. ` +
-              `PayPal will retry the webhook automatically; if retries don't succeed, ` +
-              `the payment is in PayPal with no order record on our side. Reconcile manually.`,
-            details: {
-              paypalOrderId,
-              bookId,
-              customerEmail,
-              amount,
-              currency,
-              errorCode: orderError?.code,
-            },
-            dedupKey: `paypal:order-insert-failed:${paypalOrderId}`,
-          })
-          return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
+          if (!order) {
+            console.error("Failed to create order:", orderError)
+            // CRITICAL — customer money captured by PayPal, but we have no order row.
+            await alertAdmin({
+              severity: "critical",
+              subject: "PayPal: payment received but order INSERT failed",
+              body:
+                `A PayPal payment came in but writing the order row to Supabase failed. ` +
+                `PayPal will retry the webhook automatically; if retries don't succeed, ` +
+                `the payment is in PayPal with no order record on our side. Reconcile manually.`,
+              details: {
+                paypalOrderId,
+                bookId,
+                customerEmail,
+                amount,
+                currency,
+                errorCode: orderError?.code,
+              },
+              dedupKey: `paypal:order-insert-failed:${paypalOrderId}`,
+            })
+            return NextResponse.json({ error: "Failed to create order" }, { status: 500 })
+          }
+          // Else: we recovered via the 23505 race-recovery block above.
+        } else {
+          order = insertedOrder
         }
-
-        order = insertedOrder
       }
 
       if (resumingExistingOrder) {
@@ -398,77 +350,194 @@ export async function POST(request: Request) {
 
       // Generate download token if ebook file exists
       if (book.ebook_file_url) {
-        const token = crypto.randomBytes(32).toString("hex")
-        const expiresAt = new Date()
-        expiresAt.setDate(expiresAt.getDate() + 30)
+        // Token row to use for emailing. May be (a) a freshly inserted row,
+        // (b) the reusableToken we discovered earlier (existing-order branch
+        // or race recovery), or (c) the existing row a concurrent webhook
+        // just inserted while we were racing — we hit 23505 here and re-select.
+        let tokenRowId: number
+        let tokenValue: string
+        let tokenExpiresAt: Date
+        let tokenMaxDownloads: number
+        let tokenAlreadyEmailed = false
 
-        const { data: downloadToken, error: tokenError } = await supabaseAdmin
-          .from(Tables.downloadTokens)
-          .insert({
-            token,
-            order_id: order.id,
-            book_id: book.id,
-            max_downloads: 5,
-            expires_at: expiresAt.toISOString(),
-          })
-          .select()
-          .single()
+        if (reusableToken) {
+          // Path: existing-order branch already found a token row with
+          // email_sent_at IS NULL. Use it directly.
+          tokenRowId = reusableToken.id
+          tokenValue = reusableToken.token
+          tokenExpiresAt = new Date(reusableToken.expires_at)
+          tokenMaxDownloads = reusableToken.max_downloads ?? 5
+        } else {
+          const newToken = crypto.randomBytes(32).toString("hex")
+          const newExpiresAt = new Date()
+          newExpiresAt.setDate(newExpiresAt.getDate() + 30)
 
-        if (tokenError || !downloadToken) {
-          // Customer paid but we cannot give them the file. Alert + surface as 500.
-          console.error("Token creation failed for order", order.id, "-", tokenError)
-          await alertAdmin({
-            severity: "critical",
-            subject: "PayPal order completed but token creation FAILED",
-            body: `A customer paid but download-token creation failed. Manual fulfillment required.`,
-            details: { orderId: order.id, customerEmail, bookTitle: book.title, error: tokenError },
-          })
+          const { data: downloadToken, error: tokenError } = await supabaseAdmin
+            .from(Tables.downloadTokens)
+            .insert({
+              token: newToken,
+              order_id: order.id,
+              book_id: book.id,
+              max_downloads: 5,
+              expires_at: newExpiresAt.toISOString(),
+            })
+            .select("id, token, expires_at, max_downloads, email_sent_at")
+            .single()
+
+          if (tokenError && tokenError.code === "23505") {
+            // A concurrent webhook just won the token-insert race. Re-select
+            // and continue with the winner's token. If the winner already
+            // sent the email, dedupe; otherwise resume email delivery.
+            const { data: racedToken } = await supabaseAdmin
+              .from(Tables.downloadTokens)
+              .select("id, token, expires_at, max_downloads, email_sent_at")
+              .eq("order_id", order.id)
+              .maybeSingle()
+
+            if (!racedToken) {
+              // Shouldn't happen — the unique index fired but the row is gone.
+              await alertAdmin({
+                severity: "critical",
+                subject: "PayPal webhook: token 23505 but no row on re-select",
+                body:
+                  "download_tokens INSERT raised unique_violation but the matching " +
+                  "row could not be re-selected. Either the index is misconfigured or " +
+                  "the winner's transaction rolled back after raising the conflict.",
+                details: { orderId: order.id, paypalOrderId },
+                dedupKey: `paypal:token-23505-no-row:${paypalOrderId}`,
+              })
+              return NextResponse.json({
+                error: "Order completed but token state is inconsistent — manual fulfillment required.",
+                orderId: order.id,
+              }, { status: 500 })
+            }
+
+            if (racedToken.email_sent_at) {
+              // Winner emailed. Done.
+              return NextResponse.json({
+                received: true,
+                deduplicated: true,
+                raced: true,
+                orderId: order.id,
+              })
+            }
+
+            tokenRowId = racedToken.id
+            tokenValue = racedToken.token
+            tokenExpiresAt = new Date(racedToken.expires_at)
+            tokenMaxDownloads = racedToken.max_downloads ?? 5
+          } else if (tokenError || !downloadToken) {
+            console.error("Token creation failed for order", order.id, "-", tokenError)
+            await alertAdmin({
+              severity: "critical",
+              subject: "PayPal order completed but token creation FAILED",
+              body: `A customer paid but download-token creation failed. Manual fulfillment required.`,
+              details: { orderId: order.id, customerEmail, bookTitle: book.title, errorCode: tokenError?.code },
+              dedupKey: `paypal:token-insert-failed:${paypalOrderId}`,
+            })
+            return NextResponse.json({
+              error: "Order completed but download token creation failed. Manual fulfillment required.",
+              orderId: order.id,
+            }, { status: 500 })
+          } else {
+            tokenRowId = downloadToken.id
+            tokenValue = downloadToken.token
+            tokenExpiresAt = new Date(downloadToken.expires_at)
+            tokenMaxDownloads = downloadToken.max_downloads ?? 5
+            tokenAlreadyEmailed = !!downloadToken.email_sent_at
+          }
+        }
+
+        // Defense-in-depth: if the token row already has email_sent_at, we
+        // shouldn't reach here, but if we somehow do, skip the resend.
+        if (tokenAlreadyEmailed) {
           return NextResponse.json({
-            error: "Order completed but download token creation failed. Manual fulfillment required.",
+            received: true,
+            deduplicated: true,
             orderId: order.id,
-          }, { status: 500 })
+          })
         }
 
         // NEVER log the token value — anyone with read access to Vercel function
         // logs could otherwise fulfill the download by hitting /download/<token>.
-        const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/download/${token}`
+        const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/download/${tokenValue}`
 
         const emailResult = await sendPurchaseEmail({
           customerEmail,
           customerName,
           bookTitle: book.title,
           downloadUrl,
-          expiresAt,
-          maxDownloads: 5,
+          expiresAt: tokenExpiresAt,
+          maxDownloads: tokenMaxDownloads,
         })
 
         if (!emailResult.ok) {
-          // Order + token are valid; only delivery email failed. Don't tell PayPal to retry
-          // (the order succeeded), but alert + flag for manual follow-up.
+          // Order + token are valid; only delivery email failed. We did NOT
+          // set email_sent_at, so PayPal's next webhook retry (or a manual
+          // re-fire) will re-enter the resume branch and try the email again
+          // with this same token. The customer eventually gets exactly one
+          // working email or — if Resend stays down — Maya gets the alert
+          // and can resend manually.
+          //
+          // Important: we 500 PayPal here so they DO retry. Previously this
+          // returned 200 (because order + token were valid), which silenced
+          // PayPal's auto-retry and stranded the customer if email kept failing.
           console.error("Purchase email failed for order", order.id, ":", emailResult.error)
           await alertAdmin({
             severity: "error",
             subject: "PayPal: order completed but delivery email failed",
-            body: `Order + token are valid but the buyer never received the download link. Resend the link manually.`,
+            body:
+              "Order + token are valid but the buyer never received the download link. " +
+              "Returning 500 so PayPal retries the webhook; the resume path will reuse the " +
+              "existing token. If Resend remains down, send the link manually.",
             details: {
               orderId: order.id,
               customerEmail,
               bookTitle: book.title,
-              downloadUrl,
+              // Don't include the raw resendError in the response back to PayPal,
+              // but include in the alert email for Maya.
               resendError: emailResult.error,
             },
+            dedupKey: `paypal:email-failed:${paypalOrderId}`,
           })
           return NextResponse.json({
-            success: true,
+            error: "Order completed but delivery email failed. PayPal will retry.",
             orderId: order.id,
-            warning: `Order completed and token created but delivery email failed (${emailResult.error}). Manual send required.`,
+          }, { status: 500 })
+        }
+
+        // Email confirmed delivered by Resend — record it so a future retry
+        // (or PayPal duplicate webhook) will dedupe instead of re-sending.
+        const sentAt = new Date().toISOString()
+        const { error: sentUpdateError } = await supabaseAdmin
+          .from(Tables.downloadTokens)
+          .update({ email_sent_at: sentAt })
+          .eq("id", tokenRowId)
+
+        if (sentUpdateError) {
+          // Non-fatal — the customer already has their email. But a future
+          // webhook retry will think the email wasn't sent and try to send
+          // it again (resulting in a duplicate). Alert so we know.
+          console.error("Failed to set email_sent_at:", sentUpdateError)
+          await alertAdmin({
+            severity: "warning",
+            subject: "PayPal webhook: email delivered but email_sent_at update failed",
+            body:
+              "The download link email was successfully delivered, but the email_sent_at " +
+              "column on download_tokens couldn't be updated. If PayPal retries the webhook " +
+              "the customer may receive a duplicate email.",
+            details: {
+              orderId: order.id,
+              tokenRowId,
+              errorCode: sentUpdateError.code,
+            },
+            dedupKey: "paypal:email-sent-update-failed",
           })
         }
 
         return NextResponse.json({
           success: true,
           orderId: order.id,
-          downloadUrl,
         })
       }
 
