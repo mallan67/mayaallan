@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { ShareButtons } from "@/components/share-buttons"
 import type { Metadata } from "next"
@@ -80,8 +81,14 @@ export default async function EventsPage() {
             <div key={event.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition">
               <div className="flex gap-4">
                 {event.eventImageUrl && (
-                  <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-slate-100">
-                    <img src={event.eventImageUrl} alt={event.title} className="w-full h-full object-cover" />
+                  <div className="relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-slate-100">
+                    <Image
+                      src={event.eventImageUrl}
+                      alt={event.title}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">

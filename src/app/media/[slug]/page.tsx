@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import type { Metadata } from "next"
@@ -103,7 +104,14 @@ export default async function MediaItemPage({ params }: MediaPageProps) {
 
         {item.cover_url && (
           <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden bg-slate-100">
-            <img src={item.cover_url} alt={item.title} className="w-full h-full object-cover" />
+            <Image
+              src={item.cover_url}
+              alt={item.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="object-cover"
+              priority
+            />
           </div>
         )}
 
@@ -133,7 +141,14 @@ export default async function MediaItemPage({ params }: MediaPageProps) {
         {/* Image Display */}
         {item.kind === "image" && item.file_url && !item.cover_url && (
           <div className="relative w-full h-96 mb-6 rounded-lg overflow-hidden bg-slate-100">
-            <img src={item.file_url} alt={item.title} className="w-full h-full object-contain" />
+            <Image
+              src={item.file_url}
+              alt={item.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="object-contain"
+              priority
+            />
           </div>
         )}
 

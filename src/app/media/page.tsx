@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { ShareButtons } from "@/components/share-buttons"
 import type { Metadata } from "next"
@@ -98,7 +99,13 @@ export default async function MediaPage() {
 
               {item.coverUrl && (
                 <div className="relative w-full h-48 mb-3 rounded-lg overflow-hidden bg-slate-100">
-                  <img src={item.coverUrl} alt={item.title} className="w-full h-full object-cover" />
+                  <Image
+                    src={item.coverUrl}
+                    alt={item.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover"
+                  />
                 </div>
               )}
 
@@ -128,7 +135,13 @@ export default async function MediaPage() {
               {/* Image Display */}
               {item.kind === "image" && item.fileUrl && !item.coverUrl && (
                 <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden bg-slate-100">
-                  <img src={item.fileUrl} alt={item.title} className="w-full h-full object-contain" />
+                  <Image
+                    src={item.fileUrl}
+                    alt={item.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-contain"
+                  />
                 </div>
               )}
 
