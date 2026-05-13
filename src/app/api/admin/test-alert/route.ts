@@ -14,11 +14,15 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { alertAdmin } from "@/lib/alert-admin"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 export async function POST(req: Request) {
+  const guard = assertAdminSameOrigin(req)
+  if (!guard.ok) return guard.response
+
   const authed = await isAuthenticated()
   if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

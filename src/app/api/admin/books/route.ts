@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 function toDecimalOrNull(value: unknown): number | null {
   if (value === null || value === undefined) return null
@@ -94,6 +95,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   // Step 1: Check authentication
   let authed: boolean
   try {

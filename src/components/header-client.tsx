@@ -89,8 +89,10 @@ export function HeaderClient({ navItems }: HeaderClientProps) {
               MAYA<span className="text-gold">ALLAN</span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1">
+            {/* Desktop Navigation — visible at lg (1024px) and up. Tablet
+                widths fall back to the hamburger menu since the inline row
+                is crowded with the current navItems count. */}
+            <nav className="hidden lg:flex items-center gap-1">
               {navItems.map((link) => (
                 <Link
                   key={link.href}
@@ -112,7 +114,7 @@ export function HeaderClient({ navItems }: HeaderClientProps) {
             <button
               ref={hamburgerRef}
               type="button"
-              className="md:hidden flex items-center justify-center w-11 h-11 -mr-2 rounded-lg hover:bg-white/[0.08] transition-colors text-white"
+              className="lg:hidden flex items-center justify-center w-11 h-11 -mr-2 rounded-lg hover:bg-white/[0.08] transition-colors text-white"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-menu-panel"
@@ -138,7 +140,7 @@ export function HeaderClient({ navItems }: HeaderClientProps) {
           <>
             {/* Backdrop */}
             <div
-              className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
               onClick={() => setIsMenuOpen(false)}
             />
 
@@ -149,7 +151,7 @@ export function HeaderClient({ navItems }: HeaderClientProps) {
               role="dialog"
               aria-modal="true"
               aria-label="Site navigation"
-              className="fixed top-0 right-0 bottom-0 w-[300px] bg-navy z-50 md:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.3)]"
+              className="fixed top-0 right-0 bottom-0 w-[300px] bg-navy z-50 lg:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.3)]"
             >
               <div className="flex flex-col h-full">
                 {/* Menu Header */}

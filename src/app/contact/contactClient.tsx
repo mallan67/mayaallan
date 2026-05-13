@@ -8,6 +8,10 @@ export default function ContactClient() {
     name: "",
     email: "",
     message: "",
+    // Honeypot. Bots that fill every input populate this; real users
+    // can't see or focus the field. The API treats a non-empty `company`
+    // as a silent-success (no DB write, no email).
+    company: "",
   })
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState("")
@@ -28,7 +32,7 @@ export default function ContactClient() {
       if (response.ok) {
         setStatus("success")
         setErrorMessage("")
-        setFormData({ name: "", email: "", message: "" })
+        setFormData({ name: "", email: "", message: "", company: "" })
       } else {
         setStatus("error")
         setErrorMessage(data.details || data.error || "Unknown error")
@@ -59,6 +63,21 @@ export default function ContactClient() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        {/* Honeypot — hidden from sighted users + screen readers + tab order.
+            Real submissions leave this empty; bots that fill every input
+            populate it and the API silently no-ops their request. */}
+        <div aria-hidden="true" className="absolute left-[-9999px] top-auto w-px h-px overflow-hidden">
+          <label htmlFor="contact-company">Company (leave blank)</label>
+          <input
+            id="contact-company"
+            type="text"
+            name="company"
+            tabIndex={-1}
+            autoComplete="off"
+            value={formData.company}
+            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+          />
+        </div>
         <div>
           <label htmlFor="contact-name" className="block text-xs font-semibold uppercase tracking-[0.2em] mb-1">
             Name<span aria-hidden="true"> *</span>

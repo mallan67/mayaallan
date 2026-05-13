@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { getSession } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
+import { validateNavItemPayload } from "@/lib/nav-href-validation"
 
 type NavigationItemUI = {
   id: number
@@ -42,6 +44,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   const session = await getSession()
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -49,19 +54,19 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { label, href, order, isVisible } = body
-
-    if (!label || !href) {
-      return NextResponse.json({ error: "Label and href are required" }, { status: 400 })
+    const validated = validateNavItemPayload(body)
+    if (!validated.ok) {
+      return NextResponse.json({ error: validated.error }, { status: 400 })
     }
+    const { label, href, order, isVisible } = validated.value
 
     const { data: newItem, error } = await supabaseAdmin
       .from(Tables.navigationItems)
       .insert({
         label,
         href,
-        sort_order: order || 999,
-        is_visible: isVisible !== false,
+        sort_order: order,
+        is_visible: isVisible,
       })
       .select()
       .single()
@@ -77,6 +82,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   const session = await getSession()
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -90,9 +98,23 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Items array required" }, { status: 400 })
     }
 
+    // Validate every item BEFORE issuing any update — refusing the whole
+    // batch on one bad row beats leaving the menu half-updated.
+    const validatedItems: Array<{ id: number; label: string; href: string; order: number; isVisible: boolean }> = []
+    for (const item of items) {
+      const v = validateNavItemPayload(item)
+      if (!v.ok) {
+        return NextResponse.json({ error: v.error }, { status: 400 })
+      }
+      if (typeof item.id !== "number" || !Number.isInteger(item.id)) {
+        return NextResponse.json({ error: "item id must be an integer" }, { status: 400 })
+      }
+      validatedItems.push({ id: item.id, ...v.value })
+    }
+
     // Update all items
     const updated = await Promise.all(
-      items.map(async (item) => {
+      validatedItems.map(async (item) => {
         const { data, error } = await supabaseAdmin
           .from(Tables.navigationItems)
           .update({

@@ -4,6 +4,9 @@ import { useState } from "react"
 
 export function NewsletterSection() {
   const [email, setEmail] = useState("")
+  // Honeypot. Real users can't see or focus the field; bots fill every
+  // input and the API silently no-ops their request.
+  const [company, setCompany] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
@@ -16,7 +19,7 @@ export function NewsletterSection() {
       const response = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, source: "homepage" }),
+        body: JSON.stringify({ email, source: "homepage", company }),
       })
 
       const data = await response.json()
@@ -24,6 +27,7 @@ export function NewsletterSection() {
       if (response.ok) {
         setMessage({ type: "success", text: "Successfully subscribed!" })
         setEmail("")
+        setCompany("")
       } else {
         setMessage({ type: "error", text: data.details || data.error || "Subscription failed" })
       }
@@ -47,6 +51,19 @@ export function NewsletterSection() {
           Honest reflections on awareness, self-agency, and whatever I&apos;m questioning at the moment. 1–2 emails per month — no noise, no selling, just the work.
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
+          {/* Honeypot — hidden from sighted users + screen readers + tab order. */}
+          <div aria-hidden="true" className="absolute left-[-9999px] top-auto w-px h-px overflow-hidden">
+            <label htmlFor="newsletter-company">Company (leave blank)</label>
+            <input
+              id="newsletter-company"
+              type="text"
+              name="company"
+              tabIndex={-1}
+              autoComplete="off"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+            />
+          </div>
           <input
             type="email"
             value={email}

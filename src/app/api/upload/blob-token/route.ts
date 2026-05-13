@@ -23,10 +23,18 @@
 import { NextResponse } from "next/server"
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client"
 import { isAuthenticated } from "@/lib/session"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 export const runtime = "nodejs"
 
 export async function POST(request: Request): Promise<NextResponse> {
+  // CSRF guard. Same-origin check runs BEFORE we read the body or call
+  // handleUpload — keeps the admin token endpoint behind the same
+  // protection as /api/admin/**. isAuthenticated() still runs inside
+  // onBeforeGenerateToken below (additive defense).
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   let body: HandleUploadBody
   try {
     body = (await request.json()) as HandleUploadBody
