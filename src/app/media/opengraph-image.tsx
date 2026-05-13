@@ -3,6 +3,11 @@
  * Generates a 1200x630 image for the media page
  */
 import { ImageResponse } from "next/og"
+import {
+  OG_CACHE_HEADERS,
+  loadInterFont,
+  ogFonts,
+} from "@/lib/og-image-helpers"
 
 export const runtime = "edge"
 
@@ -13,41 +18,15 @@ export const size = {
 }
 export const contentType = "image/png"
 
-// Load Inter font for crisp text rendering
-async function loadFont() {
-  const response = await fetch(
-    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2")
-  )
-  return await response.arrayBuffer()
-}
-
-async function loadFontBold() {
-  const response = await fetch(
-    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2")
-  )
-  return await response.arrayBuffer()
-}
+const OG_SOURCE = "og:media"
 
 export default async function Image() {
   const [interRegular, interBold] = await Promise.all([
-    loadFont(),
-    loadFontBold(),
+    loadInterFont(400, OG_SOURCE),
+    loadInterFont(700, OG_SOURCE),
   ])
 
-  const fonts = [
-    {
-      name: "Inter",
-      data: interRegular,
-      style: "normal" as const,
-      weight: 400 as const,
-    },
-    {
-      name: "Inter",
-      data: interBold,
-      style: "normal" as const,
-      weight: 700 as const,
-    },
-  ]
+  const fonts = ogFonts(interRegular, interBold)
 
   return new ImageResponse(
     (
@@ -195,6 +174,7 @@ export default async function Image() {
     {
       ...size,
       fonts,
+      headers: OG_CACHE_HEADERS,
     }
   )
 }

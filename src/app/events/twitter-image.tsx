@@ -3,6 +3,7 @@
  * Generates a 1200x630 image for the events page
  */
 import { ImageResponse } from "next/og"
+import { OG_CACHE_HEADERS } from "@/lib/og-image-helpers"
 
 export const runtime = "edge"
 
@@ -159,6 +160,7 @@ export default async function Image() {
     ),
     {
       ...size,
+      headers: OG_CACHE_HEADERS,
     }
   )
 }

@@ -1,4 +1,10 @@
 import { ImageResponse } from "next/og"
+import {
+  OG_CACHE_HEADERS,
+  loadInterFont,
+  logOgDataFailure,
+  ogFonts,
+} from "@/lib/og-image-helpers"
 
 export const runtime = "edge"
 
@@ -9,23 +15,10 @@ export const size = {
 }
 export const contentType = "image/png"
 
+const OG_SOURCE = "og:book"
+
 interface Props {
   params: Promise<{ slug: string }>
-}
-
-// Load Inter font for crisp text rendering
-async function loadFont() {
-  const response = await fetch(
-    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2")
-  )
-  return await response.arrayBuffer()
-}
-
-async function loadFontBold() {
-  const response = await fetch(
-    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2")
-  )
-  return await response.arrayBuffer()
 }
 
 // Simple fetch function for edge runtime (no heavy dependencies)
@@ -52,7 +45,8 @@ async function getBookData(slug: string) {
 
     const data = await response.json()
     return data?.[0] || null
-  } catch {
+  } catch (err) {
+    logOgDataFailure(OG_SOURCE, err)
     return null
   }
 }
@@ -64,24 +58,11 @@ export default async function Image({ params }: Props) {
   // Load fonts in parallel with data
   const [book, interRegular, interBold] = await Promise.all([
     getBookData(decodedSlug),
-    loadFont(),
-    loadFontBold(),
+    loadInterFont(400, OG_SOURCE),
+    loadInterFont(700, OG_SOURCE),
   ])
 
-  const fonts = [
-    {
-      name: "Inter",
-      data: interRegular,
-      style: "normal" as const,
-      weight: 400 as const,
-    },
-    {
-      name: "Inter",
-      data: interBold,
-      style: "normal" as const,
-      weight: 700 as const,
-    },
-  ]
+  const fonts = ogFonts(interRegular, interBold)
 
   // If no book found, return a generic author image
   if (!book) {
@@ -111,7 +92,7 @@ export default async function Image({ params }: Props) {
           <p style={{ fontSize: "32px", color: "#000000", fontWeight: 400 }}>Author</p>
         </div>
       ),
-      { ...size, fonts }
+      { ...size, fonts, headers: OG_CACHE_HEADERS }
     )
   }
 
@@ -286,6 +267,7 @@ export default async function Image({ params }: Props) {
     {
       ...size,
       fonts,
+      headers: OG_CACHE_HEADERS,
     }
   )
 }

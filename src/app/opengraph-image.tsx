@@ -3,6 +3,12 @@
  * Generates a 1200x630 image for the homepage
  */
 import { ImageResponse } from "next/og"
+import {
+  OG_CACHE_HEADERS,
+  loadInterFont,
+  logOgDataFailure,
+  ogFonts,
+} from "@/lib/og-image-helpers"
 
 export const runtime = "edge"
 
@@ -13,20 +19,7 @@ export const size = {
 }
 export const contentType = "image/png"
 
-// Load Inter font for crisp text rendering
-async function loadFont() {
-  const response = await fetch(
-    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2")
-  )
-  return await response.arrayBuffer()
-}
-
-async function loadFontBold() {
-  const response = await fetch(
-    new URL("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2")
-  )
-  return await response.arrayBuffer()
-}
+const OG_SOURCE = "og:home"
 
 // Fetch featured book for homepage OG image
 async function getFeaturedBook() {
@@ -52,33 +45,22 @@ async function getFeaturedBook() {
 
     const data = await response.json()
     return data?.[0] || null
-  } catch {
+  } catch (err) {
+    logOgDataFailure(OG_SOURCE, err)
     return null
   }
 }
 
 export default async function Image() {
-  // Load fonts in parallel with data
+  // Load fonts in parallel with data — both font fetches return null on
+  // failure (logged inside loadInterFont) so the route still renders.
   const [featuredBook, interRegular, interBold] = await Promise.all([
     getFeaturedBook(),
-    loadFont(),
-    loadFontBold(),
+    loadInterFont(400, OG_SOURCE),
+    loadInterFont(700, OG_SOURCE),
   ])
 
-  const fonts = [
-    {
-      name: "Inter",
-      data: interRegular,
-      style: "normal" as const,
-      weight: 400 as const,
-    },
-    {
-      name: "Inter",
-      data: interBold,
-      style: "normal" as const,
-      weight: 700 as const,
-    },
-  ]
+  const fonts = ogFonts(interRegular, interBold)
 
   // Ensure cover URL is absolute
   const coverUrl = featuredBook?.cover_url
@@ -234,6 +216,7 @@ export default async function Image() {
     {
       ...size,
       fonts,
+      headers: OG_CACHE_HEADERS,
     }
   )
 }
