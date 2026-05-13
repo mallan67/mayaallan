@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { buildCsv } from "@/lib/csv"
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -17,20 +18,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Failed to fetch subscribers" }, { status: 500 })
   }
 
-  const headers = ["email", "source", "created_at"]
-  const rows = (subscribers || []).map((s) => [
+  const rows = (subscribers || []).map((s: any) => [
     s.email,
     s.source || "",
-    new Date(s.created_at).toISOString(),
+    s.created_at ? new Date(s.created_at).toISOString() : "",
   ])
 
-  const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n")
+  // RFC 4180 — quotes any value containing commas / quotes / newlines.
+  const csv = buildCsv(["email", "source", "created_at"], rows)
 
   return new NextResponse(csv, {
     status: 200,
     headers: {
-      "Content-Type": "text/csv",
+      "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": 'attachment; filename="subscribers.csv"',
+      "Cache-Control": "private, no-store",
     },
   })
 }
