@@ -17,7 +17,24 @@
 --
 -- We use a PARTIAL unique index (WHERE paypal_order_id IS NOT NULL) so that
 -- legacy / Stripe-only rows with a NULL paypal_order_id don't collide.
+--
+-- The ADD COLUMN line in front of the index is defensive: the column was
+-- missing from the historical schema in this repo, and the PayPal webhook
+-- code in src/app/api/payment/paypal/webhook/route.ts writes to it. Without
+-- this column the webhook fails silently on INSERT.
 -- ----------------------------------------------------------------------------
+-- Defensive ADD COLUMN block: ensure every column the PayPal webhook writes
+-- to actually exists on the orders table. Each ADD COLUMN IF NOT EXISTS is a
+-- no-op if the column is already there.
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS paypal_order_id TEXT;
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS format_type TEXT DEFAULT 'ebook';
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS amount DECIMAL(10,2);
+
 CREATE UNIQUE INDEX IF NOT EXISTS uq_orders_paypal_order_id
   ON public.orders (paypal_order_id)
   WHERE paypal_order_id IS NOT NULL;
