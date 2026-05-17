@@ -253,7 +253,7 @@ export default async function AboutPage() {
       <section className="py-16 md:py-20">
         <div className="max-w-[680px] mx-auto px-5 md:px-9 text-center">
           <blockquote className="font-serif italic font-light text-[clamp(1.2rem,3vw,1.5rem)] text-charcoal leading-[1.7] mb-6">
-            &ldquo;To know and accept yourself is to be &lsquo;home.&rsquo; Others are here to share the journey — but the return to yourself is a path only you can take.&rdquo;
+            &ldquo;To know and accept your ever-evolving self is to be home. Others are here to share the journey — but the return to your ever-evolving self is a path only you can take.&rdquo;
           </blockquote>
           <div className="w-12 h-0.5 bg-gold mx-auto mb-8" />
           <div className="flex flex-wrap gap-3.5 justify-center">

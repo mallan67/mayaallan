@@ -302,7 +302,7 @@ export default async function HomePage() {
             <h1 className="font-serif text-[clamp(2.4rem,5.5vw,3.8rem)] font-semibold leading-[1.15] tracking-[-0.03em] mb-6 text-white">
               Practical Tools for{" "}
               <em className="font-normal italic text-gold">Coming Home</em>{" "}
-              to Yourself.
+              to Your Ever-Evolving Self.
             </h1>
 
             <p className="text-[1.05rem] text-white/80 leading-[1.8] mb-10">
@@ -325,7 +325,7 @@ export default async function HomePage() {
             </div>
 
             <p className="font-serif italic font-normal text-base text-white/75 leading-[1.7] pl-5 border-l-[3px] border-gold text-left">
-              &ldquo;No one can heal us but ourselves. The return to yourself is a path only you can take.&rdquo;
+              &ldquo;No one can heal us but ourselves. The return to your ever-evolving self is a path only you can take.&rdquo;
             </p>
           </div>
         </div>
@@ -595,7 +595,7 @@ export default async function HomePage() {
 
               {/* Blockquote */}
               <blockquote className="font-serif italic font-light text-[1.15rem] text-white leading-[1.7] p-6 bg-white/5 border-l-[3px] border-gold rounded-r-xl mb-7">
-                To know and accept yourself is to be &ldquo;home.&rdquo; Others are here to share the journey — but the return to yourself is a path only you can take.
+                To know and accept your ever-evolving self is to be home. Others are here to share the journey — but the return to your ever-evolving self is a path only you can take.
               </blockquote>
 
               <p className="text-[0.95rem] text-white/85 leading-[1.85] mb-4">
