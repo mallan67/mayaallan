@@ -108,9 +108,28 @@ export async function POST(request: Request) {
   const bodyText = await request.text()
   const headersList = await headers()
 
-  // Verify webhook signature via the shared helper. In dev where
-  // PAYPAL_WEBHOOK_ID isn't set, verifyPaypalWebhook returns false on missing
-  // headers / config — we still alert so a misconfigured prod gets flagged.
+  // -----------------------------------------------------------------
+  // Three-tier classification BEFORE we even attempt verification:
+  //   (a) No PayPal-shaped headers → bot probe. Silent 401, no alert.
+  //   (b) PayPal-shaped headers + verify SUCCESS → process event.
+  //   (c) PayPal-shaped headers + verify FAILURE → real event with
+  //       genuine signature mismatch. Alert as critical — this is the
+  //       webhook-id-vs-env-var-mismatch case.
+  // The bot-probe filter (a) kills 95%+ of false-positive alerts that
+  // were firing every time the endpoint got scanned.
+  // -----------------------------------------------------------------
+  const transmissionId = headersList.get("paypal-transmission-id")
+  const transmissionSig = headersList.get("paypal-transmission-sig")
+  const certUrl = headersList.get("paypal-cert-url")
+  const hasPaypalShape = !!(transmissionId && transmissionSig && certUrl)
+
+  if (!hasPaypalShape) {
+    // Bot probe — silent 401, NO alert. Just a log line for triage.
+    console.log("[paypal-webhook] bot probe (no paypal headers)")
+    return NextResponse.json({ error: "Invalid webhook signature" }, { status: 401 })
+  }
+
+  // Verify webhook signature via the shared helper.
   let isVerified = false
   try {
     isVerified = await verifyPaypalWebhook(extractWebhookHeaders({ headers: headersList }), bodyText)
@@ -118,15 +137,24 @@ export async function POST(request: Request) {
     console.error("verifyPaypalWebhook threw:", verifyErr)
   }
   if (!isVerified) {
-    console.error("PayPal webhook verification failed")
-    // Dedup heavily — bots probe webhook endpoints constantly; we want one
-    // alert per hour at most, not one per probe.
+    console.error("PayPal webhook verification failed (real-shaped request)")
+    // Real PayPal-shaped request that failed verification. Almost always
+    // means PAYPAL_WEBHOOK_ID in Vercel doesn't match the webhook ID PayPal
+    // used to sign this event — i.e. the env var is pointing at a different
+    // webhook subscription than the one PayPal delivered to.
     await alertAdmin({
       severity: "critical",
-      subject: "PayPal webhook signature verification failed",
+      subject: "PayPal webhook signature verification failed (real-shaped)",
       body:
-        "An incoming PayPal webhook failed signature verification. Either an attacker is probing the endpoint, or PAYPAL_WEBHOOK_ID / PAYPAL_SECRET / PAYPAL_CLIENT_ID is misconfigured. " +
-        "Check Vercel logs for the source IP and frequency.",
+        "A real-shaped PayPal webhook (with valid paypal-* headers) failed signature " +
+        "verification. The PAYPAL_WEBHOOK_ID env var almost certainly does not match the " +
+        "webhook subscription ID PayPal used to sign this event. Verify the value of " +
+        "PAYPAL_WEBHOOK_ID against the webhook IDs listed in PayPal Developer → Live → " +
+        "your app → Webhooks.",
+      details: {
+        certUrlHost: certUrl ? new URL(certUrl).host : null,
+        transmissionIdPrefix: transmissionId?.slice(0, 12) ?? null,
+      },
       dedupKey: "paypal:signature-failure",
     })
     return NextResponse.json({ error: "Invalid webhook signature" }, { status: 401 })
