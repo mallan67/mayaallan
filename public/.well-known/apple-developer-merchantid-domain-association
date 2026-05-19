@@ -1,0 +1,9 @@
+PLACEHOLDER — replace this entire file with the contents Stripe provides at:
+  Dashboard → Settings → Payment methods → Apple Pay → Add new domain → www.mayaallan.com
+
+Stripe gives you a small text file to download. Open it, copy ALL its contents,
+and paste them here (overwrite this whole placeholder). Then redeploy.
+
+Until this is replaced with Stripe's real domain-association content, Apple Pay
+will NOT work on the live site — Apple's domain-verification fetch from this
+exact URL must return Stripe's signed token.
