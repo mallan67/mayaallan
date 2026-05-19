@@ -21,30 +21,43 @@ type CaptureResource = {
   }
 }
 
-type OrderApprovedResource = {
-  purchase_units?: Array<{ custom_id?: string }>
-}
-
-function extractCustomId(eventName: string, resource: unknown): string | null {
+// This route only processes PAYMENT.CAPTURE.COMPLETED (gated below). The
+// previous CHECKOUT.ORDER.APPROVED branch was unreachable dead code; if it's
+// ever reintroduced, accepting APPROVED would deliver the PDF before the money
+// is captured. Keep this single-shape.
+function extractCustomId(resource: unknown): string | null {
   if (!resource || typeof resource !== "object") return null
-  if (eventName === "PAYMENT.CAPTURE.COMPLETED") {
-    return (resource as CaptureResource).custom_id ?? null
-  }
-  if (eventName === "CHECKOUT.ORDER.APPROVED") {
-    const units = (resource as OrderApprovedResource).purchase_units
-    return units?.[0]?.custom_id ?? null
-  }
-  return null
+  return (resource as CaptureResource).custom_id ?? null
 }
 
 export async function POST(req: NextRequest) {
+  // Fail-fast guard: in production, refuse to process any event unless we
+  // have the export-specific webhook ID set. Without it, verifyPaypalWebhook
+  // would silently fall back to PAYPAL_WEBHOOK_ID (the book webhook's ID),
+  // which would only verify successfully against book-route signatures and
+  // would either misroute or false-fail every export event.
+  if (
+    (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") &&
+    !process.env.PAYPAL_EXPORT_WEBHOOK_ID
+  ) {
+    await alertAdmin({
+      severity: "critical",
+      subject: "Export webhook: PAYPAL_EXPORT_WEBHOOK_ID not configured in production",
+      body:
+        "/api/export/webhook is reachable but PAYPAL_EXPORT_WEBHOOK_ID is unset. " +
+        "Without it the route would fall back to PAYPAL_WEBHOOK_ID and fail to " +
+        "verify any export-flow event. Set the env var in Vercel Production scope " +
+        "and redeploy.",
+      dedupKey: "export:missing-export-webhook-id",
+    })
+    return NextResponse.json({ error: "Service misconfigured" }, { status: 500 })
+  }
+
   const rawBody = await req.text()
   const headers = extractWebhookHeaders(req)
 
   // Verify against PAYPAL_EXPORT_WEBHOOK_ID (this route's own subscription),
-  // NOT the book-purchase PAYPAL_WEBHOOK_ID. Falls back to the default
-  // PAYPAL_WEBHOOK_ID inside verifyPaypalWebhook() only if the export-
-  // specific ID isn't set — in production that fallback should never apply.
+  // NOT the book-purchase PAYPAL_WEBHOOK_ID.
   let verified = false
   try {
     verified = await verifyPaypalWebhook(headers, rawBody, process.env.PAYPAL_EXPORT_WEBHOOK_ID)
@@ -98,36 +111,42 @@ export async function POST(req: NextRequest) {
   }
 
   const eventName = event.event_type
+
+  // Refund / dispute / reversal events on the session-PDF flow. We don't auto-
+  // process them, but Maya must be notified — silently dropping these is a
+  // real operational gap.
+  if (
+    eventName === "PAYMENT.CAPTURE.REFUNDED" ||
+    eventName === "PAYMENT.CAPTURE.REVERSED" ||
+    (typeof eventName === "string" && eventName.startsWith("CUSTOMER.DISPUTE."))
+  ) {
+    await alertAdmin({
+      severity: "warning",
+      subject: `Export webhook: ${eventName}`,
+      body:
+        "A refund / reversal / dispute event was received on the session-PDF " +
+        "PayPal subscription. We don't process these automatically — review in " +
+        "the PayPal Business dashboard and take action as needed.",
+      details: { eventName, paypalOrderId: (event.resource as any)?.id ?? null },
+      dedupKey: `export:${eventName}`,
+    })
+    return NextResponse.json({ received: true, alerted: eventName })
+  }
+
   if (eventName !== "PAYMENT.CAPTURE.COMPLETED") {
     return NextResponse.json({ received: true, ignored: eventName })
   }
 
-  const customId = extractCustomId(eventName, event.resource)
-  if (!customId) {
-    console.error("Webhook missing custom_id on resource")
-    // CRITICAL — money was captured by PayPal but we can't tell which session
-    // this is for. Cannot fulfill without manual intervention.
-    await alertAdmin({
-      severity: "critical",
-      subject: "Export webhook: paid capture missing custom_id — cannot fulfill",
-      body:
-        "A PAYMENT.CAPTURE.COMPLETED event arrived with no custom_id on the " +
-        "resource. Money has been captured by PayPal but we have no idea which " +
-        "session PDF to deliver. Manual reconciliation required: look up the " +
-        "capture in PayPal, find the customer, and re-send the session PDF.",
-      details: { eventName },
-      dedupKey: "export:missing-custom-id",
-    })
-    return NextResponse.json({ error: "Missing custom_id" }, { status: 400 })
-  }
+  const customId = extractCustomId(event.resource)
 
-  // Silently skip book-purchase events. PayPal delivers each capture event to
-  // every webhook subscription on the app, so book captures (custom_id = the
-  // numeric book row id) arrive at this URL too. Without this short-circuit
-  // they fall through to the "unparseable custom_id" CRITICAL alert below
-  // every time a book sells. Numeric ids belong to /api/payment/paypal/webhook.
-  if (/^\d+$/.test(customId)) {
-    return NextResponse.json({ received: true, ignored: "book-purchase" })
+  // Silently skip cross-flow events. PayPal delivers each capture event to
+  // every webhook subscription on the app, so book captures arrive at this
+  // URL too. The session-export contract is custom_id === `blobKey|tool`
+  // (always contains a literal `|`). Anything else — missing custom_id,
+  // numeric book id, future product shape — gets a quiet 200. Symmetric with
+  // the book webhook, which skips anything containing `|`.
+  if (typeof customId !== "string" || !customId.includes("|")) {
+    return NextResponse.json({ received: true, ignored: "cross-flow" })
   }
 
   const decoded = decodeCustomId(customId)
@@ -152,7 +171,9 @@ export async function POST(req: NextRequest) {
   let payload: BlobPayload
   try {
     const blobMeta = await head(blobKey)
-    const res = await fetch(blobMeta.url)
+    // 10s timeout — a slow blob fetch would otherwise chew the 60s function
+    // budget and force PayPal to retry an in-progress fulfillment.
+    const res = await fetch(blobMeta.url, { signal: AbortSignal.timeout(10_000) })
     if (!res.ok) throw new Error(`blob fetch ${res.status}`)
     payload = (await res.json()) as BlobPayload
   } catch (err) {
@@ -208,10 +229,13 @@ export async function POST(req: NextRequest) {
         "The customer paid for the session PDF but it was NOT delivered. " +
         "Manual fulfillment required: re-run delivery with the payload below, " +
         "or generate the PDF manually and email it to the customer.",
+      // PII: omit the customer email. blobKey is sufficient for manual
+      // reconciliation — Maya can look up the blob to find the payload's
+      // email if needed. Keeping PII out of alertAdmin payloads is the rule
+      // established in commit d01200b.
       details: {
         blobKey,
         tool,
-        customerEmail: (payload as any)?.email,
         errorMessage: err instanceof Error ? err.message : String(err),
       },
       dedupKey: `export:pdf-deliver-failed:${blobKey}`,

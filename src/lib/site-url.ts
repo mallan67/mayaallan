@@ -15,7 +15,7 @@
  */
 export function siteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim()
-  if (fromEnv) return fromEnv.replace(/\/$/, "")
+  if (fromEnv) return fromEnv.replace(/\/+$/, "")
 
   const isProduction =
     process.env.VERCEL_ENV === "production" ||

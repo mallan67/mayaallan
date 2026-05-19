@@ -152,6 +152,9 @@ export async function getAccessToken(): Promise<string> {
   const clientSecret = getPaypalClientSecret()
   const basic = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
 
+  // 10s timeout caps how long a slow PayPal API can chew the calling function's
+  // budget. Without this, a hanging OAuth call lets Vercel kill the function
+  // after the platform timeout — too late for our catch block to alertAdmin.
   const res = await fetch(`${apiBase()}/v1/oauth2/token`, {
     method: "POST",
     headers: {
@@ -159,6 +162,7 @@ export async function getAccessToken(): Promise<string> {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: "grant_type=client_credentials",
+    signal: AbortSignal.timeout(10_000),
   })
 
   if (!res.ok) {
@@ -348,9 +352,17 @@ export async function verifyPaypalWebhook(
       webhook_id: resolvedWebhookId,
       webhook_event: webhookEvent,
     }),
+    signal: AbortSignal.timeout(10_000),
   })
 
-  if (!res.ok) return false
+  // Transport / non-2xx must throw so the caller can distinguish a PayPal
+  // verify-endpoint outage ("alert as warning, retry") from a genuinely
+  // tampered signature ("alert as critical, likely attacker probe"). Without
+  // this, both look like `verified === false`.
+  if (!res.ok) {
+    const body = await res.text().catch(() => "")
+    throw new Error(`PayPal verify-webhook returned HTTP ${res.status}: ${body.slice(0, 500)}`)
+  }
   const data = (await res.json()) as { verification_status?: string }
   return data.verification_status === "SUCCESS"
 }

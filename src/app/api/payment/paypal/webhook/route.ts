@@ -8,6 +8,15 @@ import { siteUrl } from "@/lib/site-url"
 import { trackMarketingEvent } from "@/lib/marketing-events"
 import crypto from "crypto"
 
+// Explicit Node runtime + 60s budget. The default Vercel timeout (10-15s) can
+// kill this function mid-fulfillment — signature verify + OAuth + optional
+// order-fetch fallback + Supabase pre-check + order INSERT + claim RPC +
+// Resend send + email-sent UPDATE + analytics writes can collectively burn
+// well past 10s on a slow day. A killed function silently retries via
+// PayPal, risking duplicate fulfillment if the kill landed after side-effects.
+export const runtime = "nodejs"
+export const maxDuration = 60
+
 /**
  * PAYPAL WEBHOOK - Payment completion handler
  *
@@ -51,8 +60,13 @@ async function sendPurchaseEmail(args: {
   const expiryStr = args.expiresAt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
   const escape = (s: string) => s.replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c]!))
 
+  // 15s cap on the Resend call. If Resend hangs longer than this, we abort,
+  // return ok:false, and the claim is released so a future PayPal retry can
+  // re-attempt. Without the cap, a hung Resend can outlive the 10-minute
+  // claim stale window — the next retry would re-acquire the claim and
+  // potentially double-send if the first call eventually delivered.
   try {
-    const { data, error } = await resend.emails.send({
+    const sendPromise = resend.emails.send({
       from: "Maya Allan <maya@mayaallan.com>",
       to: args.customerEmail,
       subject: `Your purchase from mayaallan.com — ${args.bookTitle}`,
@@ -76,6 +90,11 @@ async function sendPurchaseEmail(args: {
         </div>
       `,
     })
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Resend send timed out after 15s")), 15_000)
+    )
+    const { data, error } = await Promise.race([sendPromise, timeoutPromise])
     if (error) {
       return { ok: false, error: error.message ?? String(error) }
     }
@@ -187,36 +206,6 @@ export async function POST(request: Request) {
         customerName = resource.payer?.name?.given_name
           ? `${resource.payer.name.given_name} ${resource.payer.name.surname || ""}`.trim()
           : null
-
-        // PayPal's PAYMENT.CAPTURE.COMPLETED payload does NOT include payer
-        // info -- only payee. When customerEmail is missing here, we fall
-        // back to a one-off GET on the order, which always includes the
-        // payer block. This makes the webhook self-sufficient regardless of
-        // which event subscriptions are configured in the PayPal dashboard.
-        // AbortSignal.timeout caps the extra call so the webhook can't hang.
-        if (!customerEmail && paypalOrderId) {
-          try {
-            const orderToken = await getAccessToken()
-            const orderRes = await fetch(
-              `${apiBase()}/v2/checkout/orders/${encodeURIComponent(paypalOrderId)}`,
-              {
-                headers: { Authorization: `Bearer ${orderToken}` },
-                signal: AbortSignal.timeout(10_000),
-              },
-            )
-            if (orderRes.ok) {
-              const orderData = await orderRes.json()
-              customerEmail = orderData?.payer?.email_address ?? customerEmail
-              if (!customerName && orderData?.payer?.name?.given_name) {
-                customerName = `${orderData.payer.name.given_name} ${orderData.payer.name.surname || ""}`.trim()
-              }
-            } else {
-              console.warn(`[paypal webhook] order fetch returned ${orderRes.status} for ${paypalOrderId}`)
-            }
-          } catch (fetchErr) {
-            console.error("[paypal webhook] order fetch failed:", fetchErr)
-          }
-        }
       } else if (body.event_type === "CHECKOUT.ORDER.COMPLETED") {
         // Checkout order completed
         const purchaseUnit = resource.purchase_units?.[0]
@@ -240,9 +229,53 @@ export async function POST(request: Request) {
           : null
       }
 
+      // Unified order-fetch fallback. ALL three event-type branches can land
+      // here with customerEmail still null: PAYMENT.CAPTURE.COMPLETED notoriously
+      // omits payer info, and legacy SALE.COMPLETED / CHECKOUT.ORDER.COMPLETED
+      // can also omit it on certain capture methods. A single GET on the order
+      // always includes the payer block. AbortSignal.timeout caps the extra
+      // call so the webhook can't hang.
+      if (!customerEmail && paypalOrderId) {
+        try {
+          const orderToken = await getAccessToken()
+          const orderRes = await fetch(
+            `${apiBase()}/v2/checkout/orders/${encodeURIComponent(paypalOrderId)}`,
+            {
+              headers: { Authorization: `Bearer ${orderToken}` },
+              signal: AbortSignal.timeout(10_000),
+            },
+          )
+          if (orderRes.ok) {
+            const orderData = await orderRes.json()
+            customerEmail = orderData?.payer?.email_address ?? customerEmail
+            if (!customerName && orderData?.payer?.name?.given_name) {
+              customerName = `${orderData.payer.name.given_name} ${orderData.payer.name.surname || ""}`.trim()
+            }
+          } else {
+            console.warn(`[paypal webhook] order fetch returned ${orderRes.status} for ${paypalOrderId}`)
+          }
+        } catch (fetchErr) {
+          console.error("[paypal webhook] order fetch failed:", fetchErr)
+        }
+      }
+
       if (!bookId) {
-        console.error("No book ID in PayPal webhook:", body.event_type)
-        return NextResponse.json({ error: "No book ID in payment data" }, { status: 400 })
+        // Returning 4xx here makes PayPal retry up to 25× over 3 days, which
+        // floods admin alerts on every retry of an unfulfillable event (e.g.
+        // someone's stray test order with no custom_id). Return 200 + ignored
+        // so PayPal stops retrying, and alert ONCE so manual reconciliation
+        // can happen if the event is genuinely ours.
+        await alertAdmin({
+          severity: "critical",
+          subject: "PayPal: webhook missing book ID — cannot fulfill",
+          body:
+            "A payment event arrived without a parseable book ID in custom_id. " +
+            "PayPal has captured money on their side but we have no idea which book " +
+            "to deliver. Manual reconciliation required from the PayPal dashboard.",
+          details: { eventType: body.event_type, paypalOrderId },
+          dedupKey: `paypal:no-book-id:${paypalOrderId ?? "unknown"}`,
+        })
+        return NextResponse.json({ received: true, ignored: "no-book-id" })
       }
 
       // Get book from database
@@ -253,12 +286,35 @@ export async function POST(request: Request) {
         .single()
 
       if (bookError || !book) {
-        return NextResponse.json({ error: "Book not found" }, { status: 404 })
+        // Same reasoning: 200 + alert instead of 404, so PayPal stops retrying.
+        await alertAdmin({
+          severity: "critical",
+          subject: "PayPal: webhook references unknown book ID",
+          body:
+            "A payment event arrived referencing a book ID that doesn't exist in the database. " +
+            "Either the book was deleted between order creation and fulfillment, or custom_id " +
+            "was tampered with. Manual reconciliation required.",
+          details: { bookId, paypalOrderId, errorCode: bookError?.code },
+          dedupKey: `paypal:book-not-found:${bookId}`,
+        })
+        return NextResponse.json({ received: true, ignored: "book-not-found" })
       }
 
       if (!customerEmail) {
-        console.error("No customer email in PayPal webhook")
-        return NextResponse.json({ error: "No customer email" }, { status: 400 })
+        // Same reasoning as !bookId above. After the unified order-fetch
+        // fallback, missing email means PayPal genuinely doesn't have a payer
+        // we can reach — alert critically, 200 so no retry storm.
+        await alertAdmin({
+          severity: "critical",
+          subject: "PayPal: webhook missing customer email — cannot deliver",
+          body:
+            "A payment captured but we have no email to send the download link to. " +
+            "Order-fetch fallback also returned no payer. Manual reconciliation required: " +
+            "find the order in PayPal, look up the buyer's email, send the link manually.",
+          details: { paypalOrderId, bookId: book.id },
+          dedupKey: `paypal:no-email:${paypalOrderId}`,
+        })
+        return NextResponse.json({ received: true, ignored: "no-customer-email" })
       }
 
       // ----------------------------------------------------------------
@@ -698,7 +754,13 @@ export async function POST(request: Request) {
         // snapshot the checkout route persisted to pending_paypal_orders
         // (keyed on paypal_order_id) and use it for both the event row's
         // utm_* columns and the orders.* attribution columns.
+        //
+        // ALL analytics writes are wrapped in a 3s hard timeout. The email is
+        // already sent + email_sent_at is set — analytics is best-effort only.
+        // If Supabase is slow, we MUST NOT chew the function budget past the
+        // 200 response, or PayPal will retry a fully-fulfilled order.
         try {
+          const analyticsPromise = (async () => {
           type CheckoutAttribution = {
             visitor_id: string | null
             session_id: string | null
@@ -781,6 +843,11 @@ export async function POST(request: Request) {
               )
             }
           }
+          })() // close analyticsPromise IIFE
+          const analyticsTimeout = new Promise<void>((resolve) =>
+            setTimeout(() => resolve(), 3_000)
+          )
+          await Promise.race([analyticsPromise, analyticsTimeout])
         } catch (trackErr) {
           console.error("[webhook] purchase tracking failed:", trackErr)
         }
@@ -797,6 +864,32 @@ export async function POST(request: Request) {
         success: true,
         orderId: order.id,
         warning: "No ebook file URL set for this book",
+      })
+    }
+
+    // Refund / dispute / reversal events. We don't process them automatically
+    // (no auto-refund-tracker today), but we MUST notify Maya — a customer
+    // chargeback with no notification is a real operational gap. Coarse
+    // dedup per event-type keeps probe spam from flooding the inbox while
+    // still alerting on every distinct event_type seen in a 1h window.
+    const eventType = typeof body.event_type === "string" ? body.event_type : null
+    if (
+      eventType === "PAYMENT.CAPTURE.REFUNDED" ||
+      eventType === "PAYMENT.CAPTURE.REVERSED" ||
+      eventType === "PAYMENT.SALE.REFUNDED" ||
+      eventType === "PAYMENT.SALE.REVERSED" ||
+      (eventType !== null && eventType.startsWith("CUSTOMER.DISPUTE."))
+    ) {
+      await alertAdmin({
+        severity: "warning",
+        subject: `PayPal: ${eventType}`,
+        body:
+          "A refund / reversal / dispute event was received from PayPal. We don't " +
+          "process these automatically — review the transaction in the PayPal " +
+          "Business dashboard and take action (respond to dispute, reconcile order " +
+          "status, contact customer, etc) as needed.",
+        details: { eventType, paypalOrderId: (body?.resource as any)?.id ?? null },
+        dedupKey: `paypal:${eventType}`,
       })
     }
 

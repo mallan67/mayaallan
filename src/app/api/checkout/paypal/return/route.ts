@@ -37,6 +37,11 @@ import { siteUrl } from "@/lib/site-url"
 import { createHash } from "node:crypto"
 
 export const runtime = "nodejs"
+// 60s budget: the capture POST itself has a 20s AbortSignal cap, plus DB
+// lookups + updates + redirect work. Default Vercel timeout (10-15s) can kill
+// the function mid-capture, leaving customer money APPROVED-but-not-captured
+// without firing the catch-block alert.
+export const maxDuration = 60
 
 /** Window (ms) within which a pending_paypal_orders row is considered fresh. */
 const PENDING_ORDER_TTL_MS = 60 * 60 * 1000 // 1 hour

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { put } from "@vercel/blob"
 import { createSessionExportOrder } from "@/lib/paypal"
 import { renderAndEmailSessionPdf, isValidPromoCode } from "@/lib/deliver-pdf"
+import { alertAdmin } from "@/lib/alert-admin"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -79,6 +80,23 @@ export async function POST(req: NextRequest) {
       })
     } catch (err) {
       console.error("Promo-code PDF delivery failed:", err)
+      // CRITICAL — promo redemption is a $0 path but the customer used a
+      // code, expects a PDF, and we have no other way to fulfill. Manual
+      // re-delivery required.
+      await alertAdmin({
+        severity: "critical",
+        subject: "Export route: promo-code PDF delivery FAILED",
+        body:
+          "A customer redeemed a promo code for a session PDF but the render+email " +
+          "step threw. Manual fulfillment required: re-run delivery for the affected " +
+          "tool / session, or generate the PDF manually and email it to the customer.",
+        details: {
+          tool: body.tool,
+          emailDomain: body.email.split("@")[1] ?? null,
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+        dedupKey: "export:promo-deliver-failed",
+      })
       return NextResponse.json({ error: "Could not deliver PDF" }, { status: 500 })
     }
 
@@ -108,6 +126,20 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     console.error("Blob staging failed:", err)
+    // No customer payment has happened yet — blob staging is pre-checkout —
+    // but a persistent failure here means the entire session-export feature
+    // is broken (paid path can't proceed). Alert as error (not critical)
+    // and surface so it doesn't go silently dark.
+    await alertAdmin({
+      severity: "error",
+      subject: "Export route: Vercel Blob staging failed — paid checkout cannot proceed",
+      body:
+        "Failed to stage the session payload in Vercel Blob. Customers clicking " +
+        "'Save Session for $9.99' will see a 500. If this fires repeatedly, the " +
+        "BLOB_READ_WRITE_TOKEN may be invalid / expired, or Vercel Blob is degraded.",
+      details: { tool: body.tool, errorMessage: err instanceof Error ? err.message : String(err) },
+      dedupKey: "export:blob-stage-failed",
+    })
     return NextResponse.json({ error: "Could not stage session" }, { status: 500 })
   }
 
@@ -121,6 +153,24 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     console.error("PayPal order creation failed:", err)
+    // No customer payment has happened — order creation is pre-checkout — but
+    // a persistent failure here means the entire paid session-export flow is
+    // unusable. Likely causes: PayPal OAuth credential issue, PayPal API
+    // outage, or invalid PAYPAL_ENV. Alert as error.
+    await alertAdmin({
+      severity: "error",
+      subject: "Export route: PayPal createOrder failed — paid checkout cannot proceed",
+      body:
+        "Failed to create a PayPal order for a session-export checkout. Customers " +
+        "will see a 500 when clicking 'Save Session for $9.99'. Likely a PayPal " +
+        "credential / OAuth issue or PayPal-side outage. Check /api/health?deep=1.",
+      details: {
+        tool: body.tool,
+        blobKey,
+        errorMessage: err instanceof Error ? err.message : String(err),
+      },
+      dedupKey: "export:create-order-failed",
+    })
     return NextResponse.json({ error: "Could not create checkout" }, { status: 500 })
   }
 

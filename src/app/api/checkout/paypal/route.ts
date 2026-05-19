@@ -268,8 +268,11 @@ export async function POST(request: Request) {
     // Track checkout_started AFTER the money path has succeeded. Wrapped
     // in try/catch despite trackMarketingEvent's own swallowing — the
     // checkout response must not be affected by any analytics failure.
+    // 2s hard cap: if Supabase is slow, the customer-facing response must
+    // still arrive promptly. The PayPal order is already created; analytics
+    // is best-effort only.
     try {
-      await trackMarketingEvent({
+      const trackPromise = trackMarketingEvent({
         request,
         eventName: "checkout_started",
         path: "/api/checkout/paypal",
@@ -282,6 +285,8 @@ export async function POST(request: Request) {
           paypal_order_id: paypalOrderId,
         },
       })
+      const trackTimeout = new Promise<void>((resolve) => setTimeout(() => resolve(), 2_000))
+      await Promise.race([trackPromise, trackTimeout])
     } catch (trackErr) {
       console.error("[checkout] tracking failed:", trackErr)
     }
