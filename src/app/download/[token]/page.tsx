@@ -13,7 +13,7 @@ import type { Metadata } from "next"
  * 4. Provides download button
  */
 
-// Prevent search engines from indexing download pages
+// Prevent search engines from indexing download pages.
 export const metadata: Metadata = {
   title: "Download Your Ebook",
   robots: {
@@ -24,6 +24,14 @@ export const metadata: Metadata = {
   },
 }
 
+// Never SSG / never ISR. Token-keyed pages must render fresh on every
+// request so a cached HTML snapshot can't be served to a different buyer
+// who happens to land on a URL that previously rendered. Combined with
+// the no-store headers in next.config.mjs, this means every visit hits
+// fresh DB state.
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 interface DownloadPageProps {
   params: Promise<{ token: string }>
 }
@@ -31,23 +39,59 @@ interface DownloadPageProps {
 export default async function DownloadPage({ params }: DownloadPageProps) {
   const { token } = await params
 
-  const { data: downloadToken, error } = await supabaseAdmin
+  // EXPLICIT field selection — only columns this page renders. Joining the
+  // full order row would pull buyer email + name + payer info into the
+  // server-rendered response object. Even though we don't display those
+  // fields, having them in the response object risks leakage via future
+  // serialization (e.g. console.log of the full object, hydration payload
+  // in dev tools, third-party error reporter that captures props).
+  //
+  // The download API route (/api/download/[token]) is the only place that
+  // legitimately needs to know the buyer — for delivery accounting — and
+  // it scopes its lookup tightly via the increment_download_count RPC.
+  // Supabase's TS inference treats joined relations as arrays by default
+  // even when the FK is 1:1; the cast below restores single-row shape
+  // (matches the actual runtime behavior — both joins return one row).
+  type DownloadTokenRow = {
+    token: string
+    expires_at: string
+    max_downloads: number
+    download_count: number
+    book: { title: string | null } | null
+    order: { status: string | null } | null
+  }
+
+  const { data: rawDownloadToken, error } = await supabaseAdmin
     .from(Tables.downloadTokens)
     .select(`
-      *,
-      book:books (*),
-      order:orders (*)
+      token,
+      expires_at,
+      max_downloads,
+      download_count,
+      book:books ( title ),
+      order:orders ( status )
     `)
     .eq("token", token)
     .single()
+
+  const downloadToken = rawDownloadToken as unknown as DownloadTokenRow | null
 
   if (error || !downloadToken) {
     notFound()
   }
 
+  // Required relations — if these are missing, the token is in an
+  // inconsistent state (db corruption / partial deletion). Treat as
+  // not-found rather than crashing the page render.
+  if (!downloadToken.book || !downloadToken.order) {
+    notFound()
+  }
+
   const isExpired = new Date() > new Date(downloadToken.expires_at)
   const downloadsRemaining = downloadToken.max_downloads - downloadToken.download_count
-  const canDownload = !isExpired && downloadsRemaining > 0 && downloadToken.order.status === "completed"
+  const orderStatus: string | null = downloadToken.order.status
+  const bookTitle: string = downloadToken.book.title ?? "Ebook"
+  const canDownload = !isExpired && downloadsRemaining > 0 && orderStatus === "completed"
 
   return (
     <div className="min-h-screen bg-slate-50 py-16">
@@ -60,7 +104,7 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
               Download Your Ebook
             </h1>
             <p className="text-slate-600 mt-2">
-              {downloadToken.book.title}
+              {bookTitle}
             </p>
           </div>
 
@@ -70,11 +114,11 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
               <span className="text-sm text-slate-600">Order Status</span>
               <span className={`text-sm font-medium ${
-                downloadToken.order.status === "completed"
+                orderStatus === "completed"
                   ? "text-green-600"
                   : "text-amber-600"
               }`}>
-                {downloadToken.order.status === "completed" ? "✓ Paid" : "Pending"}
+                {orderStatus === "completed" ? "✓ Paid" : "Pending"}
               </span>
             </div>
 
@@ -122,7 +166,7 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
                   You've reached the download limit.
                 </div>
               )}
-              {downloadToken.order.status !== "completed" && (
+              {orderStatus !== "completed" && (
                 <div className="p-4 bg-amber-50 text-amber-700 rounded-xl mb-4">
                   Payment is still processing. Please check back shortly.
                 </div>

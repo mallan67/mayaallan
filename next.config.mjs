@@ -95,11 +95,42 @@ const nextConfig = {
     ],
   },
   async headers() {
+    // No-store + private headers for any route that surfaces single-purchase
+    // state or buyer-bound resources. Privacy purpose: a shared-computer
+    // user must not see a cached version of a previous buyer's success or
+    // download page. These supersede ANY upstream CDN / browser cache.
+    const NO_STORE_HEADERS = [
+      { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, private" },
+      { key: "Pragma", value: "no-cache" },
+      { key: "Expires", value: "0" },
+    ]
+
     return [
       {
         // Apply security headers to every route.
         source: "/:path*",
         headers: SECURITY_HEADERS,
+      },
+      {
+        // /checkout/success/* — post-purchase confirmation. Must never be cached.
+        source: "/checkout/:path*",
+        headers: NO_STORE_HEADERS,
+      },
+      {
+        // /download/<token>/* — token-gated download landing page.
+        // Each token is unique to a single buyer; caching would leak info.
+        source: "/download/:path*",
+        headers: NO_STORE_HEADERS,
+      },
+      {
+        // /api/checkout/* — endpoints that return per-buyer redirect URLs / session ids.
+        source: "/api/checkout/:path*",
+        headers: NO_STORE_HEADERS,
+      },
+      {
+        // /api/download/* — actual file delivery; must not be cached at any layer.
+        source: "/api/download/:path*",
+        headers: NO_STORE_HEADERS,
       },
     ]
   },

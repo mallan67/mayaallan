@@ -61,12 +61,35 @@ function hashForBinding(value: string | null | undefined): string | null {
 function redirectToBook(
   bookSlug: string | null,
   status: "success" | "cancelled" | "error",
+  orderIdForSuccess?: string,
 ): NextResponse {
   const validSlug = safeSlug(bookSlug)
-  const path = validSlug ? `/books/${validSlug}` : "/"
-  const res = NextResponse.redirect(`${siteUrl()}${path}?payment=${status}`, { status: 303 })
-  // Don't let any intermediary cache the 303 — the token in the URL is single-use.
-  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate")
+
+  // SUCCESS goes to a dedicated /checkout/success page — NOT back to the
+  // book page. The success page is intentionally minimal: it renders a
+  // generic "purchase complete" message, never displays buyer name / email
+  // / order details, and clears any client-side checkout state on mount.
+  // This is the shared-computer privacy mitigation: the next person to use
+  // this browser must NOT see who just bought.
+  //
+  // CANCELLED and ERROR still go back to the book page so the buyer can
+  // see context and retry.
+  let url: string
+  if (status === "success") {
+    const orderParam = orderIdForSuccess ? `&orderId=${encodeURIComponent(orderIdForSuccess)}` : ""
+    const slugParam = validSlug ? `&bookSlug=${encodeURIComponent(validSlug)}` : ""
+    url = `${siteUrl()}/checkout/success?via=paypal${orderParam}${slugParam}`
+  } else {
+    const path = validSlug ? `/books/${validSlug}` : "/"
+    url = `${siteUrl()}${path}?payment=${status}`
+  }
+
+  const res = NextResponse.redirect(url, { status: 303 })
+  // Don't let any intermediary cache the 303 — the token in the URL is single-use,
+  // and the destination must always re-render fresh (no stale buyer info shown).
+  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private")
+  res.headers.set("Pragma", "no-cache")
+  res.headers.set("Expires", "0")
   return res
 }
 
@@ -151,7 +174,7 @@ export async function GET(request: NextRequest) {
   // creates the order row + token + email; that path is idempotent on its
   // own end via paypal_order_id from PR A).
   if (pending.status === "consumed") {
-    return redirectToBook(pending.book_slug, "success")
+    return redirectToBook(pending.book_slug, "success", orderId)
   }
 
   if (pending.status === "expired") {
@@ -310,7 +333,7 @@ export async function GET(request: NextRequest) {
           dedupKey: "paypal:consumed-update-failed-422",
         })
       }
-      return redirectToBook(pending.book_slug, "success")
+      return redirectToBook(pending.book_slug, "success", orderId)
     }
     await alertAdmin({
       severity: "error",
@@ -373,5 +396,5 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  return redirectToBook(pending.book_slug, "success")
+  return redirectToBook(pending.book_slug, "success", orderId)
 }

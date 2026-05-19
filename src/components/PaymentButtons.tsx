@@ -147,6 +147,36 @@ export function PaymentButtons({
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
+
+      {/*
+        Shared-computer disclosure. PayPal's hosted checkout reads its own
+        session cookies on paypal.com — if a previous user stayed logged in,
+        the current visitor lands on that account by default and there is
+        no sign-out button on PayPal's checkout page. We cannot fix this on
+        our side (paypal.com is a different origin from mayaallan.com), but
+        we can warn buyers and give them the signout URL up front so they
+        can fix it themselves before continuing.
+      */}
+      {hasPayPal && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 space-y-1.5">
+          <p className="text-xs text-amber-900 font-medium leading-snug">
+            Using a shared computer? Make sure you&apos;re signed into your own PayPal account before purchasing.
+          </p>
+          <p className="text-[11px] text-amber-800 leading-snug">
+            Need to switch accounts?{" "}
+            <a
+              href="https://www.paypal.com/signout"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline font-medium hover:text-amber-950"
+            >
+              Sign out of PayPal
+            </a>
+            {" "}then return here and click Buy again.
+          </p>
+        </div>
+      )}
+
       <p className="text-xs text-slate-500">
         Secure payment via PayPal. {formatLabel} download link emailed immediately after purchase.
       </p>
