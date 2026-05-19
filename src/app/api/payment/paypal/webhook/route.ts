@@ -306,6 +306,13 @@ export async function POST(request: Request) {
         const { data: insertedOrder, error: orderError } = await supabaseAdmin
           .from(Tables.orders)
           .insert({
+            // Legacy NOT NULL columns (from the original Stripe-era schema). The
+            // newer columns below (`email`, `amount`) are what we read elsewhere,
+            // but the legacy ones still carry NOT NULL constraints and must be
+            // populated or the INSERT fails. Keep both in sync.
+            customer_email: customerEmail,
+            amount_cents: Math.round(amount * 100),
+            // Newer canonical columns the rest of the app reads from.
             email: customerEmail,
             customer_name: customerName || null,
             paypal_order_id: paypalOrderId,
@@ -313,6 +320,7 @@ export async function POST(request: Request) {
             format_type: "ebook", // Direct sales are ebook-only — see /api/checkout/paypal
             amount: amount,
             currency: currency,
+            payment_provider: "paypal",
             status: "completed",
             completed_at: new Date().toISOString(),
           })
