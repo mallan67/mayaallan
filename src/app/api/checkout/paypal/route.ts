@@ -149,6 +149,21 @@ export async function POST(request: Request) {
             brand_name: "Maya Allan",
             shipping_preference: "NO_SHIPPING",
             user_action: "PAY_NOW",
+            // landing_page: "BILLING" makes PayPal land the buyer on the
+            // guest credit-card form instead of the PayPal-account login
+            // form. Two reasons:
+            //   1. Most customers buying a $9.99 ebook don't have or want
+            //      a PayPal account — landing on the card form skips a
+            //      friction step for the majority case.
+            //   2. PayPal's session cookies on paypal.com persist across
+            //      visits; if a buyer (or merchant testing the flow) has
+            //      ANY active PayPal session in their browser, the LOGIN
+            //      landing page auto-logs them in as that account
+            //      regardless of what email the order was created with.
+            //      Landing on BILLING avoids that surprise. Buyers with
+            //      a PayPal account can still click "Log In to PayPal"
+            //      from the BILLING page.
+            landing_page: "BILLING",
             // Return URL points at the capture-on-return route which calls
             // /v2/checkout/orders/<id>/capture, then redirects the customer
             // to /books/<slug>?payment=success. PayPal appends &token=<orderId>

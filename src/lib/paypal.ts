@@ -237,6 +237,11 @@ export async function createSessionExportOrder(args: {
       brand_name: "Maya Allan",
       shipping_preference: "NO_SHIPPING",
       user_action: "PAY_NOW",
+      // BILLING lands the buyer on the guest credit-card form rather than
+      // the PayPal-account login form. See the matching comment in
+      // /api/checkout/paypal/route.ts for the full rationale (PayPal session
+      // cookie persistence + most digital-goods buyers prefer card checkout).
+      landing_page: "BILLING",
       return_url: `${args.siteUrl}/export/success?tool=${args.tool}`,
       cancel_url: `${args.siteUrl}/tools`,
     },
