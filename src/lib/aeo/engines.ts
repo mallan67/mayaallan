@@ -36,13 +36,71 @@ export interface EngineResponse {
 }
 
 // -----------------------------------------------------------------------------
-// Claude (Anthropic)
+// Helper: shared probe via Vercel AI Gateway (or direct provider when
+// AI_PROVIDER=direct + the provider's direct key is set).
+// -----------------------------------------------------------------------------
+async function probeViaGateway(
+  engineName: EngineResponse["engine"],
+  gatewayModel: string,
+  modelLabel: string,
+  prompt: string,
+  /** Optional direct-API call. Returns null if its provider key isn't set. */
+  directFallback?: () => Promise<EngineResponse | null>
+): Promise<EngineResponse | null> {
+  const hasGateway = !!process.env.AI_GATEWAY_API_KEY
+
+  // PREFER the direct API path when the provider's direct key is present —
+  // this routes calls through the user's own provider credit (e.g., their
+  // Anthropic console balance) instead of burning Vercel AI Gateway credits.
+  // directFallback() returns null when its key isn't set, falling through to
+  // the Gateway path below.
+  if (directFallback) {
+    const direct = await directFallback()
+    if (direct !== null) return direct
+  }
+
+  // Fallback: Gateway. Skip silently if no Gateway key either.
+  if (!hasGateway) return null
+
+  try {
+    const { text } = await generateText({
+      model: gatewayModel,
+      prompt,
+      maxOutputTokens: 1024,
+    })
+    return { engine: engineName, content: text ?? "", model: modelLabel }
+  } catch (err) {
+    return {
+      engine: engineName,
+      content: "",
+      model: modelLabel,
+      error: err instanceof Error ? err.message : String(err),
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Claude — prefers DIRECT Anthropic API when ANTHROPIC_API_KEY is set (so the
+// user's own Anthropic credit is consumed, not Vercel AI Gateway credit),
+// falls back to Gateway when only AI_GATEWAY_API_KEY is present.
 // -----------------------------------------------------------------------------
 export async function queryClaude(prompt: string): Promise<EngineResponse | null> {
+  return probeViaGateway(
+    "claude",
+    "anthropic/claude-haiku-4-5",
+    "claude-haiku-4-5",
+    prompt,
+    () => queryClaudeDirect(prompt)
+  )
+}
+
+/** Direct Anthropic API call — uses ANTHROPIC_API_KEY (the user's own
+ *  Anthropic console credit). Haiku 4.5 is the cheapest current model. */
+async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null> {
   const key = process.env.ANTHROPIC_API_KEY
   if (!key) return null
 
-  const model = "claude-sonnet-4-6"
+  const model = "claude-haiku-4-5"
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -69,10 +127,19 @@ export async function queryClaude(prompt: string): Promise<EngineResponse | null
 }
 
 // -----------------------------------------------------------------------------
-// ChatGPT (OpenAI) — uses the Responses API with web search to get the
-// SAME behavior as ChatGPT Search, including citations.
+// ChatGPT — direct OpenAI when OPENAI_API_KEY is set, Gateway otherwise.
 // -----------------------------------------------------------------------------
 export async function queryChatGPT(prompt: string): Promise<EngineResponse | null> {
+  return probeViaGateway(
+    "chatgpt",
+    "openai/gpt-4o-mini",
+    "gpt-4o-mini",
+    prompt,
+    () => queryChatGPTDirect(prompt)
+  )
+}
+
+async function queryChatGPTDirect(prompt: string): Promise<EngineResponse | null> {
   const key = process.env.OPENAI_API_KEY
   if (!key) return null
 
@@ -80,20 +147,10 @@ export async function queryChatGPT(prompt: string): Promise<EngineResponse | nul
   try {
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "content-type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${key}`, "content-type": "application/json" },
       body: JSON.stringify({
         model,
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are answering as if you were ChatGPT Search. Provide a substantive answer and include URLs when you mention specific sources.",
-          },
-          { role: "user", content: prompt },
-        ],
+        messages: [{ role: "user", content: prompt }],
         max_tokens: 1024,
       }),
     })
@@ -109,11 +166,21 @@ export async function queryChatGPT(prompt: string): Promise<EngineResponse | nul
 }
 
 // -----------------------------------------------------------------------------
-// Perplexity — the BEST signal here because Perplexity actually does live web
-// search + cites sources inline, so we can directly measure if our pages get
-// surfaced.
+// Perplexity — direct API when PERPLEXITY_API_KEY is set, Gateway otherwise.
+// Perplexity is uniquely valuable because Sonar performs live web search
+// and cites URLs inline.
 // -----------------------------------------------------------------------------
 export async function queryPerplexity(prompt: string): Promise<EngineResponse | null> {
+  return probeViaGateway(
+    "perplexity",
+    "perplexity/sonar",
+    "sonar",
+    prompt,
+    () => queryPerplexityDirect(prompt)
+  )
+}
+
+async function queryPerplexityDirect(prompt: string): Promise<EngineResponse | null> {
   const key = process.env.PERPLEXITY_API_KEY
   if (!key) return null
 
@@ -121,10 +188,7 @@ export async function queryPerplexity(prompt: string): Promise<EngineResponse | 
   try {
     const res = await fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        "content-type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${key}`, "content-type": "application/json" },
       body: JSON.stringify({
         model,
         messages: [{ role: "user", content: prompt }],
@@ -135,8 +199,8 @@ export async function queryPerplexity(prompt: string): Promise<EngineResponse | 
       return { engine: "perplexity", content: "", model, error: `HTTP ${res.status}: ${await res.text()}` }
     }
     const data = await res.json()
-    // Perplexity returns content + citations. Concatenate so the detector
-    // sees both in one blob (citation URLs are what we care most about).
+    // Sonar returns citations as a separate field — concatenate so the
+    // detector sees them alongside the response body.
     const content =
       (data?.choices?.[0]?.message?.content ?? "") +
       (Array.isArray(data?.citations) ? "\n\nCitations:\n" + data.citations.join("\n") : "")
@@ -193,17 +257,23 @@ export async function queryGemini(prompt: string): Promise<EngineResponse | null
   }
 }
 
-/** Returns only engines whose API keys are present in env. */
+/** Returns only engines that have a usable credential path (direct OR
+ *  Gateway). With AI_GATEWAY_API_KEY set, every engine is usable; with
+ *  individual provider keys set (ANTHROPIC_API_KEY etc.), those engines
+ *  are usable via direct API. */
 export function enabledEngines(): Array<(prompt: string) => Promise<EngineResponse | null>> {
-  const hasGemini =
-    !!process.env.AI_GATEWAY_API_KEY ||
-    !!process.env.GOOGLE_GENAI_API_KEY ||
-    !!process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  const hasGateway = !!process.env.AI_GATEWAY_API_KEY
   const all: Array<{ fn: (p: string) => Promise<EngineResponse | null>; enabled: boolean }> = [
-    { fn: queryClaude, enabled: !!process.env.ANTHROPIC_API_KEY },
-    { fn: queryChatGPT, enabled: !!process.env.OPENAI_API_KEY },
-    { fn: queryPerplexity, enabled: !!process.env.PERPLEXITY_API_KEY },
-    { fn: queryGemini, enabled: hasGemini },
+    { fn: queryClaude, enabled: hasGateway || !!process.env.ANTHROPIC_API_KEY },
+    { fn: queryChatGPT, enabled: hasGateway || !!process.env.OPENAI_API_KEY },
+    { fn: queryPerplexity, enabled: hasGateway || !!process.env.PERPLEXITY_API_KEY },
+    {
+      fn: queryGemini,
+      enabled:
+        hasGateway ||
+        !!process.env.GOOGLE_GENAI_API_KEY ||
+        !!process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    },
   ]
   return all.filter((e) => e.enabled).map((e) => e.fn)
 }
