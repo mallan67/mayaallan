@@ -26,7 +26,7 @@ export const SITE_URL = "https://www.mayaallan.com"
 // linking to a 404 from sameAs hurts more than it helps.
 export const AUTHOR_PROFILES: string[] = [
   // Social
-  "https://www.instagram.com/mayaallan",
+  "https://www.instagram.com/maya.allan66/", // VERIFIED 2026-05-19 (first post live)
   // "https://x.com/mayaallan",                       // TODO: claim or remove
   // "https://www.facebook.com/mayaallan",            // TODO: claim or remove
   // "https://www.linkedin.com/in/mayaallan",         // TODO: claim
@@ -39,8 +39,15 @@ export const AUTHOR_PROFILES: string[] = [
   // "https://medium.com/@mayaallan",                 // TODO: claim
 
   // Author / book platforms (HIGHEST PRIORITY — Google trusts these the most)
-  // "https://www.amazon.com/author/mayaallan",       // TODO: claim Amazon Author Central
-  // "https://www.goodreads.com/author/show/XXXX",    // TODO: enroll in Goodreads Author Program
+  // NOTE on Goodreads author: the stub at goodreads.com/author/show/65134359.Maya_Allan
+  // exists but has NOT been claimed via the Goodreads Author Program. Linking
+  // sameAs to an unclaimed stub is a weak/neutral signal and can suggest an
+  // abandoned profile. Hold OUT of sameAs until claim completes — Maya tried
+  // once and it didn't go through; retry via goodreads.com/author/program.
+  // The book-level Goodreads URL (BOOK_PROFILES below) is fine to keep — that
+  // page is a real, public book listing.
+  // "https://www.goodreads.com/author/show/65134359.Maya_Allan", // ADD AFTER AUTHOR CLAIM APPROVED
+  // "https://www.amazon.com/author/mayaallan",       // TODO: claim Amazon Author Central (highest single-source ROI)
   // "https://www.bookbub.com/profile/maya-allan",    // TODO: claim
   // "https://app.thestorygraph.com/profile/mayaallan", // TODO: claim
   // "https://openlibrary.org/authors/OLXXXXXA/Maya_Allan", // TODO: add via openlibrary.org
@@ -62,19 +69,45 @@ export const AUTHOR_PROFILES: string[] = [
 // -----------------------------------------------------------------------------
 // Keyed by book slug. Used in the Book schema's sameAs array to consolidate
 // authority for each individual book.
+//
+// Each URL here tells Google "this is the same book as on retailer X." When
+// Google sees the same book on Amazon, B&N, Bookshop, AbeBooks, and ThriftBooks,
+// it merges them into one Book entity with combined authority — which is what
+// surfaces the "Book card" rich result with the cover + retailer buttons.
 export const BOOK_PROFILES: Record<string, string[]> = {
   "psilocybin-integration-guide": [
-    // "https://www.amazon.com/dp/XXXXXXXXXX",                      // TODO: Amazon ASIN URL
-    // "https://www.goodreads.com/book/show/XXXXXXXX",              // TODO: Goodreads book page
-    // "https://books.google.com/books?id=XXXXXXXX",                // TODO: Google Books listing
-    // "https://www.barnesandnoble.com/w/XXXXXXXXX",                // TODO: B&N listing
-    // "https://www.kobo.com/us/en/ebook/XXXXX",                    // TODO: Kobo
-    // "https://books.apple.com/us/book/XXXXXXX",                   // TODO: Apple Books
-    // "https://openlibrary.org/works/OLXXXXXXW/Psilocybin_Integration_Guide", // TODO: Open Library work
-    // "https://www.worldcat.org/oclc/XXXXXXXX",                    // TODO: WorldCat
-    // "https://www.bookbub.com/books/psilocybin-integration-guide", // TODO: BookBub
-    // "https://www.librarything.com/work/XXXXXX",                  // TODO: LibraryThing
+    // VERIFIED LIVE (2026-05-19) — found via cross-engine search
+    "https://www.amazon.com/Psilocybin-Integration-Guide-Navigating-Experience/dp/B0G7JWDJYQ",
+    "https://www.barnesandnoble.com/w/psilocybin-integration-guide-maya-allan/1148993659",
+    "https://bookshop.org/p/books/psilocybin-integration-guide-40-real-scenarios-for-navigating-what-you-see-feel-experience-maya-allan/3c9390316323761a",
+    "https://www.thriftbooks.com/w/psilocybin-integration-guide-40-real-scenarios-for-navigating-what-you-see-feel--experience/57728042/",
+    "https://www.abebooks.com/9798994148839/Psilocybin-Integration-Guide-Real-Scenarios/plp",
+    "https://www.goodreads.com/book/show/245299940-psilocybin-integration-guide", // VERIFIED 2026-05-19
+    "https://play.google.com/store/books/details/Maya_Allan_Psilocybin_Integration_Guide?id=HvafEQAAQBAJ", // VERIFIED 2026-05-19 ($9.99 ebook)
+
+    // TODO: paste the actual URLs once confirmed (Maya: these listings exist
+    // but the canonical URLs weren't programmatically findable — copy from the
+    // browser tab when you visit each platform):
+    // "https://books.apple.com/us/book/XXXXXXX",                   // exists per Maya
+    // "https://play.google.com/store/books/details?id=XXXXXXX",    // ebook channel per BOOK-METADATA.md
+    // "https://books.google.com/books?id=XXXXXXX",                 // Google Books catalog (separate from Play)
+
+    // TODO: future channels — leave commented until live:
+    // "https://www.kobo.com/us/en/ebook/XXXXX",                    // Kobo
+    // "https://openlibrary.org/works/OLXXXXXXW/Psilocybin_Integration_Guide", // Open Library — free, 5min, valuable
+    // "https://www.worldcat.org/oclc/XXXXXXXX",                    // WorldCat — auto-populates after library catalogs
+    // "https://www.bookbub.com/books/psilocybin-integration-guide", // BookBub author program
+    // "https://www.librarything.com/work/XXXXXX",                  // LibraryThing
   ],
+}
+
+// -----------------------------------------------------------------------------
+// BOOK_ASINS — Amazon ASIN per book slug (emitted as a schema.org PropertyValue
+// identifier alongside ISBN). Helps Google merge the Amazon listing with the
+// rest of the Book entity graph.
+// -----------------------------------------------------------------------------
+export const BOOK_ASINS: Record<string, string> = {
+  "psilocybin-integration-guide": "B0G7JWDJYQ",
 }
 
 // -----------------------------------------------------------------------------

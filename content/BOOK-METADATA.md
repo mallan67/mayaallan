@@ -10,16 +10,28 @@ One source of truth for every platform. Copy-paste what you need.
 |---|---|
 | **Title** | Psilocybin Integration Guide |
 | **Subtitle** | 40 Real Scenarios for Navigating What You See, Feel & Experience |
+| **Cover tagline 1** | Rewire Your Mind • Release Fears • Heal Traumas |
+| **Cover tagline 2** | Inner Freedom • Self-Agency • Awakening • Transformation |
 | **Author** | Maya Allan |
 | **Publisher** | Maya Allan (self-published) |
 | **First Edition** | December 2025 |
 | **Language** | English |
-| **Print ISBN-13** | 979-8-9941488-5-3 *(verify against your Bowker records)* |
-| **Alt ISBN-13** | 979-8-9941488-3-9 *(different format — verify which is which)* |
-| **Amazon ASIN** | *check Amazon product page* |
-| **Page count** | *check printed book* |
+| **Amazon ASIN** | B0G7JWDJYQ — `amazon.com/dp/B0G7JWDJYQ` (verified 2026-05-19) |
+| **Page count** | 289 (hardcover) |
 | **Primary category** | Self-Help / Personal Growth / Spiritual |
 | **Secondary category** | Body, Mind & Spirit / Entheogens & Visionary Substances |
+
+---
+
+## ISBNs — one per edition
+
+| ISBN | Edition | Channel |
+|---|---|---|
+| **979-8-9941488-3-9** | Paperback | Amazon (KDP Print) |
+| **979-8-9941488-5-3** | Hardcover | Amazon (KDP Hardcover) |
+| **979-8-9941488-9-1** | Ebook | Google Play Books |
+
+Each edition's copyright page must print its own ISBN (not shared).
 
 ---
 

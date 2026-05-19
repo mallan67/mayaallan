@@ -1,7 +1,50 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { listPosts } from "@/lib/posts"
-import { SITE_URL, AUTHOR_NAME, AUTHOR_BIO } from "@/lib/identity"
+import {
+  SITE_URL,
+  AUTHOR_NAME,
+  AUTHOR_BIO,
+  AUTHOR_PROFILES,
+  BOOK_PROFILES,
+} from "@/lib/identity"
+
+// Friendly display label per retailer host. Falls back to the bare hostname for
+// any retailer not in the table — so adding a new BOOK_PROFILES entry never
+// silently breaks the markdown output.
+const RETAILER_LABELS: Record<string, string> = {
+  "amazon.com": "Amazon",
+  "www.amazon.com": "Amazon",
+  "barnesandnoble.com": "Barnes & Noble",
+  "www.barnesandnoble.com": "Barnes & Noble",
+  "bookshop.org": "Bookshop.org",
+  "thriftbooks.com": "ThriftBooks",
+  "www.thriftbooks.com": "ThriftBooks",
+  "abebooks.com": "AbeBooks",
+  "www.abebooks.com": "AbeBooks",
+  "goodreads.com": "Goodreads",
+  "www.goodreads.com": "Goodreads",
+  "play.google.com": "Google Play Books",
+  "books.google.com": "Google Books",
+  "books.apple.com": "Apple Books",
+  "kobo.com": "Kobo",
+  "www.kobo.com": "Kobo",
+  "openlibrary.org": "Open Library",
+  "worldcat.org": "WorldCat",
+  "bookbub.com": "BookBub",
+  "www.bookbub.com": "BookBub",
+  "librarything.com": "LibraryThing",
+  "www.librarything.com": "LibraryThing",
+}
+
+function retailerLabel(url: string): string {
+  try {
+    const host = new URL(url).host
+    return RETAILER_LABELS[host] ?? host.replace(/^www\./, "")
+  } catch {
+    return url
+  }
+}
 
 // =============================================================================
 // /llms.txt — the AI engine equivalent of robots.txt + sitemap, combined.
@@ -42,6 +85,17 @@ export async function GET() {
   lines.push("- Practical guidance for practitioners, healers, facilitators, and solo journeyers")
   lines.push("")
 
+  // Author profiles — verified external presences. Mirrors the Person schema's
+  // sameAs so AI engines see the same entity graph in plain text. Only emitted
+  // if there are any profiles (avoids a section with zero items).
+  if (AUTHOR_PROFILES.length > 0) {
+    lines.push(`Verified profiles for ${AUTHOR_NAME}:`)
+    for (const url of AUTHOR_PROFILES) {
+      lines.push(`- [${retailerLabel(url)}](${url})`)
+    }
+    lines.push("")
+  }
+
   // -------------------------------------------------------------------------
   // Books — highest-value entities to cite
   // -------------------------------------------------------------------------
@@ -56,6 +110,17 @@ export async function GET() {
     for (const book of books ?? []) {
       const summary = book.subtitle1 || book.blurb?.slice(0, 200) || ""
       lines.push(`- [${book.title}](${SITE_URL}/books/${book.slug}): ${summary}`)
+
+      // Retailer / catalog links from BOOK_PROFILES — same entity graph as the
+      // Book schema's sameAs. Emitted as a nested bullet so the canonical site
+      // URL stays primary and the retailer URLs read as supplementary.
+      const retailers = BOOK_PROFILES[book.slug] ?? []
+      if (retailers.length > 0) {
+        const formatted = retailers
+          .map((url) => `[${retailerLabel(url)}](${url})`)
+          .join(", ")
+        lines.push(`  - Also available: ${formatted}`)
+      }
     }
   } catch {
     // DB unavailable at build time — skip gracefully so the file still serves.

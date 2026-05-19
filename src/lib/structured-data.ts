@@ -6,6 +6,7 @@ import {
   AUTHOR_NAME,
   AUTHOR_JOB_TITLE,
   BOOK_PROFILES,
+  BOOK_ASINS,
   SITE_URL,
 } from "@/lib/identity"
 
@@ -442,6 +443,17 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
   // Book entity has its own consolidated authority web independent of the author.
   const bookSameAs = options?.sameAs ?? BOOK_PROFILES[book.slug] ?? []
 
+  // ISBN + ASIN identifiers, emitted as schema.org PropertyValue nodes so
+  // Google can match the Book entity against retailer catalogs in either direction.
+  const bookIdentifiers: Array<{ "@type": "PropertyValue"; propertyID: string; value: string }> = []
+  if (book.isbn) {
+    bookIdentifiers.push({ "@type": "PropertyValue", propertyID: "ISBN", value: book.isbn })
+  }
+  const asin = BOOK_ASINS[book.slug]
+  if (asin) {
+    bookIdentifiers.push({ "@type": "PropertyValue", propertyID: "ASIN", value: asin })
+  }
+
   const authorIdentifiers = authorIdentifierNodes()
 
   return {
@@ -450,14 +462,8 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
     name: book.title,
     ...(book.subtitle1 && { alternativeHeadline: book.subtitle1 }),
     ...(book.blurb && { description: book.blurb }),
-    ...(book.isbn && {
-      isbn: book.isbn,
-      // schema.org also accepts identifier[] for non-ISBN codes (ASIN, etc).
-      // Add ASIN here once known by extending BOOK_PROFILES + this block.
-      identifier: [
-        { "@type": "PropertyValue", propertyID: "ISBN", value: book.isbn },
-      ],
-    }),
+    ...(book.isbn && { isbn: book.isbn }),
+    ...(bookIdentifiers.length > 0 && { identifier: bookIdentifiers }),
     ...(book.copyright && { copyrightNotice: book.copyright }),
     ...(book.coverUrl && {
       image: book.coverUrl,
