@@ -1,12 +1,28 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
+// Supported i18n locales — keep in sync with src/lib/identity.ts LOCALES.
+// Duplicated here because middleware runs at the edge before module resolution
+// from /src works reliably; keeping it as a local const avoids edge import
+// hazards.
+const I18N_LOCALES = ["en", "es", "pt", "de", "fr", "he"] as const
+const DEFAULT_I18N_LOCALE = "en"
+
+function detectLocale(pathname: string): string {
+  // First URL segment determines locale when it matches a known code; otherwise
+  // fall back to the default (English root pages).
+  const first = pathname.split("/").filter(Boolean)[0]
+  return (I18N_LOCALES as readonly string[]).includes(first || "") ? (first as string) : DEFAULT_I18N_LOCALE
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Add pathname header for server components to read
+  // Add pathname + locale headers for server components (layouts especially) to
+  // read without re-parsing the URL themselves.
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set("x-pathname", pathname)
+  requestHeaders.set("x-locale", detectLocale(pathname))
 
   // Skip login page and API routes
   if (pathname === "/admin/login" || pathname.startsWith("/api/")) {
@@ -45,6 +61,15 @@ export function middleware(request: NextRequest) {
   })
 }
 
+// Matcher now covers all routes except static assets and Next internals, so
+// the x-pathname + x-locale headers are populated everywhere. Admin gating
+// still keys off the pathname check inside the function — same behavior as
+// before for /admin/*.
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: [
+    // Match all paths except: _next internals, static files (anything with a
+    // dot), Next image optimizer, and favicon. This is the standard Next.js
+    // i18n middleware matcher recipe.
+    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
+  ],
 }

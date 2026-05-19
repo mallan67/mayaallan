@@ -1,6 +1,31 @@
 import type { Book, MediaItem, Event } from "@/lib/mock-data"
+import {
+  AUTHOR_PROFILES,
+  AUTHOR_IDENTIFIERS,
+  AUTHOR_BIO,
+  AUTHOR_NAME,
+  AUTHOR_JOB_TITLE,
+  BOOK_PROFILES,
+  SITE_URL,
+} from "@/lib/identity"
 
-const SITE_URL = "https://www.mayaallan.com"
+// Re-export so existing imports from structured-data keep working.
+export { SITE_URL }
+
+/**
+ * Build the schema.org identifier[] array from AUTHOR_IDENTIFIERS.
+ * Emits PropertyValue nodes that AI engines + Knowledge Graph use to
+ * disambiguate Maya across data sources (ORCID, ISNI, Wikidata, etc).
+ */
+function authorIdentifierNodes() {
+  if (AUTHOR_IDENTIFIERS.length === 0) return undefined
+  return AUTHOR_IDENTIFIERS.map((id) => ({
+    "@type": "PropertyValue",
+    propertyID: id.type,
+    value: id.value,
+    url: `${id.propertyId}${id.value}`,
+  }))
+}
 
 // =============================================================================
 // AEO (Answer Engine Optimization) Schemas
@@ -75,6 +100,66 @@ export function generateSpeakableWebPageSchema(
       "@type": "SpeakableSpecification",
       cssSelector: speakableCssSelectors,
     },
+  }
+}
+
+/**
+ * Article Schema for editorial content (scenarios, blog posts, essays)
+ * Required for Google Discover + AI engine attribution.
+ */
+export interface ArticleSchemaInput {
+  headline: string
+  description: string
+  url: string
+  datePublished: string // ISO 8601
+  dateModified?: string // ISO 8601, defaults to datePublished
+  image?: string | string[]
+  keywords?: string[] | string
+  /** Word count helps Google estimate read time + content depth. */
+  wordCount?: number
+  /** Set when the page is part of a series/cluster (e.g., the 40-scenarios cluster). */
+  isPartOf?: { name: string; url: string }
+  /** Inline source citations — usually built from `citedStatToCitation(stats)`. */
+  citation?: Array<{ "@type": string; name: string; url?: string }>
+}
+
+export function generateArticleSchema(input: ArticleSchemaInput, siteUrl = SITE_URL) {
+  const authorIdentifiers = authorIdentifierNodes()
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: input.headline,
+    description: input.description,
+    url: input.url,
+    mainEntityOfPage: { "@type": "WebPage", "@id": input.url },
+    datePublished: input.datePublished,
+    dateModified: input.dateModified ?? input.datePublished,
+    inLanguage: "en",
+    ...(input.image && { image: input.image }),
+    ...(input.keywords && {
+      keywords: Array.isArray(input.keywords) ? input.keywords.join(", ") : input.keywords,
+    }),
+    ...(input.wordCount && { wordCount: input.wordCount }),
+    author: {
+      "@type": "Person",
+      name: AUTHOR_NAME,
+      url: siteUrl,
+      sameAs: AUTHOR_PROFILES,
+      ...(authorIdentifiers && { identifier: authorIdentifiers }),
+    },
+    publisher: {
+      "@type": "Organization",
+      name: AUTHOR_NAME,
+      url: siteUrl,
+    },
+    ...(input.isPartOf && {
+      isPartOf: {
+        "@type": "CreativeWorkSeries",
+        name: input.isPartOf.name,
+        url: input.isPartOf.url,
+      },
+    }),
+    ...(input.citation && input.citation.length > 0 && { citation: input.citation }),
   }
 }
 
@@ -296,31 +381,68 @@ export function generateWebSiteSchema(siteName = "Maya Allan", siteUrl = SITE_UR
   }
 }
 
-export function generateOrganizationSchema(siteName = "Maya Allan", siteUrl = SITE_URL, logoUrl?: string) {
+export function generateOrganizationSchema(siteName = AUTHOR_NAME, siteUrl = SITE_URL, logoUrl?: string) {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: siteName,
     url: siteUrl,
     ...(logoUrl && { logo: logoUrl }),
-    sameAs: [
-      "https://x.com/mayaallan",
-      "https://facebook.com/mayaallan",
-      "https://instagram.com/mayaallan",
-    ],
+    // sameAs sourced from src/lib/identity.ts — add new profiles there once.
+    sameAs: AUTHOR_PROFILES,
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
       url: `${siteUrl}/contact`,
     },
+    founder: {
+      "@type": "Person",
+      name: AUTHOR_NAME,
+      url: siteUrl,
+    },
   }
 }
 
-export function generateBookSchema(book: Book, siteUrl = SITE_URL) {
+// -----------------------------------------------------------------------------
+// Reviews & Ratings (for Book rich results in Google)
+// -----------------------------------------------------------------------------
+// Once you have real customer reviews from Amazon/Goodreads, pass them in here
+// and Google will render star ratings + review count next to your book in
+// search results. Until then, do NOT fake ratings — Google penalizes that and
+// it's against schema.org guidelines. Leave both undefined and the schema
+// simply won't include them.
+export interface BookReview {
+  reviewerName: string
+  ratingValue: number // 1-5
+  reviewBody?: string
+  datePublished?: string // ISO 8601
+}
+
+export interface BookAggregateRating {
+  ratingValue: number // 1-5 average
+  reviewCount: number
+  bestRating?: number // defaults 5
+  worstRating?: number // defaults 1
+}
+
+export interface BookSchemaOptions {
+  aggregateRating?: BookAggregateRating
+  reviews?: BookReview[]
+  /** Override per-book sameAs (defaults to BOOK_PROFILES[slug] from identity.ts) */
+  sameAs?: string[]
+}
+
+export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: BookSchemaOptions) {
   // Combine book tags with relevant audience keywords for better discoverability
   const baseKeywords = book.tagsCsv || ""
   const audienceKeywords = "practitioners, healers, facilitators, psychedelic guides, solo journeyers, therapists, integration specialists"
   const combinedKeywords = baseKeywords ? `${baseKeywords}, ${audienceKeywords}` : audienceKeywords
+
+  // Per-book external listings (Amazon, Goodreads, Google Books, etc.) so the
+  // Book entity has its own consolidated authority web independent of the author.
+  const bookSameAs = options?.sameAs ?? BOOK_PROFILES[book.slug] ?? []
+
+  const authorIdentifiers = authorIdentifierNodes()
 
   return {
     "@context": "https://schema.org",
@@ -328,7 +450,14 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL) {
     name: book.title,
     ...(book.subtitle1 && { alternativeHeadline: book.subtitle1 }),
     ...(book.blurb && { description: book.blurb }),
-    ...(book.isbn && { isbn: book.isbn }),
+    ...(book.isbn && {
+      isbn: book.isbn,
+      // schema.org also accepts identifier[] for non-ISBN codes (ASIN, etc).
+      // Add ASIN here once known by extending BOOK_PROFILES + this block.
+      identifier: [
+        { "@type": "PropertyValue", propertyID: "ISBN", value: book.isbn },
+      ],
+    }),
     ...(book.copyright && { copyrightNotice: book.copyright }),
     ...(book.coverUrl && {
       image: book.coverUrl,
@@ -338,11 +467,19 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL) {
     }),
     author: {
       "@type": "Person",
-      name: "Maya Allan",
+      name: AUTHOR_NAME,
+      url: siteUrl,
+      sameAs: AUTHOR_PROFILES,
+      ...(authorIdentifiers && { identifier: authorIdentifiers }),
+    },
+    publisher: {
+      "@type": "Organization",
+      name: AUTHOR_NAME,
       url: siteUrl,
     },
+    inLanguage: "en",
     keywords: combinedKeywords,
-    genre: "Self-Help",
+    genre: ["Self-Help", "Body, Mind & Spirit", "Spirituality"],
     audience: {
       "@type": "Audience",
       audienceType: "Practitioners, Healers, Facilitators, Guides, Solo Experiencers",
@@ -352,29 +489,74 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL) {
       { "@type": "Thing", name: "Psychedelic Integration" },
       { "@type": "Thing", name: "Plant Medicine" },
       { "@type": "Thing", name: "Consciousness" },
+      { "@type": "Thing", name: "Inner Transformation" },
+      { "@type": "Thing", name: "Shadow Work" },
     ],
     url: `${siteUrl}/books/${book.slug}`,
+    ...(bookSameAs.length > 0 && { sameAs: bookSameAs }),
+    ...(options?.aggregateRating && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: options.aggregateRating.ratingValue,
+        reviewCount: options.aggregateRating.reviewCount,
+        bestRating: options.aggregateRating.bestRating ?? 5,
+        worstRating: options.aggregateRating.worstRating ?? 1,
+      },
+    }),
+    ...(options?.reviews &&
+      options.reviews.length > 0 && {
+        review: options.reviews.map((r) => ({
+          "@type": "Review",
+          author: { "@type": "Person", name: r.reviewerName },
+          reviewRating: {
+            "@type": "Rating",
+            ratingValue: r.ratingValue,
+            bestRating: 5,
+            worstRating: 1,
+          },
+          ...(r.reviewBody && { reviewBody: r.reviewBody }),
+          ...(r.datePublished && { datePublished: r.datePublished }),
+        })),
+      }),
     ...(book.allowDirectSale &&
       book.paypalPaymentLink && {
         offers: {
           "@type": "Offer",
           availability: "https://schema.org/InStock",
           url: book.paypalPaymentLink,
+          priceCurrency: "USD",
         },
       }),
   }
 }
 
 export function generateAuthorSchema(siteUrl = SITE_URL, bio?: string, imageUrl?: string) {
+  const identifiers = authorIdentifierNodes()
   return {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: "Maya Allan",
+    name: AUTHOR_NAME,
     url: siteUrl,
-    jobTitle: "Author",
-    ...(bio && { description: bio }),
+    jobTitle: AUTHOR_JOB_TITLE,
+    description: bio || AUTHOR_BIO,
     ...(imageUrl && { image: imageUrl }),
-    sameAs: ["https://x.com/mayaallan", "https://facebook.com/mayaallan", "https://instagram.com/mayaallan"],
+    // sameAs sourced from src/lib/identity.ts — add new profiles there once.
+    sameAs: AUTHOR_PROFILES,
+    ...(identifiers && { identifier: identifiers }),
+    knowsAbout: [
+      "Psilocybin integration",
+      "Psychedelic-assisted therapy",
+      "Consciousness studies",
+      "Inner transformation",
+      "Plant medicine",
+      "Shadow work",
+      "Spiritual integration",
+    ],
+    worksFor: {
+      "@type": "Organization",
+      name: AUTHOR_NAME,
+      url: siteUrl,
+    },
   }
 }
 

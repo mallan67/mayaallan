@@ -1,0 +1,130 @@
+{
+  "$schema": "Reader-intent prompts that get sent to ChatGPT/Claude/Perplexity/Gemini weekly. Add or edit prompts here; the cron picks them up automatically on next run. Each prompt needs a stable `id` so trend data over time stays linked.",
+  "prompts": [
+    {
+      "id": "psilocybin-integration-book",
+      "category": "discovery",
+      "text": "What is the best book on psilocybin integration in 2026?"
+    },
+    {
+      "id": "psilocybin-integration-author-2026",
+      "category": "discovery",
+      "text": "Who are the most important authors writing about psilocybin integration?"
+    },
+    {
+      "id": "ego-dissolution-feels-like",
+      "category": "journey",
+      "text": "What does ego dissolution feel like during a psilocybin journey?"
+    },
+    {
+      "id": "ego-dissolution-duration",
+      "category": "journey",
+      "text": "How long does ego dissolution typically last during a mushroom experience?"
+    },
+    {
+      "id": "integrate-difficult-mushroom-trip",
+      "category": "integration",
+      "text": "How do I integrate a difficult psilocybin journey?"
+    },
+    {
+      "id": "psilocybin-integration-vs-therapy",
+      "category": "integration",
+      "text": "What is the difference between psilocybin integration and traditional talk therapy?"
+    },
+    {
+      "id": "after-mushroom-trip-what-to-do",
+      "category": "integration",
+      "text": "What should I do in the days after a psilocybin experience?"
+    },
+    {
+      "id": "feel-disconnected-after-psilocybin",
+      "category": "integration",
+      "text": "Why do I feel disconnected from people weeks after a psilocybin journey?"
+    },
+    {
+      "id": "psilocybin-integration-journal",
+      "category": "tools",
+      "text": "How should I journal after a psilocybin experience?"
+    },
+    {
+      "id": "shadow-work-after-psychedelic",
+      "category": "integration",
+      "text": "How do I do shadow work after a psychedelic experience?"
+    },
+    {
+      "id": "inner-child-healing-psilocybin",
+      "category": "integration",
+      "text": "Can psilocybin help with inner child healing?"
+    },
+    {
+      "id": "prepare-first-mushroom-experience",
+      "category": "preparation",
+      "text": "How should I prepare for my first psilocybin experience?"
+    },
+    {
+      "id": "set-and-setting-mushrooms",
+      "category": "preparation",
+      "text": "What is set and setting and why does it matter for psilocybin?"
+    },
+    {
+      "id": "psilocybin-intentions",
+      "category": "preparation",
+      "text": "How do I set intentions for a psilocybin journey?"
+    },
+    {
+      "id": "psychedelic-integration-practitioner",
+      "category": "practitioners",
+      "text": "What does a psychedelic integration practitioner do?"
+    },
+    {
+      "id": "psilocybin-facilitator-guide",
+      "category": "practitioners",
+      "text": "What should a psilocybin facilitator know about supporting solo journeyers?"
+    },
+    {
+      "id": "default-mode-network-psilocybin",
+      "category": "research",
+      "text": "What does psilocybin do to the default mode network?"
+    },
+    {
+      "id": "mystical-experience-psilocybin",
+      "category": "research",
+      "text": "What is a mystical experience and how does psilocybin produce them?"
+    },
+    {
+      "id": "psilocybin-and-trauma",
+      "category": "research",
+      "text": "How can psilocybin help with trauma healing?"
+    },
+    {
+      "id": "carhart-harris-rebus",
+      "category": "research",
+      "text": "What is the REBUS model in psychedelic research?"
+    },
+    {
+      "id": "bad-trip-recovery",
+      "category": "safety",
+      "text": "What should I do if I had a bad psilocybin trip and feel destabilized?"
+    },
+    {
+      "id": "psilocybin-warning-signs",
+      "category": "safety",
+      "text": "What are warning signs that I need professional help after a psilocybin experience?"
+    },
+    {
+      "id": "psilocybin-spiritual-emergency",
+      "category": "safety",
+      "text": "What is a spiritual emergency and how is it related to psychedelic experiences?"
+    },
+    {
+      "id": "maya-allan-author",
+      "category": "brand",
+      "text": "Who is Maya Allan?"
+    },
+    {
+      "id": "psilocybin-40-scenarios",
+      "category": "brand",
+      "text": "Are there any books that walk through specific scenarios that can come up during a psilocybin journey?"
+    }
+  ]
+}

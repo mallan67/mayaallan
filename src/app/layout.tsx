@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from "next"
 import { Space_Grotesk, Fraunces } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { headers } from "next/headers"
 import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import MarketingAttributionClient from "@/components/MarketingAttributionClient"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structured-data"
-
-const SITE_URL = "https://www.mayaallan.com"
+import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL } from "@/lib/identity"
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -136,10 +136,38 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: {
       canonical: SITE_URL,
     },
+    // ---------------------------------------------------------------------
+    // Search engine ownership verification.
+    // ---------------------------------------------------------------------
+    // Each search engine wants a meta tag with a short code to verify you
+    // own the domain. After verifying, you get access to indexing stats,
+    // submission, crawl errors, etc. Paste the codes into env vars and
+    // they appear in <head> automatically. Empty vars are silently omitted.
+    //
+    // Where to get each code:
+    //   GOOGLE_SITE_VERIFICATION  — search.google.com/search-console → Add property → HTML tag method
+    //   BING_SITE_VERIFICATION     — bing.com/webmasters → Add site → HTML Meta tag
+    //   YANDEX_VERIFICATION        — webmaster.yandex.com → Add site → Meta tag
+    //   PINTEREST_VERIFICATION     — pinterest.com/business → Claim website → HTML tag
+    //   FACEBOOK_DOMAIN_VERIFICATION — business.facebook.com → Brand Safety → Domains
+    verification: {
+      ...(process.env.GOOGLE_SITE_VERIFICATION && { google: process.env.GOOGLE_SITE_VERIFICATION }),
+      ...(process.env.YANDEX_VERIFICATION && { yandex: process.env.YANDEX_VERIFICATION }),
+      // `other` accepts arbitrary <meta name="..." content="..."> tags. We
+      // use it for Bing, Pinterest, and Facebook which don't have first-class
+      // Next.js Metadata API support yet.
+      other: {
+        ...(process.env.BING_SITE_VERIFICATION && { "msvalidate.01": process.env.BING_SITE_VERIFICATION }),
+        ...(process.env.PINTEREST_VERIFICATION && { "p:domain_verify": process.env.PINTEREST_VERIFICATION }),
+        ...(process.env.FACEBOOK_DOMAIN_VERIFICATION && {
+          "facebook-domain-verification": process.env.FACEBOOK_DOMAIN_VERIFICATION,
+        }),
+      },
+    },
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
@@ -147,8 +175,20 @@ export default function RootLayout({
   const websiteSchema = generateWebSiteSchema()
   const organizationSchema = generateOrganizationSchema()
 
+  // Locale + direction are detected in middleware.ts and passed in via the
+  // x-locale header. Layouts can't see params from nested [locale] routes, so
+  // the header is the cleanest way to set <html lang> + <html dir> correctly
+  // for Hebrew (rtl) and the LTR locales. Defaults to English if anything's
+  // off (e.g., middleware skipped a static asset).
+  const headersList = await headers()
+  const rawLocale = headersList.get("x-locale") ?? DEFAULT_LOCALE
+  const locale = (LOCALES as readonly string[]).includes(rawLocale)
+    ? (rawLocale as Locale)
+    : DEFAULT_LOCALE
+  const dir = LOCALE_LABELS[locale].dir
+
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${fraunces.variable}`}>
+    <html lang={locale} dir={dir} className={`${spaceGrotesk.variable} ${fraunces.variable}`}>
       <head>
         {/* Preconnect to image origins so cache-miss image requests don't pay the TLS handshake cost. */}
         <link rel="preconnect" href="https://yaqhbuvjnaq0ur0v.public.blob.vercel-storage.com" crossOrigin="anonymous" />

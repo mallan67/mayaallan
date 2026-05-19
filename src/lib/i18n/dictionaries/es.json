@@ -1,0 +1,48 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "about": "Sobre Maya",
+    "books": "Libros",
+    "scenarios": "Escenarios",
+    "integration": "Integración",
+    "blog": "Escritos",
+    "events": "Eventos",
+    "contact": "Contacto"
+  },
+  "cta": {
+    "seeTheBook": "Ver el libro",
+    "readMore": "Leer más",
+    "learnMore": "Saber más",
+    "tryItFree": "Probar gratis",
+    "buyNow": "Comprar ahora",
+    "contactMe": "Contacto",
+    "subscribe": "Suscribirse"
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados.",
+    "builtBy": "Por Maya Allan",
+    "privacyPolicy": "Privacidad",
+    "terms": "Términos",
+    "languageSwitcher": "Idioma"
+  },
+  "home": {
+    "heroTitle": "Guía con los pies en la tierra para la integración de la psilocibina y el trabajo interior.",
+    "heroSubtitle": "Escenarios, marcos y herramientas basados en investigación para navegar estados no ordinarios y el trabajo que sigue.",
+    "heroCta": "Ver el libro",
+    "aboutHeadline": "Sobre Maya Allan",
+    "aboutLead": "Autora, investigadora y guía de integración.",
+    "aboutBody": "Maya Allan escribe para practicantes, terapeutas, facilitadores y quienes hacen el viaje en solitario y buscan una guía sólida para el trabajo de transformación interior. Su trabajo se nutre de la investigación revisada por pares y de décadas de experiencia facilitando procesos.",
+    "booksHeadline": "Libros",
+    "integrationHeadline": "Herramienta de integración gratuita",
+    "integrationBody": "Después del viaje queda el trabajo de dejar que se asiente. La herramienta de integración es una sesión gratuita guiada por IA para ayudar a que una nueva experiencia se asiente junto a un patrón antiguo."
+  },
+  "about": {
+    "title": "Sobre Maya Allan",
+    "lead": "Autora e investigadora especializada en integración de psilocibina, estudios de conciencia y el trabajo práctico de la transformación interior.",
+    "body": [
+      "Maya Allan escribe para practicantes, terapeutas, facilitadores y quienes hacen el viaje en solitario. Su trabajo se basa en la investigación psicodélica revisada por pares (Carhart-Harris, Griffiths, Davis, Ecker) y décadas de experiencia facilitando procesos para aportar claridad y compasión a una medicina envuelta durante mucho tiempo en el misterio.",
+      "Su primer libro, *Guía de Integración de Psilocibina*, recorre 40 escenarios reales de un viaje —desde la disolución del ego y el trabajo de sombra hasta la sanación del niño interior y la conciencia cósmica— con orientación detallada para cada uno.",
+      "El sitio ofrece herramientas gratuitas de integración, páginas de referencia por escenario y un cuerpo de escritos sobre el trabajo interior que sigue a los estados no ordinarios."
+    ]
+  }
+}

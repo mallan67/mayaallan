@@ -1,11 +1,38 @@
 import type { MetadataRoute } from "next"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { listPosts } from "@/lib/posts"
+import { listScenarios } from "@/lib/scenarios"
+import { LOCALES, type Locale } from "@/lib/identity"
+import { sitemapAlternates } from "@/lib/i18n/hreflang"
+
+// Pages that have translated versions live. As more pages get translated, add
+// their root-relative path here so the sitemap emits hreflang alternates for
+// them. Google reads these to serve the right language to the right user.
+const TRANSLATED_PATHS = new Set<string>(["/", "/about"])
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.mayaallan.com"
   const currentDate = new Date()
   const posts = await listPosts()
+  const scenarios = await listScenarios()
+
+  // Build a list of {path, lastModified, priority} for translated pages —
+  // these need both their English entry AND per-locale entries with
+  // hreflang alternates.
+  const translatedLocaleEntries: MetadataRoute.Sitemap = []
+  for (const path of TRANSLATED_PATHS) {
+    for (const locale of LOCALES) {
+      if (locale === "en") continue // English lives at the canonical path
+      const url = path === "/" ? `${baseUrl}/${locale}` : `${baseUrl}/${locale}${path}`
+      translatedLocaleEntries.push({
+        url,
+        lastModified: currentDate,
+        changeFrequency: "weekly",
+        priority: 0.8,
+        alternates: { languages: sitemapAlternates(path) },
+      })
+    }
+  }
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
@@ -14,12 +41,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: currentDate,
       changeFrequency: "weekly",
       priority: 1.0,
+      // hreflang alternates for the homepage — declared on the canonical
+      // English entry so Google can serve the right language version.
+      alternates: { languages: sitemapAlternates("/") },
     },
     {
       url: `${baseUrl}/about`,
       lastModified: currentDate,
       changeFrequency: "monthly",
       priority: 0.8,
+      alternates: { languages: sitemapAlternates("/about") },
     },
     {
       url: `${baseUrl}/books`,
@@ -93,7 +124,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    {
+      url: `${baseUrl}/scenarios`,
+      lastModified: currentDate,
+      changeFrequency: "weekly",
+      // High priority — this is a hub page for the 40-scenario content
+      // cluster, the highest-leverage SEO + AI-citation asset on the site.
+      priority: 0.9,
+    },
   ]
+
+  // Scenario pages — each is an AI-citation-optimized landing page targeting
+  // one specific user query. Crawled and indexed alongside everything else.
+  const scenarioPages: MetadataRoute.Sitemap = scenarios.map((s) => {
+    const parsed = new Date(s.dateModified ?? s.datePublished)
+    const lastModified = isNaN(parsed.getTime()) ? currentDate : parsed
+    return {
+      url: `${baseUrl}/scenarios/${s.slug}`,
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    }
+  })
 
   const blogPostPages: MetadataRoute.Sitemap = posts.map((post) => {
     const parsed = new Date(post.date)
@@ -162,5 +214,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.warn("Sitemap dynamic content fetch failed:", error)
   }
 
-  return [...staticPages, ...bookPages, ...eventPages, ...mediaPages, ...blogPostPages]
+  return [
+    ...staticPages,
+    ...translatedLocaleEntries,
+    ...bookPages,
+    ...eventPages,
+    ...mediaPages,
+    ...blogPostPages,
+    ...scenarioPages,
+  ]
 }

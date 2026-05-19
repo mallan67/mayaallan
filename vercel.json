@@ -1,3 +1,10 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "//": "AEO tracker — weekly probe of AI engines (ChatGPT/Claude/Perplexity/Gemini) to measure citation rate. See src/app/api/cron/aeo-track/route.ts. Vercel automatically sends Authorization: Bearer ${CRON_SECRET}.",
+      "path": "/api/cron/aeo-track",
+      "schedule": "0 9 * * 1"
+    }
+  ]
 }
