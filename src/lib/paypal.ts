@@ -203,13 +203,23 @@ export function decodeCustomId(
 
 export async function createSessionExportOrder(args: {
   blobKey: string
-  customerEmail: string
   tool: "reset" | "belief_inquiry" | "integration"
   siteUrl: string
 }): Promise<{ url: string; orderId: string }> {
   const token = await getAccessToken()
   const customId = encodeCustomId(args.blobKey, args.tool)
 
+  // Match the book-purchase flow's pattern: use top-level application_context
+  // and DO NOT set payment_source.paypal. Setting payment_source.paypal forces
+  // the buyer through a PayPal-login-only flow and pre-fills the login form
+  // with email_address — when the buyer has an active PayPal session for a
+  // different account (e.g. shared device, or merchant testing their own
+  // checkout), PayPal's session cookie overrides the email hint and the buyer
+  // lands logged in as someone else.
+  //
+  // The buyer's email is still captured at fulfillment time: PAYMENT.CAPTURE.
+  // COMPLETED's payer block, or the order-fetch fallback in the webhook.
+  // customId carries the blobKey+tool needed to deliver the PDF.
   const body = {
     intent: "CAPTURE",
     purchase_units: [
@@ -219,16 +229,12 @@ export async function createSessionExportOrder(args: {
         amount: { currency_code: "USD", value: SESSION_PRICE_USD },
       },
     ],
-    payment_source: {
-      paypal: {
-        experience_context: {
-          shipping_preference: "NO_SHIPPING",
-          user_action: "PAY_NOW",
-          return_url: `${args.siteUrl}/export/success?tool=${args.tool}`,
-          cancel_url: `${args.siteUrl}/tools`,
-        },
-        email_address: args.customerEmail,
-      },
+    application_context: {
+      brand_name: "Maya Allan",
+      shipping_preference: "NO_SHIPPING",
+      user_action: "PAY_NOW",
+      return_url: `${args.siteUrl}/export/success?tool=${args.tool}`,
+      cancel_url: `${args.siteUrl}/tools`,
     },
   }
 

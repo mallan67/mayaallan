@@ -116,7 +116,6 @@ export async function POST(req: NextRequest) {
   try {
     checkout = await createSessionExportOrder({
       blobKey,
-      customerEmail: body.email,
       tool: body.tool,
       siteUrl: origin,
     })
