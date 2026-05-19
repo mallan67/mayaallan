@@ -1,14 +1,16 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Legal & Disclaimer",
-  description: "Legal disclaimer and terms of use for mayaallan.com. Informational and educational purposes only.",
+  title: "Educational Disclaimer",
+  description:
+    "Educational disclaimer for mayaallan.com. Content is informational and educational only — not medical, psychological, therapeutic, or legal advice.",
   alternates: {
     canonical: "https://www.mayaallan.com/legal",
   },
   openGraph: {
-    title: "Legal & Disclaimer - Maya Allan",
-    description: "Legal disclaimer and terms of use. Informational and educational purposes only.",
+    title: "Educational Disclaimer — Maya Allan",
+    description: "Content is informational and educational only — not medical or therapeutic advice.",
     url: "https://www.mayaallan.com/legal",
   },
   robots: {
@@ -20,17 +22,22 @@ export const metadata: Metadata = {
 export default function LegalPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 md:py-12 space-y-6 text-sm text-slate-700">
-      <h1 className="font-serif text-2xl md:text-3xl font-semibold mb-2">Legal &amp; Disclaimer</h1>
+      <h1 className="font-serif text-2xl md:text-3xl font-semibold mb-2 text-slate-900">Educational Disclaimer</h1>
+
+      {/* Anchors #terms and #privacy are preserved for any legacy inbound links
+          (older footer links, external citations) — content was split into
+          dedicated /terms, /privacy, /refunds pages but anchors still resolve. */}
       <section id="terms">
-        <h2 className="font-serif font-semibold mb-2">Informational &amp; Educational Only</h2>
+        <h2 className="font-serif font-semibold mb-2 text-slate-900">Informational &amp; Educational Only</h2>
         <p>
-          All content on this site and in associated publications is for informational and educational purposes only. It
-          is not medical, psychological, therapeutic, or legal advice, and should not be used to diagnose, treat, cure,
-          or prevent any condition.
+          All content on this site and in associated publications is for informational and educational purposes only.
+          It is not medical, psychological, therapeutic, or legal advice, and should not be used to diagnose, treat,
+          cure, or prevent any condition.
         </p>
       </section>
+
       <section>
-        <h2 className="font-serif font-semibold mb-2">Legal Compliance &amp; Local Laws</h2>
+        <h2 className="font-serif font-semibold mb-2 text-slate-900">Legal Compliance &amp; Local Laws</h2>
         <p>
           Psilocybin and related substances may be controlled or illegal in many jurisdictions, including but not
           limited to the United States, the European Union, the United Kingdom, Canada, Australia, Latin America, Asia,
@@ -38,12 +45,33 @@ export default function LegalPage() {
           This site does not encourage or facilitate illegal activity in any form.
         </p>
       </section>
+
       <section id="privacy">
-        <h2 className="font-serif font-semibold mb-2">Privacy</h2>
+        <h2 className="font-serif font-semibold mb-2 text-slate-900">Privacy, Terms &amp; Refunds</h2>
         <p>
-          A future privacy policy will explain how basic analytics and contact information are handled. Any email
-          communication will always include an option to unsubscribe.
+          How we handle personal information, the terms that govern your use of the site, and our refund policy for
+          digital purchases live on their own pages:
         </p>
+        <ul className="list-disc pl-6 mt-2 space-y-1">
+          <li>
+            <Link href="/privacy" className="underline">
+              Privacy Policy
+            </Link>{" "}
+            — what we collect, how we use it, who we share it with, and your rights.
+          </li>
+          <li>
+            <Link href="/terms" className="underline">
+              Terms of Service
+            </Link>{" "}
+            — the agreement that applies when you use the site or its AI tools.
+          </li>
+          <li>
+            <Link href="/refunds" className="underline">
+              Refund Policy
+            </Link>{" "}
+            — how refunds work for ebooks and session-export PDFs.
+          </li>
+        </ul>
       </section>
     </div>
   )

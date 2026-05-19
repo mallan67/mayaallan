@@ -51,11 +51,14 @@ export function Footer() {
               <Link href="/methods" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
                 Methods &amp; Attributions
               </Link>
-              <Link href="/legal#privacy" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+              <Link href="/privacy" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
                 Privacy
               </Link>
-              <Link href="/legal#terms" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+              <Link href="/terms" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
                 Terms
+              </Link>
+              <Link href="/refunds" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                Refunds
               </Link>
             </nav>
           </div>

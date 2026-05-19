@@ -89,6 +89,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.3,
     },
     {
+      url: `${baseUrl}/privacy`,
+      lastModified: currentDate,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/terms`,
+      lastModified: currentDate,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${baseUrl}/refunds`,
+      lastModified: currentDate,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
       url: `${baseUrl}/tools`,
       lastModified: currentDate,
       changeFrequency: "monthly",
@@ -136,6 +154,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // FAQ page — 20 short answers to top reader queries, AI-citation
       // optimized. Same logic as scenarios: pure citation-magnet content.
       url: `${baseUrl}/faq`,
+      lastModified: currentDate,
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      // Glossary — canonical "what is X" reference for psilocybin +
+      // integration vocabulary. DefinedTermSet schema makes this the
+      // citation target for AI engines answering definition queries.
+      url: `${baseUrl}/glossary`,
       lastModified: currentDate,
       changeFrequency: "monthly",
       priority: 0.9,
