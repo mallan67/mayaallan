@@ -19,6 +19,7 @@ import { isAuthenticated } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { loadRecentRuns, allRows, type CitationRow, type AeoRun } from "@/lib/aeo/storage"
 import { RunNowButton } from "./RunNowButton"
+import { CopyButton } from "./CopyButton"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -205,31 +206,48 @@ export default async function AeoDashboardPage() {
         )}
       </section>
 
-      {/* RECENT ERRORS — surfaced so failures are diagnosable from the UI */}
+      {/* RECENT ERRORS — collapsed by default; click to expand full text */}
       {recentErrors.length > 0 && (
         <section className="mb-10">
           <h2 className="text-lg font-semibold text-slate-900 mb-3">Recent errors</h2>
           <p className="text-xs text-slate-500 mb-3">
-            Grouped by engine + error message. If every probe of an engine errored, the cause is
-            usually the API key, the model name, or a quota limit.
+            Grouped by engine + error message. Click to expand. If every probe of an engine
+            errored, the cause is usually the API key, the model name, or a quota limit.
           </p>
           <div className="space-y-2">
-            {recentErrors.map((e, i) => (
-              <div
-                key={`${e.engine}-${i}`}
-                className="p-3 border border-red-200 rounded-lg bg-red-50/40 text-sm"
-              >
-                <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
-                  <span className="px-2 py-0.5 bg-slate-100 rounded font-medium uppercase">
-                    {e.engine}
-                  </span>
-                  <span>×{e.count}</span>
-                </div>
-                <pre className="text-xs text-red-900 whitespace-pre-wrap break-words font-mono">
-                  {e.message}
-                </pre>
-              </div>
-            ))}
+            {recentErrors.map((e, i) => {
+              // First line / first 120 chars = the summary preview shown
+              // when the row is collapsed. Keeps the panel scannable even
+              // when individual errors are giant JSON blobs.
+              const preview = (e.message.split("\n")[0] ?? "").slice(0, 140)
+              return (
+                <details
+                  key={`${e.engine}-${i}`}
+                  className="group border border-red-200 rounded-lg bg-red-50/40 text-sm overflow-hidden"
+                >
+                  <summary className="cursor-pointer list-none px-3 py-2 flex items-center gap-2 hover:bg-red-50">
+                    <span className="px-2 py-0.5 bg-slate-100 rounded font-medium uppercase text-xs text-slate-600">
+                      {e.engine}
+                    </span>
+                    <span className="text-xs text-slate-500 shrink-0">×{e.count}</span>
+                    <span className="text-xs text-red-900 truncate flex-1 font-mono">
+                      {preview}
+                    </span>
+                    <span className="text-slate-400 group-open:rotate-90 transition-transform text-base shrink-0">
+                      ›
+                    </span>
+                  </summary>
+                  <div className="px-3 pb-3 pt-1 border-t border-red-200/60">
+                    <div className="flex justify-end mb-1">
+                      <CopyButton text={e.message} ariaLabel="Copy error message" />
+                    </div>
+                    <pre className="text-xs text-red-900 whitespace-pre-wrap break-words font-mono">
+                      {e.message}
+                    </pre>
+                  </div>
+                </details>
+              )
+            })}
           </div>
         </section>
       )}
