@@ -12,6 +12,38 @@ import {
 import { saveRun, pruneOldRuns, type AeoRun, type CitationRow } from "@/lib/aeo/storage"
 
 // =============================================================================
+// Tuning knobs (override via env)
+// =============================================================================
+//
+// AEO_ENGINES — comma-separated allow-list of engine names. When set, only
+// these engines run; everything else is skipped. Useful for users who only
+// want to spend on one provider (e.g., AEO_ENGINES=claude when you have
+// Anthropic credit and don't want to burn Vercel AI Gateway credits on the
+// other three). Unset = all configured engines run.
+//   Valid values: claude, chatgpt, perplexity, gemini
+//
+// AEO_CONCURRENCY — how many prompts to probe concurrently. Each in-flight
+// prompt fires every enabled engine in parallel internally. Default 5 means
+// at any moment 5 prompts × N engines are in flight, which keeps each
+// provider under ~5 RPM for safety. Bump if you have higher rate limits.
+//
+// With defaults (4 engines, concurrency 5) the full 25-prompt run takes
+// ~max_engine_time × 5 batches ≈ 25-40 seconds total.
+function parseEngineAllowList(): Set<string> | null {
+  const raw = process.env.AEO_ENGINES?.trim()
+  if (!raw) return null
+  return new Set(raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean))
+}
+
+function parseConcurrency(): number {
+  const raw = process.env.AEO_CONCURRENCY
+  if (!raw) return 5
+  const n = Number.parseInt(raw, 10)
+  if (!Number.isFinite(n) || n < 1) return 5
+  return Math.min(n, 25) // cap at 25 — no point exceeding prompt count
+}
+
+// =============================================================================
 // AEO probe runner — shared by:
 //   - the weekly cron at /api/cron/aeo-track
 //   - the admin "Run now" button at /api/admin/aeo/run-now
@@ -48,15 +80,18 @@ export async function executeRun(): Promise<
     return { ok: false, error: "No prompts loaded from content/aeo-prompts.json" }
   }
 
+  const allowedEngines = parseEngineAllowList()
   const engineFns: Array<{
     name: "claude" | "chatgpt" | "perplexity" | "gemini"
     fn: (p: string) => Promise<EngineResponse | null>
-  }> = [
-    { name: "claude", fn: queryClaude },
-    { name: "chatgpt", fn: queryChatGPT },
-    { name: "perplexity", fn: queryPerplexity },
-    { name: "gemini", fn: queryGemini },
-  ]
+  }> = (
+    [
+      { name: "claude", fn: queryClaude },
+      { name: "chatgpt", fn: queryChatGPT },
+      { name: "perplexity", fn: queryPerplexity },
+      { name: "gemini", fn: queryGemini },
+    ] as const
+  ).filter((e) => !allowedEngines || allowedEngines.has(e.name))
 
   const enginesRun: string[] = []
   const rows: CitationRow[] = []
@@ -64,65 +99,74 @@ export async function executeRun(): Promise<
   let citationHits = 0
   let errors = 0
 
-  // Sequential prompts × parallel engines per prompt.
+  // Concurrent prompt batches × parallel engines per prompt.
   //
-  // Why this layout: most of the wall-clock cost is the LLM response latency
-  // (2-5 sec per call). Running all four engines for a single prompt in
-  // parallel collapses each prompt's time to "the slowest engine" instead of
-  // "sum of all engines". For 25 prompts × 4 engines that's roughly
-  //   25 × max_engine_time ≈ 1-2 minutes
-  // instead of
-  //   25 × sum_engine_times ≈ 4-8 minutes (would hit Vercel's 5-min cap).
+  // Layout:
+  //   - Up to AEO_CONCURRENCY prompts (default 5) are in flight at once.
+  //   - Each in-flight prompt fires every enabled engine in parallel.
+  //   - So in-flight calls = concurrency × enabled_engines (default 5 × N).
   //
-  // We keep prompts sequential to avoid hammering any single provider's
-  // per-minute rate limit (each provider only sees 1 in-flight request from
-  // us at a time, even though up to 4 providers run concurrently).
-  for (const prompt of prompts) {
+  // With 4 engines + concurrency 5 = 20 concurrent calls. Each provider sees
+  // at most 5 simultaneous calls from us, which stays comfortably under most
+  // free / low-tier rate limits.
+  //
+  // Total wall time: ceil(prompts / concurrency) × max_engine_time
+  //   = ceil(25 / 5) × ~5 sec = ~25 seconds for the full 25-prompt run.
+  const concurrency = parseConcurrency()
+  async function probeOnePrompt(prompt: (typeof prompts)[number]) {
     const settled = await Promise.all(
       engineFns.map(async ({ name, fn }) => {
         const result = await fn(prompt.text)
         return { name, result }
       })
     )
+    return { prompt, settled }
+  }
 
-    for (const { name, result } of settled) {
-      if (result === null) continue // engine not configured — silently skip
+  for (let i = 0; i < prompts.length; i += concurrency) {
+    const batch = prompts.slice(i, i + concurrency)
+    const batchResults = await Promise.all(batch.map(probeOnePrompt))
 
-      if (!enginesRun.includes(name)) enginesRun.push(name)
-      totalProbes++
+    for (const { prompt, settled } of batchResults) {
+      for (const { name, result } of settled) {
+        if (result === null) continue
 
-      if (result.error) {
-        errors++
+        if (!enginesRun.includes(name)) enginesRun.push(name)
+        totalProbes++
+
+        if (result.error) {
+          errors++
+          rows.push({
+            engine: name,
+            prompt: prompt.text,
+            prompt_id: prompt.id,
+            prompt_category: prompt.category,
+            was_cited: false,
+            mention_types: [],
+            cited_urls: [],
+            excerpt: null,
+            response_chars: 0,
+            error: result.error,
+          })
+          continue
+        }
+
+        const detection = detectCitation(result.content)
+        if (detection.wasCited) citationHits++
+
         rows.push({
           engine: name,
           prompt: prompt.text,
           prompt_id: prompt.id,
           prompt_category: prompt.category,
-          was_cited: false,
-          mention_types: [],
-          cited_urls: [],
-          excerpt: null,
-          response_chars: 0,
-          error: result.error,
+          was_cited: detection.wasCited,
+          mention_types: detection.mentionTypes,
+          cited_urls: detection.citedUrls,
+          excerpt: detection.excerpt,
+          response_chars: result.content.length,
+          error: null,
         })
-        continue
       }
-
-      const detection = detectCitation(result.content)
-      if (detection.wasCited) citationHits++
-
-      rows.push({
-        engine: name,
-        prompt: prompt.text,
-        prompt_id: prompt.id,
-        prompt_category: prompt.category,
-        was_cited: detection.wasCited,
-        mention_types: detection.mentionTypes,
-        cited_urls: detection.citedUrls,
-        excerpt: detection.excerpt,
-        response_chars: result.content.length,
-        error: null,
-      })
     }
   }
 
