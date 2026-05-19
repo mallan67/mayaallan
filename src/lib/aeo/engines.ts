@@ -1,4 +1,6 @@
 import "server-only"
+import { generateText } from "ai"
+import { google } from "@ai-sdk/google"
 
 // =============================================================================
 // AEO Engine clients — one minimal client per AI engine.
@@ -145,44 +147,58 @@ export async function queryPerplexity(prompt: string): Promise<EngineResponse | 
 }
 
 // -----------------------------------------------------------------------------
-// Gemini (Google AI Studio) — TRULY FREE, no card required
+// Gemini — routed the same way the rest of the site's AI tools route
 // -----------------------------------------------------------------------------
-// Accepts either GOOGLE_GENAI_API_KEY (canonical for the AEO tracker) or
-// GOOGLE_GENERATIVE_AI_API_KEY (the @ai-sdk/google convention used by the
-// integration/belief-inquiry/reset chat tools). Same key value works for both;
-// having the fallback means existing setups don't need to add a duplicate var.
+// Mirrors src/app/api/chat/route.ts: defaults to Vercel AI Gateway (which uses
+// AI_GATEWAY_API_KEY and pulls from Vercel credits), and switches to direct
+// Google API only if AI_PROVIDER=direct is set (with GOOGLE_GENERATIVE_AI_API_KEY).
+//
+// Why: the direct Google API can have project-specific quota issues
+// (limit: 0 errors even on free-tier models). Going through Gateway uses the
+// same path that already works for the production chat tools, with predictable
+// billing on Vercel rather than Google's free-tier quirks.
+//
+// Cost on Gateway: ~$0.003 per probe × 25 prompts × 4 weekly runs ≈ $0.30/mo.
 export async function queryGemini(prompt: string): Promise<EngineResponse | null> {
-  const key = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
-  if (!key) return null
+  const hasGatewayKey = !!process.env.AI_GATEWAY_API_KEY
+  const hasDirectKey = !!(process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY)
+  const provider = (process.env.AI_PROVIDER ?? "gateway").toLowerCase()
 
-  // Use the same model the rest of the site's AI tools use (per
-  // src/app/api/chat/route.ts) so this works with the existing Gemini key
-  // without quota surprises.
-  const model = "gemini-2.5-flash"
+  // No usable credentials anywhere — skip silently.
+  if (!hasGatewayKey && !hasDirectKey) return null
+
+  // Decide the actual transport: prefer the path that has a key configured,
+  // honoring AI_PROVIDER when it's set explicitly.
+  const useDirect = provider === "direct" ? hasDirectKey : !hasGatewayKey && hasDirectKey
+  const model = useDirect ? google("gemini-2.5-flash") : "google/gemini-2.5-flash"
+  const modelLabel = "gemini-2.5-flash"
+
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 1024 },
-      }),
+    const { text } = await generateText({
+      model,
+      prompt,
+      // maxOutputTokens cap keeps cost predictable; 1024 is enough for AEO
+      // citation detection (we only need to see whether the engine mentioned
+      // the site, not get a full long-form answer).
+      maxOutputTokens: 1024,
     })
-    if (!res.ok) {
-      return { engine: "gemini", content: "", model, error: `HTTP ${res.status}: ${await res.text()}` }
-    }
-    const data = await res.json()
-    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ""
-    return { engine: "gemini", content, model }
+    return { engine: "gemini", content: text ?? "", model: modelLabel }
   } catch (err) {
-    return { engine: "gemini", content: "", model, error: err instanceof Error ? err.message : String(err) }
+    return {
+      engine: "gemini",
+      content: "",
+      model: modelLabel,
+      error: err instanceof Error ? err.message : String(err),
+    }
   }
 }
 
 /** Returns only engines whose API keys are present in env. */
 export function enabledEngines(): Array<(prompt: string) => Promise<EngineResponse | null>> {
-  const hasGemini = !!(process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY)
+  const hasGemini =
+    !!process.env.AI_GATEWAY_API_KEY ||
+    !!process.env.GOOGLE_GENAI_API_KEY ||
+    !!process.env.GOOGLE_GENERATIVE_AI_API_KEY
   const all: Array<{ fn: (p: string) => Promise<EngineResponse | null>; enabled: boolean }> = [
     { fn: queryClaude, enabled: !!process.env.ANTHROPIC_API_KEY },
     { fn: queryChatGPT, enabled: !!process.env.OPENAI_API_KEY },
