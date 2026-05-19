@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type MouseEvent as ReactMouseEvent } from "react"
 import { Copy, Check } from "lucide-react"
 
 // =============================================================================
@@ -19,7 +19,7 @@ interface CopyButtonProps {
 export function CopyButton({ text, ariaLabel = "Copy to clipboard" }: CopyButtonProps) {
   const [copied, setCopied] = useState(false)
 
-  async function onClick(e: React.MouseEvent) {
+  async function onClick(e: ReactMouseEvent) {
     e.preventDefault()
     e.stopPropagation()
     try {
