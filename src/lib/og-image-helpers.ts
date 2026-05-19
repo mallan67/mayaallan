@@ -15,10 +15,14 @@
  *      to ImageResponse never contains undefined/null entries.
  */
 
+// IMPORTANT: @vercel/og can ONLY parse TTF or OTF — it will throw
+// "Unsupported OpenType signature wOF2" on any WOFF2 file. Use the Fontsource
+// CDN (jsDelivr-hosted, same upstream as the Google Fonts files) which serves
+// authentic TTF builds directly. URLs are stable per the Fontsource v5 release.
 const FONT_REGULAR_URL =
-  "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiJ-Ek-_EeA.woff2"
+  "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.ttf"
 const FONT_BOLD_URL =
-  "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2"
+  "https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-700-normal.ttf"
 
 /**
  * Cache-Control header to apply to every OG / Twitter ImageResponse.
