@@ -1,0 +1,139 @@
+{
+  "$schema": "Structured FAQ data — drives /faq page + emits FAQPage JSON-LD for AI citation. Edit answers here, page auto-updates.",
+  "title": "Frequently Asked Questions",
+  "description": "Short, research-informed answers to the most common questions about psilocybin journeys, integration, set and setting, shadow work, inner child healing, and safety. Adapted from Maya Allan's Psilocybin Integration Guide.",
+  "categories": [
+    { "id": "preparation",   "label": "Preparation"    },
+    { "id": "journey",       "label": "During the Journey" },
+    { "id": "integration",   "label": "Integration"    },
+    { "id": "safety",        "label": "Safety & Concerns" },
+    { "id": "research",      "label": "Research & Science" },
+    { "id": "practitioners", "label": "For Practitioners" },
+    { "id": "brand",         "label": "About the Book" }
+  ],
+  "questions": [
+    {
+      "id": "ego-dissolution-feel",
+      "category": "journey",
+      "question": "What does ego dissolution feel like during a psilocybin journey?",
+      "answer": "Ego dissolution feels like the boundary between \"you\" and everything else softening — the inner narrator goes quiet, identity becomes optional, and you may feel merged with the room, the music, or all of existence. It is temporary, not damaging, and reversible within hours. The fear that you won't come back is part of the experience, not a prediction.",
+      "relatedUrl": "/scenarios/ego-dissolution"
+    },
+    {
+      "id": "ego-dissolution-duration",
+      "category": "journey",
+      "question": "How long does ego dissolution typically last during a mushroom experience?",
+      "answer": "Peak ego dissolution typically lasts 30 minutes to 2 hours during a 4–6 hour psilocybin experience. The come-up takes 30–60 minutes; peak effects last 2–3 hours; gradual return takes another 2–3 hours. Dissolution often comes in waves during the peak rather than holding steady.",
+      "relatedUrl": "/scenarios/ego-dissolution"
+    },
+    {
+      "id": "integrate-difficult-journey",
+      "category": "integration",
+      "question": "How do I integrate a difficult psilocybin journey?",
+      "answer": "Start with rest, not analysis. First 48 hours: sleep, hydrate, eat simply, journal without judgment, avoid major decisions. Weeks 1–4: revisit notes, talk with a psychedelic-informed therapist or integration circle, use somatic practices (walking, bodywork) to discharge what surfaced, and identify one small concrete change. Difficult journeys carry the deepest insight when allowed to land slowly."
+    },
+    {
+      "id": "days-after-experience",
+      "category": "integration",
+      "question": "What should I do in the days after a psilocybin experience?",
+      "answer": "The first 48 hours are for settling, not action. Prioritize sleep, hydration, gentle whole foods, journaling, and minimal stimulation. Avoid alcohol, intense conversations, and major decisions. Days 3–7: re-read your journal daily, walk in nature, share simply with someone trusted. The deepest meaning often becomes clear in weeks 2–4, not immediately."
+    },
+    {
+      "id": "feel-disconnected-after",
+      "category": "integration",
+      "question": "Why do I feel disconnected from people weeks after a psilocybin journey?",
+      "answer": "Persistent disconnection weeks after a journey is common. The medicine often reveals how you've been performing connection rather than feeling it, so ordinary social patterns feel hollow until rebuilt honestly. It can also signal under-supported processing. Helpful: journal which relationships feel different and why; spend time with people who can hold real conversation; see a psychedelic-informed therapist if it persists past 6 weeks."
+    },
+    {
+      "id": "shadow-work-after",
+      "category": "integration",
+      "question": "How do I do shadow work after a psychedelic experience?",
+      "answer": "Shadow work after a psychedelic experience means engaging compassionately with whatever the journey surfaced — protective patterns, suppressed grief, parts you've avoided. Name what you saw without judging it. Ask what age the part feels like and what it was protecting you from. Treat it as a part seeking compassion, not a flaw. For heavy material, work with an IFS or psychedelic-informed therapist. Titrate, don't flood."
+    },
+    {
+      "id": "inner-child-healing",
+      "category": "integration",
+      "question": "Can psilocybin help with inner child healing?",
+      "answer": "Yes — psilocybin temporarily softens the defenses keeping younger parts of you out of awareness, creating an opening to meet your inner child with more compassion than ordinary states allow. The work is not erasing the past but seeing what the child lived through and offering the safety they never received. With significant trauma history, this should be done with a trauma-trained therapist, not alone."
+    },
+    {
+      "id": "prepare-first-experience",
+      "category": "preparation",
+      "question": "How should I prepare for my first psilocybin experience?",
+      "answer": "Three layers. Mental: clarify one or two intentions (orientations, not goals) and arrive emotionally stable. Physical: light eating 4–6 hours before, no alcohol or other drugs for 48 hours prior, good sleep beforehand. Environmental: a familiar quiet space, soft lighting, water within reach, ideally a trusted sober person available. First experiences benefit from a lower dose and an unhurried 8-hour window."
+    },
+    {
+      "id": "set-and-setting",
+      "category": "preparation",
+      "question": "What is set and setting and why does it matter for psilocybin?",
+      "answer": "Set and setting are the two most reliable predictors of a psilocybin experience's quality. \"Set\" is your internal state — mindset, intention, emotional baseline. \"Setting\" is the external environment — space, sound, lighting, presence of others. Both shape what arises because psilocybin amplifies whatever is already present in you and your surroundings. Calm mindset + safe space supports openness; agitation or chaos tends to surface fear."
+    },
+    {
+      "id": "set-intentions",
+      "category": "preparation",
+      "question": "How do I set intentions for a psilocybin journey?",
+      "answer": "Ask what you genuinely want to sit with, not what you want to fix. Spend quiet time before the journey listening for what's actually present. Write one or two clear intentions: \"I seek clarity on my next direction\" or \"I want to release what isn't mine to carry.\" Hold them as a compass, not a script. The medicine often shows what you need, not what you asked for."
+    },
+    {
+      "id": "integration-practitioner",
+      "category": "practitioners",
+      "question": "What does a psychedelic integration practitioner do?",
+      "answer": "A psychedelic integration practitioner helps translate insights from a journey into lasting change. Work typically includes preparation sessions (clarifying intentions, screening for safety), post-journey settling support, weekly integration sessions for 4–12 weeks using journaling, somatic practices, parts work, or other modalities, and identifying concrete life changes. Most practitioners do not provide the medicine itself. Good fit: trauma-trained, lived psychedelic experience, clear ethics."
+    },
+    {
+      "id": "facilitator-solo-journeyers",
+      "category": "practitioners",
+      "question": "What should a psilocybin facilitator know about supporting solo journeyers?",
+      "answer": "Solo journeyers benefit from preparation, reachable presence, and post-journey integration support — without active intervention during the experience. Facilitator responsibilities: thorough prep (intention-setting, screening, set/setting review), on-call presence during the journey (text or phone, not necessarily co-located), grounded next-day follow-up, and integration sessions in the weeks after. Your job is to hold space for the journeyer's meaning-making, not interpret it for them."
+    },
+    {
+      "id": "default-mode-network",
+      "category": "research",
+      "question": "What does psilocybin do to the default mode network?",
+      "answer": "Psilocybin reduces activity in the default mode network (DMN), the brain regions tied to self-referential thought and the felt sense of being a separate \"I.\" Research from Carhart-Harris at Imperial College London shows that as DMN activity drops, the usual experience of being yourself softens — producing ego dissolution, unity sensations, and the capacity to see familiar patterns from outside them. DMN activity returns to normal within hours."
+    },
+    {
+      "id": "mystical-experience",
+      "category": "research",
+      "question": "What is a mystical experience and how does psilocybin produce them?",
+      "answer": "A mystical experience is a profound state of perceived unity (with all things, with the divine), sacredness, ineffability, transcendence of time, and noetic certainty. Psilocybin produces them by temporarily reducing the brain's self-other distinction while increasing cross-network connectivity. Johns Hopkins research (Griffiths) shows mystical-type experiences are the strongest predictor of long-term therapeutic benefit — when followed by genuine integration."
+    },
+    {
+      "id": "trauma-healing",
+      "category": "research",
+      "question": "How can psilocybin help with trauma healing?",
+      "answer": "Psilocybin may support trauma healing by temporarily reducing fear response while keeping memory access intact, letting you approach material that's normally too threatening to face. This creates an opening for reprocessing; the medicine itself does not heal trauma — integration does. Safety: titrate small openings rather than flood, work with a trauma-trained professional, and avoid entirely if you have active complex PTSD, dissociation, or psychosis without clinical guidance."
+    },
+    {
+      "id": "rebus-model",
+      "category": "research",
+      "question": "What is the REBUS model in psychedelic research?",
+      "answer": "The REBUS model (Relaxed Beliefs Under pSychedelics) is Robin Carhart-Harris's framework explaining how psychedelics produce therapeutic effects. Core idea: the brain normally relies on high-level prior beliefs to filter experience; psychedelics temporarily relax these priors, allowing bottom-up information to reach awareness. This explains both insight (seeing patterns from outside them) and risk (in unstable conditions, loosened priors can destabilize rather than heal)."
+    },
+    {
+      "id": "bad-trip-destabilized",
+      "category": "safety",
+      "question": "What should I do if I had a bad psilocybin trip and feel destabilized?",
+      "answer": "For acute destabilization (hours to days): ground physically — cold water, sensory anchors, slow breathing — and stay with one trusted person who can hold presence without fixing. Eat, hydrate, sleep. Avoid being alone if frightened. For lingering destabilization beyond a week — persistent depersonalization, intrusive thoughts, sleep disruption — contact a psychedelic-informed therapist. Crisis resources: Fireside Project peer support, 988 lifeline."
+    },
+    {
+      "id": "warning-signs-help",
+      "category": "safety",
+      "question": "What are warning signs that I need professional help after a psilocybin experience?",
+      "answer": "Seek professional support if any of these persist beyond 1–2 weeks: depersonalization, intrusive flashbacks, sleep disruption, intense ongoing anxiety, dissociation, increasing isolation, sense that \"something is wrong with me\" that wasn't there before, suicidal thoughts, or urges to use more psychedelics to escape what surfaced. Earlier intervention is better. Look for therapists trained in trauma, IFS, or psychedelic integration."
+    },
+    {
+      "id": "spiritual-emergency",
+      "category": "safety",
+      "question": "What is a spiritual emergency and how is it related to psychedelic experiences?",
+      "answer": "A spiritual emergency is a period of intense psycho-spiritual crisis — often called a \"spiritual awakening gone too fast\" — where transformative experience overwhelms a person's integration capacity. Symptoms include sense of being broken open, fluid identity, intense emotional release, and difficulty managing ordinary life. Psychedelic experiences can trigger or accelerate them. The work is slow, supported integration with someone who recognizes the difference from a mental health crisis."
+    },
+    {
+      "id": "book-scenarios",
+      "category": "brand",
+      "question": "Are there any books that walk through specific scenarios that can come up during a psilocybin journey?",
+      "answer": "Psilocybin Integration Guide by Maya Allan walks through 40 real journey scenarios — ego dissolution, shadow figures, entity contact, cosmic consciousness, inner child material, difficult emotional release, and the re-entry phase. Each scenario includes: description of what's happening, why it arises, how to navigate it in the moment, the lesson it carries, and an example. For solo journeyers, practitioners, healers, and facilitators working with psilocybin.",
+      "relatedUrl": "/books/psilocybin-integration-guide"
+    }
+  ]
+}

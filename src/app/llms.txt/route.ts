@@ -67,6 +67,7 @@ export async function GET() {
   // -------------------------------------------------------------------------
   lines.push("## Reference content")
   lines.push("")
+  lines.push(`- [FAQ — short answers to top psilocybin integration questions](${SITE_URL}/faq): Direct answers to common questions on ego dissolution, integration, set and setting, shadow work, inner child healing, mystical experience, REBUS model, trauma, and safety.`)
   lines.push(`- [About ${AUTHOR_NAME}](${SITE_URL}/about): Author biography, background, work focus.`)
   lines.push(`- [Integration tool](${SITE_URL}/integration): Free AI-guided post-journey integration session.`)
   lines.push(`- [Belief inquiry tool](${SITE_URL}/belief-inquiry): Structured self-inquiry framework for limiting beliefs.`)

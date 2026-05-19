@@ -132,6 +132,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // cluster, the highest-leverage SEO + AI-citation asset on the site.
       priority: 0.9,
     },
+    {
+      // FAQ page — 20 short answers to top reader queries, AI-citation
+      // optimized. Same logic as scenarios: pure citation-magnet content.
+      url: `${baseUrl}/faq`,
+      lastModified: currentDate,
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
   ]
 
   // Scenario pages — each is an AI-citation-optimized landing page targeting
