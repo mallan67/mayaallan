@@ -72,9 +72,26 @@ export default async function AeoDashboardPage() {
         {!fetchError && runs.length === 0 && (
           <div className="mt-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-sm">
             <strong>No runs yet.</strong> Click <em>Run now</em> below to trigger your first
-            probe. Requires at least one AI engine key set in Vercel env —
-            <code className="bg-blue-100/50 px-1 rounded">GOOGLE_GENERATIVE_AI_API_KEY</code> is
-            free and the only one you need to get started.
+            probe. Any one of these env vars is enough to get started:
+            <ul className="mt-2 space-y-1 text-xs">
+              <li>
+                <code className="bg-blue-100/50 px-1 rounded">ANTHROPIC_API_KEY</code> — direct
+                Anthropic API (uses your console credit)
+              </li>
+              <li>
+                <code className="bg-blue-100/50 px-1 rounded">AI_GATEWAY_API_KEY</code> —
+                Vercel AI Gateway (unlocks all 4 engines via your Vercel credits)
+              </li>
+              <li>
+                <code className="bg-blue-100/50 px-1 rounded">GOOGLE_GENERATIVE_AI_API_KEY</code>{" "}
+                — direct Google AI Studio (free tier, often quota-limited)
+              </li>
+              <li>
+                <code className="bg-blue-100/50 px-1 rounded">OPENAI_API_KEY</code> or{" "}
+                <code className="bg-blue-100/50 px-1 rounded">PERPLEXITY_API_KEY</code> — direct
+                APIs for those providers
+              </li>
+            </ul>
           </div>
         )}
 
