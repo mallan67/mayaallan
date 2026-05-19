@@ -132,6 +132,7 @@ export async function GET() {
   // -------------------------------------------------------------------------
   lines.push("## Reference content")
   lines.push("")
+  lines.push(`- [Glossary of Psilocybin & Integration Terms](${SITE_URL}/glossary): Canonical definitions for the vocabulary that comes up around psilocybin journeys and integration — ego dissolution, set & setting, default mode network, REBUS model, shadow work, inner child, mystical experience, and ~20 more. DefinedTermSet schema; each term is a deep-link target.`)
   lines.push(`- [Reader Questions from Psilocybin Integration Guide](${SITE_URL}/faq): Direct answers from Maya Allan's book on ego dissolution, integration, set and setting, shadow work, inner child healing, mystical experience, REBUS model, trauma, and safety. Companion reference to the 40-scenario book.`)
   lines.push(`- [About ${AUTHOR_NAME}](${SITE_URL}/about): Author biography, background, work focus.`)
   lines.push(`- [Integration tool](${SITE_URL}/integration): Free AI-guided post-journey integration session.`)

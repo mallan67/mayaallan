@@ -1,0 +1,209 @@
+{
+  "title": "Psilocybin & Integration Glossary",
+  "shortTitle": "Glossary",
+  "tagline": "A working vocabulary for the journey and what comes after.",
+  "description": "Plain-language definitions of the terms that come up most often around psilocybin journeys and integration — ego dissolution, set & setting, the default mode network, the REBUS model, shadow work, and more. General scientific and cultural definitions; the specific working method behind each is in Maya Allan's Psilocybin Integration Guide.",
+  "categories": [
+    { "id": "experience", "label": "The experience itself" },
+    { "id": "framework", "label": "Frameworks & models" },
+    { "id": "practice", "label": "Practice & support" },
+    { "id": "substance", "label": "Substance & dosing" }
+  ],
+  "terms": [
+    {
+      "id": "ego-dissolution",
+      "term": "Ego dissolution",
+      "alternateNames": ["Ego loss", "Self-dissolution"],
+      "category": "experience",
+      "definition": "The temporary softening or disappearance of the felt sense of being a separate self during a psilocybin experience. Associated with reduced activity in the brain's default mode network. Subjective reports range from boundary blurring to a total felt unity with surroundings. Usually lasts 30 minutes to two hours at the peak of a 4-6 hour journey. Reversible and not associated with physical harm; psychological difficulty depends heavily on set, setting, and integration.",
+      "relatedTerms": ["ego-death", "default-mode-network", "mystical-experience"],
+      "relatedScenarios": ["ego-dissolution"]
+    },
+    {
+      "id": "ego-death",
+      "term": "Ego death",
+      "alternateNames": ["Complete ego dissolution"],
+      "category": "experience",
+      "definition": "The most intense form of ego dissolution, characterized by total loss of the personal-identity construct and a felt sense of 'dying.' Distinguished from milder ego dissolution by completeness rather than kind. Commonly reported with high-dose psilocybin (4 g+ dried) or other classical psychedelics. The 'death' is metaphorical — the self-model returns intact, often within hours. Frequently described retrospectively as the most transformative element of a journey.",
+      "relatedTerms": ["ego-dissolution", "mystical-experience", "rebirth"]
+    },
+    {
+      "id": "integration",
+      "term": "Integration",
+      "alternateNames": ["Post-journey integration", "Psychedelic integration"],
+      "category": "framework",
+      "definition": "The process of translating insights, emotions, and material that surfaced during a psychedelic experience into ongoing changes in everyday life. Includes journaling, somatic work, dialogue with trusted others, and deliberate behavior modification. The experience itself is generally the easier part; sustained integration over weeks to months is where psychedelic benefit either takes root or fades. Distinct from interpretation — integration is what you do, not just what the experience meant.",
+      "relatedTerms": ["afterglow", "re-entry", "rebus-model"]
+    },
+    {
+      "id": "set",
+      "term": "Set",
+      "alternateNames": ["Mindset"],
+      "category": "framework",
+      "definition": "Half of the foundational 'set and setting' framework: the user's internal state going into a psychedelic experience. Includes mood, expectations, intentions, mental-health stability, history with the substance, and recent life context. Strongly predictive of experience quality independent of the substance or dose. Originally formalized in the psychedelic-therapy literature by Timothy Leary and colleagues.",
+      "relatedTerms": ["setting", "intention"]
+    },
+    {
+      "id": "setting",
+      "term": "Setting",
+      "alternateNames": ["Environment"],
+      "category": "framework",
+      "definition": "The external environment of a psychedelic experience: physical space, music, presence and demeanor of others, lighting, sensory inputs, perceived safety, and time available. Different settings (clinical, ceremonial, recreational, solo, group) systematically produce different experiences. Optimizing setting is one of the highest-leverage harm-reduction moves available to anyone preparing for a journey.",
+      "relatedTerms": ["set", "trip-sitter", "harm-reduction"]
+    },
+    {
+      "id": "default-mode-network",
+      "term": "Default mode network",
+      "alternateNames": ["DMN"],
+      "category": "framework",
+      "definition": "A network of brain regions (including the medial prefrontal cortex, posterior cingulate cortex, and angular gyri) most active during self-referential thought, autobiographical memory, mind-wandering, and the maintenance of the felt sense of self. Carhart-Harris et al. (2014) showed via fMRI that psilocybin reduces DMN activity, correlating with reports of ego dissolution and mystical experience. The DMN is sometimes called the brain's 'self-system.'",
+      "relatedTerms": ["ego-dissolution", "rebus-model", "mystical-experience"]
+    },
+    {
+      "id": "mystical-experience",
+      "term": "Mystical experience",
+      "alternateNames": ["Unitive experience", "Cosmic consciousness"],
+      "category": "experience",
+      "definition": "A category of psychedelic and meditative experience characterized by six dimensions: unity, transcendence of time and space, ineffability, noetic quality, sacredness, and positive mood. Measured psychometrically via the Mystical Experience Questionnaire (MEQ30, Griffiths et al. 2006). The intensity of a mystical experience is the strongest single predictor of long-term therapeutic outcomes across major psilocybin clinical trials.",
+      "relatedTerms": ["ego-dissolution", "ineffability", "noetic-quality"]
+    },
+    {
+      "id": "microdosing",
+      "term": "Microdosing",
+      "alternateNames": ["Sub-perceptual dosing"],
+      "category": "substance",
+      "definition": "Regular ingestion of a small fraction (typically 1/10 to 1/20) of a recreational psilocybin dose, generally below the threshold of noticeable subjective effects. Common protocols include Fadiman (1 day on, 2 days off) and Stamets (4 on, 3 off). Self-reports describe subtle effects on mood, focus, and creativity. Controlled-trial evidence is mixed and still emerging.",
+      "relatedTerms": ["macrodosing", "threshold-dose", "tolerance"]
+    },
+    {
+      "id": "macrodosing",
+      "term": "Macrodosing",
+      "alternateNames": ["Heroic dose"],
+      "category": "substance",
+      "definition": "A high-dose psilocybin experience, commonly 4-5+ grams of dried mushrooms, intended to induce a full mystical experience or significant ego dissolution. Terence McKenna coined the 'heroic dose' framing (5 grams in silent darkness). Requires substantially more careful set, setting, and integration than threshold or moderate doses. Not appropriate for first-time users without experienced support.",
+      "relatedTerms": ["threshold-dose", "ego-dissolution", "trip-sitter"]
+    },
+    {
+      "id": "psilocybin",
+      "term": "Psilocybin",
+      "alternateNames": ["4-PO-DMT"],
+      "category": "substance",
+      "definition": "A naturally occurring tryptamine produced by over 200 species of mushrooms (most commonly psilocybe cubensis). A prodrug that converts in the body to psilocin, the active metabolite. Schedule I controlled in most jurisdictions; therapeutic-use legal status as of 2026 in Oregon (Measure 109), Colorado (Prop 122), and select Canadian programs. Active areas of clinical research include treatment-resistant depression, end-of-life anxiety, and substance use disorders.",
+      "relatedTerms": ["psilocin", "threshold-dose"]
+    },
+    {
+      "id": "psilocin",
+      "term": "Psilocin",
+      "alternateNames": ["4-HO-DMT"],
+      "category": "substance",
+      "definition": "The active metabolite of psilocybin and the molecule that crosses the blood-brain barrier to produce the psychedelic experience. Binds primarily to serotonin 5-HT2A receptors. Less chemically stable than psilocybin (oxidizes more readily), which is why dried mushrooms gradually lose potency over months to years of storage.",
+      "relatedTerms": ["psilocybin"]
+    },
+    {
+      "id": "threshold-dose",
+      "term": "Threshold dose",
+      "alternateNames": ["Museum dose"],
+      "category": "substance",
+      "definition": "The minimum psilocybin dose at which noticeable subjective effects begin — typically 0.25 to 0.5 grams of dried psilocybe cubensis. Below threshold is generally classed as microdosing; just at threshold is sometimes called a 'museum dose' (subtle enough to function in public). Doses 1.5-3.5 g are moderate; 3.5 g and above are typically described as full psychedelic experiences.",
+      "relatedTerms": ["microdosing", "macrodosing"]
+    },
+    {
+      "id": "trip-sitter",
+      "term": "Trip sitter",
+      "alternateNames": ["Sitter", "Sober sitter"],
+      "category": "practice",
+      "definition": "A sober person present during a psychedelic experience to provide safety and support. Distinct from a guide (who actively shapes the experience) and a therapist (who provides clinical care). Best practices: stay calm, minimal directing, comfort-on-request, basic harm-reduction knowledge, no recording or photography, and a clear pre-agreed signal system.",
+      "relatedTerms": ["setting", "harm-reduction"]
+    },
+    {
+      "id": "difficult-experience",
+      "term": "Difficult experience",
+      "alternateNames": ["Challenging experience", "Bad trip (outdated)"],
+      "category": "experience",
+      "definition": "A psychedelic session involving intense fear, anxiety, paranoia, confusion, or distressing imagery. Current psychedelic literature prefers 'difficult' or 'challenging' over the older 'bad trip' framing, because such experiences often produce durable insights when navigated with support and integrated afterward. Rarely associated with lasting psychological harm in healthy adults with proper set, setting, and integration.",
+      "relatedTerms": ["set", "setting", "integration", "harm-reduction"]
+    },
+    {
+      "id": "re-entry",
+      "term": "Re-entry",
+      "alternateNames": ["Coming down"],
+      "category": "experience",
+      "definition": "The phase of a psychedelic experience as effects subside — typically the final 1-2 hours of a 4-6 hour psilocybin journey. Often the most emotionally tender phase, when the dissolved self is reconstituting. The shape of re-entry strongly influences integration: gentle physical movement, journaling within an hour of full sobriety, and avoiding screens or news improves outcomes.",
+      "relatedTerms": ["afterglow", "integration"]
+    },
+    {
+      "id": "afterglow",
+      "term": "Afterglow",
+      "category": "experience",
+      "definition": "The period of heightened well-being, emotional openness, and clarity that follows a meaningful psychedelic experience. Typically lasts one to seven days. Some research frames this as a window of enhanced neuroplasticity, making it a critical integration period: behavior changes initiated during afterglow tend to stick more reliably than those started later.",
+      "relatedTerms": ["re-entry", "integration"]
+    },
+    {
+      "id": "shadow",
+      "term": "Shadow (Jungian)",
+      "alternateNames": ["Shadow material", "Shadow self"],
+      "category": "framework",
+      "definition": "From Carl Jung's analytical psychology: the rejected, denied, or unconscious aspects of the psyche, including impulses, traits, and memories the conscious self has disavowed. Psychedelics often surface shadow material — sometimes as imagery, sometimes as emotion. Integration involves acknowledging and reincorporating these aspects rather than re-suppressing them. Shadow work is foundational across analytical, transpersonal, and Internal Family Systems traditions.",
+      "relatedTerms": ["inner-child", "integration"]
+    },
+    {
+      "id": "inner-child",
+      "term": "Inner child",
+      "alternateNames": ["Younger self"],
+      "category": "framework",
+      "definition": "A psychological construct referring to the residual childhood self — the patterns, wounds, joys, and needs from formative years that continue shaping adult experience. Inner-child work is a thread within Internal Family Systems, gestalt therapy, and somatic approaches. Psilocybin experiences frequently bring inner-child material into vivid awareness; integration involves attending to these younger parts as distinct subselves rather than overriding them.",
+      "relatedTerms": ["shadow", "integration"]
+    },
+    {
+      "id": "rebus-model",
+      "term": "REBUS model",
+      "alternateNames": ["Relaxed Beliefs Under Psychedelics"],
+      "category": "framework",
+      "definition": "A neuroscientific framework proposed by Robin Carhart-Harris and Karl Friston (2019) describing how psychedelics produce therapeutic effects by relaxing high-level priors (long-held beliefs and expectations) and amplifying bottom-up sensory and emotional signaling. Predicts that experiences which surface and update entrenched belief patterns produce the most durable change — which is why integration matters more than the experience alone.",
+      "relatedTerms": ["default-mode-network", "integration"]
+    },
+    {
+      "id": "psychedelic-assisted-therapy",
+      "term": "Psychedelic-assisted therapy",
+      "alternateNames": ["PAT", "Psychedelic-assisted psychotherapy"],
+      "category": "practice",
+      "definition": "A clinical treatment model in which psychedelic substances (psilocybin, MDMA, ketamine) are administered in controlled settings as part of structured psychotherapy. Typical structure: 1-3 preparation sessions, a dosing session with two trained clinicians present, then multiple integration sessions over the following weeks. Active areas of FDA-supervised research as of 2026 include treatment-resistant depression, PTSD, alcohol use disorder, and end-of-life anxiety.",
+      "relatedTerms": ["integration", "harm-reduction"]
+    },
+    {
+      "id": "harm-reduction",
+      "term": "Harm reduction",
+      "category": "practice",
+      "definition": "A public-health philosophy and set of practices aimed at minimizing the negative consequences of substance use without requiring abstinence. In the psychedelic context: safe sourcing, dose verification, reagent testing, sober sitters, mental-health screening, and integration support. Organizations: DanceSafe, Zendo Project, MAPS Drug Education.",
+      "relatedTerms": ["trip-sitter", "setting", "difficult-experience"]
+    },
+    {
+      "id": "tolerance",
+      "term": "Tolerance (psilocybin)",
+      "category": "substance",
+      "definition": "Rapid cross-tolerance to the classical psychedelics (psilocybin, LSD, mescaline) develops within hours of dosing and persists for several days. A second psilocybin dose taken within 24 hours typically produces little additional effect even at higher doses. Most practitioners recommend at least 2-4 weeks between meaningful doses; longer intervals tend to produce richer experiences and better integration.",
+      "relatedTerms": ["microdosing", "macrodosing"]
+    },
+    {
+      "id": "entheogen",
+      "term": "Entheogen",
+      "category": "framework",
+      "definition": "From the Greek for 'generating the divine within' — a term coined in 1979 (Ruck, Bigwood, Staples, Ott, Wasson) for plants, fungi, and synthetic compounds used in religious or spiritual contexts. Includes psilocybin mushrooms, peyote, ayahuasca, LSD, DMT, iboga, and others. Used to distinguish ceremonial or spiritual use from recreational use without implying judgment on either.",
+      "relatedTerms": ["psilocybin", "mystical-experience"]
+    },
+    {
+      "id": "ineffability",
+      "term": "Ineffability",
+      "category": "experience",
+      "definition": "One of the six dimensions of mystical experience: the felt sense that the experience cannot be adequately described in words. Many people report partial or full ineffability after high-dose psilocybin sessions, often combined with frustration at the inadequacy of language. Integration practices like art-making, body movement, breath, and sound can express dimensions that words cannot.",
+      "relatedTerms": ["mystical-experience", "noetic-quality"]
+    },
+    {
+      "id": "noetic-quality",
+      "term": "Noetic quality",
+      "category": "experience",
+      "definition": "Another core dimension of mystical experience: the sense that genuine knowledge was gained — that the experience revealed truth beyond ordinary cognition. Often described as 'knowing' rather than 'thinking.' Distinguished from intellectual insight by certainty and depth. The noetic quality of psychedelic experiences is part of why they feel more 'real' than ordinary reality, and part of why integration is so important: a felt knowing that doesn't become a lived knowing tends to fade.",
+      "relatedTerms": ["mystical-experience", "ineffability", "integration"]
+    }
+  ]
+}

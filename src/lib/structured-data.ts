@@ -60,6 +60,49 @@ export function generateFAQSchema(faqs: FAQItem[], pageUrl?: string) {
 }
 
 /**
+ * DefinedTermSet schema — the canonical structure for glossary-style pages.
+ * AI engines (Claude, ChatGPT, Perplexity) and Google use DefinedTerm to
+ * recognize a page as the authoritative definition for a given concept.
+ *
+ * Each term renders as a DefinedTerm node with optional alternateName synonyms;
+ * the set is keyed by the page URL so engines can deep-link to a specific term.
+ */
+export interface DefinedTermInput {
+  /** Stable id used as the anchor fragment (e.g. "ego-dissolution"). */
+  id: string
+  /** Canonical term name. */
+  term: string
+  /** Synonyms / alternative spellings. */
+  alternateNames?: string[]
+  /** 50-150 word standalone definition (AI engines quote verbatim). */
+  definition: string
+}
+
+export function generateDefinedTermSetSchema(
+  setName: string,
+  setUrl: string,
+  description: string,
+  terms: DefinedTermInput[]
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "DefinedTermSet",
+    name: setName,
+    url: setUrl,
+    description,
+    hasDefinedTerm: terms.map((t) => ({
+      "@type": "DefinedTerm",
+      "@id": `${setUrl}#${t.id}`,
+      name: t.term,
+      ...(t.alternateNames && t.alternateNames.length > 0 && { alternateName: t.alternateNames }),
+      description: t.definition,
+      inDefinedTermSet: setUrl,
+      url: `${setUrl}#${t.id}`,
+    })),
+  }
+}
+
+/**
  * BreadcrumbList Schema for Navigation Context
  * Helps answer engines understand site hierarchy and navigation paths
  */
