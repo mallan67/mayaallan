@@ -263,6 +263,50 @@ export async function GET(
       )
     }
 
+    // SSRF defense: ebook_file_url is set by an admin on the book row. If that
+    // admin account is ever compromised, an attacker could repoint the URL at
+    // an internal address (cloud metadata, intranet) and exfil the response
+    // body through this stream. Restrict to https + the Vercel Blob host.
+    let parsedFileUrl: URL
+    try {
+      parsedFileUrl = new URL(book.ebook_file_url)
+    } catch {
+      await alertAdmin({
+        severity: "critical",
+        subject: "Download route: ebook_file_url is not a valid URL",
+        body: "book.ebook_file_url could not be parsed as a URL. Investigate the admin book page.",
+        details: { orderId, bookId },
+        dedupKey: `download:invalid-file-url:${bookId}`,
+      })
+      await compensateDecrement(tokenParam, { reason: "invalid-file-url", orderId, bookId })
+      return NextResponse.json(
+        { error: "Ebook file not available. Please contact support." },
+        { status: 500 }
+      )
+    }
+    const isVercelBlob =
+      parsedFileUrl.protocol === "https:" &&
+      (parsedFileUrl.hostname.endsWith(".public.blob.vercel-storage.com") ||
+        parsedFileUrl.hostname === "public.blob.vercel-storage.com")
+    if (!isVercelBlob) {
+      await alertAdmin({
+        severity: "critical",
+        subject: "Download route: ebook_file_url points outside Vercel Blob",
+        body:
+          "book.ebook_file_url resolved to a host that is not Vercel Blob. " +
+          "This may indicate an admin account compromise -- an attacker could " +
+          "repoint the URL to internal infrastructure to exfil data via the " +
+          "download stream. Refusing to fetch.",
+        details: { orderId, bookId, host: parsedFileUrl.hostname },
+        dedupKey: `download:non-vercel-blob:${bookId}`,
+      })
+      await compensateDecrement(tokenParam, { reason: "non-vercel-blob-host", orderId, bookId })
+      return NextResponse.json(
+        { error: "Ebook file not available. Please contact support." },
+        { status: 500 }
+      )
+    }
+
     // ------------------------------------------------------------------
     // 2) Stream the file through the function with Content-Disposition.
     // ------------------------------------------------------------------

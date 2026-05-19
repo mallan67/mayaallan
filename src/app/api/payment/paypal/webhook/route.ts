@@ -3,7 +3,8 @@ import { headers } from "next/headers"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { Resend } from "resend"
 import { alertAdmin } from "@/lib/alert-admin"
-import { extractWebhookHeaders, verifyPaypalWebhook } from "@/lib/paypal"
+import { apiBase, extractWebhookHeaders, getAccessToken, verifyPaypalWebhook } from "@/lib/paypal"
+import { siteUrl } from "@/lib/site-url"
 import { trackMarketingEvent } from "@/lib/marketing-events"
 import crypto from "crypto"
 
@@ -169,6 +170,36 @@ export async function POST(request: Request) {
         customerName = resource.payer?.name?.given_name
           ? `${resource.payer.name.given_name} ${resource.payer.name.surname || ""}`.trim()
           : null
+
+        // PayPal's PAYMENT.CAPTURE.COMPLETED payload does NOT include payer
+        // info -- only payee. When customerEmail is missing here, we fall
+        // back to a one-off GET on the order, which always includes the
+        // payer block. This makes the webhook self-sufficient regardless of
+        // which event subscriptions are configured in the PayPal dashboard.
+        // AbortSignal.timeout caps the extra call so the webhook can't hang.
+        if (!customerEmail && paypalOrderId) {
+          try {
+            const orderToken = await getAccessToken()
+            const orderRes = await fetch(
+              `${apiBase()}/v2/checkout/orders/${encodeURIComponent(paypalOrderId)}`,
+              {
+                headers: { Authorization: `Bearer ${orderToken}` },
+                signal: AbortSignal.timeout(10_000),
+              },
+            )
+            if (orderRes.ok) {
+              const orderData = await orderRes.json()
+              customerEmail = orderData?.payer?.email_address ?? customerEmail
+              if (!customerName && orderData?.payer?.name?.given_name) {
+                customerName = `${orderData.payer.name.given_name} ${orderData.payer.name.surname || ""}`.trim()
+              }
+            } else {
+              console.warn(`[paypal webhook] order fetch returned ${orderRes.status} for ${paypalOrderId}`)
+            }
+          } catch (fetchErr) {
+            console.error("[paypal webhook] order fetch failed:", fetchErr)
+          }
+        }
       } else if (body.event_type === "CHECKOUT.ORDER.COMPLETED") {
         // Checkout order completed
         const purchaseUnit = resource.purchase_units?.[0]
@@ -342,7 +373,6 @@ export async function POST(request: Request) {
               details: {
                 paypalOrderId,
                 bookId,
-                customerEmail,
                 amount,
                 currency,
                 errorCode: orderError?.code,
@@ -369,7 +399,7 @@ export async function POST(request: Request) {
             "An order row already existed for this PayPal order but no download " +
             "token was created — the previous webhook attempt crashed mid-flight. " +
             "Resuming token creation + email delivery now.",
-          details: { orderId: order.id, paypalOrderId, customerEmail },
+          details: { orderId: order.id, paypalOrderId },
           dedupKey: `paypal:resume-fulfillment:${paypalOrderId}`,
         })
       }
@@ -458,7 +488,7 @@ export async function POST(request: Request) {
               severity: "critical",
               subject: "PayPal order completed but token creation FAILED",
               body: `A customer paid but download-token creation failed. Manual fulfillment required.`,
-              details: { orderId: order.id, customerEmail, bookTitle: book.title, errorCode: tokenError?.code },
+              details: { orderId: order.id, paypalOrderId, bookId: book.id, errorCode: tokenError?.code },
               dedupKey: `paypal:token-insert-failed:${paypalOrderId}`,
             })
             return NextResponse.json({
@@ -561,7 +591,7 @@ export async function POST(request: Request) {
 
         // claimResult.status === "ok" — we are the sole worker authorized
         // to send the email for this token. NEVER log the token value.
-        const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/download/${tokenValue}`
+        const downloadUrl = `${siteUrl()}/download/${tokenValue}`
 
         const emailResult = await sendPurchaseEmail({
           customerEmail,
@@ -590,8 +620,8 @@ export async function POST(request: Request) {
               "link manually.",
             details: {
               orderId: order.id,
-              customerEmail,
-              bookTitle: book.title,
+              paypalOrderId,
+              bookId: book.id,
               resendError: emailResult.error,
             },
             dedupKey: `paypal:email-failed:${paypalOrderId}`,

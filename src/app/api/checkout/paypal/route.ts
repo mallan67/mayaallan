@@ -28,6 +28,7 @@ import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, getAccessToken, safePaypalEnvLabel } from "@/lib/paypal"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { trackMarketingEvent, snapshotAttributionFromRequest } from "@/lib/marketing-events"
+import { siteUrl } from "@/lib/site-url"
 import { createHash } from "node:crypto"
 import { z } from "zod"
 
@@ -152,8 +153,8 @@ export async function POST(request: Request) {
             // /v2/checkout/orders/<id>/capture, then redirects the customer
             // to /books/<slug>?payment=success. PayPal appends &token=<orderId>
             // and &PayerID=<...> automatically.
-            return_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/checkout/paypal/return?bookSlug=${encodeURIComponent(book.slug)}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/books/${book.slug}?payment=cancelled`,
+            return_url: `${siteUrl()}/api/checkout/paypal/return?bookSlug=${encodeURIComponent(book.slug)}`,
+            cancel_url: `${siteUrl()}/books/${book.slug}?payment=cancelled`,
           },
         }),
       }

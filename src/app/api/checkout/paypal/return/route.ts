@@ -33,16 +33,13 @@ import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, getAccessToken, safePaypalEnvLabel } from "@/lib/paypal"
 import { supabaseAdmin } from "@/lib/supabaseAdmin"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { siteUrl } from "@/lib/site-url"
 import { createHash } from "node:crypto"
 
 export const runtime = "nodejs"
 
 /** Window (ms) within which a pending_paypal_orders row is considered fresh. */
 const PENDING_ORDER_TTL_MS = 60 * 60 * 1000 // 1 hour
-
-function siteUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-}
 
 function safeSlug(s: string | null): string | null {
   if (!s) return null
