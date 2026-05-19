@@ -62,9 +62,28 @@ export async function executeRun(): Promise<
   let citationHits = 0
   let errors = 0
 
+  // Sequential prompts × parallel engines per prompt.
+  //
+  // Why this layout: most of the wall-clock cost is the LLM response latency
+  // (2-5 sec per call). Running all four engines for a single prompt in
+  // parallel collapses each prompt's time to "the slowest engine" instead of
+  // "sum of all engines". For 25 prompts × 4 engines that's roughly
+  //   25 × max_engine_time ≈ 1-2 minutes
+  // instead of
+  //   25 × sum_engine_times ≈ 4-8 minutes (would hit Vercel's 5-min cap).
+  //
+  // We keep prompts sequential to avoid hammering any single provider's
+  // per-minute rate limit (each provider only sees 1 in-flight request from
+  // us at a time, even though up to 4 providers run concurrently).
   for (const prompt of prompts) {
-    for (const { name, fn } of engineFns) {
-      const result = await fn(prompt.text)
+    const settled = await Promise.all(
+      engineFns.map(async ({ name, fn }) => {
+        const result = await fn(prompt.text)
+        return { name, result }
+      })
+    )
+
+    for (const { name, result } of settled) {
       if (result === null) continue // engine not configured — silently skip
 
       if (!enginesRun.includes(name)) enginesRun.push(name)
