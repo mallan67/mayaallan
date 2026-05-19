@@ -39,14 +39,11 @@ export function PaymentButtons({
   const [loadingPayPal, setLoadingPayPal] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const startCheckout = async (
-    endpoint: "/api/checkout/stripe" | "/api/checkout/paypal",
-    setLoading: (v: boolean) => void,
-  ) => {
-    setLoading(true)
+  const startStripeCheckout = async () => {
+    setLoadingStripe(true)
     setError(null)
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch("/api/checkout/stripe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookId }),
@@ -56,16 +53,26 @@ export function PaymentButtons({
         window.location.href = data.url
       } else {
         setError(data.error || "Failed to create checkout session")
-        setLoading(false)
+        setLoadingStripe(false)
       }
     } catch {
       setError("Something went wrong. Please try again.")
-      setLoading(false)
+      setLoadingStripe(false)
     }
   }
 
-  const handleStripeCheckout = () => startCheckout("/api/checkout/stripe", setLoadingStripe)
-  const handlePayPalCheckout = () => startCheckout("/api/checkout/paypal", setLoadingPayPal)
+  // PayPal now routes through the /checkout/privacy-gate page rather than
+  // POSTing directly. The gate forces explicit "this is my PayPal account"
+  // confirmation, clears any client-side checkout state, and then opens
+  // PayPal in a popup via SDK v6 (with a redirect fallback).
+  const goToPrivacyGate = () => {
+    setLoadingPayPal(true)
+    setError(null)
+    window.location.href = `/checkout/privacy-gate?bookId=${encodeURIComponent(String(bookId))}`
+  }
+
+  const handleStripeCheckout = startStripeCheckout
+  const handlePayPalCheckout = goToPrivacyGate
 
   // Shared lock-icon SVG. Single inline source avoids a network request and
   // platform emoji-rendering inconsistencies.

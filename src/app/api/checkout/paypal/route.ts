@@ -306,7 +306,11 @@ export async function POST(request: Request) {
       console.error("[checkout] tracking failed:", trackErr)
     }
 
-    return NextResponse.json({ url: approvalUrl })
+    // Return BOTH url (for legacy redirect flow) AND orderId (for the
+    // SDK v6 popup flow). The privacy-gate page uses orderId to feed into
+    // sdkInstance.createPayPalOneTimePaymentSession; the legacy fallback
+    // (popup blocked / SDK init failed) uses url for a full-page redirect.
+    return NextResponse.json({ url: approvalUrl, orderId: paypalOrderId })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid request data", details: error.issues }, { status: 400 })
