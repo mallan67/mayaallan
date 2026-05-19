@@ -25,6 +25,10 @@ export interface FaqQuestion {
 
 export interface FaqData {
   title: string
+  /** Optional short version of title — used as the visible H1 / breadcrumb when set. */
+  shortTitle?: string
+  /** Optional tagline displayed under the H1 (sub-headline above the lead paragraph). */
+  tagline?: string
   description: string
   categories: FaqCategory[]
   questions: FaqQuestion[]
@@ -37,6 +41,8 @@ export async function loadFaq(): Promise<FaqData> {
   const parsed = JSON.parse(raw)
   return {
     title: String(parsed.title ?? "Frequently Asked Questions"),
+    shortTitle: parsed.shortTitle ? String(parsed.shortTitle) : undefined,
+    tagline: parsed.tagline ? String(parsed.tagline) : undefined,
     description: String(parsed.description ?? ""),
     categories: Array.isArray(parsed.categories) ? parsed.categories : [],
     questions: Array.isArray(parsed.questions) ? parsed.questions : [],

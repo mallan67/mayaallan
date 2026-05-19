@@ -1,7 +1,9 @@
 {
   "$schema": "Structured FAQ data — drives /faq page + emits FAQPage JSON-LD for AI citation. Edit answers here, page auto-updates.",
-  "title": "Frequently Asked Questions",
-  "description": "Short, research-informed answers to the most common questions about psilocybin journeys, integration, set and setting, shadow work, inner child healing, and safety. Adapted from Maya Allan's Psilocybin Integration Guide.",
+  "title": "Reader Questions — Psilocybin Integration Guide",
+  "shortTitle": "Reader Questions",
+  "tagline": "Short answers from the book",
+  "description": "Short, research-informed answers to the most common reader questions from Psilocybin Integration Guide by Maya Allan — covering preparation, ego dissolution, integration, set and setting, shadow work, inner child healing, trauma, and safety.",
   "categories": [
     { "id": "preparation",   "label": "Preparation"    },
     { "id": "journey",       "label": "During the Journey" },

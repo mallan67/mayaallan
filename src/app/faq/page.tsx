@@ -72,18 +72,31 @@ export default async function FaqPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }} />
 
-      {/* Breadcrumb */}
+      {/* Breadcrumb — uses the shortTitle so the trail reads cleanly */}
       <nav className="text-sm text-slate-500 mb-6" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-slate-700">Home</Link>
         <span className="mx-2">/</span>
-        <span>FAQ</span>
+        <Link href="/books/psilocybin-integration-guide" className="hover:text-slate-700">
+          Psilocybin Integration Guide
+        </Link>
+        <span className="mx-2">/</span>
+        <span>{faq.shortTitle ?? "FAQ"}</span>
       </nav>
 
       <header className="mb-10">
+        {/* "From the book" eyebrow tag — links back to the book detail page */}
+        <p className="text-xs uppercase tracking-wider font-semibold text-blue-700 mb-3">
+          <Link href="/books/psilocybin-integration-guide" className="hover:underline">
+            From Psilocybin Integration Guide
+          </Link>
+        </p>
         <h1 className="font-serif text-4xl md:text-5xl font-bold leading-tight text-slate-900">
-          {faq.title}
+          {faq.shortTitle ?? faq.title}
         </h1>
-        <p className="mt-5 text-lg text-slate-600 leading-relaxed max-w-3xl">
+        {faq.tagline && (
+          <p className="mt-3 text-lg italic text-slate-500">{faq.tagline}</p>
+        )}
+        <p className="mt-5 text-base md:text-lg text-slate-600 leading-relaxed max-w-3xl">
           {faq.description}
         </p>
       </header>
