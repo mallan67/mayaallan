@@ -45,6 +45,12 @@ import matter from "gray-matter"
 //                    practitioners. Used for cross-linking related scenarios.
 //
 //   tags:            Free-form tags for filtering.
+//
+//   draft:           Optional bool. If true, the scenario is HIDDEN from the
+//                    public index, the sitemap, and the /scenarios collection
+//                    schema — but its URL still resolves (so you can preview
+//                    it). The detail page emits a `noindex` meta tag for
+//                    drafts. Flip to false (or remove the field) to publish.
 // =============================================================================
 
 export type ScenarioCategory = "preparation" | "journey" | "integration" | "safety" | "practitioners"
@@ -71,6 +77,8 @@ export interface ScenarioFrontmatter {
   faqs?: ScenarioFAQ[]
   category: ScenarioCategory
   tags?: string[]
+  /** Hidden from listings/sitemap but reachable by direct URL (with noindex). */
+  draft?: boolean
 }
 
 export type ScenarioSummary = ScenarioFrontmatter & {
@@ -117,10 +125,16 @@ function parseFrontmatter(data: Record<string, unknown>, slug: string): Scenario
       ? String(data.category)
       : "integration") as ScenarioCategory,
     tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
+    draft: data.draft === true,
   }
 }
 
-export async function listScenarios(): Promise<ScenarioSummary[]> {
+export interface ListScenariosOptions {
+  /** Include `draft: true` scenarios in the result. Default: false. */
+  includeDrafts?: boolean
+}
+
+export async function listScenarios(options: ListScenariosOptions = {}): Promise<ScenarioSummary[]> {
   let files: string[]
   try {
     files = await fs.readdir(SCENARIOS_DIR)
@@ -139,7 +153,11 @@ export async function listScenarios(): Promise<ScenarioSummary[]> {
   // Sort by date, newest first. If you'd rather sort by filename prefix to keep
   // book-order, swap this for: summaries.sort((a, b) => a.slug.localeCompare(b.slug))
   summaries.sort((a, b) => (a.datePublished < b.datePublished ? 1 : -1))
-  return summaries
+
+  // Hide drafts from public listings (sitemap + /scenarios index). Drafts are
+  // still reachable via direct URL — see getScenario + the noindex meta tag in
+  // src/app/scenarios/[slug]/page.tsx.
+  return options.includeDrafts ? summaries : summaries.filter((s) => !s.draft)
 }
 
 export async function getScenario(slug: string): Promise<ScenarioFull | null> {

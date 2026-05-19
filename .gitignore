@@ -13,3 +13,10 @@ nul
 .claude/
 !.env.example
 
+# Per-script output (extraction reports, source-content reference files
+# containing verbatim book text — kept locally, never published or committed).
+scripts/output/
+
+# Debug HTML from one-off search engine fetches.
+google-*.html
+

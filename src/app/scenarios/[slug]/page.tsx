@@ -77,6 +77,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     keywords: scenario.keywords,
     authors: [{ name: AUTHOR_NAME, url: SITE_URL }],
     alternates: { canonical: url },
+    // Drafts: keep the URL reachable for preview but tell crawlers to stay out.
+    // The page also visually marks itself as a draft below.
+    ...(scenario.draft && {
+      robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+    }),
     openGraph: {
       type: "article",
       title: titleForSearch,
@@ -165,6 +170,17 @@ export default async function ScenarioPage({ params }: PageProps) {
         <span className="mx-2">/</span>
         <Link href="/scenarios" className="hover:text-slate-700">Scenarios</Link>
       </nav>
+
+      {/* Draft banner — visible to anyone with the URL, search-engine-noindexed
+          via the metadata above. Remove `draft: true` from the .md frontmatter
+          to publish. */}
+      {scenario.draft && (
+        <div className="mb-6 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900">
+          <strong>DRAFT — not published.</strong> This page is hidden from the public
+          scenarios index and search engines. Remove <code className="bg-amber-100 px-1 rounded">draft: true</code>
+          {" "}from the markdown frontmatter to publish.
+        </div>
+      )}
 
       {/* H1 — the exact user query */}
       <h1 className="font-serif text-3xl md:text-4xl font-bold leading-tight text-slate-900">
