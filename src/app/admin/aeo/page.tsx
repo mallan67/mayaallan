@@ -43,6 +43,9 @@ export default async function AeoDashboardPage() {
   const byPrompt = aggregateByPrompt(rows)
   const byUrl = aggregateByUrl(rows)
   const recentHits = rows.filter((r) => r.was_cited).slice(0, 25)
+  // Surface recent errors so they're diagnosable from the dashboard.
+  // Group by (engine, error message) so we don't repeat the same error 25 times.
+  const recentErrors = aggregateErrors(rows)
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -202,6 +205,35 @@ export default async function AeoDashboardPage() {
         )}
       </section>
 
+      {/* RECENT ERRORS — surfaced so failures are diagnosable from the UI */}
+      {recentErrors.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-lg font-semibold text-slate-900 mb-3">Recent errors</h2>
+          <p className="text-xs text-slate-500 mb-3">
+            Grouped by engine + error message. If every probe of an engine errored, the cause is
+            usually the API key, the model name, or a quota limit.
+          </p>
+          <div className="space-y-2">
+            {recentErrors.map((e, i) => (
+              <div
+                key={`${e.engine}-${i}`}
+                className="p-3 border border-red-200 rounded-lg bg-red-50/40 text-sm"
+              >
+                <div className="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                  <span className="px-2 py-0.5 bg-slate-100 rounded font-medium uppercase">
+                    {e.engine}
+                  </span>
+                  <span>×{e.count}</span>
+                </div>
+                <pre className="text-xs text-red-900 whitespace-pre-wrap break-words font-mono">
+                  {e.message}
+                </pre>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* RECENT HITS */}
       <section className="mb-10">
         <h2 className="text-lg font-semibold text-slate-900 mb-3">Recent excerpts</h2>
@@ -295,6 +327,20 @@ function aggregateByPrompt(rows: Row[]) {
   return Array.from(map.entries())
     .map(([promptId, m]) => ({ promptId, ...m, rate: m.total ? (m.hits / m.total) * 100 : 0 }))
     .sort((a, b) => b.rate - a.rate)
+}
+
+function aggregateErrors(rows: Row[]): Array<{ engine: string; message: string; count: number }> {
+  const map = new Map<string, { engine: string; message: string; count: number }>()
+  for (const r of rows) {
+    if (!r.error) continue
+    const key = `${r.engine}::${r.error}`
+    const existing = map.get(key)
+    if (existing) existing.count++
+    else map.set(key, { engine: r.engine, message: r.error, count: 1 })
+  }
+  return Array.from(map.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10)
 }
 
 function aggregateByUrl(rows: Row[]) {

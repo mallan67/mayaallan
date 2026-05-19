@@ -155,7 +155,10 @@ export async function queryGemini(prompt: string): Promise<EngineResponse | null
   const key = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
   if (!key) return null
 
-  const model = "gemini-2.0-flash"
+  // Use the same model the rest of the site's AI tools use (per
+  // src/app/api/chat/route.ts) so this works with the existing Gemini key
+  // without quota surprises.
+  const model = "gemini-2.5-flash"
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`
     const res = await fetch(url, {
