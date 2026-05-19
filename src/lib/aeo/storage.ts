@@ -1,5 +1,5 @@
 import "server-only"
-import { put, list } from "@vercel/blob"
+import { put, list, del } from "@vercel/blob"
 
 // =============================================================================
 // AEO storage — Vercel Blob backend.
@@ -118,6 +118,67 @@ export async function loadRecentRuns(limit = 30): Promise<AeoRun[]> {
   )
 
   return runs.filter((r): r is AeoRun => r !== null)
+}
+
+/**
+ * Default retention — how many of the most recent runs to keep before
+ * auto-pruning. Override via env: AEO_KEEP_RUNS=52 for a year of weekly runs.
+ *
+ * Storage at default (26 runs × ~50KB) = ~1.3MB. Free tier (1GB) is wildly
+ * larger than this needs, but keeping a rolling window keeps the dashboard
+ * scannable and bounds list/fetch latency.
+ */
+export const DEFAULT_KEEP_RUNS = 26
+
+function configuredKeepCount(): number {
+  const raw = process.env.AEO_KEEP_RUNS
+  if (!raw) return DEFAULT_KEEP_RUNS
+  const n = Number.parseInt(raw, 10)
+  if (!Number.isFinite(n) || n < 1) return DEFAULT_KEEP_RUNS
+  return n
+}
+
+/**
+ * Delete every run blob beyond the most recent `keep`. Returns the number
+ * of blobs deleted. Safe to call from the runner after every successful
+ * save — caps storage growth and keeps the dashboard fast.
+ *
+ * Silently no-ops on Blob errors so a transient prune failure can't tank
+ * a successful run.
+ */
+export async function pruneOldRuns(keep: number = configuredKeepCount()): Promise<number> {
+  try {
+    // Pull a generous window so we don't miss any old blobs.
+    const listing = await list({ prefix: RUN_PREFIX, limit: 1000 })
+    const sorted = [...listing.blobs].sort((a, b) =>
+      a.pathname < b.pathname ? 1 : a.pathname > b.pathname ? -1 : 0
+    )
+    const toDelete = sorted.slice(keep)
+    if (toDelete.length === 0) return 0
+    await del(toDelete.map((b) => b.url))
+    return toDelete.length
+  } catch (err) {
+    console.warn("[aeo] pruneOldRuns failed (non-fatal):", err)
+    return 0
+  }
+}
+
+/**
+ * Delete EVERY AEO run blob. Used by the admin "Clear all" button.
+ * Returns the number of blobs deleted.
+ */
+export async function deleteAllRuns(): Promise<number> {
+  let total = 0
+  // list() paginates implicitly at 1000 — loop in case there are more.
+  // Defensive: also bound the loop so we can't infinite-loop on a bug.
+  for (let i = 0; i < 50; i++) {
+    const listing = await list({ prefix: RUN_PREFIX, limit: 1000 })
+    if (listing.blobs.length === 0) break
+    await del(listing.blobs.map((b) => b.url))
+    total += listing.blobs.length
+    if (listing.blobs.length < 1000) break
+  }
+  return total
 }
 
 /** Flatten rows across multiple runs — useful for cross-run aggregations. */

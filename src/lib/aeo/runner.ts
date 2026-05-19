@@ -9,7 +9,7 @@ import {
   queryGemini,
   type EngineResponse,
 } from "@/lib/aeo/engines"
-import { saveRun, type AeoRun, type CitationRow } from "@/lib/aeo/storage"
+import { saveRun, pruneOldRuns, type AeoRun, type CitationRow } from "@/lib/aeo/storage"
 
 // =============================================================================
 // AEO probe runner — shared by:
@@ -31,6 +31,8 @@ export interface RunSummary {
   citationHits: number
   errors: number
   blobPath?: string
+  /** Number of old runs auto-deleted by retention policy after this run. */
+  prunedOldRuns?: number
   storageError?: string
 }
 
@@ -147,9 +149,14 @@ export async function executeRun(): Promise<
 
   let storageError: string | undefined
   let blobPath: string | undefined
+  let pruned: number | undefined
   try {
     const blobUrl = await saveRun(aeoRun)
     blobPath = new URL(blobUrl).pathname
+    // Best-effort prune of older runs so storage doesn't grow unbounded.
+    // pruneOldRuns is wrapped in its own try/catch so a prune failure can't
+    // mask the success of the save.
+    pruned = await pruneOldRuns()
   } catch (err) {
     storageError = err instanceof Error ? err.message : String(err)
   }
@@ -166,6 +173,7 @@ export async function executeRun(): Promise<
       citationHits,
       errors,
       ...(blobPath && { blobPath }),
+      ...(typeof pruned === "number" && pruned > 0 && { prunedOldRuns: pruned }),
       ...(storageError && { storageError }),
     },
   }

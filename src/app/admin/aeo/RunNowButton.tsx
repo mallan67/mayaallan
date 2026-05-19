@@ -38,12 +38,28 @@ export function RunNowButton() {
     setResult(null)
     try {
       const res = await fetch("/api/admin/aeo/run-now", { method: "POST" })
-      const body = await res.json()
+
+      // Vercel function timeouts return plain text ("An error occurred...")
+      // rather than JSON. Detect that explicitly so the user sees a useful
+      // message instead of "Unexpected token 'A'..." from a failed JSON parse.
+      const contentType = res.headers.get("content-type") ?? ""
+      const isJson = contentType.includes("application/json")
+      const raw = await res.text()
+
+      if (!isJson) {
+        if (res.status === 504 || /timeout|timed out|FUNCTION_INVOCATION_TIMEOUT/i.test(raw)) {
+          throw new Error(
+            "Probe timed out (Vercel 5-min function limit). Too many engines × prompts for one run. Try fewer engines or shorter prompts."
+          )
+        }
+        throw new Error(`Server returned ${res.status} ${res.statusText}: ${raw.slice(0, 200)}`)
+      }
+
+      const body = JSON.parse(raw)
       if (!res.ok) {
         throw new Error(body?.error ?? `HTTP ${res.status}`)
       }
       setResult(body as RunSummary)
-      // Reload server components so the new run shows up in the tables.
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))

@@ -20,6 +20,7 @@ import { redirect } from "next/navigation"
 import { loadRecentRuns, allRows, type CitationRow, type AeoRun } from "@/lib/aeo/storage"
 import { RunNowButton } from "./RunNowButton"
 import { CopyButton } from "./CopyButton"
+import { ClearAllButton } from "./ClearAllButton"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -79,6 +80,11 @@ export default async function AeoDashboardPage() {
 
         {/* Trigger a probe from the dashboard — no terminal needed. */}
         <RunNowButton />
+
+        {/* Manual cleanup. Auto-prune already keeps a rolling window of
+            ~6 months (AEO_KEEP_RUNS env var, default 26 runs); this button is
+            the "start fresh" hammer for when the history is cluttered. */}
+        <ClearAllButton runCount={runs.length} />
       </header>
 
       {/* CITATION RATE BY ENGINE */}
