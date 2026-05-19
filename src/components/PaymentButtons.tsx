@@ -26,8 +26,12 @@ interface PaymentButtonsProps {
 
 export function PaymentButtons({
   bookId,
-  hasStripe = true,
-  hasPayPal = false,
+  // Stripe button is hidden by default while the Stripe Link cross-merchant
+  // session behavior (and Stripe's 5-10-business-day card refund timing)
+  // are evaluated. The Stripe integration code is fully shipped and live —
+  // pass `hasStripe={true}` from the call site to re-enable.
+  hasStripe = false,
+  hasPayPal = true,
   formatLabel = "Ebook",
   priceLabel,
 }: PaymentButtonsProps) {
@@ -144,7 +148,7 @@ export function PaymentButtons({
         </div>
       )}
       <p className="text-xs text-slate-500">
-        Secure payment via Stripe. {formatLabel} download link emailed immediately after purchase.
+        Secure payment via PayPal. {formatLabel} download link emailed immediately after purchase.
       </p>
     </div>
   )
