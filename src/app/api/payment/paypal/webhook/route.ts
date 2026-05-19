@@ -126,6 +126,23 @@ export async function POST(request: Request) {
       const resource = body.resource
       console.log("PayPal webhook event:", body.event_type)
 
+      // Silently skip session-export events. PayPal delivers each capture
+      // event to every webhook subscription on the app, so session-PDF
+      // captures (custom_id = `blobKey|tool`) arrive at this URL too.
+      // Without this short-circuit they fall through to "No book ID in
+      // payment data" which 400s, causing PayPal to retry up to 25× and
+      // firing repeated CRITICAL admin alerts. Pipe-separated ids belong
+      // to /api/export/webhook.
+      const rawCustomId: string | null =
+        body.event_type === "PAYMENT.CAPTURE.COMPLETED"
+          ? resource?.custom_id ?? null
+          : body.event_type === "CHECKOUT.ORDER.COMPLETED"
+          ? resource?.purchase_units?.[0]?.custom_id ?? null
+          : resource?.custom ?? null
+      if (typeof rawCustomId === "string" && rawCustomId.includes("|")) {
+        return NextResponse.json({ received: true, ignored: "session-export" })
+      }
+
       // Extract book ID from custom_id (modern) or custom (legacy)
       let bookId: number | null = null
       let customerEmail: string | null = null

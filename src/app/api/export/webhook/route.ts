@@ -41,9 +41,13 @@ export async function POST(req: NextRequest) {
   const rawBody = await req.text()
   const headers = extractWebhookHeaders(req)
 
+  // Verify against PAYPAL_EXPORT_WEBHOOK_ID (this route's own subscription),
+  // NOT the book-purchase PAYPAL_WEBHOOK_ID. Falls back to the default
+  // PAYPAL_WEBHOOK_ID inside verifyPaypalWebhook() only if the export-
+  // specific ID isn't set — in production that fallback should never apply.
   let verified = false
   try {
-    verified = await verifyPaypalWebhook(headers, rawBody)
+    verified = await verifyPaypalWebhook(headers, rawBody, process.env.PAYPAL_EXPORT_WEBHOOK_ID)
   } catch (err) {
     console.error("PayPal webhook verification error:", err)
     // Verification threw — most likely a network error talking to PayPal, but
@@ -115,6 +119,15 @@ export async function POST(req: NextRequest) {
       dedupKey: "export:missing-custom-id",
     })
     return NextResponse.json({ error: "Missing custom_id" }, { status: 400 })
+  }
+
+  // Silently skip book-purchase events. PayPal delivers each capture event to
+  // every webhook subscription on the app, so book captures (custom_id = the
+  // numeric book row id) arrive at this URL too. Without this short-circuit
+  // they fall through to the "unparseable custom_id" CRITICAL alert below
+  // every time a book sells. Numeric ids belong to /api/payment/paypal/webhook.
+  if (/^\d+$/.test(customId)) {
+    return NextResponse.json({ received: true, ignored: "book-purchase" })
   }
 
   const decoded = decodeCustomId(customId)

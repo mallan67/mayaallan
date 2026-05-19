@@ -287,9 +287,25 @@ export function extractWebhookHeaders(req: {
   }
 }
 
+/**
+ * Verify a PayPal webhook signature.
+ *
+ * `webhookId` resolves in this order:
+ *   1. Explicit `webhookId` argument (use this when a route needs to verify
+ *      against a non-default webhook subscription — e.g. the session-export
+ *      webhook has its own PAYPAL_EXPORT_WEBHOOK_ID).
+ *   2. `PAYPAL_WEBHOOK_ID` env var (the default — the book-purchase webhook).
+ *
+ * PayPal allows multiple webhook subscriptions on the same REST app, each
+ * with its own ID. The signature in incoming headers is bound to the
+ * specific webhook the event was delivered to, so each route MUST verify
+ * against its own ID — using the wrong ID returns FAILURE indistinguishably
+ * from a tampered body.
+ */
 export async function verifyPaypalWebhook(
   headers: PaypalWebhookHeaders,
-  rawBody: string
+  rawBody: string,
+  webhookId?: string,
 ): Promise<boolean> {
   if (
     !headers.authAlgo ||
@@ -301,7 +317,7 @@ export async function verifyPaypalWebhook(
     return false
   }
 
-  const webhookId = ensureEnv("PAYPAL_WEBHOOK_ID")
+  const resolvedWebhookId = webhookId?.trim() || ensureEnv("PAYPAL_WEBHOOK_ID")
   const token = await getAccessToken()
 
   let webhookEvent: unknown
@@ -323,7 +339,7 @@ export async function verifyPaypalWebhook(
       transmission_id: headers.transmissionId,
       transmission_sig: headers.transmissionSig,
       transmission_time: headers.transmissionTime,
-      webhook_id: webhookId,
+      webhook_id: resolvedWebhookId,
       webhook_event: webhookEvent,
     }),
   })
