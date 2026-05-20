@@ -3,7 +3,7 @@ import { headers } from "next/headers"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { Resend } from "resend"
 import { alertAdmin } from "@/lib/alert-admin"
-import { apiBase, extractWebhookHeaders, getAccessToken, verifyPaypalWebhook } from "@/lib/paypal"
+import { apiBase, extractWebhookHeaders, getAccessToken, safePaypalEnvLabel, verifyPaypalWebhook } from "@/lib/paypal"
 import { siteUrl } from "@/lib/site-url"
 import { trackMarketingEvent } from "@/lib/marketing-events"
 import crypto from "crypto"
@@ -138,26 +138,94 @@ export async function POST(request: Request) {
   }
   if (!isVerified) {
     console.error("PayPal webhook verification failed (real-shaped request)")
-    // Real PayPal-shaped request that failed verification. Almost always
-    // means PAYPAL_WEBHOOK_ID in Vercel doesn't match the webhook ID PayPal
-    // used to sign this event — i.e. the env var is pointing at a different
-    // webhook subscription than the one PayPal delivered to.
+
+    // Classify the failure by comparing the cert-URL host (which PayPal env
+    // SIGNED the event) against our configured PAYPAL_ENV (which env WE
+    // think we're talking to). The two main flavors of "real-shaped but
+    // didn't verify" have very different remediations:
+    //
+    //   • Cross-env (e.g. sandbox-signed event arriving at a live endpoint):
+    //     a webhook subscription still exists in the OTHER PayPal app
+    //     pointing at this URL. Verification CAN NEVER succeed (live and
+    //     sandbox verify endpoints can't validate each other's signatures),
+    //     so PayPal retrying the same event 25× over 3 days produces a
+    //     dedup-busting flood. Action: delete the stale subscription in the
+    //     other PayPal dashboard.
+    //
+    //   • Same-env: cert-URL host matches our env. The PAYPAL_WEBHOOK_ID env
+    //     var doesn't match the subscription PayPal signed with. Action: fix
+    //     the env var to match the webhook ID shown in the PayPal dashboard.
+    //
+    // Either way: return 200, not 401. 401 (and any non-2xx) makes PayPal
+    // retry the same unverifiable event up to 25× over 3 days, and every
+    // retry that lands on a cold-started Vercel instance gets past the
+    // in-memory alertAdmin dedup → email flood. 200 stops the retry storm;
+    // the alert (with a 24h env-pair-scoped dedup key) is the actionable
+    // surface for the operator.
+    let certHost: string | null = null
+    try {
+      certHost = certUrl ? new URL(certUrl).host : null
+    } catch {
+      certHost = null
+    }
+    const signedByEnv: "live" | "sandbox" | "unknown" = certHost
+      ? certHost.endsWith("sandbox.paypal.com")
+        ? "sandbox"
+        : certHost.endsWith("paypal.com")
+        ? "live"
+        : "unknown"
+      : "unknown"
+    const ourEnv = safePaypalEnvLabel()
+    const isCrossEnv =
+      (signedByEnv === "sandbox" && ourEnv === "live") ||
+      (signedByEnv === "live" && ourEnv === "sandbox")
+
+    if (isCrossEnv) {
+      await alertAdmin({
+        severity: "warning",
+        subject: `PayPal webhook: cross-env delivery (${signedByEnv} → ${ourEnv})`,
+        body:
+          `A PayPal webhook signed by ${signedByEnv.toUpperCase()} arrived at this ` +
+          `${ourEnv.toUpperCase()} endpoint. Verification cannot succeed across PayPal ` +
+          `environments. Most likely the ${signedByEnv} PayPal app still has an active ` +
+          `webhook subscription pointed at this URL — log into PayPal Developer → ` +
+          `${signedByEnv === "sandbox" ? "Sandbox" : "Live"} → your app → Webhooks and ` +
+          `delete the subscription. Returning 200 to stop PayPal's retry storm; the ` +
+          `underlying ${signedByEnv} capture/order isn't ours to fulfill from ${ourEnv}.`,
+        details: {
+          ourEnv,
+          signedByEnv,
+          certUrlHost: certHost,
+          transmissionIdPrefix: transmissionId?.slice(0, 12) ?? null,
+        },
+        dedupKey: `paypal:cross-env:${signedByEnv}-to-${ourEnv}`,
+        dedupWindowMs: 24 * 60 * 60 * 1000,
+      })
+      return NextResponse.json({ received: true, ignored: "cross-env-webhook" })
+    }
+
+    // Same-env (or unknown cert host) — genuine config mismatch or tampering.
     await alertAdmin({
       severity: "critical",
       subject: "PayPal webhook signature verification failed (real-shaped)",
       body:
         "A real-shaped PayPal webhook (with valid paypal-* headers) failed signature " +
-        "verification. The PAYPAL_WEBHOOK_ID env var almost certainly does not match the " +
-        "webhook subscription ID PayPal used to sign this event. Verify the value of " +
-        "PAYPAL_WEBHOOK_ID against the webhook IDs listed in PayPal Developer → Live → " +
-        "your app → Webhooks.",
+        "verification, and the cert URL host matches our configured PAYPAL_ENV — so this " +
+        "isn't a cross-environment leak. The PAYPAL_WEBHOOK_ID env var almost certainly " +
+        "does not match the webhook subscription ID PayPal used to sign this event. " +
+        `Verify the value of PAYPAL_WEBHOOK_ID against the webhook IDs listed in PayPal ` +
+        `Developer → ${ourEnv === "live" ? "Live" : "Sandbox"} → your app → Webhooks. ` +
+        "Returning 200 to stop PayPal's retry storm; until the env var is fixed, every " +
+        "subsequent event will fail the same way.",
       details: {
-        certUrlHost: certUrl ? new URL(certUrl).host : null,
+        ourEnv,
+        certUrlHost: certHost,
         transmissionIdPrefix: transmissionId?.slice(0, 12) ?? null,
       },
-      dedupKey: "paypal:signature-failure",
+      dedupKey: `paypal:signature-failure:${ourEnv}`,
+      dedupWindowMs: 24 * 60 * 60 * 1000,
     })
-    return NextResponse.json({ error: "Invalid webhook signature" }, { status: 401 })
+    return NextResponse.json({ received: true, ignored: "verification-failed" })
   }
 
   try {

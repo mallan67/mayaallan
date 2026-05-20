@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import {
   decodeCustomId,
   extractWebhookHeaders,
+  safePaypalEnvLabel,
   verifyPaypalWebhook,
 } from "@/lib/paypal"
 import { renderAndEmailSessionPdf } from "@/lib/deliver-pdf"
@@ -75,19 +76,72 @@ export async function POST(req: NextRequest) {
     })
   }
   if (!verified) {
-    // Heavily dedup'd — webhook endpoints get probed by bots constantly.
-    // Without dedup this would email Maya every few seconds.
+    // Classify by cert-URL host vs configured PAYPAL_ENV (same logic as the
+    // book-purchase webhook — see comment there for the full reasoning).
+    // Cross-env failures get a warning + 200 (cleanup-style alert, won't
+    // succeed via retry). Same-env failures get a critical + 200 (real
+    // config mismatch, retries can't fix it either). Both use 24h dedup
+    // windows so PayPal's 25× / 3-day retry schedule doesn't outlive dedup.
+    let certHost: string | null = null
+    try {
+      certHost = headers.certUrl ? new URL(headers.certUrl).host : null
+    } catch {
+      certHost = null
+    }
+    const signedByEnv: "live" | "sandbox" | "unknown" = certHost
+      ? certHost.endsWith("sandbox.paypal.com")
+        ? "sandbox"
+        : certHost.endsWith("paypal.com")
+        ? "live"
+        : "unknown"
+      : "unknown"
+    const ourEnv = safePaypalEnvLabel()
+    const isCrossEnv =
+      (signedByEnv === "sandbox" && ourEnv === "live") ||
+      (signedByEnv === "live" && ourEnv === "sandbox")
+
+    if (isCrossEnv) {
+      await alertAdmin({
+        severity: "warning",
+        subject: `Export webhook: cross-env delivery (${signedByEnv} → ${ourEnv})`,
+        body:
+          `A PayPal webhook signed by ${signedByEnv.toUpperCase()} arrived at the export ` +
+          `webhook in ${ourEnv.toUpperCase()} mode. Verification cannot succeed across ` +
+          `PayPal environments. Most likely the ${signedByEnv} PayPal app still has an ` +
+          `active webhook subscription pointed at this URL — log into PayPal Developer → ` +
+          `${signedByEnv === "sandbox" ? "Sandbox" : "Live"} → your app → Webhooks and ` +
+          `delete the subscription. Returning 200 to stop PayPal's retry storm.`,
+        details: {
+          ourEnv,
+          signedByEnv,
+          certUrlHost: certHost,
+          transmissionIdPrefix: headers.transmissionId?.slice(0, 12) ?? null,
+        },
+        dedupKey: `export:cross-env:${signedByEnv}-to-${ourEnv}`,
+        dedupWindowMs: 24 * 60 * 60 * 1000,
+      })
+      return NextResponse.json({ received: true, ignored: "cross-env-webhook" })
+    }
+
     await alertAdmin({
       severity: "critical",
       subject: "Export webhook: signature verification FAILED",
       body:
-        "An incoming PayPal webhook on /api/export/webhook failed signature " +
-        "verification. Could be an attacker probing the endpoint, or a real " +
-        "misconfiguration (PAYPAL_WEBHOOK_ID for the SESSION-PDF webhook is " +
-        "wrong). Check Vercel function logs for source IP + frequency.",
-      dedupKey: "export:signature-failure",
+        "An incoming PayPal webhook on /api/export/webhook failed signature verification, " +
+        "and the cert URL host matches our configured PAYPAL_ENV — so this isn't a cross- " +
+        "environment leak. PAYPAL_EXPORT_WEBHOOK_ID is almost certainly wrong (or an " +
+        "attacker is probing). Verify the value against the webhook IDs listed in PayPal " +
+        `Developer → ${ourEnv === "live" ? "Live" : "Sandbox"} → your app → Webhooks. ` +
+        "Returning 200 to stop PayPal's retry storm.",
+      details: {
+        ourEnv,
+        certUrlHost: certHost,
+        transmissionIdPrefix: headers.transmissionId?.slice(0, 12) ?? null,
+      },
+      dedupKey: `export:signature-failure:${ourEnv}`,
+      dedupWindowMs: 24 * 60 * 60 * 1000,
     })
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
+    return NextResponse.json({ received: true, ignored: "verification-failed" })
   }
 
   let event: { event_type?: string; resource?: unknown }
