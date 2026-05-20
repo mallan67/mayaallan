@@ -1,3 +1,5 @@
+// Build-cache buster: 2026-05-20 cross-env verification-failure fix.
+// Turbopack file-hash change forces this route's chunk to recompile.
 import { NextRequest, NextResponse } from "next/server"
 import {
   decodeCustomId,
