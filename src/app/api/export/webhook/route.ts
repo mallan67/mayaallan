@@ -166,13 +166,58 @@ export async function POST(req: NextRequest) {
   const { sessionId, tool } = decoded
 
   // ── Fetch session payload from storage (Upstash; blob fallback for in-flight)
-  const payload = await readSession(sessionId)
-  if (!payload) {
-    // null = either expired (TTL >24h since stage), already-processed
-    // (we delete on success), or never existed. All three resolve to
-    // an idempotent acknowledgement — PayPal will not retry a 200.
+  const readResult = await readSession(sessionId)
+
+  if (readResult.status === "already-fulfilled") {
+    // Legitimate PayPal retry of a previously-successful delivery, OR a
+    // legacy blob session that was already cleaned up. Silent 200.
     return NextResponse.json({ ok: true, idempotent: true })
   }
+
+  if (readResult.status === "not-found") {
+    // CRITICAL — money captured but we have no record of staging this
+    // session AND no record of previously fulfilling it. This is the
+    // silent-failure bug class that previously delivered no PDF and
+    // no alert. Now it alerts loudly.
+    //
+    // Likely causes:
+    //   - Stage write failed silently before the PayPal order was created
+    //     (impossible with current code paths — putSession throws on failure)
+    //   - Upstash key mismatch (write went to one key, read tried another)
+    //   - Upstash data was wiped between stage and fulfillment
+    //   - The session is genuinely older than the TTL (24h) — extreme PayPal
+    //     delivery delay
+    //   - The custom_id was tampered with between checkout and webhook
+    await alertAdmin({
+      severity: "critical",
+      subject: "Export webhook: PAID CAPTURE but session not found — manual fulfillment required",
+      body:
+        "A signature-verified PAYMENT.CAPTURE.COMPLETED event arrived for an " +
+        "export-flow order, but no session payload exists in storage AND no " +
+        "fulfillment marker exists. Money has moved but we cannot generate the " +
+        "PDF automatically. Investigate immediately:\n" +
+        "  1. Check Upstash for any key matching " + sessionId + "\n" +
+        "  2. Look at /api/export logs from before the capture to see if the " +
+        "stage write actually succeeded\n" +
+        "  3. If the session is unrecoverable, refund the customer and apologize",
+      details: {
+        sessionId,
+        customId,
+        tool,
+        // PayPal resource id for the capture — use this to find the order
+        // in PayPal Business dashboard for refund.
+        paymentResourceId: (event.resource as any)?.id ?? null,
+      },
+      dedupKey: `export:session-not-found:${sessionId}`,
+    })
+    // Still 200 — PayPal retrying this event won't help since the data is
+    // genuinely missing. The alert is the action item; PayPal retries would
+    // just spam the alert (deduped).
+    return NextResponse.json({ ok: true, sessionNotFound: true })
+  }
+
+  // status === "found"
+  const payload = readResult.payload
 
   if (payload.tool !== tool) {
     // Suspicious — custom_id said one tool, stored payload says another.

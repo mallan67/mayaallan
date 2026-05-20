@@ -208,12 +208,38 @@ export async function handleExportWebhook(
   // Fetch staged session payload (Upstash; legacy blob fallback for
   // in-flight orders created before the Upstash migration)
   // ---------------------------------------------------------------
-  const payload = await readSession(sessionId)
-  if (!payload) {
-    // Already-processed in a previous delivery (we delete on success) OR
-    // expired (Upstash TTL: 24h). Idempotent acknowledgement.
+  const readResult = await readSession(sessionId)
+
+  if (readResult.status === "already-fulfilled") {
+    // Legitimate PayPal retry of a previously-successful delivery, OR a
+    // legacy blob session that was already cleaned up. Silent 200.
     return NextResponse.json({ ok: true, idempotent: true })
   }
+
+  if (readResult.status === "not-found") {
+    // CRITICAL — paid capture but no session found AND no fulfillment marker.
+    // See route.ts handler for full rationale; this is the silent-failure
+    // bug class that previously delivered nothing without alerting.
+    await alertAdmin({
+      severity: "critical",
+      subject: `Export webhook (${routeName}): PAID CAPTURE but session not found — manual fulfillment required`,
+      body:
+        "A signature-verified PAYMENT.CAPTURE.COMPLETED event arrived but no " +
+        "session payload exists in storage AND no fulfillment marker exists. " +
+        "Money has moved but we cannot generate the PDF automatically.",
+      details: {
+        sessionId,
+        customId,
+        tool,
+        paymentResourceId: (event.resource as { id?: string } | undefined)?.id ?? null,
+      },
+      dedupKey: `export-${routeName}:session-not-found:${sessionId}`,
+    })
+    return NextResponse.json({ ok: true, sessionNotFound: true })
+  }
+
+  // status === "found"
+  const payload = readResult.payload
 
   // Sanity check: payload's tool field should match what custom_id said
   // (and what THIS route expects). A mismatch suggests a programming bug or
