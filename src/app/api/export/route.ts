@@ -3,6 +3,7 @@ import { put } from "@vercel/blob"
 import { createSessionExportOrder } from "@/lib/paypal"
 import { renderAndEmailSessionPdf, isValidPromoCode } from "@/lib/deliver-pdf"
 import { alertAdmin } from "@/lib/alert-admin"
+import { safeLog, safeLogError, emailDomain, errorMessage } from "@/lib/safe-log"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -79,7 +80,11 @@ export async function POST(req: NextRequest) {
         sessionDate,
       })
     } catch (err) {
-      console.error("Promo-code PDF delivery failed:", err)
+      safeLogError("export.promo-deliver-failed", {
+        tool: body.tool,
+        recipientDomain: emailDomain(body.email),
+        err: errorMessage(err),
+      })
       // CRITICAL — promo redemption is a $0 path but the customer used a
       // code, expects a PDF, and we have no other way to fulfill. Manual
       // re-delivery required.
@@ -100,9 +105,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Could not deliver PDF" }, { status: 500 })
     }
 
-    console.log("Promo-code redemption", {
+    safeLog("export.promo-redeem", {
       tool: body.tool,
-      emailDomain: body.email.split("@")[1],
+      recipientDomain: emailDomain(body.email),
       codeUsed: body.promoCode.trim().toUpperCase(),
     })
 
@@ -125,7 +130,10 @@ export async function POST(req: NextRequest) {
       addRandomSuffix: false,
     })
   } catch (err) {
-    console.error("Blob staging failed:", err)
+    safeLogError("export.blob-stage-failed", {
+      tool: body.tool,
+      err: errorMessage(err),
+    })
     // No customer payment has happened yet — blob staging is pre-checkout —
     // but a persistent failure here means the entire session-export feature
     // is broken (paid path can't proceed). Alert as error (not critical)
@@ -152,7 +160,10 @@ export async function POST(req: NextRequest) {
       siteUrl: origin,
     })
   } catch (err) {
-    console.error("PayPal order creation failed:", err)
+    safeLogError("export.create-order-failed", {
+      tool: body.tool,
+      err: errorMessage(err),
+    })
     // No customer payment has happened — order creation is pre-checkout — but
     // a persistent failure here means the entire paid session-export flow is
     // unusable. Likely causes: PayPal OAuth credential issue, PayPal API

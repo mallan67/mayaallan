@@ -34,6 +34,7 @@ import {
 import { renderAndEmailSessionPdf, type SessionPayload } from "@/lib/deliver-pdf"
 import { head, del } from "@vercel/blob"
 import { siteUrl } from "@/lib/site-url"
+import { emailDomain } from "@/lib/safe-log"
 import crypto from "crypto"
 import type Stripe from "stripe"
 
@@ -185,7 +186,8 @@ export async function POST(request: Request) {
         "either of our known flows (book purchase, session export). Likely a " +
         "manually-created Payment Link or a future flow we haven't wired yet. " +
         "Reconcile manually if this is a real customer order.",
-      details: { stripeSessionId, customerEmail: session.customer_details?.email ?? null },
+      // PII rule (d01200b): no full customer email in alert payloads.
+      details: { stripeSessionId, customerDomain: emailDomain(session.customer_details?.email) },
       dedupKey: `stripe:unknown-metadata:${stripeSessionId}`,
     })
     return NextResponse.json({ received: true, ignored: "unknown-metadata" })

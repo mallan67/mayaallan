@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 
 export async function GET(request: Request) {
@@ -44,6 +45,11 @@ export async function PATCH() {
 }
 
 export async function DELETE(request: Request) {
+  // CSRF: a cross-origin DELETE here would delete contact submissions while
+  // an admin is logged in. Same-origin guard runs before any state change.
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }

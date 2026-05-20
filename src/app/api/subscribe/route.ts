@@ -6,6 +6,7 @@ import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { alertAdmin } from "@/lib/alert-admin"
 import { resolveOperatorRecipient } from "@/lib/operator-email"
 import { trackMarketingEvent, emailDomainOnly } from "@/lib/marketing-events"
+import { safeLogError, emailDomain, errorMessage } from "@/lib/safe-log"
 
 /**
  * Newsletter subscribe: stricter validation + honeypot + centralized recipient.
@@ -110,7 +111,10 @@ export async function POST(request: Request) {
         `,
         replyTo: email,
       }).catch(async (err) => {
-        console.error("Notification email error:", err)
+        safeLogError("subscribe.notify-smtp-failed", {
+          subscriberDomain: emailDomain(email),
+          err: errorMessage(err),
+        })
         await alertAdmin({
           severity: "error",
           subject: "SMTP send failed: newsletter signup notification",
@@ -118,8 +122,11 @@ export async function POST(request: Request) {
             "A newsletter signup landed in the database but the operator " +
             "notification email could not be sent. The subscriber row is still " +
             "saved. Verify Porkbun SMTP credentials and connectivity.",
+          // PII rule (d01200b): no full subscriber email in alert payloads.
+          // Domain-only is enough for triage; admin can look up the row by
+          // signup time if a specific user follow-up is needed.
           details: {
-            subscriberEmail: email,
+            subscriberDomain: emailDomain(email),
             recipientSource: recipient.source,
             errorMessage: err?.message ?? String(err),
           },
@@ -138,14 +145,18 @@ export async function POST(request: Request) {
           <p>Best,<br>Maya Allan</p>
         `,
       }).catch(async (err) => {
-        console.error("Welcome email error:", err)
+        safeLogError("subscribe.welcome-smtp-failed", {
+          subscriberDomain: emailDomain(email),
+          err: errorMessage(err),
+        })
         await alertAdmin({
           severity: "error",
           subject: "SMTP send failed: newsletter welcome email",
           body:
             "Welcome email to a new subscriber failed to send. The subscriber row " +
             "is still saved in the database. Send a manual welcome if needed.",
-          details: { subscriberEmail: email, errorMessage: err?.message ?? String(err) },
+          // PII rule (d01200b): no full subscriber email in alert payloads.
+          details: { subscriberDomain: emailDomain(email), errorMessage: err?.message ?? String(err) },
           dedupKey: "smtp:subscribe-welcome-failed",
         })
       })

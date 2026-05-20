@@ -7,6 +7,7 @@
 import { renderToBuffer } from "@react-pdf/renderer"
 import { Resend } from "resend"
 import { SessionPdf, type PdfMessage } from "@/lib/pdf/template"
+import { safeLog, safeLogError, emailDomain, errorMessage } from "@/lib/safe-log"
 
 export type SessionPayload = {
   tool: "reset" | "belief_inquiry" | "integration"
@@ -52,10 +53,21 @@ export async function renderAndEmailSessionPdf(payload: SessionPayload): Promise
   })
 
   if (error) {
-    console.error("Session PDF email failed for", payload.email, "-", error)
+    // PII-safe: log domain only, never the full email. errorMessage strips
+    // any Error.cause or Resend payload that might quote the recipient back.
+    safeLogError("deliver-pdf.send-failed", {
+      tool: payload.tool,
+      recipientDomain: emailDomain(payload.email),
+      err: errorMessage(error),
+    })
     throw new Error(`Resend send failed: ${error.message ?? String(error)}`)
   }
-  console.log("Session PDF email sent — Resend id:", data?.id)
+  // PII-safe: Resend id is a non-identifier opaque token, useful for support
+  // lookups; recipient email is intentionally omitted.
+  safeLog("deliver-pdf.sent", {
+    tool: payload.tool,
+    resendId: data?.id ?? null,
+  })
 }
 
 /**

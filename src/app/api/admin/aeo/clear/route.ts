@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { deleteAllRuns } from "@/lib/aeo/storage"
 
 // =============================================================================
@@ -15,7 +16,12 @@ import { deleteAllRuns } from "@/lib/aeo/storage"
 export const maxDuration = 60
 export const dynamic = "force-dynamic"
 
-export async function POST() {
+export async function POST(req: Request) {
+  // CSRF: refuse cross-origin POSTs before any session check. sameSite=lax
+  // cookies don't block credentialed XHR/fetch from a malicious page.
+  const guard = assertAdminSameOrigin(req)
+  if (!guard.ok) return guard.response
+
   const authed = await isAuthenticated()
   if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

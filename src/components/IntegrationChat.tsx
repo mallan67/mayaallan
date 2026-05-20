@@ -250,6 +250,7 @@ export function IntegrationChat() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Share what you're integrating..."
+            aria-label="Your message"
             disabled={isStreaming}
             className="flex-1 bg-white border border-[#B8BCC0] rounded-2xl px-4 py-3 h-12 text-charcoal text-[0.9rem] sm:text-base placeholder:text-charcoal-soft focus:outline-none focus:border-liquid-blue/50 focus:ring-2 focus:ring-liquid-blue/15 disabled:opacity-50 transition-colors shadow-sm"
           />

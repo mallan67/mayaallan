@@ -6,6 +6,7 @@ import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { alertAdmin } from "@/lib/alert-admin"
 import { resolveOperatorRecipient } from "@/lib/operator-email"
 import { trackMarketingEvent, emailDomainOnly, messageLengthBucket } from "@/lib/marketing-events"
+import { safeLogError, emailDomain, errorMessage } from "@/lib/safe-log"
 
 /**
  * Contact form: stricter validation + honeypot + centralized recipient.
@@ -122,7 +123,10 @@ export async function POST(request: Request) {
         `,
         replyTo: data.email,
       }).catch(async (err) => {
-        console.error("Contact email error:", err)
+        safeLogError("contact.smtp-send-failed", {
+          submitterDomain: emailDomain(data.email),
+          err: errorMessage(err),
+        })
         await alertAdmin({
           severity: "error",
           subject: "SMTP send failed: contact form notification",
@@ -131,8 +135,11 @@ export async function POST(request: Request) {
             "email could not be sent. The submission row is still saved. Verify " +
             "Porkbun SMTP credentials and connectivity, then read the submission " +
             "in the admin panel.",
+          // PII rule (d01200b): no full submitter email in alert payloads.
+          // The submission row in supabase has the full email if Maya needs
+          // to follow up; the dedup key + timestamp lets her find it.
           details: {
-            submitterEmail: data.email,
+            submitterDomain: emailDomain(data.email),
             recipientSource: recipient.source,
             errorMessage: err?.message ?? String(err),
           },

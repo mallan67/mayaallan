@@ -260,6 +260,7 @@ export function ResetChat() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Describe how your body feels..."
+            aria-label="Your message"
             disabled={isStreaming}
             className="flex-1 bg-white border border-[#B8BCC0] rounded-2xl px-4 py-3 h-12
               text-charcoal text-[0.9rem] sm:text-base placeholder:text-charcoal-soft
