@@ -197,6 +197,57 @@ const SEPARATOR = "|"
  * orders created before the Upstash migration still decode cleanly —
  * the session-store layer routes legacy blob-path ids to its blob fallback.
  */
+/**
+ * Fetch a PayPal order by ID. Used for:
+ *   - The export webhook's order-fetch fallback (when payer info is missing
+ *     from the capture event payload)
+ *   - The admin recovery endpoint (manually fulfill an order whose webhook
+ *     was missed / silently dropped / Vercel-Blob-bug'd)
+ *
+ * Returns the parsed order including purchase_units[].custom_id, status,
+ * captures, and payer. Throws on network error or non-2xx PayPal response.
+ */
+export type PaypalOrderResponse = {
+  id: string
+  status?: string
+  intent?: string
+  purchase_units?: Array<{
+    custom_id?: string
+    amount?: { value?: string; currency_code?: string }
+    payments?: {
+      captures?: Array<{
+        id: string
+        status?: string
+        amount?: { value?: string; currency_code?: string }
+        create_time?: string
+      }>
+    }
+  }>
+  payer?: {
+    email_address?: string
+    name?: { given_name?: string; surname?: string }
+    payer_id?: string
+  }
+  create_time?: string
+  update_time?: string
+}
+
+export async function fetchOrderById(orderId: string): Promise<PaypalOrderResponse> {
+  const token = await getAccessToken()
+  const res = await fetch(`${apiBase()}/v2/checkout/orders/${encodeURIComponent(orderId)}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    signal: AbortSignal.timeout(10_000),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => "")
+    throw new Error(`PayPal fetch order ${orderId} failed: ${res.status} ${text.slice(0, 500)}`)
+  }
+  return (await res.json()) as PaypalOrderResponse
+}
+
 export function encodeCustomId(sessionId: string, tool: string): string {
   return `${sessionId}${SEPARATOR}${tool}`
 }
