@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { put } from "@vercel/blob"
 import { createSessionExportOrder } from "@/lib/paypal"
 import { renderAndEmailSessionPdf, isValidPromoCode } from "@/lib/deliver-pdf"
 import { alertAdmin } from "@/lib/alert-admin"
 import { safeLog, safeLogError, emailDomain, errorMessage } from "@/lib/safe-log"
+import { putSession } from "@/lib/session-store"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -114,39 +114,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ promoApplied: true })
   }
 
-  // ── Paid path: stage session in Blob, create PayPal order ─────
-  const blobKey = `sessions/${crypto.randomUUID()}.json`
-  const payload = {
-    tool: body.tool,
-    messages: body.messages,
-    email: body.email,
-    sessionDate,
-  }
-
+  // ── Paid path: stage session in Upstash, create PayPal order ─────
+  // Session payload (transcript + email) lives in Upstash with a 24h TTL.
+  // The PayPal custom_id carries the opaque session id; the webhook reads
+  // it back after capture. No more public-blob writes for sensitive content.
+  let sessionId: string
   try {
-    await put(blobKey, JSON.stringify(payload), {
-      access: "public",
-      contentType: "application/json",
-      addRandomSuffix: false,
+    sessionId = await putSession({
+      tool: body.tool,
+      messages: body.messages,
+      email: body.email,
+      sessionDate,
     })
   } catch (err) {
-    safeLogError("export.blob-stage-failed", {
+    safeLogError("export.session-stage-failed", {
       tool: body.tool,
       err: errorMessage(err),
     })
-    // No customer payment has happened yet — blob staging is pre-checkout —
-    // but a persistent failure here means the entire session-export feature
-    // is broken (paid path can't proceed). Alert as error (not critical)
-    // and surface so it doesn't go silently dark.
+    // session-store.putSession() already alerts on the production-without-
+    // Upstash case via its own critical alert. Surface a generic error here.
     await alertAdmin({
       severity: "error",
-      subject: "Export route: Vercel Blob staging failed — paid checkout cannot proceed",
+      subject: "Export route: session staging failed — paid checkout cannot proceed",
       body:
-        "Failed to stage the session payload in Vercel Blob. Customers clicking " +
-        "'Save Session for $9.99' will see a 500. If this fires repeatedly, the " +
-        "BLOB_READ_WRITE_TOKEN may be invalid / expired, or Vercel Blob is degraded.",
+        "Failed to stage the session payload. Customers clicking " +
+        "'Save Session for $9.99' will see a 500. If this fires repeatedly, " +
+        "Upstash Redis is degraded or env vars are misconfigured. " +
+        "Check /api/health?deep=1.",
       details: { tool: body.tool, errorMessage: err instanceof Error ? err.message : String(err) },
-      dedupKey: "export:blob-stage-failed",
+      dedupKey: "export:session-stage-failed",
     })
     return NextResponse.json({ error: "Could not stage session" }, { status: 500 })
   }
@@ -155,7 +151,7 @@ export async function POST(req: NextRequest) {
   let checkout: { url: string; orderId: string }
   try {
     checkout = await createSessionExportOrder({
-      blobKey,
+      sessionId,
       tool: body.tool,
       siteUrl: origin,
     })
@@ -177,7 +173,7 @@ export async function POST(req: NextRequest) {
         "credential / OAuth issue or PayPal-side outage. Check /api/health?deep=1.",
       details: {
         tool: body.tool,
-        blobKey,
+        sessionId,
         errorMessage: err instanceof Error ? err.message : String(err),
       },
       dedupKey: "export:create-order-failed",

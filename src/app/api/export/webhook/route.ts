@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { head, del } from "@vercel/blob"
 import {
   decodeCustomId,
   extractWebhookHeaders,
   verifyPaypalWebhook,
 } from "@/lib/paypal"
-import {
-  renderAndEmailSessionPdf,
-  type SessionPayload as BlobPayload,
-} from "@/lib/deliver-pdf"
+import { renderAndEmailSessionPdf } from "@/lib/deliver-pdf"
+import { readSession, deleteSession } from "@/lib/session-store"
 import { alertAdmin } from "@/lib/alert-admin"
 
 export const runtime = "nodejs"
@@ -158,7 +155,7 @@ export async function POST(req: NextRequest) {
       subject: "Export webhook: paid capture has unparseable custom_id",
       body:
         "decodeCustomId() returned null for a paid PayPal capture. Money has " +
-        "been captured but the customId can't be decoded to a (blobKey, tool) " +
+        "been captured but the customId can't be decoded to a (sessionId, tool) " +
         "pair. Manual reconciliation required.",
       details: { customId },
       dedupKey: "export:bad-custom-id",
@@ -166,50 +163,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid custom_id" }, { status: 400 })
   }
 
-  const { blobKey, tool } = decoded
+  const { sessionId, tool } = decoded
 
-  let payload: BlobPayload
-  try {
-    const blobMeta = await head(blobKey)
-    // 10s timeout — a slow blob fetch would otherwise chew the 60s function
-    // budget and force PayPal to retry an in-progress fulfillment.
-    const res = await fetch(blobMeta.url, { signal: AbortSignal.timeout(10_000) })
-    if (!res.ok) throw new Error(`blob fetch ${res.status}`)
-    payload = (await res.json()) as BlobPayload
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    if (msg.includes("not found") || msg.includes("BlobNotFound") || msg.includes("404")) {
-      // Already-processed — the blob was deleted at the end of a previous
-      // successful run. Idempotent acknowledgement.
-      return NextResponse.json({ ok: true, idempotent: true })
-    }
-    console.error("Blob fetch failed:", err)
-    // CRITICAL — money in, payload unreachable, can't fulfill.
-    await alertAdmin({
-      severity: "critical",
-      subject: "Export webhook: blob fetch failed — paid customer cannot get PDF",
-      body:
-        "Failed to fetch the session payload from Vercel Blob after a successful " +
-        "PayPal capture. The customer has paid but the source data for their PDF " +
-        "is unreachable. Manual reconciliation: check the blob, re-generate the " +
-        "PDF if possible, and email the customer.",
-      details: { blobKey, tool, errorMessage: msg },
-      dedupKey: `export:blob-fetch-failed:${blobKey}`,
-    })
-    return NextResponse.json({ error: "Session data not available" }, { status: 500 })
+  // ── Fetch session payload from storage (Upstash; blob fallback for in-flight)
+  const payload = await readSession(sessionId)
+  if (!payload) {
+    // null = either expired (TTL >24h since stage), already-processed
+    // (we delete on success), or never existed. All three resolve to
+    // an idempotent acknowledgement — PayPal will not retry a 200.
+    return NextResponse.json({ ok: true, idempotent: true })
   }
 
   if (payload.tool !== tool) {
-    // Suspicious — custom_id said one tool, blob says another. Could indicate
-    // a programming bug or a tampering attempt. Not fatal (we proceed with the
-    // payload's tool field), but worth a warning.
+    // Suspicious — custom_id said one tool, stored payload says another.
+    // Could indicate a programming bug or a tampering attempt. Not fatal
+    // (we proceed with the payload's tool field), but worth a warning.
     await alertAdmin({
       severity: "warning",
-      subject: "Export webhook: tool mismatch between custom_id and blob",
+      subject: "Export webhook: tool mismatch between custom_id and stored session",
       body:
         "The tool extracted from PayPal's custom_id does not match the tool " +
-        "field in the stored blob payload. Investigate.",
-      details: { customIdTool: tool, blobTool: payload.tool, blobKey },
+        "field in the stored session payload. Investigate.",
+      details: { customIdTool: tool, payloadTool: payload.tool, sessionId },
       dedupKey: "export:tool-mismatch",
     })
   }
@@ -229,34 +204,36 @@ export async function POST(req: NextRequest) {
         "The customer paid for the session PDF but it was NOT delivered. " +
         "Manual fulfillment required: re-run delivery with the payload below, " +
         "or generate the PDF manually and email it to the customer.",
-      // PII: omit the customer email. blobKey is sufficient for manual
-      // reconciliation — Maya can look up the blob to find the payload's
-      // email if needed. Keeping PII out of alertAdmin payloads is the rule
-      // established in commit d01200b.
+      // PII: omit the customer email. sessionId is sufficient for manual
+      // reconciliation — Maya can look up the session in Upstash to find
+      // the payload's email if needed (delete-on-success means it's gone
+      // for successful flows). Keeping PII out of alertAdmin payloads is
+      // the rule established in commit d01200b.
       details: {
-        blobKey,
+        sessionId,
         tool,
         errorMessage: err instanceof Error ? err.message : String(err),
       },
-      dedupKey: `export:pdf-deliver-failed:${blobKey}`,
+      dedupKey: `export:pdf-deliver-failed:${sessionId}`,
     })
     return NextResponse.json({ error: "Delivery failed" }, { status: 500 })
   }
 
   try {
-    await del(blobKey)
+    await deleteSession(sessionId)
   } catch (err) {
-    // Non-fatal — the customer already has their PDF. But blob cleanup
-    // failures left unchecked could accumulate storage cost over time.
-    console.error("Blob deletion failed (non-fatal):", err)
+    // Non-fatal — the customer already has their PDF; Upstash TTL is the
+    // backstop for any orphaned sessions.
+    console.error("Session deletion failed (non-fatal):", err)
     await alertAdmin({
       severity: "warning",
-      subject: "Export webhook: blob cleanup failed (non-fatal)",
+      subject: "Export webhook: session cleanup failed (non-fatal)",
       body:
-        "Customer got their PDF but the source blob couldn't be deleted. If " +
-        "this fires repeatedly, stale blobs are piling up in storage.",
-      details: { blobKey, errorMessage: err instanceof Error ? err.message : String(err) },
-      dedupKey: "export:blob-cleanup-failed",
+        "Customer got their PDF but the staged session couldn't be deleted. " +
+        "Upstash TTL (24h) will sweep it. If this fires repeatedly, investigate " +
+        "the Upstash connection.",
+      details: { sessionId, errorMessage: err instanceof Error ? err.message : String(err) },
+      dedupKey: "export:session-cleanup-failed",
     })
   }
 

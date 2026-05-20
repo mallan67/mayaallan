@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { apiBase as paypalApiBase } from "@/lib/paypal"
+import { hasUpstash, probeUpstash } from "@/lib/upstash"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic" // never cache — must reflect real-time state
@@ -166,8 +167,17 @@ export async function GET(req: NextRequest) {
   const stripe = deep ? await deepStripe() : checkStripeEnv()
   const session = checkEnvPresent("SESSION_SECRET")
   const admin = checkAdminEnv()
+  // Upstash: env-presence (cheap mode) or full PING (deep mode). Upstash is
+  // REQUIRED in production for session-export staging — a !ok status here
+  // means the /api/export flow will refuse to write (refusing the public-blob
+  // privacy regression) and customers will see a 500 on "Save Session".
+  const upstash = deep
+    ? await probeUpstash()
+    : hasUpstash()
+      ? { ok: true }
+      : { ok: false, error: "UPSTASH_REDIS_REST_URL / TOKEN not configured" }
 
-  const checks = { database, resend, blob, paypal, stripe, session, admin }
+  const checks = { database, resend, blob, paypal, stripe, session, admin, upstash }
   const allOk = Object.values(checks).every((c) => c.ok)
 
   return NextResponse.json(

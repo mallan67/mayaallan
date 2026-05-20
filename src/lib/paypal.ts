@@ -189,29 +189,37 @@ export async function getAccessToken(): Promise<string> {
 const SESSION_PRICE_USD = "9.99"
 const SEPARATOR = "|"
 
-export function encodeCustomId(blobKey: string, tool: string): string {
-  return `${blobKey}${SEPARATOR}${tool}`
+/**
+ * Encode a session id + tool into PayPal's custom_id field.
+ *
+ * Wire format is unchanged from the prior blob-based implementation
+ * (sessions/uuid.json|integration vs uuid|integration) so any in-flight
+ * orders created before the Upstash migration still decode cleanly —
+ * the session-store layer routes legacy blob-path ids to its blob fallback.
+ */
+export function encodeCustomId(sessionId: string, tool: string): string {
+  return `${sessionId}${SEPARATOR}${tool}`
 }
 
 export function decodeCustomId(
   customId: string
-): { blobKey: string; tool: "reset" | "belief_inquiry" | "integration" } | null {
+): { sessionId: string; tool: "reset" | "belief_inquiry" | "integration" } | null {
   const idx = customId.lastIndexOf(SEPARATOR)
   if (idx < 0) return null
-  const blobKey = customId.slice(0, idx)
+  const sessionId = customId.slice(0, idx)
   const tool = customId.slice(idx + 1)
   if (tool !== "reset" && tool !== "belief_inquiry" && tool !== "integration") return null
-  if (!blobKey) return null
-  return { blobKey, tool }
+  if (!sessionId) return null
+  return { sessionId, tool }
 }
 
 export async function createSessionExportOrder(args: {
-  blobKey: string
+  sessionId: string
   tool: "reset" | "belief_inquiry" | "integration"
   siteUrl: string
 }): Promise<{ url: string; orderId: string }> {
   const token = await getAccessToken()
-  const customId = encodeCustomId(args.blobKey, args.tool)
+  const customId = encodeCustomId(args.sessionId, args.tool)
 
   // Match the book-purchase flow's pattern: use top-level application_context
   // and DO NOT set payment_source.paypal. Setting payment_source.paypal forces
