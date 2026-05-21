@@ -28,6 +28,7 @@
 import "server-only"
 import { createHash } from "node:crypto"
 import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { alertAdmin } from "@/lib/alert-admin"
 import {
   ATTRIBUTION_COOKIES,
   parseTouchCookie,
@@ -236,11 +237,45 @@ export async function trackMarketingEvent(input: TrackInput): Promise<void> {
 
     if (error) {
       console.error("[marketing-events] insert failed:", error.message, error.code)
-      // Swallow — caller mustn't see this.
+      // Surface a one-time-per-cold-start alert so a sustained DB schema
+      // regression doesn't silently empty the analytics stream. The catch
+      // block intentionally never throws back to the caller (the function
+      // contract is "never throws"), but losing all analytics without
+      // visibility was the pre-PR-5B failure mode.
+      await alertAdmin({
+        severity: "warning",
+        subject: "Marketing events: insert failed",
+        body:
+          "trackMarketingEvent() supabase insert returned an error. If this " +
+          "persists, every event in the analytics stream is being lost — " +
+          "revenue-by-campaign + funnel reporting will go quiet. Most common " +
+          "causes: missing column, RLS policy regression, table renamed.",
+        details: {
+          errorMessage: error.message,
+          errorCode: error.code,
+          eventName: input.eventName,
+        },
+        dedupKey: "marketing-events:insert-failed",
+        dedupWindowMs: 24 * 60 * 60 * 1000,
+      })
     }
   } catch (err) {
     console.error("[marketing-events] track threw:", err instanceof Error ? err.message : String(err))
-    // Never throw.
+    // Outer catch — function contract is "never throws". Alert at the
+    // same rate as the insert-failed branch so we don't flood when both
+    // paths fail (e.g., Supabase down).
+    await alertAdmin({
+      severity: "warning",
+      subject: "Marketing events: track threw",
+      body:
+        "trackMarketingEvent() outer catch fired. The function contract is " +
+        "never-throws, but if it's hitting this catch repeatedly the analytics " +
+        "stream is going dark. Check for upstream changes in marketing_events " +
+        "schema, attribution cookie format, or supabase auth.",
+      details: { errorMessage: err instanceof Error ? err.message : String(err) },
+      dedupKey: "marketing-events:track-threw",
+      dedupWindowMs: 24 * 60 * 60 * 1000,
+    })
   }
 }
 

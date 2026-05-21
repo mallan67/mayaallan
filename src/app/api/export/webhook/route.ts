@@ -292,7 +292,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await renderAndEmailSessionPdf(payload)
+    // Idempotency key keyed on sessionId. PayPal webhook retries (25× over
+    // 3 days on any non-2xx) would otherwise risk duplicate deliveries.
+    // Resend dedupes for 24h based on this key — second send returns the
+    // original result instead of sending again.
+    await renderAndEmailSessionPdf(payload, {
+      idempotencyKey: `export-pdf-${sessionId}`,
+    })
   } catch (err) {
     console.error("PDF render/email failed:", err)
     // CRITICAL — money in, PDF NOT delivered. The most important alert in

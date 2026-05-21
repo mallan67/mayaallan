@@ -10,6 +10,7 @@ import {
   type EngineResponse,
 } from "@/lib/aeo/engines"
 import { saveRun, pruneOldRuns, type AeoRun, type CitationRow } from "@/lib/aeo/storage"
+import { alertAdmin } from "@/lib/alert-admin"
 
 // =============================================================================
 // Tuning knobs (override via env)
@@ -203,6 +204,27 @@ export async function executeRun(): Promise<
     pruned = await pruneOldRuns()
   } catch (err) {
     storageError = err instanceof Error ? err.message : String(err)
+    // Previously this storage failure was packed into the summary's
+    // `storageError` field, the cron route checked only `result.ok` (which
+    // remained true), and the dashboard timestamps silently stopped
+    // moving. Every weekly run since the regression would burn ~$0.50-$2
+    // in LLM credits with no recorded data.
+    //
+    // Alert now. 7-day dedup because the cron only runs weekly and we
+    // don't need a fresh alert on every run during a sustained outage.
+    await alertAdmin({
+      severity: "error",
+      subject: "AEO cron: storage failed (LLM credits burned, data lost)",
+      body:
+        "executeRun() completed its probe phase successfully but saveRun() " +
+        "threw. The AEO dashboard will show no new data, but the LLM credits " +
+        "were spent. Likely cause: Vercel Blob token rotated, namespace " +
+        "changed, or storage account hit a quota. Check /api/health?deep=1 " +
+        "blob check + Vercel Blob dashboard.",
+      details: { runId, storageError },
+      dedupKey: "aeo:storage-failed",
+      dedupWindowMs: 7 * 24 * 60 * 60 * 1000,
+    })
   }
 
   return {

@@ -52,6 +52,14 @@ async function sendPurchaseEmail(args: {
   downloadUrl: string
   expiresAt: Date
   maxDownloads: number
+  /**
+   * Resend idempotency key. PayPal retries webhooks up to 25× over 3
+   * days on any non-2xx — without an idempotency key, the same purchase
+   * email could be sent multiple times if upstream code path hits an
+   * intermittent failure between Resend success and email_sent_at UPDATE.
+   * Resend dedupes for 24h based on this key.
+   */
+  idempotencyKey: string
 }): Promise<{ ok: true; id?: string } | { ok: false; error: string }> {
   const resendKey = process.env.RESEND_API_KEY
   if (!resendKey) {
@@ -69,34 +77,37 @@ async function sendPurchaseEmail(args: {
   // claim stale window — the next retry would re-acquire the claim and
   // potentially double-send if the first call eventually delivered.
   try {
-    const sendPromise = resend.emails.send({
-      from: "Maya Allan <maya@mayaallan.com>",
-      // Replies route to hello@ (operations inbox) so a customer reply
-      // doesn't sit unread in a personal mailbox. Override per deployment
-      // via SUPPORT_REPLY_TO if the operations inbox name changes.
-      replyTo: process.env.SUPPORT_REPLY_TO || "hello@mayaallan.com",
-      to: args.customerEmail,
-      subject: `Your purchase from mayaallan.com — ${args.bookTitle}`,
-      html: `
-        <div style="font-family: Georgia, serif; max-width: 560px; line-height: 1.55; color: #14110d;">
-          <p>${escape(greeting)},</p>
-          <p>Thank you for your purchase. Your download link for <strong>${escape(args.bookTitle)}</strong> is below.</p>
-          <p style="margin: 32px 0;">
-            <a href="${args.downloadUrl}"
-               style="display: inline-block; padding: 14px 32px; background: #0A0A0D; color: white; text-decoration: none; border-radius: 999px; font-weight: 600;">
-              Download ${escape(args.bookTitle)}
-            </a>
-          </p>
-          <p style="font-size: 13px; color: #6B665E;">
-            This link is valid for up to <strong>${args.maxDownloads} downloads</strong> and expires on <strong>${expiryStr}</strong>.
-          </p>
-          <p style="font-size: 13px; color: #6B665E;">
-            Trouble downloading? Reply to this email and I'll send a fresh link.
-          </p>
-          <p style="margin-top: 32px;">With care,<br/>Maya</p>
-        </div>
-      `,
-    })
+    const sendPromise = resend.emails.send(
+      {
+        from: "Maya Allan <maya@mayaallan.com>",
+        // Replies route to hello@ (operations inbox) so a customer reply
+        // doesn't sit unread in a personal mailbox. Override per deployment
+        // via SUPPORT_REPLY_TO if the operations inbox name changes.
+        replyTo: process.env.SUPPORT_REPLY_TO || "hello@mayaallan.com",
+        to: args.customerEmail,
+        subject: `Your purchase from mayaallan.com — ${args.bookTitle}`,
+        html: `
+          <div style="font-family: Georgia, serif; max-width: 560px; line-height: 1.55; color: #14110d;">
+            <p>${escape(greeting)},</p>
+            <p>Thank you for your purchase. Your download link for <strong>${escape(args.bookTitle)}</strong> is below.</p>
+            <p style="margin: 32px 0;">
+              <a href="${args.downloadUrl}"
+                 style="display: inline-block; padding: 14px 32px; background: #0A0A0D; color: white; text-decoration: none; border-radius: 999px; font-weight: 600;">
+                Download ${escape(args.bookTitle)}
+              </a>
+            </p>
+            <p style="font-size: 13px; color: #6B665E;">
+              This link is valid for up to <strong>${args.maxDownloads} downloads</strong> and expires on <strong>${expiryStr}</strong>.
+            </p>
+            <p style="font-size: 13px; color: #6B665E;">
+              Trouble downloading? Reply to this email and I'll send a fresh link.
+            </p>
+            <p style="margin-top: 32px;">With care,<br/>Maya</p>
+          </div>
+        `,
+      },
+      { idempotencyKey: args.idempotencyKey },
+    )
 
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error("Resend send timed out after 15s")), 15_000)
@@ -791,6 +802,11 @@ export async function POST(request: Request) {
           downloadUrl,
           expiresAt: tokenExpiresAt,
           maxDownloads: tokenMaxDownloads,
+          // Keyed on the PayPal order id so any number of PayPal retries
+          // can only deliver one purchase email per actual purchase. The
+          // atomic claim above already prevents double-send within our
+          // own DB; the idempotency key is defense-in-depth at Resend.
+          idempotencyKey: `paypal-book-purchase-${paypalOrderId}`,
         })
 
         if (!emailResult.ok) {
