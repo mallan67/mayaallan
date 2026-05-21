@@ -140,29 +140,41 @@ export async function POST(req: Request) {
       ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&#39;" }[c]!),
     )
 
+  // Idempotency key uses a 10-second time bucket, not a stable
+  // `resend-email-${orderId}` key. The endpoint is BUYER-TRIGGERED for
+  // intentional re-delivery ("I didn't get my email"). A stable 24h-dedup
+  // key would silently no-op a legitimate retry — buyer thinks the resend
+  // didn't go through, contacts support. The 10-second bucket catches
+  // double-clicks and browser/network retries while letting a deliberate
+  // retry 10+ seconds later go through (still bounded by the 3/hr
+  // per-IP rate limit at the top of this function).
+  const resendBucket = Math.floor(Date.now() / 10_000)
   try {
-    const { error } = await resend.emails.send({
-      from: "Maya Allan <maya@mayaallan.com>",
-      replyTo: process.env.SUPPORT_REPLY_TO || "hello@mayaallan.com",
-      to: order.email,
-      subject: `Your download link (resent) — ${book.title}`,
-      html: `
-        <div style="font-family: Georgia, serif; max-width: 560px; line-height: 1.55; color: #14110d;">
-          <p>${escape(greeting)},</p>
-          <p>You asked us to resend your download link for <strong>${escape(book.title)}</strong>. Here it is:</p>
-          <p style="margin: 32px 0;">
-            <a href="${downloadUrl}"
-               style="display: inline-block; padding: 14px 32px; background: #0A0A0D; color: white; text-decoration: none; border-radius: 999px; font-weight: 600;">
-              Download ${escape(book.title)}
-            </a>
-          </p>
-          <p style="font-size: 13px; color: #6B665E;">
-            Valid for up to <strong>${token.max_downloads ?? 5} downloads</strong>; expires <strong>${expiry}</strong>.
-          </p>
-          <p style="margin-top: 32px;">With care,<br/>Maya</p>
-        </div>
-      `,
-    })
+    const { error } = await resend.emails.send(
+      {
+        from: "Maya Allan <maya@mayaallan.com>",
+        replyTo: process.env.SUPPORT_REPLY_TO || "hello@mayaallan.com",
+        to: order.email,
+        subject: `Your download link (resent) — ${book.title}`,
+        html: `
+          <div style="font-family: Georgia, serif; max-width: 560px; line-height: 1.55; color: #14110d;">
+            <p>${escape(greeting)},</p>
+            <p>You asked us to resend your download link for <strong>${escape(book.title)}</strong>. Here it is:</p>
+            <p style="margin: 32px 0;">
+              <a href="${downloadUrl}"
+                 style="display: inline-block; padding: 14px 32px; background: #0A0A0D; color: white; text-decoration: none; border-radius: 999px; font-weight: 600;">
+                Download ${escape(book.title)}
+              </a>
+            </p>
+            <p style="font-size: 13px; color: #6B665E;">
+              Valid for up to <strong>${token.max_downloads ?? 5} downloads</strong>; expires <strong>${expiry}</strong>.
+            </p>
+            <p style="margin-top: 32px;">With care,<br/>Maya</p>
+          </div>
+        `,
+      },
+      { idempotencyKey: `resend-email-${orderId}-${resendBucket}` },
+    )
     if (error) {
       console.error("[checkout-resend-email] send failed:", sanitizeResendError(error))
       // Don't surface the failure to the client — they shouldn't know
@@ -181,6 +193,17 @@ export async function POST(req: Request) {
     }
   } catch (err) {
     console.error("[checkout-resend-email] threw:", err)
+    await alertAdmin({
+      severity: "error",
+      subject: "Resend-email handler threw",
+      body:
+        "The /api/checkout/resend-email handler hit its outer catch. " +
+        "Buyer-triggered resends are failing silently with a generic 200. " +
+        "Check Vercel runtime logs.",
+      details: { errorMessage: err instanceof Error ? err.message : String(err) },
+      dedupKey: "resend-email:handler-threw",
+      dedupWindowMs: 24 * 60 * 60 * 1000,
+    })
   }
 
   return NextResponse.json({ resent: true })

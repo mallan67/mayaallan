@@ -23,7 +23,20 @@ const TOOL_DISPLAY = {
   integration: "Integration",
 } as const
 
-export async function renderAndEmailSessionPdf(payload: SessionPayload): Promise<void> {
+/**
+ * Optional caller-supplied delivery options. The `idempotencyKey` lets the
+ * caller dedup retries at the Resend layer (24h dedup window). Use it on
+ * webhook-driven paths where the same delivery may be triggered multiple
+ * times by retry behavior; omit it on intentional re-send paths.
+ */
+export type DeliverPdfOptions = {
+  idempotencyKey?: string
+}
+
+export async function renderAndEmailSessionPdf(
+  payload: SessionPayload,
+  options?: DeliverPdfOptions,
+): Promise<void> {
   // Heuristic extraction (no LLM call) — surfaces structured fields so the
   // PDF renders the closing arc + an appendix transcript instead of the
   // first-6-message dump that used to be the entire "Key reflections"
@@ -46,18 +59,28 @@ export async function renderAndEmailSessionPdf(payload: SessionPayload): Promise
   const resend = new Resend(resendKey)
   const displayName = TOOL_DISPLAY[payload.tool]
 
-  const { data, error } = await resend.emails.send({
-    from: "Maya Allan <hello@mayaallan.com>",
-    to: payload.email,
-    subject: `Your ${displayName} session keepsake`,
-    text: `Hi,\n\nThank you for keeping your ${displayName} session. Your PDF is attached.\n\nWith care,\nMaya`,
-    attachments: [
-      {
-        filename: `${payload.tool}-session.pdf`,
-        content: pdfBuffer.toString("base64"),
-      },
-    ],
-  })
+  // Resend's second argument carries request-level options. When the caller
+  // passes an idempotencyKey, Resend dedupes for 24h — the second call with
+  // the same key returns the original send result instead of sending again.
+  const sendOptions = options?.idempotencyKey
+    ? { idempotencyKey: options.idempotencyKey }
+    : undefined
+
+  const { data, error } = await resend.emails.send(
+    {
+      from: "Maya Allan <hello@mayaallan.com>",
+      to: payload.email,
+      subject: `Your ${displayName} session keepsake`,
+      text: `Hi,\n\nThank you for keeping your ${displayName} session. Your PDF is attached.\n\nWith care,\nMaya`,
+      attachments: [
+        {
+          filename: `${payload.tool}-session.pdf`,
+          content: pdfBuffer.toString("base64"),
+        },
+      ],
+    },
+    sendOptions,
+  )
 
   if (error) {
     // PII-safe: log domain only, never the full email. errorMessage strips

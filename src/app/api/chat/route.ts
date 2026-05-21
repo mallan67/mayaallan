@@ -14,6 +14,7 @@ import {
   totalConversationCharCount,
 } from "@/lib/crisis-detection"
 import { rateLimit } from "@/lib/rate-limit"
+import { alertAdmin } from "@/lib/alert-admin"
 import crypto from "crypto"
 
 /**
@@ -724,9 +725,24 @@ export async function POST(req: Request) {
 
     return result.toUIMessageStreamResponse()
   } catch (error) {
-    // Log + surface generic message; alertAdmin path comes in PR 5
-    // (operational alerting for silent failures across the codebase).
+    // Log + alert + surface generic message. The chat tool is the highest-
+    // traffic surface on the site; if the LLM provider goes down or the
+    // handler throws for any other reason we want to know within minutes,
+    // not from a customer complaint. 6h dedup so we don't spam if the
+    // outage persists.
     console.error("Chat API error:", error instanceof Error ? error.message : String(error))
+    await alertAdmin({
+      severity: "error",
+      subject: "Chat handler threw",
+      body:
+        "The /api/chat handler hit its outer catch. The user saw a generic " +
+        "error. Likely causes: LLM provider outage, AI_PROVIDER misconfigured, " +
+        "or an internal regression. Check Vercel runtime logs around this " +
+        "timestamp for the underlying stack trace.",
+      details: { errorMessage: error instanceof Error ? error.message : String(error) },
+      dedupKey: "chat:handler-threw",
+      dedupWindowMs: 6 * 60 * 60 * 1000,
+    })
     return new Response(
       JSON.stringify({ error: "Something went wrong. Please try again." }),
       { status: 500, headers: { "Content-Type": "application/json" } },

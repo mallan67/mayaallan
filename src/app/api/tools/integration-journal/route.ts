@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { renderToBuffer } from "@react-pdf/renderer"
 import { IntegrationJournalDocument, type JourneyPhase } from "@/lib/pdf/integration-journal"
+import { alertAdmin } from "@/lib/alert-admin"
 
 // =============================================================================
 // POST /api/tools/integration-journal — generates a downloadable journal PDF.
@@ -62,6 +63,21 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     console.error("[integration-journal] PDF render failed:", err)
+    // High-traffic free tool; a render regression (template breakage,
+    // @react-pdf/renderer font fetch outage, etc.) breaks every download.
+    // Previously silent — customer hit a 500 and we found out from
+    // complaints. Once-per-day dedup.
+    await alertAdmin({
+      severity: "error",
+      subject: "Integration-journal PDF render failed",
+      body:
+        "renderToBuffer threw on the integration-journal route. Every download " +
+        "of the free journal PDF is currently failing. Likely a template " +
+        "regression or @react-pdf/renderer dependency issue. Check Vercel logs.",
+      details: { errorMessage: err instanceof Error ? err.message : String(err) },
+      dedupKey: "integration-journal:render-failed",
+      dedupWindowMs: 24 * 60 * 60 * 1000,
+    })
     return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 })
   }
 }

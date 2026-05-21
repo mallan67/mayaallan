@@ -4,6 +4,7 @@ import { listScenarios } from "@/lib/scenarios"
 import { listPosts } from "@/lib/posts"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { SITE_URL } from "@/lib/identity"
+import { alertAdmin } from "@/lib/alert-admin"
 
 // =============================================================================
 // POST /api/indexnow/submit — manually trigger an IndexNow submission.
@@ -76,20 +77,41 @@ async function collectAllPublicUrls(): Promise<string[]> {
     `${SITE_URL}/contact`,
   ]
 
-  // Scenarios (markdown)
+  // Scenarios (markdown). Previously the catch swallowed entirely — a
+  // bundler regression that moves /content/scenarios out of the deployed
+  // Lambda silently empties the IndexNow submission. Now alerted; URL
+  // list still proceeds with what's available.
   try {
     const scenarios = await listScenarios()
     for (const s of scenarios) urls.push(`${SITE_URL}/scenarios/${s.slug}`)
-  } catch {
-    // ignore
+  } catch (err) {
+    await alertAdmin({
+      severity: "warning",
+      subject: "IndexNow: scenarios listing failed (partial submission)",
+      body:
+        "listScenarios() threw inside the IndexNow URL collector. Submitted " +
+        "URL list will be missing /scenarios/* entries until this resolves.",
+      details: { errorMessage: err instanceof Error ? err.message : String(err) },
+      dedupKey: "indexnow:scenarios-list-failed",
+      dedupWindowMs: 24 * 60 * 60 * 1000,
+    })
   }
 
   // Blog posts (markdown)
   try {
     const posts = await listPosts()
     for (const p of posts) urls.push(`${SITE_URL}/blog/${p.slug}`)
-  } catch {
-    // ignore
+  } catch (err) {
+    await alertAdmin({
+      severity: "warning",
+      subject: "IndexNow: blog posts listing failed (partial submission)",
+      body:
+        "listPosts() threw inside the IndexNow URL collector. Submitted " +
+        "URL list will be missing /blog/* entries until this resolves.",
+      details: { errorMessage: err instanceof Error ? err.message : String(err) },
+      dedupKey: "indexnow:posts-list-failed",
+      dedupWindowMs: 24 * 60 * 60 * 1000,
+    })
   }
 
   // Books (Supabase)
@@ -100,8 +122,17 @@ async function collectAllPublicUrls(): Promise<string[]> {
       .eq("is_published", true)
       .eq("is_visible", true)
     for (const b of books ?? []) urls.push(`${SITE_URL}/books/${b.slug}`)
-  } catch {
-    // ignore
+  } catch (err) {
+    await alertAdmin({
+      severity: "warning",
+      subject: "IndexNow: books query failed (partial submission)",
+      body:
+        "Supabase books query threw inside the IndexNow URL collector. " +
+        "Submitted URL list will be missing /books/* entries until this resolves.",
+      details: { errorMessage: err instanceof Error ? err.message : String(err) },
+      dedupKey: "indexnow:books-query-failed",
+      dedupWindowMs: 24 * 60 * 60 * 1000,
+    })
   }
 
   return urls

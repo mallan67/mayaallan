@@ -237,13 +237,27 @@ export async function POST(req: Request) {
   }
 
   // ── Render + email the PDF ──────────────────────────────────────
+  //
+  // Idempotency key uses a 10-second time bucket — not a stable key —
+  // because this route is OPERATOR-TRIGGERED for intentional re-delivery.
+  // A stable `admin-recover-${sessionId}` would dedupe across 24h and
+  // block a legitimate second attempt (e.g., first delivery bounced, the
+  // operator is retrying with a different email). The 10-second bucket
+  // catches:
+  //   - accidental double-clicks on the Recover button (sub-second apart)
+  //   - browser/network retries of the POST (typically sub-5-second)
+  // …while letting a deliberate retry 10+ seconds later go through.
+  const recoverBucket = Math.floor(Date.now() / 10_000)
   try {
-    await renderAndEmailSessionPdf({
-      tool: payload.tool,
-      messages: payload.messages,
-      email: recipientEmail,
-      sessionDate: payload.sessionDate,
-    })
+    await renderAndEmailSessionPdf(
+      {
+        tool: payload.tool,
+        messages: payload.messages,
+        email: recipientEmail,
+        sessionDate: payload.sessionDate,
+      },
+      { idempotencyKey: `admin-recover-${sessionId}-${recoverBucket}` },
+    )
   } catch (err) {
     safeLogError("admin-export-recover.deliver-failed", {
       orderId: body.orderId,

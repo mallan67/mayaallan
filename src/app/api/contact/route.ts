@@ -153,7 +153,22 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 })
     }
+    // Outer-catch alert: if the entire handler throws (DB out, alert
+    // path broken, etc.), the user sees a generic 500. Without this
+    // alert, you'd find out via a customer complaint about an unanswered
+    // form. Once-per-day dedup so a sustained outage doesn't flood.
     console.error("Contact submission error:", error)
+    await alertAdmin({
+      severity: "error",
+      subject: "Contact form handler threw",
+      body:
+        "The /api/contact handler hit its outer catch. Likely DB or " +
+        "Resend regression — customers' contact-form submissions are " +
+        "failing with a generic 500. Check Vercel runtime logs.",
+      details: { errorMessage: error instanceof Error ? error.message : String(error) },
+      dedupKey: "contact:handler-threw",
+      dedupWindowMs: 24 * 60 * 60 * 1000,
+    })
     return NextResponse.json({ error: "Failed to send message. Please try again." }, { status: 500 })
   }
 }

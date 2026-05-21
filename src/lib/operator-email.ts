@@ -28,10 +28,32 @@ function readEnv(name: string): string | null {
   return value ? value : null
 }
 
+// One-time-per-cold-start warning so the migration nag stays visible
+// in Vercel logs without flooding on every request. The docstring at
+// the top of this file promises this logging — it now actually happens.
+const warnedFallbackKinds = new Set<RecipientKind>()
+function warnFallbackOnce(kind: RecipientKind): void {
+  if (warnedFallbackKinds.has(kind)) return
+  warnedFallbackKinds.add(kind)
+  // eslint-disable-next-line no-console
+  console.error(
+    `[operator-email] FALLBACK RECIPIENT USED for kind="${kind}". ` +
+      "ADMIN_EMAIL (and the kind-specific env var) are unset, so notifications " +
+      "for this stream are routing to the hardcoded fallback address. " +
+      "Set ADMIN_EMAIL in Vercel env vars.",
+  )
+}
+
 /**
  * Returns the resolved recipient email and a label noting which env var
  * supplied it (or "fallback" if none did). Caller treats the email as
  * opaque — no leaking the source name to public users.
+ *
+ * When the fallback path is hit, a one-time-per-cold-start `console.error`
+ * surfaces the misconfiguration in Vercel logs. The previous version of
+ * this docstring promised that logging but the code didn't deliver it —
+ * silent fallback was exactly the failure mode the PR-5B silent-failure
+ * sweep is closing.
  */
 export function resolveOperatorRecipient(kind: RecipientKind): {
   email: string
@@ -43,6 +65,7 @@ export function resolveOperatorRecipient(kind: RecipientKind): {
     const specific = readEnv("CONTACT_EMAIL")
     if (specific) return { email: specific, source: "CONTACT_EMAIL" }
     if (adminEmail) return { email: adminEmail, source: "ADMIN_EMAIL" }
+    warnFallbackOnce(kind)
     return { email: FALLBACK_RECIPIENT, source: "fallback" }
   }
 
@@ -50,10 +73,16 @@ export function resolveOperatorRecipient(kind: RecipientKind): {
     const specific = readEnv("NEWSLETTER_NOTIFY_EMAIL")
     if (specific) return { email: specific, source: "NEWSLETTER_NOTIFY_EMAIL" }
     if (adminEmail) return { email: adminEmail, source: "ADMIN_EMAIL" }
+    warnFallbackOnce(kind)
     return { email: FALLBACK_RECIPIENT, source: "fallback" }
   }
 
   // alert
   if (adminEmail) return { email: adminEmail, source: "ADMIN_EMAIL" }
+  // NOTE: deliberately no alertAdmin import here. The alert path itself
+  // routes through this function — alerting on a missing alert address
+  // would be a circular dependency. The console.error above is the only
+  // visibility for the alert-fallback case.
+  warnFallbackOnce(kind)
   return { email: FALLBACK_RECIPIENT, source: "fallback" }
 }

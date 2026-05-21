@@ -167,8 +167,21 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid email address" }, { status: 400 })
     }
-    // Log full detail server-side; return generic message to client.
+    // Outer-catch alert: if the entire subscribe handler throws, every
+    // signup gets a 500 with no operator visibility. Once-per-day dedup
+    // covers a sustained outage without flooding the inbox.
     console.error("Subscription error:", error)
+    await alertAdmin({
+      severity: "error",
+      subject: "Subscribe handler threw",
+      body:
+        "The /api/subscribe handler hit its outer catch. Likely a DB or " +
+        "schema regression — newsletter signups are failing with a generic " +
+        "500. Check Vercel runtime logs.",
+      details: { errorMessage: error instanceof Error ? error.message : String(error) },
+      dedupKey: "subscribe:handler-threw",
+      dedupWindowMs: 24 * 60 * 60 * 1000,
+    })
     return NextResponse.json({ error: "Subscription failed. Please try again." }, { status: 500 })
   }
 }
