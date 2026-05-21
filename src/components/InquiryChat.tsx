@@ -311,7 +311,12 @@ export function InquiryChat() {
                 Start Over
               </button>
             )}
-            {messages.length > 0 && !showExportCta && (
+            {/* Minimum-turn gate: paid export requires at least 3 user turns.
+                Below that, the conversation is too thin to produce a useful
+                keepsake and the export route now rejects with "Conversation
+                too short". The button is hidden rather than disabled so the
+                $9.99 doesn't taunt users early in a session. */}
+            {userTurns >= 3 && !showExportCta && (
               <button
                 onClick={() => setUserRequestedExport(true)}
                 className="flex items-center gap-2 text-charcoal-mid hover:text-liquid-blue text-xs transition-colors"
