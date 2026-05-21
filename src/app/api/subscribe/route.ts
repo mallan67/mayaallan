@@ -40,7 +40,7 @@ const transporter = process.env.SMTP_USER && process.env.SMTP_PASS
   : null
 
 export async function POST(request: Request) {
-  const limit = rateLimit({
+  const limit = await rateLimit({
     scope: "subscribe",
     ip: getClientIp(request),
     windowMs: 60 * 60 * 1000,

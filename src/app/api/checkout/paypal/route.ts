@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   // Per-IP rate-limit BEFORE we burn a PayPal OAuth token or create an order.
   // 15 attempts per 15 min is generous for real shoppers; anonymous spam hits
   // the lockout quickly.
-  const limit = rateLimit({
+  const limit = await rateLimit({
     scope: "paypal-checkout",
     ip,
     windowMs: 15 * 60 * 1000,

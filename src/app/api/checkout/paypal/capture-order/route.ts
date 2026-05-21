@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   const ip = getClientIp(request)
 
   // Coarse rate-limit — prevents brute-force capture-id probing.
-  const limit = rateLimit({
+  const limit = await rateLimit({
     scope: "paypal-capture-order",
     ip,
     windowMs: 15 * 60 * 1000,

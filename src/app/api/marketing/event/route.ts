@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   }
 
   const ip = getClientIp(request)
-  const limit = rateLimit({
+  const limit = await rateLimit({
     scope: "marketing-event",
     ip,
     windowMs: 60 * 1000,
