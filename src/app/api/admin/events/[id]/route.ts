@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
+import { eventUpdateSchema, formatZodError } from "@/lib/admin-schemas"
 
 /**
  * EVENT API ROUTES (by ID)
@@ -63,7 +64,12 @@ export async function PUT(
   }
 
   try {
-    const body = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const parsed = eventUpdateSchema.safeParse(rawBody)
+    if (!parsed.success) {
+      return NextResponse.json(formatZodError(parsed.error), { status: 400 })
+    }
+    const input = parsed.data
 
     // Verify event exists
     const { data: existingEvent, error: fetchError } = await supabaseAdmin
@@ -77,24 +83,15 @@ export async function PUT(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    // Build update data with camelCase columns (matching Event table)
-    const updateData: any = {
+    // Partial update: only set columns that were actually present in the
+    // validated input. Same "field omitted = leave untouched" behavior as
+    // before, but with type-checked values.
+    const updateData: Record<string, unknown> = {
       updatedAt: new Date().toISOString(),
     }
-
-    if (body.title !== undefined) updateData.title = body.title
-    if (body.slug !== undefined) updateData.slug = body.slug
-    if (body.description !== undefined) updateData.description = body.description || null
-    if (body.startsAt !== undefined) updateData.startsAt = body.startsAt
-    if (body.endsAt !== undefined) updateData.endsAt = body.endsAt || null
-    if (body.locationText !== undefined) updateData.locationText = body.locationText || null
-    if (body.locationUrl !== undefined) updateData.locationUrl = body.locationUrl || null
-    if (body.eventImageUrl !== undefined) updateData.eventImageUrl = body.eventImageUrl || null
-    if (body.isPublished !== undefined) updateData.isPublished = Boolean(body.isPublished)
-    if (body.isVisible !== undefined) updateData.isVisible = Boolean(body.isVisible)
-    if (body.keepVisibleAfterEnd !== undefined) updateData.keepVisibleAfterEnd = Boolean(body.keepVisibleAfterEnd)
-    if (body.seoTitle !== undefined) updateData.seoTitle = body.seoTitle || null
-    if (body.seoDescription !== undefined) updateData.seoDescription = body.seoDescription || null
+    for (const key of Object.keys(input) as Array<keyof typeof input>) {
+      updateData[key] = input[key]
+    }
 
     const { data: event, error: updateError } = await supabaseAdmin
       .from(Tables.events)

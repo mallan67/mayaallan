@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
+import { eventCreateSchema, formatZodError } from "@/lib/admin-schemas"
 
 /**
  * EVENTS API ROUTES
@@ -43,32 +44,30 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json()
-
-    if (!body.title || !body.slug) {
-      return NextResponse.json({ error: "Title and slug are required" }, { status: 400 })
+    const rawBody = await request.json().catch(() => ({}))
+    const parsed = eventCreateSchema.safeParse(rawBody)
+    if (!parsed.success) {
+      return NextResponse.json(formatZodError(parsed.error), { status: 400 })
     }
+    const input = parsed.data
 
-    if (!body.startsAt) {
-      return NextResponse.json({ error: "Start date/time is required" }, { status: 400 })
-    }
-
-    // Event table uses camelCase columns
+    // Event table uses camelCase columns. Validated input passes through
+    // 1:1 (the schema already coerced + trimmed values).
     const now = new Date().toISOString()
-    const insertData: any = {
-      title: body.title,
-      slug: body.slug,
-      description: body.description || null,
-      startsAt: body.startsAt,
-      endsAt: body.endsAt || null,
-      locationText: body.locationText || null,
-      locationUrl: body.locationUrl || null,
-      eventImageUrl: body.eventImageUrl || null,
-      isPublished: body.isPublished ?? false,
-      isVisible: body.isVisible ?? false,
-      keepVisibleAfterEnd: body.keepVisibleAfterEnd ?? false,
-      seoTitle: body.seoTitle || null,
-      seoDescription: body.seoDescription || null,
+    const insertData = {
+      title: input.title,
+      slug: input.slug,
+      description: input.description,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+      locationText: input.locationText,
+      locationUrl: input.locationUrl,
+      eventImageUrl: input.eventImageUrl,
+      isPublished: input.isPublished,
+      isVisible: input.isVisible,
+      keepVisibleAfterEnd: input.keepVisibleAfterEnd,
+      seoTitle: input.seoTitle,
+      seoDescription: input.seoDescription,
       createdAt: now,
       updatedAt: now,
     }

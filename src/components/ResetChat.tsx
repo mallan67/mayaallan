@@ -161,7 +161,15 @@ export function ResetChat() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* ── Messages Area ──────────────────────────────────── */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-5 min-h-0">
+      <div
+        ref={messagesContainerRef}
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+        aria-atomic="false"
+        aria-label="Nervous System Reset conversation"
+        className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-5 min-h-0"
+      >
         {/* Empty state with starter prompts */}
         {messages.length === 0 && !isStreaming && (
           <div className="flex flex-col items-center justify-center py-4 sm:py-20">
@@ -217,7 +225,7 @@ export function ResetChat() {
 
         {/* Typing indicator */}
         {status === "submitted" && (
-          <div className="flex justify-start">
+          <div className="flex justify-start" role="status" aria-label="Assistant is typing">
             <div className="bg-white/90 border border-[#E8ECF0]/50 rounded-2xl rounded-bl-md px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
               <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-violet-400 block mb-2">
                 Reset
@@ -233,7 +241,7 @@ export function ResetChat() {
 
         {/* Error display */}
         {error && (
-          <div className="flex justify-center">
+          <div className="flex justify-center" role="alert">
             <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-3 text-red-600 text-sm text-center max-w-md">
               {isRateLimited ? (
                 "Daily limit reached. Come back tomorrow."
@@ -312,7 +320,12 @@ export function ResetChat() {
               </button>
             )}
           </div>
-          <p className="hidden sm:block text-charcoal-soft/50 text-xs text-right ml-auto">
+          {/* Safety disclaimer — visible on every viewport. Was previously
+              `hidden sm:block`, which hid the legal-safety message on mobile
+              (where most users actually visit). Even compressed, the line
+              has to be reachable: "this is not therapy" is the core
+              boundary for the tool. */}
+          <p className="text-charcoal-soft/50 text-[0.65rem] sm:text-xs text-right ml-auto">
             This is not therapy. If you need support, please reach out to a licensed professional.
           </p>
         </div>

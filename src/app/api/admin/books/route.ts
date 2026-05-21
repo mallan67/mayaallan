@@ -4,16 +4,7 @@ import { revalidatePath } from "next/cache"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
-
-function toDecimalOrNull(value: unknown): number | null {
-  if (value === null || value === undefined) return null
-  if (typeof value === "number") return Number.isFinite(value) ? value : null
-  if (typeof value !== "string") return null
-  const cleaned = value.trim().replace(/[$,]/g, "")
-  if (!cleaned) return null
-  const n = Number(cleaned)
-  return Number.isFinite(n) ? n : null
-}
+import { bookCreateSchema, formatZodError } from "@/lib/admin-schemas"
 
 export async function GET() {
   const authed = await isAuthenticated()
@@ -108,14 +99,20 @@ export async function POST(request: Request) {
 
   if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  // Step 2: Parse request body
-  let body: any
+  // Step 2: Parse + validate request body
+  let rawBody: unknown
   try {
-    body = await request.json()
+    rawBody = await request.json()
   } catch (parseError: any) {
     console.error("Body parse failed:", parseError)
     return NextResponse.json({ error: "Invalid JSON body", details: parseError?.message }, { status: 400 })
   }
+
+  const parsed = bookCreateSchema.safeParse(rawBody)
+  if (!parsed.success) {
+    return NextResponse.json(formatZodError(parsed.error), { status: 400 })
+  }
+  const input = parsed.data
 
   // Step 3: Insert into database
   try {
@@ -129,38 +126,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Server config error: Missing database credentials" }, { status: 500 })
     }
 
+    // Map validated camelCase input to the books table's snake_case columns.
     const data = {
-      slug: body.slug || "",
-      title: body.title || "",
-      subtitle1: body.subtitle1 || null,
-      subtitle2: body.subtitle2 || null,
-      subtitle3: body.subtitle3 || null,
-      tags_csv: body.tagsCsv || null,
-      isbn: body.isbn || null,
-      copyright: body.copyright || null,
-      blurb: body.blurb || null,
-      cover_url: body.coverUrl || null,
-      back_cover_url: body.backCoverUrl || null,
-      ebook_file_url: body.ebookFileUrl || null,
-      has_ebook: Boolean(body.hasEbook),
-      has_paperback: Boolean(body.hasPaperback),
-      has_hardcover: Boolean(body.hasHardcover),
-      has_audiobook: Boolean(body.hasAudiobook),
-      ebook_price: toDecimalOrNull(body.ebookPrice),
-      paperback_price: toDecimalOrNull(body.paperbackPrice),
-      hardcover_price: toDecimalOrNull(body.hardcoverPrice),
-      audiobook_price: toDecimalOrNull(body.audiobookPrice),
-      is_featured: Boolean(body.isFeatured),
-      is_published: Boolean(body.isPublished),
-      is_visible: Boolean(body.isVisible),
-      is_coming_soon: Boolean(body.isComingSoon),
-      allow_direct_sale: Boolean(body.allowDirectSale),
-      allow_retailer_sale: Boolean(body.allowRetailerSale),
-      paypal_payment_link: body.paypalPaymentLink || null,
-      seo_title: body.seoTitle || null,
-      seo_description: body.seoDescription || null,
-      og_image_url: body.ogImageUrl || null,
-      published_at: body.publishedAt ? new Date(body.publishedAt).toISOString() : null,
+      slug: input.slug,
+      title: input.title,
+      subtitle1: input.subtitle1,
+      subtitle2: input.subtitle2,
+      subtitle3: input.subtitle3,
+      tags_csv: input.tagsCsv,
+      isbn: input.isbn,
+      copyright: input.copyright,
+      blurb: input.blurb,
+      cover_url: input.coverUrl,
+      back_cover_url: input.backCoverUrl,
+      ebook_file_url: input.ebookFileUrl,
+      has_ebook: input.hasEbook,
+      has_paperback: input.hasPaperback,
+      has_hardcover: input.hasHardcover,
+      has_audiobook: input.hasAudiobook,
+      ebook_price: input.ebookPrice ?? null,
+      paperback_price: input.paperbackPrice ?? null,
+      hardcover_price: input.hardcoverPrice ?? null,
+      audiobook_price: input.audiobookPrice ?? null,
+      is_featured: input.isFeatured,
+      is_published: input.isPublished,
+      is_visible: input.isVisible,
+      is_coming_soon: input.isComingSoon,
+      allow_direct_sale: input.allowDirectSale,
+      allow_retailer_sale: input.allowRetailerSale,
+      paypal_payment_link: input.paypalPaymentLink,
+      seo_title: input.seoTitle,
+      seo_description: input.seoDescription,
+      og_image_url: input.ogImageUrl,
+      published_at: input.publishedAt,
     }
 
     const { data: book, error } = await supabaseAdmin
