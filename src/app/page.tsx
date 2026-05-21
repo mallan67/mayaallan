@@ -6,6 +6,7 @@ import { NewsletterSection } from "@/components/NewsletterSection"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateAuthorSchema } from "@/lib/structured-data"
 import { SITE_URL } from "@/lib/identity"
+import { upcomingEventsOrClause } from "@/lib/events-visibility"
 
 export const revalidate = 300 // 5 minutes
 
@@ -154,6 +155,9 @@ export default async function HomePage() {
       .from(Tables.events)
       .select("id, slug, title, description, startsAt, locationText")
       .eq("isVisible", true)
+      // Hide past events from the homepage "Upcoming Events" block
+      // unless the operator pinned them via keepVisibleAfterEnd.
+      .or(upcomingEventsOrClause())
       .order("startsAt", { ascending: true })
       .limit(3),
   ])
