@@ -3,11 +3,14 @@ import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { eventUpdateSchema, formatZodError } from "@/lib/admin-schemas"
+import { eventRowToObject, eventObjectToRow } from "@/lib/events-visibility"
 
 /**
  * EVENT API ROUTES (by ID)
  *
- * Uses Supabase Event table with camelCase columns.
+ * Reads + writes the canonical snake_case `events` table (post the
+ * 2026-05-21 reconciliation migration). Wire format stays camelCase via
+ * eventRowToObject() on read and eventObjectToRow() on write.
  */
 
 // GET single event by ID
@@ -37,7 +40,7 @@ export async function GET(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    return NextResponse.json(event)
+    return NextResponse.json(eventRowToObject(event))
   } catch (error) {
     console.error("Error fetching event:", error)
     return NextResponse.json({ error: "Failed to fetch event" }, { status: 500 })
@@ -83,14 +86,12 @@ export async function PUT(
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    // Partial update: only set columns that were actually present in the
-    // validated input. Same "field omitted = leave untouched" behavior as
-    // before, but with type-checked values.
+    // Partial update against snake_case columns. eventObjectToRow maps
+    // the camelCase validated input → snake_case columns, only emitting
+    // keys present in `input` (preserves "field omitted = column untouched").
     const updateData: Record<string, unknown> = {
-      updatedAt: new Date().toISOString(),
-    }
-    for (const key of Object.keys(input) as Array<keyof typeof input>) {
-      updateData[key] = input[key]
+      ...eventObjectToRow(input as Record<string, unknown>),
+      updated_at: new Date().toISOString(),
     }
 
     const { data: event, error: updateError } = await supabaseAdmin
@@ -111,7 +112,7 @@ export async function PUT(
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
-    return NextResponse.json(event)
+    return NextResponse.json(eventRowToObject(event))
   } catch (error: any) {
     console.error("Error updating event:", error)
     return NextResponse.json({ error: "Failed to update event" }, { status: 500 })

@@ -17,10 +17,12 @@ export const revalidate = 300
 
 async function getAuthorInfo() {
   try {
-    // Order by id to ensure we get the same row as admin settings
+    // site_settings is snake_case post-migration; map to camelCase
+    // before returning so existing UI consumers (`.authorName` etc.)
+    // continue working.
     const { data: settings, error } = await supabaseAdmin
       .from(Tables.siteSettings)
-      .select("id, authorName, authorBio, authorPhotoUrl")
+      .select("id, author_name, author_bio, author_photo_url")
       .order("id", { ascending: true })
       .limit(1)
       .single()
@@ -30,8 +32,14 @@ async function getAuthorInfo() {
       return null
     }
 
-    console.log("About page - Loaded settings id:", settings?.id, "authorName:", settings?.authorName)
-    return settings
+    const mapped = {
+      id: settings.id,
+      authorName: settings.author_name as string | null,
+      authorBio: settings.author_bio as string | null,
+      authorPhotoUrl: settings.author_photo_url as string | null,
+    }
+    console.log("About page - Loaded settings id:", mapped.id, "authorName:", mapped.authorName)
+    return mapped
   } catch (error) {
     console.error("About page - Failed to fetch author info:", error)
     return null
@@ -96,7 +104,7 @@ export default async function AboutPage() {
   const authorSchema = generateAuthorSchema(
     SITE_URL,
     author?.authorBio || "Maya Allan is an author and researcher exploring consciousness, integration, and self-agency through lived experience and inquiry.",
-    author?.authorPhotoUrl
+    author?.authorPhotoUrl ?? undefined,
   )
 
   // AEO: FAQ Schema for AI answer engines

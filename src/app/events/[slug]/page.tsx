@@ -21,8 +21,10 @@ async function getEvent(slug: string) {
   }
 
   try {
+    // Canonical snake_case table + column names (post-migration). The
+    // PascalCase /rest/v1/Event orphan path was retired here.
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/Event?slug=eq.${encodeURIComponent(slug)}&isVisible=eq.true&select=*&limit=1`,
+      `${supabaseUrl}/rest/v1/events?slug=eq.${encodeURIComponent(slug)}&is_visible=eq.true&select=*&limit=1`,
       {
         headers: {
           apikey: supabaseKey,
@@ -91,7 +93,8 @@ export default async function EventPage({ params }: EventPageProps) {
     notFound()
   }
 
-  const eventDate = new Date(event.startsAt)
+  // Snake_case columns from the canonical events table (post-migration).
+  const eventDate = new Date(event.starts_at)
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 md:py-12">
@@ -101,12 +104,12 @@ export default async function EventPage({ params }: EventPageProps) {
 
       <div className="border border-slate-200 rounded-lg p-6">
         <div className="flex flex-col md:flex-row gap-6">
-          {event.eventImageUrl && (
+          {event.event_image_url && (
             <div className="flex-shrink-0">
               <div className="relative w-full md:w-48 h-48 rounded-lg overflow-hidden bg-slate-100">
-                {isOptimizableImageHost(event.eventImageUrl) ? (
+                {isOptimizableImageHost(event.event_image_url) ? (
                   <Image
-                    src={event.eventImageUrl}
+                    src={event.event_image_url}
                     alt={event.title}
                     fill
                     sizes="(max-width: 768px) 100vw, 192px"
@@ -115,7 +118,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={event.eventImageUrl}
+                    src={event.event_image_url}
                     alt={event.title}
                     className="w-full h-full object-cover"
                   />
@@ -158,13 +161,13 @@ export default async function EventPage({ params }: EventPageProps) {
               </div>
             </div>
 
-            {event.locationText && (
+            {event.location_text && (
               <div className="flex items-center gap-2 text-sm text-slate-600 mb-4">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
-                <span>{event.locationText}</span>
+                <span>{event.location_text}</span>
               </div>
             )}
 
@@ -172,9 +175,9 @@ export default async function EventPage({ params }: EventPageProps) {
               <p className="text-slate-700 mb-6 whitespace-pre-wrap">{event.description}</p>
             )}
 
-            {event.locationUrl && (
+            {event.location_url && (
               <a
-                href={event.locationUrl}
+                href={event.location_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block px-6 py-3 text-sm font-semibold text-white bg-black rounded-lg hover:bg-black/80 transition"

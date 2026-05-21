@@ -102,10 +102,35 @@ export async function GET() {
       throw error
     }
 
-    return NextResponse.json(settings || {})
+    // DB is snake_case (post-migration). The admin UI expects camelCase.
+    return NextResponse.json(settings ? settingsRowToObject(settings) : {})
   } catch (error) {
     console.error("Error fetching settings:", error)
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 })
+  }
+}
+
+// Internal: DB row (snake_case) ↔ API/admin-UI shape (camelCase).
+// Mirrors the books / events pattern: snake_case in the DB, camelCase
+// over the wire so existing admin UI doesn't need a rewrite.
+function settingsRowToObject(row: any): Record<string, unknown> {
+  return {
+    id: row.id,
+    siteName: row.site_name,
+    tagline: row.tagline,
+    contactEmail: row.contact_email,
+    socialX: row.social_x,
+    socialInstagram: row.social_instagram,
+    socialFacebook: row.social_facebook,
+    socialYoutube: row.social_youtube,
+    socialTiktok: row.social_tiktok,
+    footerText: row.footer_text,
+    authorName: row.author_name,
+    authorBio: row.author_bio,
+    authorPhotoUrl: row.author_photo_url,
+    defaultOgImageUrl: row.default_og_image_url,
+    siteIconUrl: row.site_icon_url,
+    updatedAt: row.updated_at,
   }
 }
 
@@ -149,24 +174,24 @@ export async function PATCH(request: Request) {
       .limit(1)
       .single()
 
-    // SiteSettings table uses camelCase columns. Spread the validated
-    // values directly — emptyToNull has already converted "" to null.
+    // site_settings table uses snake_case columns (post-migration).
+    // Map the validated camelCase input → snake_case columns.
     const settingsData: Record<string, unknown> = {
-      siteName: data.siteName,
+      site_name: data.siteName,
       tagline: data.tagline,
-      contactEmail: data.contactEmail,
-      socialX: data.socialX,
-      socialInstagram: data.socialInstagram,
-      socialFacebook: data.socialFacebook,
-      socialYoutube: data.socialYoutube,
-      socialTiktok: data.socialTiktok,
-      footerText: data.footerText,
-      authorName: data.authorName,
-      authorBio: data.authorBio,
-      authorPhotoUrl: data.authorPhotoUrl,
-      defaultOgImageUrl: data.defaultOgImageUrl,
-      siteIconUrl: data.siteIconUrl,
-      updatedAt: new Date().toISOString(),
+      contact_email: data.contactEmail,
+      social_x: data.socialX,
+      social_instagram: data.socialInstagram,
+      social_facebook: data.socialFacebook,
+      social_youtube: data.socialYoutube,
+      social_tiktok: data.socialTiktok,
+      footer_text: data.footerText,
+      author_name: data.authorName,
+      author_bio: data.authorBio,
+      author_photo_url: data.authorPhotoUrl,
+      default_og_image_url: data.defaultOgImageUrl,
+      site_icon_url: data.siteIconUrl,
+      updated_at: new Date().toISOString(),
     }
 
     let settings
@@ -203,7 +228,7 @@ export async function PATCH(request: Request) {
     revalidatePath("/books", "page")
     revalidatePath("/contact", "page")
 
-    return NextResponse.json(settings)
+    return NextResponse.json(settingsRowToObject(settings))
   } catch (error) {
     console.error("Error saving settings:", error)
     return NextResponse.json({ error: "Failed to save settings" }, { status: 500 })

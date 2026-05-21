@@ -5,13 +5,13 @@ export async function GET() {
   try {
     const { data: settings } = await supabaseAdmin
       .from(Tables.siteSettings)
-      .select("siteIconUrl")
+      .select("site_icon_url")
       .limit(1)
       .single()
 
-    if (settings?.siteIconUrl) {
+    if (settings?.site_icon_url) {
       // Redirect to the uploaded icon
-      return NextResponse.redirect(settings.siteIconUrl)
+      return NextResponse.redirect(settings.site_icon_url)
     }
 
     // Return a default response if no icon is set

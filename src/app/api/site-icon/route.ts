@@ -5,12 +5,12 @@ export async function GET() {
   try {
     const { data: settings } = await supabaseAdmin
       .from(Tables.siteSettings)
-      .select("siteIconUrl")
+      .select("site_icon_url")
       .limit(1)
       .single()
 
-    if (settings?.siteIconUrl) {
-      return NextResponse.json({ iconUrl: settings.siteIconUrl })
+    if (settings?.site_icon_url) {
+      return NextResponse.json({ iconUrl: settings.site_icon_url })
     }
 
     return NextResponse.json({ iconUrl: null })

@@ -45,19 +45,26 @@ export const supabaseAdmin = new Proxy({} as SupabaseClient, {
 })
 
 /**
- * Table name mappings (Prisma model -> Supabase table)
- * Supabase uses snake_case table names by convention
+ * Table name mappings (logical name → live Supabase table name).
+ *
+ * All names below resolve to snake_case Postgres tables. The historical
+ * Prisma PascalCase tables ("Event", "SiteSettings") were reconciled to
+ * snake_case by supabase/migrations/2026-05-21-events-and-site-settings-
+ * snake-case.sql. The PascalCase tables are intentionally kept for now
+ * as a rollback safety net — they'll be dropped in a separate PR after
+ * the snake_case path has been verified live for at least one release
+ * cycle.
  */
 export const Tables = {
   books: "books",
   navigationItems: "navigation_items",
-  siteSettings: "SiteSettings",
+  siteSettings: "site_settings",
   retailers: "retailers",
   bookRetailerLinks: "book_retailer_links",
   emailSubscribers: "email_subscribers",
   contactSubmissions: "contact_submissions",
   orders: "orders",
   downloadTokens: "download_tokens",
-  events: "Event",  // PascalCase table with camelCase columns
+  events: "events",
   mediaItems: "media_items",
 } as const

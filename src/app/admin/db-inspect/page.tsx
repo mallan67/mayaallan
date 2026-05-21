@@ -132,28 +132,27 @@ async function getVisibleEventsCheck(): Promise<{
   rows: VisibleEventRow[] | null
   error: string | null
 }> {
-  // Read-only check used to answer "why is the Jan 15 event still showing
-  // on the live homepage after PR #5C?" — surfaces every event the public
-  // filter would currently allow through, plus its keepVisibleAfterEnd
-  // flag, so the operator can see at a glance whether the past-event
-  // visibility is intentional pinning vs. a filter bug.
+  // Surfaces every event the public filter would currently allow through.
+  // Reads from the canonical snake_case `events` table (post-migration)
+  // so the report reflects what the live site actually shows. Output
+  // stays camelCase for the existing UI consumer below.
   try {
     const { data, error } = await supabaseAdmin
-      .from("Event")
-      .select("slug, startsAt, endsAt, keepVisibleAfterEnd, isVisible")
-      .eq("isVisible", true)
-      .order("startsAt", { ascending: true })
+      .from("events")
+      .select("slug, starts_at, ends_at, keep_visible_after_end, is_visible")
+      .eq("is_visible", true)
+      .order("starts_at", { ascending: true })
     if (error) {
       return { rows: null, error: error.message?.slice(0, 200) ?? "Unknown error" }
     }
     const nowMs = Date.now()
     const rows: VisibleEventRow[] = (data ?? []).map((row: any) => ({
       slug: row.slug,
-      startsAt: row.startsAt ?? null,
-      endsAt: row.endsAt ?? null,
-      keepVisibleAfterEnd: row.keepVisibleAfterEnd ?? null,
-      isVisible: row.isVisible ?? null,
-      isPast: row.startsAt ? new Date(row.startsAt).getTime() < nowMs : null,
+      startsAt: row.starts_at ?? null,
+      endsAt: row.ends_at ?? null,
+      keepVisibleAfterEnd: row.keep_visible_after_end ?? null,
+      isVisible: row.is_visible ?? null,
+      isPast: row.starts_at ? new Date(row.starts_at).getTime() < nowMs : null,
     }))
     return { rows, error: null }
   } catch (err) {
@@ -358,8 +357,8 @@ export default async function DbInspectPage() {
           Visible-events check (why is the Jan 15 event still on the homepage?)
         </h2>
         <p className="text-sm text-slate-600 mb-4">
-          Every row from <code>Event</code> with <code>isVisible = true</code>, with
-          <code> keepVisibleAfterEnd</code> + computed <code>isPast</code>. Past + pinned
+          Every row from canonical <code>events</code> with <code>is_visible = true</code>, with
+          <code> keep_visible_after_end</code> + computed <code>isPast</code>. Past + pinned
           rows are the ones the PR-#5C filter intentionally keeps visible.
         </p>
         {report.visibleEventsError ? (
