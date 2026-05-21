@@ -120,7 +120,8 @@ export async function POST(req: NextRequest) {
           transmissionIdPrefix: headers.transmissionId?.slice(0, 12) ?? null,
         },
         dedupKey: `export:cross-env:${signedByEnv}-to-${ourEnv}`,
-        dedupWindowMs: 24 * 60 * 60 * 1000,
+        // 7-day dedup — same reasoning as the book webhook's cross-env path.
+        dedupWindowMs: 7 * 24 * 60 * 60 * 1000,
       })
       return NextResponse.json({ received: true, ignored: "cross-env-webhook" })
     }

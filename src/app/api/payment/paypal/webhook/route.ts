@@ -206,7 +206,11 @@ export async function POST(request: Request) {
           transmissionIdPrefix: transmissionId?.slice(0, 12) ?? null,
         },
         dedupKey: `paypal:cross-env:${signedByEnv}-to-${ourEnv}`,
-        dedupWindowMs: 24 * 60 * 60 * 1000,
+        // 7-day dedup. Cross-env is the transient state where a deleted
+        // subscription's queued retries are draining out of PayPal's queue
+        // (max 3 days). One alert per direction per week is more than
+        // enough — the operator can't do anything new each time it fires.
+        dedupWindowMs: 7 * 24 * 60 * 60 * 1000,
       })
       return NextResponse.json({ received: true, ignored: "cross-env-webhook" })
     }

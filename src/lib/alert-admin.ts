@@ -15,6 +15,7 @@
  */
 import "server-only"
 import { Resend } from "resend"
+import { getUpstash } from "@/lib/upstash"
 
 export type AlertSeverity = "info" | "warning" | "error" | "critical"
 
@@ -30,14 +31,23 @@ const HTML_ENTITIES: Record<string, string> = {
 }
 const escapeHtml = (s: string) => s.replace(/[<>&"']/g, (c) => HTML_ENTITIES[c]!)
 
-// Per-instance dedup: suppress repeats of the same alert key within the window.
-// In-memory only — resets on serverless cold start. That's acceptable: at worst
-// a fresh instance sends one duplicate, vs a storm of dozens during a real
-// incident. For tighter guarantees, swap for a tiny KV store later.
+// Two-layer dedup:
+//
+//   1. In-memory Map  — fastest, but resets on serverless cold start. Useful
+//      for catching same-instance bursts within milliseconds.
+//   2. Upstash Redis  — persistent across cold starts AND across multiple
+//      concurrent function instances. This is what makes 24h dedup actually
+//      last 24h instead of "until the next cold start." Best-effort: if
+//      Upstash is unavailable, we fall through to in-memory only.
+//
+// Why both: Upstash adds a network call, so a tight loop in a single function
+// instance is faster with the in-memory check. Upstash's value is preventing
+// a fresh lambda from re-alerting on the same incident moments after another
+// lambda already alerted.
 const DEFAULT_DEDUP_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 const recentAlerts = new Map<string, number>()
 
-function shouldSuppress(dedupKey: string, windowMs: number): boolean {
+function suppressedInMemory(dedupKey: string, windowMs: number): boolean {
   const now = Date.now()
   // Opportunistic eviction (avoid unbounded growth on a long-lived instance)
   if (recentAlerts.size > 256) {
@@ -49,6 +59,32 @@ function shouldSuppress(dedupKey: string, windowMs: number): boolean {
   if (last && now - last < windowMs) return true
   recentAlerts.set(dedupKey, now)
   return false
+}
+
+/**
+ * Persistent dedup via Upstash. Returns true if another instance has already
+ * alerted on this key within the window — we should suppress. Returns false
+ * if we just successfully claimed the key (we're the first; alert).
+ *
+ * Falls through to "not suppressed" if Upstash is unavailable so a temporary
+ * Upstash outage doesn't permanently silence alerts. This is the correct
+ * failure mode for an alerting path — better to over-alert than miss a real
+ * incident because Redis was down.
+ */
+async function suppressedByUpstash(dedupKey: string, windowMs: number): Promise<boolean> {
+  const redis = getUpstash()
+  if (!redis) return false
+  try {
+    const key = `alertdedup:${dedupKey}`
+    const seconds = Math.max(1, Math.ceil(windowMs / 1000))
+    // SETNX with EX — atomically set if not exists, with TTL. Returns "OK" if
+    // we won the race, null if another worker already set it.
+    const result = await redis.set(key, "1", { nx: true, ex: seconds })
+    return result !== "OK"
+  } catch (err) {
+    console.error("[alertAdmin] Upstash dedup probe threw:", err instanceof Error ? err.message : String(err))
+    return false
+  }
 }
 
 export async function alertAdmin(opts: {
@@ -65,8 +101,18 @@ export async function alertAdmin(opts: {
   const dedupKey = opts.dedupKey ?? `${severity}::${opts.subject}`
   const dedupWindowMs = opts.dedupWindowMs ?? DEFAULT_DEDUP_WINDOW_MS
 
-  if (shouldSuppress(dedupKey, dedupWindowMs)) {
-    console.warn(`[alertAdmin] suppressed (dedup) within ${Math.round(dedupWindowMs / 60_000)}min: ${opts.subject}`)
+  if (suppressedInMemory(dedupKey, dedupWindowMs)) {
+    console.warn(`[alertAdmin] suppressed (in-memory dedup) within ${Math.round(dedupWindowMs / 60_000)}min: ${opts.subject}`)
+    return { ok: false, error: "Suppressed by dedup", suppressed: true }
+  }
+
+  // Cross-instance / cross-cold-start dedup. Only consulted AFTER the
+  // in-memory check passes — if we're already suppressing locally there's
+  // no need to chew a network round-trip. The Upstash check is also what
+  // prevents two fresh cold-started lambdas from both alerting on the same
+  // incident moments apart.
+  if (await suppressedByUpstash(dedupKey, dedupWindowMs)) {
+    console.warn(`[alertAdmin] suppressed (Upstash dedup) within ${Math.round(dedupWindowMs / 60_000)}min: ${opts.subject}`)
     return { ok: false, error: "Suppressed by dedup", suppressed: true }
   }
 
