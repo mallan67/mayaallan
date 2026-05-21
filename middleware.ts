@@ -36,11 +36,13 @@ export function middleware(request: NextRequest) {
     // CRITICAL: If admin auth is not configured, BLOCK ALL ACCESS
     const hasSessionSecret = !!process.env.SESSION_SECRET
     const hasAdminEmail = !!process.env.ADMIN_EMAIL
-    // Bcrypt-hashed credential is required; the legacy plaintext
-    // ADMIN_PASSWORD path was removed (Vercel env vars are visible to
-    // anyone with project read access — plaintext storage there was a
-    // credential leak waiting to happen).
-    const hasAdminCredential = !!process.env.ADMIN_PASSWORD_HASH
+    // Either credential form satisfies the requirement: ADMIN_PASSWORD_HASH
+    // (bcrypt, preferred) OR the legacy plaintext ADMIN_PASSWORD. The
+    // plaintext path is deprecated but kept until the operator confirms
+    // ADMIN_PASSWORD_HASH is set in Vercel — removing it without that
+    // confirmation locks the operator out of their own admin.
+    const hasAdminCredential =
+      !!process.env.ADMIN_PASSWORD_HASH || !!process.env.ADMIN_PASSWORD
 
     // EMERGENCY BLOCK: If environment variables are missing, redirect to login
     // (AdminAuthGuard will show the error message)

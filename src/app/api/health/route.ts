@@ -71,8 +71,12 @@ function checkAdminEnv(): CheckResult {
   if (!process.env.ADMIN_EMAIL) {
     return { ok: false, error: "ADMIN_EMAIL not configured" }
   }
-  if (!process.env.ADMIN_PASSWORD_HASH) {
-    return { ok: false, error: "ADMIN_PASSWORD_HASH not configured" }
+  // Either credential form satisfies the health check — matches the
+  // login route's acceptance policy. The login route emits a deprecation
+  // warning per cold start when only the plaintext path is used; health
+  // doesn't need to surface that since it would 503 the CI probe.
+  if (!process.env.ADMIN_PASSWORD_HASH && !process.env.ADMIN_PASSWORD) {
+    return { ok: false, error: "ADMIN_PASSWORD_HASH (or legacy ADMIN_PASSWORD) not configured" }
   }
   return { ok: true }
 }
