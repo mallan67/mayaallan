@@ -4,6 +4,7 @@ import { ShareButtons } from "@/components/share-buttons"
 import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
 import { SITE_URL } from "@/lib/identity"
+import { upcomingEventsOrClause } from "@/lib/events-visibility"
 
 export const metadata: Metadata = {
   title: "Events",
@@ -41,6 +42,11 @@ async function getVisibleEvents() {
       .from(Tables.events)
       .select("*")
       .eq("isVisible", true)
+      // Hide past events from the /events listing unless the operator
+      // explicitly pinned them via keepVisibleAfterEnd. The framing of
+      // this page is "Upcoming talks, readings, and workshops" (per
+      // the page metadata) — past events leak misleadingly into that view.
+      .or(upcomingEventsOrClause())
       .order("startsAt", { ascending: true })
 
     if (error) {

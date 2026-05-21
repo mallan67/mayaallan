@@ -4,6 +4,7 @@ import { listPosts } from "@/lib/posts"
 import { listScenarios } from "@/lib/scenarios"
 import { LOCALES, SITE_URL, type Locale } from "@/lib/identity"
 import { sitemapAlternates } from "@/lib/i18n/hreflang"
+import { upcomingEventsOrClause } from "@/lib/events-visibility"
 
 // Pages that have translated versions live. As more pages get translated, add
 // their root-relative path here so the sitemap emits hreflang alternates for
@@ -215,11 +216,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     // Dynamic event pages - fetch visible events from Supabase
-    // Note: Event table uses camelCase columns (isVisible, updatedAt)
+    // Note: Event table uses camelCase columns (isVisible, updatedAt).
+    // Past events are excluded unless the operator pinned them via
+    // keepVisibleAfterEnd — same rule as the public /events listing.
+    // This keeps Googlebot from indexing dead "Upcoming Events" links.
     const { data: events, error: eventsError } = await supabaseAdmin
       .from(Tables.events)
       .select("slug, updatedAt")
       .eq("isVisible", true)
+      .or(upcomingEventsOrClause())
 
     if (!eventsError && events) {
       eventPages = events.map((event) => ({
