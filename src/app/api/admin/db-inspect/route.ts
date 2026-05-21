@@ -150,8 +150,8 @@ function recommend(pascal: TableProbe, snake: TableProbe): string {
   if (!pHasData && !sHasData) {
     return (
       "NEITHER SIDE HAS ROWS. Pick the snake_case name as canonical, drop the " +
-      "PascalCase orphan if it exists. Confirm absence of foreign keys / RLS " +
-      "policies still referencing the old name before dropping."
+      "PascalCase orphan if it exists. Confirm absence of foreign-key " +
+      "constraints still referencing the old name before dropping."
     )
   }
   return "Unreachable."

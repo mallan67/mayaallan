@@ -1,4 +1,17 @@
-# Backend Features - Complete Documentation
+# Backend Features — Historical Reference
+
+> ⚠️ **HISTORICAL — NOT MAINTAINED.** This document describes an earlier
+> snapshot of the admin/backend feature set. It is **not authoritative**
+> for current behavior. In particular:
+>
+> - **Stripe was removed** from the codebase. There is no
+>   `/api/payment/stripe/webhook`, no `stripePaymentLink` field, and no
+>   Stripe processing path. The only payment integration is PayPal.
+> - Other claims here (field names, admin routes, "what's not included"
+>   list) may have drifted from the live code.
+>
+> For current behavior, read the actual source files. Do not rely on
+> this document for implementation decisions.
 
 ## What Existed Before
 
@@ -62,12 +75,8 @@
 
 **Direct Sales with Real Payments (NEW):**
 - Per-book toggle: `allowDirectSale`
-- Integration fields:
-  - `stripePaymentLink` - Stripe checkout URL
-  - `paypalPaymentLink` - PayPal payment URL
-- Webhook endpoints:
-  - `/api/payment/stripe/webhook` - Processes Stripe payments
-  - `/api/payment/paypal/webhook` - Processes PayPal payments
+- Integration field: `paypalPaymentLink` — PayPal payment URL
+- Webhook endpoint: `/api/payment/paypal/webhook` — processes PayPal payments
 - After successful payment:
   - Webhook receives event
   - Verifies payment
@@ -206,7 +215,6 @@ return true
 ### Public Endpoints
 - `POST /api/contact` - Submit contact form
 - `POST /api/subscribe` - Subscribe to email list
-- `POST /api/payment/stripe/webhook` - Stripe payment webhook
 - `POST /api/payment/paypal/webhook` - PayPal payment webhook
 
 ---
