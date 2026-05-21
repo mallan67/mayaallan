@@ -24,10 +24,8 @@ interface Props {
 // Simple fetch function for edge runtime (no heavy dependencies)
 async function getBookData(slug: string) {
   const supabaseUrl = process.env.SUPABASE_URL
-  // Server-only key chain (pre-RLS cleanup): public anon/publishable
-  // keys removed so future RLS policies cannot be bypassed by this
-  // surface. Falls through to the null-return fallback below when no
-  // server key is set, which yields the default visual.
+  // Server-only key chain: public-key fallbacks removed; default
+  // visual renders when no server key is set.
   const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {

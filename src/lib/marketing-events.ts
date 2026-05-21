@@ -249,7 +249,7 @@ export async function trackMarketingEvent(input: TrackInput): Promise<void> {
           "trackMarketingEvent() supabase insert returned an error. If this " +
           "persists, every event in the analytics stream is being lost — " +
           "revenue-by-campaign + funnel reporting will go quiet. Most common " +
-          "causes: missing column, RLS policy regression, table renamed.",
+          "causes: missing column, table renamed, or supabase auth issue.",
         details: {
           errorMessage: error.message,
           errorCode: error.code,
