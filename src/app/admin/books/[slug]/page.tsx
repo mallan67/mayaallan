@@ -13,7 +13,7 @@ import Image from "next/image"
  * Restores:
  * - Cover + back cover + ebook uploads
  * - Pricing, formats, publishing status
- * - Direct sale links (Stripe/PayPal)
+ * - Direct sale links (PayPal)
  * - Retailer links section
  * - SEO metadata
  *
@@ -60,7 +60,6 @@ interface Book {
 
   allowDirectSale: boolean
   allowRetailerSale: boolean
-  stripePaymentLink: string | null
   paypalPaymentLink: string | null
 
   seoTitle: string | null
@@ -95,7 +94,6 @@ const defaultBook: Book = {
 
   allowDirectSale: false,
   allowRetailerSale: false,
-  stripePaymentLink: null,
   paypalPaymentLink: null,
 
   seoTitle: null,
@@ -651,23 +649,12 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
               />
               <div>
                 <span className="font-medium">💳 Direct Sale</span>
-                <p className="text-xs text-slate-500">Sell via Stripe/PayPal links</p>
+                <p className="text-xs text-slate-500">Sell via PayPal link</p>
               </div>
             </label>
 
             {book.allowDirectSale && (
               <div className="mt-4 ml-8 space-y-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Stripe Payment Link</label>
-                  <input
-                    type="url"
-                    value={book.stripePaymentLink || ""}
-                    onChange={(e) => setBook({ ...book, stripePaymentLink: e.target.value || null })}
-                    className="w-full border rounded-lg px-3 py-2"
-                    placeholder="https://buy.stripe.com/..."
-                  />
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium mb-1">PayPal Payment Link</label>
                   <input
@@ -679,10 +666,10 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
                   />
                 </div>
 
-                {!book.stripePaymentLink && !book.paypalPaymentLink && (
+                {!book.paypalPaymentLink && (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                     <p className="text-xs text-amber-800">
-                      ⚠️ Add at least one payment link for “Buy Now” buttons to appear.
+                      ⚠️ Add a PayPal payment link for the “Buy Now” button to appear.
                     </p>
                   </div>
                 )}

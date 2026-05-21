@@ -4,18 +4,11 @@ import { useState } from "react"
 
 interface PaymentButtonsProps {
   bookId: number
-  /** Whether to render the Stripe checkout button. Default true. */
-  hasStripe?: boolean
   /**
-   * Whether to render the PayPal direct-checkout button.
-   *
-   * Recommended: false now that Stripe is live. Stripe Checkout already
-   * offers PayPal as a payment method (when enabled in the Stripe Dashboard),
-   * which means buyers who want to use PayPal still can — without the
-   * shared-device session-cookie exposure the standalone PayPal flow has.
-   *
-   * Pass true only if you specifically want both buttons visible side-by-side
-   * during a transition window.
+   * Whether to render the PayPal direct-checkout button. Default true.
+   * PayPal is the sole supported payment processor on the site. The
+   * standalone PayPal flow is routed through /checkout/privacy-gate to
+   * mitigate the shared-device PayPal-session-cookie exposure.
    */
   hasPayPal?: boolean
   /** Format shown on the button so the customer knows what they're buying. */
@@ -26,42 +19,14 @@ interface PaymentButtonsProps {
 
 export function PaymentButtons({
   bookId,
-  // Stripe button is hidden by default while the Stripe Link cross-merchant
-  // session behavior (and Stripe's 5-10-business-day card refund timing)
-  // are evaluated. The Stripe integration code is fully shipped and live —
-  // pass `hasStripe={true}` from the call site to re-enable.
-  hasStripe = false,
   hasPayPal = true,
   formatLabel = "Ebook",
   priceLabel,
 }: PaymentButtonsProps) {
-  const [loadingStripe, setLoadingStripe] = useState(false)
   const [loadingPayPal, setLoadingPayPal] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const startStripeCheckout = async () => {
-    setLoadingStripe(true)
-    setError(null)
-    try {
-      const response = await fetch("/api/checkout/stripe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId }),
-      })
-      const data = await response.json()
-      if (response.ok && data.url) {
-        window.location.href = data.url
-      } else {
-        setError(data.error || "Failed to create checkout session")
-        setLoadingStripe(false)
-      }
-    } catch {
-      setError("Something went wrong. Please try again.")
-      setLoadingStripe(false)
-    }
-  }
-
-  // PayPal now routes through the /checkout/privacy-gate page rather than
+  // PayPal routes through the /checkout/privacy-gate page rather than
   // POSTing directly. The gate forces explicit "this is my PayPal account"
   // confirmation, clears any client-side checkout state, and then opens
   // PayPal in a popup via SDK v6 (with a redirect fallback).
@@ -71,7 +36,6 @@ export function PaymentButtons({
     window.location.href = `/checkout/privacy-gate?bookId=${encodeURIComponent(String(bookId))}`
   }
 
-  const handleStripeCheckout = startStripeCheckout
   const handlePayPalCheckout = goToPrivacyGate
 
   // Shared lock-icon SVG. Single inline source avoids a network request and
@@ -96,36 +60,10 @@ export function PaymentButtons({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
-        {hasStripe && (
-          <button
-            onClick={handleStripeCheckout}
-            disabled={loadingStripe || loadingPayPal}
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-center bg-charcoal text-white rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
-            aria-label={
-              loadingStripe
-                ? "Processing payment"
-                : `Buy ${formatLabel}${priceLabel ? ` ${priceLabel}` : ""}`
-            }
-          >
-            <LockIcon />
-            <span>
-              {loadingStripe ? (
-                "Processing…"
-              ) : (
-                <>
-                  Buy {formatLabel}
-                  {priceLabel && (
-                    <span className="font-normal opacity-90"> · {priceLabel}</span>
-                  )}
-                </>
-              )}
-            </span>
-          </button>
-        )}
         {hasPayPal && (
           <button
             onClick={handlePayPalCheckout}
-            disabled={loadingPayPal || loadingStripe}
+            disabled={loadingPayPal}
             className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
             aria-label={
               loadingPayPal

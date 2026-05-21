@@ -23,7 +23,6 @@ const CHECKOUT_STORAGE_PREFIXES = [
   // related code. Currently the codebase uses none of these for PII; if
   // any future code does, the clear here remains correct.
   "paypal_",
-  "stripe_",
   "checkout_",
   "buyer_",
   "order_",
