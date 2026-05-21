@@ -119,22 +119,21 @@ const TOOL_DISPLAY = {
   integration: "Integration",
 } as const
 
-// Placeholder section labels — operator (Maya) will finalize wording.
-// Keep them factual / structural so they read sensibly until she rewrites
-// them with her own voice. Per the audit fix-up direction: implement the
-// structure first, finalize the language separately.
-const SECTION_LABEL_USER_BELIEF = {
-  reset: "The state you came in with",
-  belief_inquiry: "The belief you brought in",
-  integration: "What you brought in",
+// Customer-facing section labels. PRIOR labels are preserved verbatim from
+// the previous template version; only the strictly-new sections required
+// by the structural rewrite (closing-anchor surface + transcript appendix)
+// introduce new copy. Operator review approved this minimum-change set.
+const TOOL_SECTION_LABELS = {
+  reset: "The state you explored",
+  belief_inquiry: "The belief you explored",
+  integration: "The shift you explored",
 } as const
 
-const SECTION_LABEL_KEY_REFLECTIONS = "Key reflections from the session"
-const SECTION_LABEL_CLOSING_ANCHOR = "Closing reflection"
-const SECTION_LABEL_USER_CLOSING = "What you noticed at the end"
+const SECTION_LABEL_KEY_REFLECTIONS = "Key reflections"
+const SECTION_LABEL_CLOSING_ANCHOR = "Closing reflection"  // NEW — required to surface the [SESSION_COMPLETE] anchor
 const SECTION_LABEL_JOURNALING = "Journaling prompts"
 const SECTION_LABEL_NOTES = "Your notes"
-const SECTION_LABEL_TRANSCRIPT = "Full conversation"
+const SECTION_LABEL_TRANSCRIPT = "Full conversation"        // NEW — required for the appendix page
 
 const JOURNALING_PROMPTS = {
   reset: [
@@ -155,7 +154,7 @@ export function SessionPdf(props: PdfProps) {
   const { tool, insights, sessionDate } = props
   const prompts = JOURNALING_PROMPTS[tool]
   const toolName = TOOL_DISPLAY[tool]
-  const userBeliefLabel = SECTION_LABEL_USER_BELIEF[tool]
+  const userBeliefLabel = TOOL_SECTION_LABELS[tool]
 
   return (
     <Document>
@@ -198,12 +197,11 @@ export function SessionPdf(props: PdfProps) {
           </>
         )}
 
-        {insights.closingUserReflection && (
-          <>
-            <Text style={styles.sectionTitle}>{SECTION_LABEL_USER_CLOSING}</Text>
-            <Text style={styles.userQuote}>{insights.closingUserReflection}</Text>
-          </>
-        )}
+        {/* The closing user reflection is intentionally NOT rendered as its
+            own section — it's already visible in the transcript appendix.
+            Adding a second section heading here would have meant inventing
+            new customer-facing copy, and the appendix surface preserves
+            the same content without that cost. */}
 
         <Text style={styles.sectionTitle}>{SECTION_LABEL_JOURNALING}</Text>
         {prompts.map((p, i) => (
