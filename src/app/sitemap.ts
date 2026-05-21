@@ -215,21 +215,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }))
     }
 
-    // Dynamic event pages - fetch visible events from Supabase
-    // Note: Event table uses camelCase columns (isVisible, updatedAt).
-    // Past events are excluded unless the operator pinned them via
-    // keepVisibleAfterEnd — same rule as the public /events listing.
-    // This keeps Googlebot from indexing dead "Upcoming Events" links.
+    // Dynamic event pages — events table is canonical snake_case
+    // post-migration. Past events excluded unless pinned via
+    // keep_visible_after_end, same rule as /events listing. Keeps
+    // Googlebot from indexing dead "Upcoming Events" links.
     const { data: events, error: eventsError } = await supabaseAdmin
       .from(Tables.events)
-      .select("slug, updatedAt")
-      .eq("isVisible", true)
+      .select("slug, updated_at")
+      .eq("is_visible", true)
       .or(upcomingEventsOrClause())
 
     if (!eventsError && events) {
-      eventPages = events.map((event) => ({
+      eventPages = events.map((event: any) => ({
         url: `${baseUrl}/events/${event.slug}`,
-        lastModified: event.updatedAt ? new Date(event.updatedAt) : currentDate,
+        lastModified: event.updated_at ? new Date(event.updated_at) : currentDate,
         changeFrequency: "weekly" as const,
         priority: 0.7,
       }))

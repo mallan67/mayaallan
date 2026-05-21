@@ -33,12 +33,19 @@ export const revalidate = 300 // Revalidate every 5 minutes
 
 async function getSiteSettings() {
   try {
+    // site_settings is snake_case post-migration; map to camelCase
+    // for the consumers below (`siteName`, `tagline`, `siteIconUrl`).
     const { data: settings } = await supabaseAdmin
       .from(Tables.siteSettings)
-      .select("siteName, tagline, siteIconUrl")
+      .select("site_name, tagline, site_icon_url")
       .limit(1)
       .single()
-    return settings
+    if (!settings) return null
+    return {
+      siteName: settings.site_name as string | null,
+      tagline: settings.tagline as string | null,
+      siteIconUrl: settings.site_icon_url as string | null,
+    }
   } catch (error) {
     return null
   }

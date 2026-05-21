@@ -148,17 +148,17 @@ export default async function HomePage() {
       .single(),
     supabaseAdmin
       .from(Tables.siteSettings)
-      .select("authorName, authorBio, authorPhotoUrl")
+      .select("author_name, author_bio, author_photo_url")
       .limit(1)
       .single(),
     supabaseAdmin
       .from(Tables.events)
-      .select("id, slug, title, description, startsAt, locationText")
-      .eq("isVisible", true)
+      .select("id, slug, title, description, starts_at, location_text")
+      .eq("is_visible", true)
       // Hide past events from the homepage "Upcoming Events" block
-      // unless the operator pinned them via keepVisibleAfterEnd.
+      // unless the operator pinned them via keep_visible_after_end.
       .or(upcomingEventsOrClause())
-      .order("startsAt", { ascending: true })
+      .order("starts_at", { ascending: true })
       .limit(3),
   ])
 
@@ -195,14 +195,15 @@ export default async function HomePage() {
     console.error("Homepage featured book fetch failed:", featuredBookResult.reason)
   }
 
-  // Author info
+  // Author info — DB returns snake_case (post-migration); map to camelCase
+  // for the JS-side `authorInfo` shape (keeps UI consumers unchanged).
   if (authorInfoResult.status === "fulfilled") {
     const { data } = authorInfoResult.value
     if (data) {
       authorInfo = {
-        authorName: data.authorName,
-        authorBio: data.authorBio,
-        authorPhotoUrl: data.authorPhotoUrl,
+        authorName: data.author_name,
+        authorBio: data.author_bio,
+        authorPhotoUrl: data.author_photo_url,
       }
     }
   } else {
@@ -210,11 +211,20 @@ export default async function HomePage() {
     // Fallback handled in rendering
   }
 
-  // Upcoming events
+  // Upcoming events — DB returns snake_case (post-migration); map to camelCase
+  // so the existing render code (event.startsAt / event.locationText) keeps
+  // working without per-component refactor.
   if (upcomingEventsResult.status === "fulfilled") {
     const { data } = upcomingEventsResult.value
     if (data && data.length > 0) {
-      upcomingEvents = data
+      upcomingEvents = data.map((row: any) => ({
+        id: row.id,
+        slug: row.slug,
+        title: row.title,
+        description: row.description,
+        startsAt: row.starts_at,
+        locationText: row.location_text,
+      }))
     }
   } else {
     console.error("Homepage upcomingEvents fetch failed:", upcomingEventsResult.reason)

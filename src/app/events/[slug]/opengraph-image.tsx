@@ -37,7 +37,7 @@ async function getEvent(slug: string) {
 
   try {
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/Event?slug=eq.${encodeURIComponent(slug)}&select=title,description,startsAt,locationText,eventImageUrl&limit=1`,
+      `${supabaseUrl}/rest/v1/events?slug=eq.${encodeURIComponent(slug)}&select=title,description,starts_at,location_text,event_image_url&limit=1`,
       {
         headers: {
           apikey: supabaseKey,
@@ -95,7 +95,7 @@ export default async function Image({ params }: Props) {
   const truncatedDesc = description.length > 100 ? description.substring(0, 97) + "..." : description
 
   // Format date
-  const eventDate = new Date(event.startsAt)
+  const eventDate = new Date(event.starts_at)
   const dateStr = eventDate.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
@@ -108,10 +108,10 @@ export default async function Image({ params }: Props) {
   })
 
   // Ensure image URL is absolute
-  const imageUrl = event.eventImageUrl
-    ? event.eventImageUrl.startsWith("http")
-      ? event.eventImageUrl
-      : `https://www.mayaallan.com${event.eventImageUrl}`
+  const imageUrl = event.event_image_url
+    ? event.event_image_url.startsWith("http")
+      ? event.event_image_url
+      : `https://www.mayaallan.com${event.event_image_url}`
     : null
 
   return new ImageResponse(
@@ -245,9 +245,9 @@ export default async function Image({ params }: Props) {
           </div>
 
           {/* Location */}
-          {event.locationText && (
+          {event.location_text && (
             <p style={{ fontSize: "20px", color: "#000000", fontWeight: 400, marginBottom: "16px" }}>
-              {event.locationText}
+              {event.location_text}
             </p>
           )}
 

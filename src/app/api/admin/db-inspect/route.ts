@@ -183,10 +183,11 @@ export async function GET() {
     inspectPair("site_settings", "SiteSettings", "site_settings"),
   ])
 
-  // Specific visibility-check: surface every event currently visible on
-  // the live `Event` table with its date + keepVisibleAfterEnd value.
-  // Operator request — verifying why the Jan 15 event is still showing
-  // on the live homepage / /events / sitemap surfaces post-PR-#22 (P5C).
+  // Visibility-check: surface every event currently visible on the
+  // canonical snake_case `events` table with its date +
+  // keep_visible_after_end value. Reads from the post-migration table
+  // so the report reflects what the live site actually shows. Result
+  // shape stays camelCase for the UI consumer.
   let visibleEvents: Array<{
     slug: string
     startsAt: string | null
@@ -198,21 +199,21 @@ export async function GET() {
   let visibleEventsError: string | null = null
   try {
     const { data, error } = await supabaseAdmin
-      .from("Event")
-      .select("slug, startsAt, endsAt, keepVisibleAfterEnd, isVisible")
-      .eq("isVisible", true)
-      .order("startsAt", { ascending: true })
+      .from("events")
+      .select("slug, starts_at, ends_at, keep_visible_after_end, is_visible")
+      .eq("is_visible", true)
+      .order("starts_at", { ascending: true })
     if (error) {
       visibleEventsError = error.message?.slice(0, 200) ?? "Unknown error"
     } else {
       const nowMs = Date.now()
       visibleEvents = (data ?? []).map((row: any) => ({
         slug: row.slug,
-        startsAt: row.startsAt ?? null,
-        endsAt: row.endsAt ?? null,
-        keepVisibleAfterEnd: row.keepVisibleAfterEnd ?? null,
-        isVisible: row.isVisible ?? null,
-        isPast: row.startsAt ? new Date(row.startsAt).getTime() < nowMs : null,
+        startsAt: row.starts_at ?? null,
+        endsAt: row.ends_at ?? null,
+        keepVisibleAfterEnd: row.keep_visible_after_end ?? null,
+        isVisible: row.is_visible ?? null,
+        isPast: row.starts_at ? new Date(row.starts_at).getTime() < nowMs : null,
       }))
     }
   } catch (err) {

@@ -3,11 +3,16 @@ import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { eventCreateSchema, formatZodError } from "@/lib/admin-schemas"
+import { eventRowToObject } from "@/lib/events-visibility"
 
 /**
  * EVENTS API ROUTES
  *
- * Uses Supabase Event table with camelCase columns.
+ * Reads + writes the canonical snake_case `events` table (post the
+ * 2026-05-21 table reconciliation migration). The wire format (request
+ * body + response body) stays camelCase — eventRowToObject() converts
+ * each row before sending it out, matching the established `books`
+ * pattern in the codebase.
  */
 
 // GET all events
@@ -20,14 +25,14 @@ export async function GET() {
     const { data: events, error } = await supabaseAdmin
       .from(Tables.events)
       .select("*")
-      .order("startsAt", { ascending: false })
+      .order("starts_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching events:", error)
       throw error
     }
 
-    return NextResponse.json(events || [])
+    return NextResponse.json((events ?? []).map(eventRowToObject))
   } catch (error) {
     console.error("Error fetching events:", error)
     return NextResponse.json({ error: "Failed to fetch events" }, { status: 500 })
@@ -51,25 +56,25 @@ export async function POST(request: Request) {
     }
     const input = parsed.data
 
-    // Event table uses camelCase columns. Validated input passes through
-    // 1:1 (the schema already coerced + trimmed values).
+    // Events table uses snake_case columns. Validated input (camelCase
+    // from the admin form) maps to snake_case columns explicitly.
     const now = new Date().toISOString()
     const insertData = {
       title: input.title,
       slug: input.slug,
       description: input.description,
-      startsAt: input.startsAt,
-      endsAt: input.endsAt,
-      locationText: input.locationText,
-      locationUrl: input.locationUrl,
-      eventImageUrl: input.eventImageUrl,
-      isPublished: input.isPublished,
-      isVisible: input.isVisible,
-      keepVisibleAfterEnd: input.keepVisibleAfterEnd,
-      seoTitle: input.seoTitle,
-      seoDescription: input.seoDescription,
-      createdAt: now,
-      updatedAt: now,
+      starts_at: input.startsAt,
+      ends_at: input.endsAt,
+      location_text: input.locationText,
+      location_url: input.locationUrl,
+      event_image_url: input.eventImageUrl,
+      is_published: input.isPublished,
+      is_visible: input.isVisible,
+      keep_visible_after_end: input.keepVisibleAfterEnd,
+      seo_title: input.seoTitle,
+      seo_description: input.seoDescription,
+      created_at: now,
+      updated_at: now,
     }
 
     const { data: event, error } = await supabaseAdmin
@@ -89,7 +94,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Database insert failed" }, { status: 500 })
     }
 
-    return NextResponse.json(event, { status: 201 })
+    return NextResponse.json(eventRowToObject(event), { status: 201 })
   } catch (error: any) {
     console.error("Error creating event:", error)
     return NextResponse.json({ error: "Failed to create event" }, { status: 500 })

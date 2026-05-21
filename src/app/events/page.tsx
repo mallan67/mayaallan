@@ -4,7 +4,7 @@ import { ShareButtons } from "@/components/share-buttons"
 import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
 import { SITE_URL } from "@/lib/identity"
-import { upcomingEventsOrClause } from "@/lib/events-visibility"
+import { upcomingEventsOrClause, eventRowToObject } from "@/lib/events-visibility"
 
 export const metadata: Metadata = {
   title: "Events",
@@ -41,20 +41,21 @@ async function getVisibleEvents() {
     const { data, error } = await supabaseAdmin
       .from(Tables.events)
       .select("*")
-      .eq("isVisible", true)
+      .eq("is_visible", true)
       // Hide past events from the /events listing unless the operator
-      // explicitly pinned them via keepVisibleAfterEnd. The framing of
+      // explicitly pinned them via keep_visible_after_end. The framing of
       // this page is "Upcoming talks, readings, and workshops" (per
       // the page metadata) — past events leak misleadingly into that view.
       .or(upcomingEventsOrClause())
-      .order("startsAt", { ascending: true })
+      .order("starts_at", { ascending: true })
 
     if (error) {
       console.error("Error fetching visible events:", error)
       return []
     }
 
-    return data || []
+    // Map snake_case DB rows → camelCase shape the render code consumes.
+    return (data ?? []).map(eventRowToObject)
   } catch (error) {
     console.error("Failed to fetch events:", error)
     return []
