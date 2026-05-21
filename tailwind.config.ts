@@ -44,6 +44,15 @@ const config: Config = {
           mid: '#2A2A30',
           soft: '#484850',
         },
+        // Warm off-white used on dark surfaces (consent banner, future
+        // dark-mode panels). Was referenced by ConsentBanner before it
+        // was defined here — that left the cookie banner's "Reject
+        // analytics" button with no text color (browser default = black
+        // on the charcoal background = invisible) and no border color
+        // (currentColor → also invisible).
+        cream: {
+          DEFAULT: '#F5EFE4',
+        },
       },
       // Fluid typography
       fontSize: {
