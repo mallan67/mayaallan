@@ -4,19 +4,7 @@ import { useState } from "react"
 
 interface PaymentButtonsProps {
   bookId: number
-  /** Whether to render the Stripe checkout button. Default true. */
-  hasStripe?: boolean
-  /**
-   * Whether to render the PayPal direct-checkout button.
-   *
-   * Recommended: false now that Stripe is live. Stripe Checkout already
-   * offers PayPal as a payment method (when enabled in the Stripe Dashboard),
-   * which means buyers who want to use PayPal still can — without the
-   * shared-device session-cookie exposure the standalone PayPal flow has.
-   *
-   * Pass true only if you specifically want both buttons visible side-by-side
-   * during a transition window.
-   */
+  /** Whether to render the PayPal direct-checkout button. */
   hasPayPal?: boolean
   /** Format shown on the button so the customer knows what they're buying. */
   formatLabel?: string
@@ -26,42 +14,14 @@ interface PaymentButtonsProps {
 
 export function PaymentButtons({
   bookId,
-  // Stripe button is hidden by default while the Stripe Link cross-merchant
-  // session behavior (and Stripe's 5-10-business-day card refund timing)
-  // are evaluated. The Stripe integration code is fully shipped and live —
-  // pass `hasStripe={true}` from the call site to re-enable.
-  hasStripe = false,
   hasPayPal = true,
   formatLabel = "Ebook",
   priceLabel,
 }: PaymentButtonsProps) {
-  const [loadingStripe, setLoadingStripe] = useState(false)
   const [loadingPayPal, setLoadingPayPal] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const startStripeCheckout = async () => {
-    setLoadingStripe(true)
-    setError(null)
-    try {
-      const response = await fetch("/api/checkout/stripe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId }),
-      })
-      const data = await response.json()
-      if (response.ok && data.url) {
-        window.location.href = data.url
-      } else {
-        setError(data.error || "Failed to create checkout session")
-        setLoadingStripe(false)
-      }
-    } catch {
-      setError("Something went wrong. Please try again.")
-      setLoadingStripe(false)
-    }
-  }
-
-  // PayPal now routes through the /checkout/privacy-gate page rather than
+  // PayPal routes through the /checkout/privacy-gate page rather than
   // POSTing directly. The gate forces explicit "this is my PayPal account"
   // confirmation, clears any client-side checkout state, and then opens
   // PayPal in a popup via SDK v6 (with a redirect fallback).
@@ -70,9 +30,6 @@ export function PaymentButtons({
     setError(null)
     window.location.href = `/checkout/privacy-gate?bookId=${encodeURIComponent(String(bookId))}`
   }
-
-  const handleStripeCheckout = startStripeCheckout
-  const handlePayPalCheckout = goToPrivacyGate
 
   // Shared lock-icon SVG. Single inline source avoids a network request and
   // platform emoji-rendering inconsistencies.
@@ -96,36 +53,10 @@ export function PaymentButtons({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
-        {hasStripe && (
-          <button
-            onClick={handleStripeCheckout}
-            disabled={loadingStripe || loadingPayPal}
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-center bg-charcoal text-white rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
-            aria-label={
-              loadingStripe
-                ? "Processing payment"
-                : `Buy ${formatLabel}${priceLabel ? ` ${priceLabel}` : ""}`
-            }
-          >
-            <LockIcon />
-            <span>
-              {loadingStripe ? (
-                "Processing…"
-              ) : (
-                <>
-                  Buy {formatLabel}
-                  {priceLabel && (
-                    <span className="font-normal opacity-90"> · {priceLabel}</span>
-                  )}
-                </>
-              )}
-            </span>
-          </button>
-        )}
         {hasPayPal && (
           <button
-            onClick={handlePayPalCheckout}
-            disabled={loadingPayPal || loadingStripe}
+            onClick={goToPrivacyGate}
+            disabled={loadingPayPal}
             className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
             aria-label={
               loadingPayPal
@@ -136,7 +67,7 @@ export function PaymentButtons({
             <LockIcon />
             <span>
               {loadingPayPal ? (
-                "Processing…"
+                "Processing..."
               ) : (
                 <>
                   Buy {formatLabel} with PayPal
@@ -155,15 +86,6 @@ export function PaymentButtons({
         </div>
       )}
 
-      {/*
-        Shared-computer disclosure. PayPal's hosted checkout reads its own
-        session cookies on paypal.com — if a previous user stayed logged in,
-        the current visitor lands on that account by default and there is
-        no sign-out button on PayPal's checkout page. We cannot fix this on
-        our side (paypal.com is a different origin from mayaallan.com), but
-        we can warn buyers and give them the signout URL up front so they
-        can fix it themselves before continuing.
-      */}
       {hasPayPal && (
         <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 space-y-1.5">
           <p className="text-xs text-amber-900 font-medium leading-snug">
