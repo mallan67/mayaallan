@@ -9,7 +9,7 @@ import {
   generateBreadcrumbSchema,
   AUTHOR_FAQS,
 } from "@/lib/structured-data"
-const SITE_URL = "https://www.mayaallan.com"
+import { SITE_URL } from "@/lib/identity"
 
 // Cache author bio for 5 min (admin edits in Settings will revalidate
 // the page automatically when they save).

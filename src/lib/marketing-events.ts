@@ -111,11 +111,25 @@ function readAttributionFromRequest(request: Request | null | undefined): {
 // ----------------------------------------------------------------------------
 // Hashing
 // ----------------------------------------------------------------------------
-const ATTRIBUTION_HASH_SALT = process.env.SESSION_SECRET || "marketing-events-fallback-salt"
+// SESSION_SECRET must be set or the hash is unsalted-by-known-string and
+// trivially rainbow-tableable over IPv4 space. Previous behavior fell back
+// to a hardcoded literal — if SESSION_SECRET was ever unset in a preview env
+// pointed at prod, the privacy policy's "we don't store raw IPs" claim
+// would have been violated. We now refuse to produce a hash without it;
+// callers must tolerate `null` rather than store a deterministically-reversible
+// value.
+const ATTRIBUTION_HASH_SALT: string | null = process.env.SESSION_SECRET ?? null
 
 /** Truncated SHA-256 hash for IP / UA. Never reversible. */
 export function hashForAttribution(value: string | null | undefined): string | null {
   if (!value) return null
+  if (!ATTRIBUTION_HASH_SALT) {
+    console.error(
+      "[marketing-events] SESSION_SECRET not set — refusing to store IP/UA hash " +
+        "to avoid de-anonymization. Set SESSION_SECRET in env.",
+    )
+    return null
+  }
   return createHash("sha256")
     .update(value)
     .update(ATTRIBUTION_HASH_SALT)
@@ -126,39 +140,54 @@ export function hashForAttribution(value: string | null | undefined): string | n
 // ----------------------------------------------------------------------------
 // Properties bounding
 // ----------------------------------------------------------------------------
+const EMAIL_LOOKING_RE = /[^\s@]+@[^\s@]+\.[^\s@]+/
+
+/**
+ * Recursively walk a value, redacting email-looking strings at any nesting
+ * depth and capping individual string lengths. Used by `boundProperties`.
+ *
+ * Previously this function only checked top-level string values, so a caller
+ * passing `{ profile: { email: "user@example.com" } }` would slip a full
+ * email into the marketing_events row. Now any string anywhere in the value
+ * tree is scanned.
+ */
+function sanitizeValue(value: unknown, redactedRef: { dropped: boolean }): unknown {
+  if (typeof value === "string") {
+    if (EMAIL_LOOKING_RE.test(value)) {
+      redactedRef.dropped = true
+      return "<email-redacted>"
+    }
+    return value.length > MAX_STRING_FIELD_LENGTH ? value.slice(0, MAX_STRING_FIELD_LENGTH) : value
+  }
+  if (Array.isArray(value)) {
+    return value.map((v) => sanitizeValue(v, redactedRef))
+  }
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = sanitizeValue(v, redactedRef)
+    }
+    return out
+  }
+  return value
+}
+
 function boundProperties(properties: Record<string, unknown> | null | undefined): Record<string, unknown> {
   if (!properties || typeof properties !== "object") return {}
 
-  // Quick sanity check: refuse any field that looks like a full email.
-  // The contract is "email domain only" but the helper is a soft net.
-  for (const [key, value] of Object.entries(properties)) {
-    if (
-      typeof value === "string" &&
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) &&
-      // Allow domain-only strings like "gmail.com" through.
-      value.split("@").length > 1
-    ) {
-      console.warn(
-        `[marketing-events] dropped field '${key}' that looks like a full email; ` +
-          `callers should pass only the domain (after the @).`,
-      )
-      properties = { ...properties, [key]: "<email-redacted>" }
-    }
-  }
-
-  // Cap string field lengths so a hostile value can't blow up the row.
-  const bounded: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(properties)) {
-    if (typeof value === "string") {
-      bounded[key] = value.length > MAX_STRING_FIELD_LENGTH ? value.slice(0, MAX_STRING_FIELD_LENGTH) : value
-    } else {
-      bounded[key] = value
-    }
+  // Recursively sanitize every string in the tree.
+  const redactedRef = { dropped: false }
+  const sanitized = sanitizeValue(properties, redactedRef) as Record<string, unknown>
+  if (redactedRef.dropped) {
+    console.warn(
+      "[marketing-events] redacted one or more email-looking string values from " +
+        "properties; callers should pass only the email domain (after the @).",
+    )
   }
 
   // Final size check: serialize and refuse if > 4 KB.
   try {
-    const serialized = JSON.stringify(bounded)
+    const serialized = JSON.stringify(sanitized)
     if (serialized.length > MAX_PROPERTIES_BYTES) {
       return { error: "oversize", original_bytes: serialized.length }
     }
@@ -166,7 +195,7 @@ function boundProperties(properties: Record<string, unknown> | null | undefined)
     return { error: "unserializable" }
   }
 
-  return bounded
+  return sanitized
 }
 
 // ----------------------------------------------------------------------------

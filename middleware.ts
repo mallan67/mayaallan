@@ -36,11 +36,11 @@ export function middleware(request: NextRequest) {
     // CRITICAL: If admin auth is not configured, BLOCK ALL ACCESS
     const hasSessionSecret = !!process.env.SESSION_SECRET
     const hasAdminEmail = !!process.env.ADMIN_EMAIL
-    // Either form of the admin credential is acceptable: ADMIN_PASSWORD_HASH
-    // (bcrypt hash, preferred) or legacy ADMIN_PASSWORD (plaintext, deprecated).
-    // Without this OR, rotating to hash-only locks the admin out of their own site.
-    const hasAdminCredential =
-      !!process.env.ADMIN_PASSWORD_HASH || !!process.env.ADMIN_PASSWORD
+    // Bcrypt-hashed credential is required; the legacy plaintext
+    // ADMIN_PASSWORD path was removed (Vercel env vars are visible to
+    // anyone with project read access — plaintext storage there was a
+    // credential leak waiting to happen).
+    const hasAdminCredential = !!process.env.ADMIN_PASSWORD_HASH
 
     // EMERGENCY BLOCK: If environment variables are missing, redirect to login
     // (AdminAuthGuard will show the error message)
@@ -71,5 +71,12 @@ export const config = {
     // dot), Next image optimizer, and favicon. This is the standard Next.js
     // i18n middleware matcher recipe.
     "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    // Belt-and-braces: explicitly include every /admin/* path regardless of
+    // whether it contains a dot. The recipe above excludes dotted paths to
+    // avoid running middleware on static assets, but the day someone adds an
+    // admin route like /admin/export.csv we want the auth gate to still run.
+    // The auth check inside the middleware function is the load-bearing line;
+    // this matcher entry just guarantees it runs.
+    "/admin/:path*",
   ],
 }

@@ -19,11 +19,11 @@ export default async function AdminAuthGuard({ children }: { children: React.Rea
   // CRITICAL: Check if admin authentication is configured
   const hasSessionSecret = !!process.env.SESSION_SECRET
   const hasAdminEmail = !!process.env.ADMIN_EMAIL
-  // Either credential form is acceptable: ADMIN_PASSWORD_HASH (preferred,
-  // bcrypt) or legacy ADMIN_PASSWORD (plaintext, deprecated). Without this
-  // OR, rotating to hash-only locks the admin out of their own site.
-  const hasAdminCredential =
-    !!process.env.ADMIN_PASSWORD_HASH || !!process.env.ADMIN_PASSWORD
+  // Bcrypt-hashed credential is required. The legacy ADMIN_PASSWORD plaintext
+  // env var path was removed — Vercel env vars are visible to anyone with
+  // project read access, so plaintext storage there was a credential leak
+  // surface.
+  const hasAdminCredential = !!process.env.ADMIN_PASSWORD_HASH
 
   // EMERGENCY BLOCK: If environment variables are missing, show error instead of allowing access
   if (!hasSessionSecret || !hasAdminEmail || !hasAdminCredential) {
@@ -39,7 +39,7 @@ export default async function AdminAuthGuard({ children }: { children: React.Rea
             <ul className="list-disc list-inside space-y-1 text-sm">
               {!hasSessionSecret && <li>SESSION_SECRET</li>}
               {!hasAdminEmail && <li>ADMIN_EMAIL</li>}
-              {!hasAdminCredential && <li>ADMIN_PASSWORD_HASH (preferred) or ADMIN_PASSWORD</li>}
+              {!hasAdminCredential && <li>ADMIN_PASSWORD_HASH (bcrypt)</li>}
             </ul>
           </div>
           <div className="bg-yellow-50 border border-yellow-300 rounded p-4">

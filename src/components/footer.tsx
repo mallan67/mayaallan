@@ -1,4 +1,5 @@
 import Link from "next/link"
+import CookiePreferencesLink from "@/components/CookiePreferencesLink"
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -60,6 +61,7 @@ export function Footer() {
               <Link href="/refunds" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
                 Refunds
               </Link>
+              <CookiePreferencesLink />
             </nav>
           </div>
         </div>

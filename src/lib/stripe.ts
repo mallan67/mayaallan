@@ -20,6 +20,7 @@
  */
 import "server-only"
 import Stripe from "stripe"
+import { SITE_URL } from "@/lib/identity"
 
 function ensureEnv(name: string): string {
   const value = process.env[name]
@@ -47,7 +48,7 @@ export function getStripe(): Stripe {
     typescript: true,
     appInfo: {
       name: "mayaallan.com",
-      url: "https://www.mayaallan.com",
+      url: SITE_URL,
     },
     // 10s timeout caps how long a slow Stripe API can chew the function
     // budget — matches the timeout pattern in src/lib/paypal.ts.

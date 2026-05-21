@@ -32,7 +32,10 @@ const CSP_DIRECTIVES = [
   "img-src 'self' data: blob: https: ",
   "media-src 'self' blob: https://*.public.blob.vercel-storage.com",
   "connect-src 'self' https://*.supabase.co https://*.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://vitals.vercel-insights.com",
-  "frame-src https://*.paypal.com https://*.youtube.com https://*.youtube-nocookie.com https://*.vimeo.com https://player.vimeo.com",
+  // Pin PayPal to the specific hostnames the SDK actually loads. Wildcards
+  // would also permit hypothetical hostile sub-hosts if PayPal ever has a
+  // subdomain takeover — unlikely but a free hardening win.
+  "frame-src https://www.paypal.com https://www.sandbox.paypal.com https://*.youtube.com https://*.youtube-nocookie.com https://*.vimeo.com https://player.vimeo.com",
   "frame-ancestors 'none'",
   "form-action 'self' https://*.paypal.com",
   "base-uri 'self'",
@@ -105,6 +108,17 @@ const nextConfig = {
       { key: "Expires", value: "0" },
     ]
 
+    // For routes whose URL itself carries a secret bearer token (download
+    // tokens), the site-wide `strict-origin-when-cross-origin` Referrer-Policy
+    // is too lenient: same-origin navigations from /download/<token> would
+    // send the full URL (including the token) in `Referer` to the destination
+    // — exposing the token in Vercel access logs, third-party analytics
+    // beacons on subsequent pages, and any image/font/script the next page
+    // loads. `no-referrer` strips it unconditionally.
+    const NO_REFERRER_HEADERS = [
+      { key: "Referrer-Policy", value: "no-referrer" },
+    ]
+
     return [
       {
         // Apply security headers to every route.
@@ -120,7 +134,7 @@ const nextConfig = {
         // /download/<token>/* — token-gated download landing page.
         // Each token is unique to a single buyer; caching would leak info.
         source: "/download/:path*",
-        headers: NO_STORE_HEADERS,
+        headers: [...NO_STORE_HEADERS, ...NO_REFERRER_HEADERS],
       },
       {
         // /api/checkout/* — endpoints that return per-buyer redirect URLs / session ids.
@@ -128,9 +142,10 @@ const nextConfig = {
         headers: NO_STORE_HEADERS,
       },
       {
-        // /api/download/* — actual file delivery; must not be cached at any layer.
+        // /api/download/* — actual file delivery; must not be cached at any layer
+        // and must not leak the token via Referer.
         source: "/api/download/:path*",
-        headers: NO_STORE_HEADERS,
+        headers: [...NO_STORE_HEADERS, ...NO_REFERRER_HEADERS],
       },
     ]
   },

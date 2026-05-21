@@ -99,7 +99,7 @@ export async function POST(request: Request) {
           { status: 409 }
         )
       }
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: "Database insert failed" }, { status: 500 })
     }
 
     // Map response back to camelCase
@@ -122,6 +122,6 @@ export async function POST(request: Request) {
     return NextResponse.json(mappedMedia, { status: 201 })
   } catch (error: any) {
     console.error("Error creating media:", error)
-    return NextResponse.json({ error: error.message || "Failed to create media" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to create media" }, { status: 500 })
   }
 }

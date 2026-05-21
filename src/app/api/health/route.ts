@@ -16,6 +16,7 @@
  * with full detail and surfaced to the client as a short generic string.
  */
 import { NextRequest, NextResponse } from "next/server"
+import { list } from "@vercel/blob"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { apiBase as paypalApiBase } from "@/lib/paypal"
 import { hasUpstash, probeUpstash } from "@/lib/upstash"
@@ -70,10 +71,27 @@ function checkAdminEnv(): CheckResult {
   if (!process.env.ADMIN_EMAIL) {
     return { ok: false, error: "ADMIN_EMAIL not configured" }
   }
-  if (!(process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD)) {
-    return { ok: false, error: "ADMIN_PASSWORD_HASH (or legacy ADMIN_PASSWORD) not configured" }
+  if (!process.env.ADMIN_PASSWORD_HASH) {
+    return { ok: false, error: "ADMIN_PASSWORD_HASH not configured" }
   }
   return { ok: true }
+}
+
+// Deep blob probe — env-presence is fragile (a revoked / rotated token won't
+// show as failed). One list({ limit: 1 }) call exercises auth + connectivity
+// with negligible cost. Falls back to env-presence if the token is missing.
+async function deepBlob(): Promise<CheckResult> {
+  const t0 = Date.now()
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return { ok: false, error: "BLOB_READ_WRITE_TOKEN not configured" }
+  }
+  try {
+    await list({ limit: 1 })
+    return { ok: true, latencyMs: Date.now() - t0 }
+  } catch (err: any) {
+    console.error("[health] deep blob probe threw:", err)
+    return { ok: false, error: "Vercel Blob unreachable", latencyMs: Date.now() - t0 }
+  }
 }
 
 // Deep checks — only run when ?deep=1. Use sparingly (real API calls).
@@ -162,7 +180,7 @@ export async function GET(req: NextRequest) {
 
   const database = await checkDatabase()
   const resend = deep ? await deepResend() : checkEnvPresent("RESEND_API_KEY")
-  const blob = checkEnvPresent("BLOB_READ_WRITE_TOKEN")
+  const blob = deep ? await deepBlob() : checkEnvPresent("BLOB_READ_WRITE_TOKEN")
   const paypal = deep ? await deepPaypal() : checkPaypalEnv()
   const stripe = deep ? await deepStripe() : checkStripeEnv()
   const session = checkEnvPresent("SESSION_SECRET")

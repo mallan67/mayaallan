@@ -31,10 +31,17 @@ export function emailDomain(email: unknown): string | null {
  * Short, stable, NON-REVERSIBLE handle for correlating logs across requests
  * without exposing the underlying value. SHA-256 truncated to 8 hex chars.
  * Salt prevents rainbow-table reversal across deployments.
+ *
+ * If SESSION_SECRET is unset, returns "no-salt" instead of computing an
+ * unsalted hash — the prior behavior used a hardcoded literal fallback,
+ * which made handles deterministically reversible if the env var was ever
+ * missing. Correlating logs is non-critical; producing a fake-but-stable
+ * hash would only matter for an attacker rainbow-tabling them.
  */
-const HANDLE_SALT = process.env.SESSION_SECRET ?? "no-salt-default"
+const HANDLE_SALT: string | null = process.env.SESSION_SECRET ?? null
 export function shortHandle(value: unknown): string {
   if (value === null || value === undefined) return "null"
+  if (!HANDLE_SALT) return "no-salt"
   const s = typeof value === "string" ? value : JSON.stringify(value)
   return crypto.createHash("sha256").update(HANDLE_SALT + s).digest("hex").slice(0, 8)
 }
@@ -48,6 +55,45 @@ export function errorMessage(err: unknown): string {
   } catch {
     return String(err)
   }
+}
+
+/**
+ * Sanitize a Resend error for inclusion in admin alerts. Resend errors
+ * commonly echo the recipient address verbatim (e.g.
+ *   "The email address user@example.com is invalid"
+ *   "missing_required_field: to: user@example.com"
+ * ). The d01200b commit established that customer PII must never appear
+ * in alertAdmin payloads — this helper enforces that contract for the
+ * webhook → resend-failure → alertAdmin path.
+ *
+ * Returns a sanitized projection: error name + an email-redacted message.
+ */
+export function sanitizeResendError(err: unknown): {
+  name: string
+  message: string
+} {
+  const raw =
+    err instanceof Error
+      ? err.message
+      : typeof err === "string"
+        ? err
+        : (() => {
+            try {
+              return JSON.stringify(err)
+            } catch {
+              return String(err)
+            }
+          })()
+  const name =
+    err instanceof Error && typeof err.name === "string" && err.name.length > 0
+      ? err.name
+      : "Error"
+  // Replace any email-shaped substring with <email-redacted>.
+  const message = raw.replace(
+    /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,
+    "<email-redacted>",
+  )
+  return { name, message }
 }
 
 /**

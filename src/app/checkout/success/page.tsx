@@ -21,6 +21,7 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { ClearAndExitButton } from "./ClearAndExitButton"
+import ResendEmailButton from "./ResendEmailButton"
 
 export const dynamic = "force-dynamic" // never SSG / never ISR — must always re-render fresh
 export const revalidate = 0
@@ -93,6 +94,8 @@ export default async function CheckoutSuccessPage({
             Reference: <span className="font-mono">{orderRef}</span>
           </p>
         )}
+
+        {orderRef && <ResendEmailButton orderId={orderRef} />}
 
         <ClearAndExitButton exitHref={exitHref} />
 

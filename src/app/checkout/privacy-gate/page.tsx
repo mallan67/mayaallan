@@ -32,6 +32,7 @@ import { headers } from "next/headers"
 import { PrivacyGateClient } from "./PrivacyGateClient"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { siteUrl } from "@/lib/site-url"
+import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -131,12 +132,12 @@ export default async function PrivacyGatePage({ searchParams }: { searchParams: 
         />
 
         <footer className="text-center">
-          <a
+          <Link
             href={`/books/${book.slug}`}
             className="text-xs text-slate-500 hover:text-slate-700 underline"
           >
             Cancel and go back
-          </a>
+          </Link>
         </footer>
       </div>
     </main>

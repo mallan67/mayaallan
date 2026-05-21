@@ -13,6 +13,7 @@ import {
   generateBreadcrumbSchema,
   BOOK_FAQS,
 } from "@/lib/structured-data"
+import { SITE_URL } from "@/lib/identity"
 
 interface BookPageProps {
   params: Promise<{ slug: string }>
@@ -61,13 +62,13 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
     const title = book.seo_title || book.title
     const subtitles = [book.subtitle1, book.subtitle2, book.subtitle3].filter(Boolean).join(" | ")
     const description = book.seo_description || book.blurb || subtitles || `${book.title} by Maya Allan`
-    const bookUrl = `https://www.mayaallan.com/books/${slug}`
+    const bookUrl = `${SITE_URL}/books/${slug}`
 
     // ALWAYS use the dynamic OG image route for consistent 1200x630 social images
     // This ensures Facebook, LinkedIn, Twitter, etc. all get properly sized images
     // with book cover, title, author, and description
-    const ogImageUrl = `https://www.mayaallan.com/books/${slug}/opengraph-image`
-    const twitterImageUrl = `https://www.mayaallan.com/books/${slug}/twitter-image`
+    const ogImageUrl = `${SITE_URL}/books/${slug}/opengraph-image`
+    const twitterImageUrl = `${SITE_URL}/books/${slug}/twitter-image`
 
     const fullTitle = `${book.title}${subtitles ? ` - ${subtitles}` : ""}`
     // OG titles cap usefully around 60-70 chars; longer reads as keyword spam in social shares.
@@ -243,7 +244,7 @@ export default async function BookPage({ params }: BookPageProps) {
     notFound()
   }
 
-  const bookUrl = `https://www.mayaallan.com/books/${book.slug}`
+  const bookUrl = `${SITE_URL}/books/${book.slug}`
 
   // Generate Book schema for SEO
   const bookSchema = generateBookSchema({
@@ -265,8 +266,8 @@ export default async function BookPage({ params }: BookPageProps) {
 
   // AEO: Breadcrumb Schema for navigation context
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: "Home", url: "https://www.mayaallan.com" },
-    { name: "Books", url: "https://www.mayaallan.com/books" },
+    { name: "Home", url: SITE_URL },
+    { name: "Books", url: `${SITE_URL}/books` },
     { name: book.title, url: bookUrl },
   ])
 
@@ -583,7 +584,7 @@ export default async function BookPage({ params }: BookPageProps) {
               title={book.title}
               description={book.blurb ?? book.subtitle1 ?? undefined}
               hashtags={book.tagsCsv?.split(",").map((t: string) => t.trim())}
-              imageUrl={`https://www.mayaallan.com/books/${book.slug}/opengraph-image`}
+              imageUrl={`${SITE_URL}/books/${book.slug}/opengraph-image`}
             />
           </div>
         </div>

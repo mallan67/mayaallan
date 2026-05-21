@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import ContactClient from "./contactClient"
-
-const SITE_URL = "https://www.mayaallan.com"
+import { SITE_URL } from "@/lib/identity"
 
 export const metadata: Metadata = {
   title: "Contact",

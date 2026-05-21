@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next"
 import { Space_Grotesk, Fraunces } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
 import { headers } from "next/headers"
 import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import MarketingAttributionClient from "@/components/MarketingAttributionClient"
+import ConsentBanner from "@/components/ConsentBanner"
+import { GatedAnalytics, GatedMarketing } from "@/components/AnalyticsGated"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structured-data"
 import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL } from "@/lib/identity"
@@ -218,8 +218,12 @@ export default async function RootLayout({
           {children}
         </main>
         <Footer />
-        <Analytics />
-        <MarketingAttributionClient />
+        {/* Analytics + attribution gated by user consent (GDPR/ePrivacy).
+            Banner shows on first visit; choice persists in localStorage.
+            Users can revisit via the "Cookie preferences" link in the footer. */}
+        <ConsentBanner />
+        <GatedAnalytics />
+        <GatedMarketing />
       </body>
     </html>
   )

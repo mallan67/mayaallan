@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next"
+import { SITE_URL } from "@/lib/identity"
 
 // =============================================================================
 // robots.txt — explicit allowances for search + AI crawlers.
@@ -104,7 +105,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: DISALLOWED_PATHS,
       })),
     ],
-    sitemap: "https://www.mayaallan.com/sitemap.xml",
-    host: "https://www.mayaallan.com",
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   }
 }

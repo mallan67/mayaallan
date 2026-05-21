@@ -151,7 +151,7 @@ export async function PUT(
     return NextResponse.json(mappedMedia)
   } catch (error: any) {
     console.error("Error updating media:", error)
-    return NextResponse.json({ error: error.message || "Failed to update media" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to update media" }, { status: 500 })
   }
 }
 
@@ -182,12 +182,12 @@ export async function DELETE(
 
     if (error) {
       console.error("Error deleting media:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: "Database delete failed" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error("Error deleting media:", error)
-    return NextResponse.json({ error: error.message || "Failed to delete media" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to delete media" }, { status: 500 })
   }
 }

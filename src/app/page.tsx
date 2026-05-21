@@ -5,8 +5,7 @@ import { MessageCircle, Dna, Brain, ListChecks, HeartPulse, PenLine, Star, Calen
 import { NewsletterSection } from "@/components/NewsletterSection"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateAuthorSchema } from "@/lib/structured-data"
-
-const SITE_URL = "https://www.mayaallan.com"
+import { SITE_URL } from "@/lib/identity"
 
 export const revalidate = 300 // 5 minutes
 

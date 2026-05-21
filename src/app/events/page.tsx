@@ -3,8 +3,7 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { ShareButtons } from "@/components/share-buttons"
 import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
-
-const SITE_URL = "https://www.mayaallan.com"
+import { SITE_URL } from "@/lib/identity"
 
 export const metadata: Metadata = {
   title: "Events",

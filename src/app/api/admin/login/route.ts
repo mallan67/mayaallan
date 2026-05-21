@@ -42,10 +42,12 @@ export async function POST(req: Request) {
 
   const adminEmail = process.env.ADMIN_EMAIL
   const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH
-  const adminPasswordPlain = process.env.ADMIN_PASSWORD // legacy fallback during migration
 
-  if (!adminEmail || (!adminPasswordHash && !adminPasswordPlain)) {
-    console.error("ADMIN_EMAIL and (ADMIN_PASSWORD_HASH or ADMIN_PASSWORD) must be set")
+  // ADMIN_PASSWORD (plaintext) is no longer accepted. Storing the admin
+  // password as a plaintext env var meant anyone with Vercel project read
+  // access could see it. ADMIN_PASSWORD_HASH (bcrypt) is required.
+  if (!adminEmail || !adminPasswordHash) {
+    console.error("ADMIN_EMAIL and ADMIN_PASSWORD_HASH must be set")
     return NextResponse.json({ ok: false, error: "Server configuration error" }, { status: 500 })
   }
 
@@ -53,32 +55,27 @@ export async function POST(req: Request) {
 
   let passwordMatches = false
   let bcryptThrew = false
-  if (adminPasswordHash) {
-    try {
-      passwordMatches = await bcrypt.compare(password, adminPasswordHash)
-    } catch (err) {
-      // bcrypt.compare throws when the hash itself is malformed (e.g. an
-      // env var got truncated or double-quoted). Previously this silently
-      // became "Invalid credentials" forever, locking the admin out with
-      // a misleading message. Now: alert + return 500 so the operator
-      // knows it's a server config issue, not their password.
-      console.error("bcrypt.compare failed:", err)
-      bcryptThrew = true
-      await alertAdmin({
-        severity: "critical",
-        subject: "Admin login: bcrypt.compare threw — ADMIN_PASSWORD_HASH likely corrupted",
-        body:
-          "bcrypt.compare raised an exception during admin login. The most common " +
-          "cause is a malformed ADMIN_PASSWORD_HASH env var (truncated, double-quoted, " +
-          "or whitespace-padded). Until this is fixed, every admin login attempt will " +
-          "return 500. Regenerate the hash and update the Vercel env var.",
-        details: { errorMessage: err instanceof Error ? err.message : String(err) },
-        dedupKey: "auth:bcrypt-threw",
-      })
-    }
-  } else if (adminPasswordPlain) {
-    console.warn("ADMIN_PASSWORD_HASH not set — falling back to plaintext ADMIN_PASSWORD. Migrate to ADMIN_PASSWORD_HASH (bcrypt) immediately.")
-    passwordMatches = password === adminPasswordPlain
+  try {
+    passwordMatches = await bcrypt.compare(password, adminPasswordHash)
+  } catch (err) {
+    // bcrypt.compare throws when the hash itself is malformed (e.g. an
+    // env var got truncated or double-quoted). Previously this silently
+    // became "Invalid credentials" forever, locking the admin out with
+    // a misleading message. Now: alert + return 500 so the operator
+    // knows it's a server config issue, not their password.
+    console.error("bcrypt.compare failed:", err)
+    bcryptThrew = true
+    await alertAdmin({
+      severity: "critical",
+      subject: "Admin login: bcrypt.compare threw — ADMIN_PASSWORD_HASH likely corrupted",
+      body:
+        "bcrypt.compare raised an exception during admin login. The most common " +
+        "cause is a malformed ADMIN_PASSWORD_HASH env var (truncated, double-quoted, " +
+        "or whitespace-padded). Until this is fixed, every admin login attempt will " +
+        "return 500. Regenerate the hash and update the Vercel env var.",
+      details: { errorMessage: err instanceof Error ? err.message : String(err) },
+      dedupKey: "auth:bcrypt-threw",
+    })
   }
 
   if (bcryptThrew) {

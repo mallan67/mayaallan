@@ -117,7 +117,7 @@ export async function PUT(
     return NextResponse.json(event)
   } catch (error: any) {
     console.error("Error updating event:", error)
-    return NextResponse.json({ error: error.message || "Failed to update event" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to update event" }, { status: 500 })
   }
 }
 
@@ -148,12 +148,12 @@ export async function DELETE(
 
     if (error) {
       console.error("Error deleting event:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: "Database delete failed" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error("Error deleting event:", error)
-    return NextResponse.json({ error: error.message || "Failed to delete event" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to delete event" }, { status: 500 })
   }
 }

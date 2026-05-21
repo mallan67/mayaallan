@@ -7,7 +7,7 @@ import Link from "next/link"
 // on this for dispute defense. Update `lastUpdated` and the prose any
 // time the data practices change (new third party added, new collection
 // surface, retention period changed, etc).
-const LAST_UPDATED = "May 19, 2026"
+const LAST_UPDATED = "May 20, 2026"
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -80,8 +80,9 @@ export default function PrivacyPage() {
             <strong>AI chat conversations.</strong> When you use Belief Inquiry, Integration, or Reset, your messages
             are sent to a third-party large-language-model provider in real time to generate the response. We do not
             persistently store the full transcript on our side unless you click &quot;Save Session as PDF for $9.99&quot;
-            — in which case the transcript is held briefly in our blob storage so we can render and email the PDF,
-            then deleted.
+            — in which case the transcript is held in encrypted Redis (Upstash) for up to 24 hours so we can render
+            and email the PDF, and deleted as soon as delivery succeeds. If the 24-hour window passes without
+            successful delivery, the transcript is automatically removed.
           </li>
         </ul>
       </section>
@@ -121,12 +122,17 @@ export default function PrivacyPage() {
             replies, admin alerts). Email addresses pass through Resend to deliver mail.
           </li>
           <li>
-            <strong>Vercel</strong> — hosts the website and stores files in Vercel Blob (book PDFs, session export
-            blobs).
+            <strong>Vercel</strong> — hosts the website and stores public assets in Vercel Blob (book PDFs, cover
+            images, audiobook files).
           </li>
           <li>
             <strong>Supabase</strong> — provides the database where orders, contact-form submissions, and aggregated
             analytics events are stored.
+          </li>
+          <li>
+            <strong>Upstash</strong> — provides the encrypted, short-lived Redis store used to hold AI chat session
+            transcripts during the 24-hour window between &quot;Save Session as PDF&quot; checkout and email
+            delivery.
           </li>
           <li>
             <strong>AI providers (e.g. Anthropic, OpenAI, Google)</strong> — when you use the AI chat tools, your
@@ -157,18 +163,21 @@ export default function PrivacyPage() {
         <h2 className="font-serif text-lg font-semibold text-slate-900">5. Retention</h2>
         <ul className="list-disc pl-6 space-y-2">
           <li>
-            <strong>Order records</strong> are kept for at least seven years to meet tax and accounting obligations.
+            <strong>Order records</strong> are kept as required by applicable tax and accounting law (typically six to
+            seven years in the United States). After that period, records are deleted or anonymized.
           </li>
           <li>
             <strong>Download tokens</strong> emailed after a purchase expire automatically (typically after 30 days and
             5 download attempts).
           </li>
           <li>
-            <strong>Session-export blobs</strong> are deleted as soon as the PDF has been delivered.
+            <strong>Session-export transcripts</strong> live in Upstash Redis with a 24-hour time-to-live and are
+            deleted as soon as the PDF has been delivered (whichever comes first).
           </li>
           <li>
-            <strong>Analytics events</strong> are retained in aggregated form indefinitely; the per-visitor
-            identifiers used for attribution are pruned on a rolling basis.
+            <strong>Analytics events</strong> are retained for current product analysis. We honor deletion requests
+            against your visitor and session identifiers — write to us via the contact page and reference the date
+            range you want removed.
           </li>
           <li>
             <strong>Contact form messages and newsletter subscriptions</strong> are kept until you ask us to delete
@@ -198,11 +207,14 @@ export default function PrivacyPage() {
           <li>
             <strong>Strictly necessary</strong> — to keep you logged in to the admin area (if you are an
             administrator), to remember your in-progress purchase before redirecting you to PayPal, and to apply rate
-            limits.
+            limits. These are always on.
           </li>
           <li>
-            <strong>Analytics</strong> — the visitor and session identifiers described above, used to measure how the
-            site is performing in aggregate. We do not run third-party advertising trackers.
+            <strong>Analytics (optional, consent-gated)</strong> — the visitor and session identifiers described
+            above, used to measure how the site is performing in aggregate. We do not run third-party advertising
+            trackers. If you are in the EU, the UK, or any other jurisdiction where consent is required for non-
+            essential cookies, these are set only after you accept on the consent banner. You can revisit your
+            choice at any time using the &quot;Cookie preferences&quot; link in the site footer.
           </li>
         </ul>
         <p>You can block cookies in your browser settings; some site features may stop working if you do.</p>

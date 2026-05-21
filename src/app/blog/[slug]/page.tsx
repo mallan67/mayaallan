@@ -5,8 +5,7 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import rehypeSlug from "rehype-slug"
 import { getPost, listPosts } from "@/lib/posts"
-
-const SITE_URL = "https://www.mayaallan.com"
+import { SITE_URL } from "@/lib/identity"
 
 export const revalidate = 3600
 

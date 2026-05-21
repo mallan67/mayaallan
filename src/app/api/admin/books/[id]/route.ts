@@ -288,9 +288,10 @@ export async function PUT(
     return NextResponse.json(mappedBook)
   } catch (error: any) {
     console.error("Error updating book:", error)
-
+    // Generic client message; full details only in server logs to avoid
+    // leaking Supabase column / constraint names.
     return NextResponse.json(
-      { error: error.message || "Failed to update book" },
+      { error: "Failed to update book" },
       { status: 500 }
     )
   }

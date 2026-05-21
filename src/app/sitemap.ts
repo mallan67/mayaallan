@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { listPosts } from "@/lib/posts"
 import { listScenarios } from "@/lib/scenarios"
-import { LOCALES, type Locale } from "@/lib/identity"
+import { LOCALES, SITE_URL, type Locale } from "@/lib/identity"
 import { sitemapAlternates } from "@/lib/i18n/hreflang"
 
 // Pages that have translated versions live. As more pages get translated, add
@@ -11,7 +11,7 @@ import { sitemapAlternates } from "@/lib/i18n/hreflang"
 const TRANSLATED_PATHS = new Set<string>(["/", "/about"])
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://www.mayaallan.com"
+  const baseUrl = SITE_URL
   const currentDate = new Date()
   const posts = await listPosts()
   const scenarios = await listScenarios()

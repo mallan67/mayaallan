@@ -42,7 +42,7 @@ export function NewsletterSection() {
     <section className="py-24">
       <div className="max-w-[740px] mx-auto px-5 md:px-9 text-center">
         <p className="text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-3">
-          Stay Connected
+          Newsletter
         </p>
         <h2 className="font-serif text-[clamp(1.8rem,4vw,2.6rem)] font-semibold mb-4">
           Stay Connected
@@ -69,6 +69,7 @@ export function NewsletterSection() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Your email address"
+            aria-label="Email address"
             required
             disabled={isLoading}
             className="px-6 py-[15px] w-full sm:w-[300px] text-[0.92rem] border-2 border-[#CDCDD2] rounded-full bg-white outline-none font-sans text-charcoal transition-all focus:border-liquid-blue focus:shadow-[0_0_0_3px_rgba(13,110,191,0.07)] disabled:opacity-50"

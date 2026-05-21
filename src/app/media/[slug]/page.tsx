@@ -3,8 +3,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
-
-const SITE_URL = "https://www.mayaallan.com"
+import { SITE_URL } from "@/lib/identity"
 
 interface MediaPageProps {
   params: Promise<{ slug: string }>

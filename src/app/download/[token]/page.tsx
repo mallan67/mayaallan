@@ -172,7 +172,11 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
                 </div>
               )}
               <p className="text-sm text-slate-500">
-                Need help? Contact support.
+                Need help?{" "}
+                <Link href="/contact" className="underline hover:text-slate-700">
+                  Contact support
+                </Link>
+                .
               </p>
             </div>
           )}

@@ -4,8 +4,7 @@ import type { Metadata } from "next"
 import { RetailerIcon } from "@/lib/retailer-icons"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateBreadcrumbSchema } from "@/lib/structured-data"
-
-const SITE_URL = "https://www.mayaallan.com"
+import { SITE_URL } from "@/lib/identity"
 
 export const metadata: Metadata = {
   title: "Books | Maya Allan",
@@ -190,7 +189,7 @@ export default async function BooksPage() {
                 {book.coverUrl ? (
                   <Image
                     src={book.coverUrl}
-                    alt=""
+                    alt={`Cover of ${book.title}`}
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 280px, 360px"

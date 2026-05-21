@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { IntegrationChat } from "@/components/IntegrationChat"
 import { Sparkles } from "lucide-react"
 
@@ -61,6 +62,23 @@ export default function IntegrationPage() {
                 Not therapy or a substitute for professional mental health care.
               </p>
             </div>
+
+            {/* Minimal legal cluster — the chat page hides the global footer
+                to maximize chat space, but GDPR Art. 13 requires privacy /
+                terms / contact to remain discoverable. */}
+            <nav aria-label="Legal" className="mt-3 text-[0.7rem] text-charcoal-mid/70 flex flex-wrap gap-x-3 gap-y-1 justify-center">
+              <Link href="/privacy" className="hover:text-charcoal-mid underline-offset-2 hover:underline">
+                Privacy
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/terms" className="hover:text-charcoal-mid underline-offset-2 hover:underline">
+                Terms
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/contact" className="hover:text-charcoal-mid underline-offset-2 hover:underline">
+                Contact
+              </Link>
+            </nav>
           </div>
         </div>
 

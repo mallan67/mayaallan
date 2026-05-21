@@ -8,6 +8,7 @@ import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, extractWebhookHeaders, getAccessToken, safePaypalEnvLabel, verifyPaypalWebhook } from "@/lib/paypal"
 import { siteUrl } from "@/lib/site-url"
 import { trackMarketingEvent } from "@/lib/marketing-events"
+import { sanitizeResendError } from "@/lib/safe-log"
 import crypto from "crypto"
 
 // Explicit Node runtime + 60s budget. The default Vercel timeout (10-15s) can
@@ -70,6 +71,10 @@ async function sendPurchaseEmail(args: {
   try {
     const sendPromise = resend.emails.send({
       from: "Maya Allan <maya@mayaallan.com>",
+      // Replies route to hello@ (operations inbox) so a customer reply
+      // doesn't sit unread in a personal mailbox. Override per deployment
+      // via SUPPORT_REPLY_TO if the operations inbox name changes.
+      replyTo: process.env.SUPPORT_REPLY_TO || "hello@mayaallan.com",
       to: args.customerEmail,
       subject: `Your purchase from mayaallan.com — ${args.bookTitle}`,
       html: `
@@ -613,7 +618,10 @@ export async function POST(request: Request) {
               token: newToken,
               order_id: order.id,
               book_id: book.id,
-              max_downloads: 5,
+              // Per-deployment override via DOWNLOAD_TOKEN_MAX_DOWNLOADS;
+              // defaults to 5. Audiobooks or larger packages may want a
+              // lower or higher cap once that flow is built.
+              max_downloads: Number(process.env.DOWNLOAD_TOKEN_MAX_DOWNLOADS) || 5,
               expires_at: newExpiresAt.toISOString(),
             })
             .select("id, token, expires_at, max_downloads, email_sent_at")
@@ -801,7 +809,10 @@ export async function POST(request: Request) {
               orderId: order.id,
               paypalOrderId,
               bookId: book.id,
-              resendError: emailResult.error,
+              // Sanitize Resend error to strip any echoed customer email
+              // (Resend frequently echoes the recipient address verbatim
+              // in error messages). PII rule from d01200b.
+              resendError: sanitizeResendError(emailResult.error),
             },
             dedupKey: `paypal:email-failed:${paypalOrderId}`,
           })

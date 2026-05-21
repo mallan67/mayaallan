@@ -191,9 +191,50 @@ export async function POST(req: Request) {
     // Continue with payload's tool (more authoritative) but warn.
   }
 
-  // Override recipient if explicitly provided (admin can send to a different
-  // address for testing without modifying the buyer's email).
-  const recipientEmail = body.recipientEmail ?? payload.email
+  // Override recipient if explicitly provided. SECURITY CONSTRAINT: the
+  // override is limited to the same email domain as the buyer's address.
+  // A compromised admin account otherwise becomes a one-click exfiltration
+  // tool — an attacker who learns any real PayPal order ID can resend the
+  // customer's full chat-transcript PDF to attacker@evil.com. Same-domain
+  // override still allows legitimate use cases (resend to a +suffix alias,
+  // a shared inbox at the buyer's domain), while preventing exfiltration
+  // to an unrelated third party.
+  const buyerEmail = payload.email
+  const buyerDomain = emailDomain(buyerEmail)
+  let recipientEmail = buyerEmail
+  if (body.recipientEmail) {
+    const overrideDomain = emailDomain(body.recipientEmail)
+    if (!overrideDomain || !buyerDomain || overrideDomain !== buyerDomain) {
+      safeLogError("admin-export-recover.override-rejected", {
+        orderId: body.orderId,
+        sessionId,
+        buyerDomain,
+        overrideDomain,
+      })
+      await alertAdmin({
+        severity: "warning",
+        subject: "Admin export-recover: cross-domain recipient override REJECTED",
+        body:
+          "An operator attempted to redirect a session-PDF delivery to a recipient " +
+          "whose email domain does not match the buyer's. This is blocked: same-domain " +
+          "overrides are allowed (resend to a +suffix alias), but cross-domain overrides " +
+          "would be an exfiltration channel if admin credentials are ever compromised. " +
+          "If this rejection is unexpected, contact the buyer directly to confirm.",
+        details: { orderId: body.orderId, sessionId, buyerDomain, overrideDomain },
+        dedupKey: `admin-export-recover:cross-domain:${sessionId}`,
+      })
+      return NextResponse.json(
+        {
+          error: "Cross-domain recipient override is not allowed",
+          orderId: body.orderId,
+          buyerDomain,
+          attemptedDomain: overrideDomain,
+        },
+        { status: 403 },
+      )
+    }
+    recipientEmail = body.recipientEmail
+  }
 
   // ── Render + email the PDF ──────────────────────────────────────
   try {
@@ -235,6 +276,29 @@ export async function POST(req: Request) {
     sessionId,
     tool: payload.tool,
     recipientDomain: emailDomain(recipientEmail),
+  })
+
+  // If the recipient differs from the buyer's address (same domain, but a
+  // different mailbox — e.g. a +suffix alias or a shared inbox), fire an
+  // info-level alert so the operator has a paper trail. Always alert on
+  // any recovery delivery so admin-compromise leaves footprints in the
+  // alert inbox.
+  await alertAdmin({
+    severity: "info",
+    subject: "Admin export-recover: PDF re-delivered",
+    body:
+      "An operator manually re-delivered a session-export PDF via /admin/export-recover. " +
+      "If this was not an authorized operator action, treat the admin account as " +
+      "compromised: rotate ADMIN_PASSWORD_HASH and SESSION_SECRET, then audit recent " +
+      "logins.",
+    details: {
+      orderId: body.orderId,
+      sessionId,
+      tool: payload.tool,
+      recipientDomain: emailDomain(recipientEmail),
+      overrideUsed: !!body.recipientEmail,
+    },
+    dedupKey: `admin-export-recover:delivered:${sessionId}`,
   })
 
   return NextResponse.json({

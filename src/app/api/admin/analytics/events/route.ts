@@ -14,6 +14,7 @@
  */
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { supabaseAdmin } from "@/lib/supabaseAdmin"
 import { buildCsv } from "@/lib/csv"
 
@@ -50,6 +51,15 @@ function isoDaysAgo(days: number): string {
 }
 
 export async function GET(request: Request) {
+  // Same-origin guard FIRST. A logged-in admin clicking a phishing link
+  // `https://www.mayaallan.com/api/admin/analytics/events?from=3650d` would
+  // otherwise force-download all-time buyer attribution to their disk —
+  // this endpoint sets `Content-Disposition: attachment` and the browser
+  // follows the link cross-origin without triggering CORS. assertAdminSameOrigin
+  // rejects requests whose Origin/Referer doesn't match our prod allowlist.
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }

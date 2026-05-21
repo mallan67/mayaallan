@@ -34,7 +34,7 @@ import {
 import { renderAndEmailSessionPdf, type SessionPayload } from "@/lib/deliver-pdf"
 import { head, del } from "@vercel/blob"
 import { siteUrl } from "@/lib/site-url"
-import { emailDomain } from "@/lib/safe-log"
+import { emailDomain, sanitizeResendError } from "@/lib/safe-log"
 import crypto from "crypto"
 import type Stripe from "stripe"
 
@@ -67,6 +67,9 @@ async function sendBookPurchaseEmail(args: {
   try {
     const sendPromise = resend.emails.send({
       from: "Maya Allan <maya@mayaallan.com>",
+      // Mirror the PayPal-webhook replyTo so support replies route to the
+      // operations inbox rather than a personal mailbox.
+      replyTo: process.env.SUPPORT_REPLY_TO || "hello@mayaallan.com",
       to: args.customerEmail,
       subject: `Your purchase from mayaallan.com — ${args.bookTitle}`,
       html: `
@@ -410,7 +413,8 @@ async function handleBookPurchase(
         token: newToken,
         order_id: order.id,
         book_id: book.id,
-        max_downloads: 5,
+        // Mirror the PayPal-webhook cap; env-configurable for future use.
+        max_downloads: Number(process.env.DOWNLOAD_TOKEN_MAX_DOWNLOADS) || 5,
         expires_at: newExpiresAt.toISOString(),
       })
       .select("id, token, expires_at, max_downloads, email_sent_at")
@@ -491,7 +495,14 @@ async function handleBookPurchase(
       body:
         "Order + token are valid but Resend rejected the send. Claim released so the next " +
         "Stripe retry (or a manual resend) can try again.",
-      details: { orderId: order.id, stripeSessionId, bookId: book.id, resendError: emailResult.error },
+      details: {
+        orderId: order.id,
+        stripeSessionId,
+        bookId: book.id,
+        // Sanitize Resend error to strip any echoed customer email
+        // (commit d01200b's PII rule applies here too).
+        resendError: sanitizeResendError(emailResult.error),
+      },
       dedupKey: `stripe:email-failed:${stripeSessionId}`,
     })
     return NextResponse.json({ error: "Order completed but delivery email failed" }, { status: 500 })
