@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
 
   // Rate-limit BEFORE we look anything up — defends against scripted capture
   // probes that try to brute-force valid order IDs.
-  const limit = rateLimit({
+  const limit = await rateLimit({
     scope: "paypal-return",
     ip,
     windowMs: 15 * 60 * 1000,

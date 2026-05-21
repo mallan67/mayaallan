@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
   const ip = getClientIp(req)
 
-  const limit = rateLimit({
+  const limit = await rateLimit({
     scope: RATE_LIMIT_SCOPE,
     ip,
     windowMs: 15 * 60 * 1000,
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
   }
 
   // Success — clear rate-limit record so future typos don't accumulate
-  clearRateLimit(RATE_LIMIT_SCOPE, ip)
+  await clearRateLimit(RATE_LIMIT_SCOPE, ip)
 
   const session = await getAdminSession()
   session.adminId = "1"

@@ -52,7 +52,7 @@ const transporter = process.env.SMTP_USER && process.env.SMTP_PASS
 
 export async function POST(request: Request) {
   // Throttle to 5 submissions per IP per hour to deter form spam.
-  const limit = rateLimit({
+  const limit = await rateLimit({
     scope: "contact",
     ip: getClientIp(request),
     windowMs: 60 * 60 * 1000,

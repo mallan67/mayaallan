@@ -59,7 +59,7 @@ export async function POST(req: Request) {
   // same buyer 3× in an hour covers genuine "my spam folder is broken"
   // cases; beyond that, the customer needs human support.
   const ip = getClientIp(req)
-  const limit = rateLimit({
+  const limit = await rateLimit({
     scope: "checkout-resend-email",
     ip,
     windowMs: 60 * 60 * 1000,

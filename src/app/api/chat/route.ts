@@ -13,6 +13,7 @@ import {
   MAX_CONVERSATION_CHARS,
   totalConversationCharCount,
 } from "@/lib/crisis-detection"
+import { rateLimit } from "@/lib/rate-limit"
 import crypto from "crypto"
 
 /**
@@ -41,43 +42,44 @@ function getModel(): LanguageModel {
   return "google/gemini-2.5-flash"
 }
 
-// ── Rate-limit state (in-memory, resets on cold start) ──────────────
+// ── Rate-limit configuration ────────────────────────────────────────
+// Migrated from a module-state in-memory limiter (which reset on every
+// Vercel cold start, making the daily caps far more permissive than they
+// read on paper) to the shared Upstash-backed helper in src/lib/rate-limit.ts.
+//
+// Behavior change: previously the reset was calendar-day-UTC anchored
+// (00:00 UTC clears all counters). Now it's a rolling 24h window per
+// (scope, ip). This is slightly more conservative for the user — they
+// can't bypass the cap by waiting until 23:59 UTC and burning 80 more
+// at 00:01 — and slightly more lenient for the operator (the rolling
+// window deflates as old hits expire).
 const GLOBAL_DAILY_CAP = 1000
 const PER_IP_DAILY_CAP = 80
 const MAX_MESSAGES = 40
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
-let globalCount = 0
-let globalResetDate = todayKey()
-const ipCounts = new Map<string, { count: number; date: string }>()
+async function checkRateLimit(ip: string): Promise<boolean> {
+  // Global per-day cap — uses a fixed pseudo-IP key so all callers share
+  // the same counter via Upstash. The lockout window matches the rolling
+  // window so once tripped, it stays tripped for the full 24h.
+  const globalLimit = await rateLimit({
+    scope: "chat-daily-global",
+    ip: "__global__",
+    windowMs: ONE_DAY_MS,
+    maxAttempts: GLOBAL_DAILY_CAP,
+    lockoutMs: ONE_DAY_MS,
+  })
+  if (!globalLimit.allowed) return false
 
-function todayKey() {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function checkRateLimit(ip: string): boolean {
-  const today = todayKey()
-
-  // Reset global counter at midnight
-  if (globalResetDate !== today) {
-    globalCount = 0
-    globalResetDate = today
-    ipCounts.clear()
-  }
-
-  if (globalCount >= GLOBAL_DAILY_CAP) return false
-
-  const entry = ipCounts.get(ip)
-  if (entry && entry.date === today && entry.count >= PER_IP_DAILY_CAP) return false
-
-  // Increment
-  globalCount++
-  if (entry && entry.date === today) {
-    entry.count++
-  } else {
-    ipCounts.set(ip, { count: 1, date: today })
-  }
-
-  return true
+  // Per-IP per-day cap.
+  const perIpLimit = await rateLimit({
+    scope: "chat-daily-ip",
+    ip,
+    windowMs: ONE_DAY_MS,
+    maxAttempts: PER_IP_DAILY_CAP,
+    lockoutMs: ONE_DAY_MS,
+  })
+  return perIpLimit.allowed
 }
 
 // ── System prompts keyed by tool name ───────────────────────────────
@@ -609,7 +611,7 @@ export async function POST(req: Request) {
       req.headers.get("x-real-ip") ||
       "unknown"
 
-    if (!checkRateLimit(ip)) {
+    if (!(await checkRateLimit(ip))) {
       return new Response(
         JSON.stringify({ error: "Daily limit reached. Come back tomorrow." }),
         { status: 429, headers: { "Content-Type": "application/json" } }
