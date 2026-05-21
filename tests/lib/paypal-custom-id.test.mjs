@@ -35,7 +35,7 @@ test("roundtrip survives all three tool names", () => {
 })
 
 test("decode rejects unknown tool", () => {
-  assert.equal(decodeCustomId("sessions/x.json|stripe"), null)
+  assert.equal(decodeCustomId("sessions/x.json|unknown"), null)
 })
 
 test("decode rejects empty blobKey", () => {

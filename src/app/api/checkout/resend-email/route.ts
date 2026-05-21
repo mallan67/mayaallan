@@ -41,8 +41,7 @@ type RecoverBody = {
 }
 
 function validateOrderId(value: unknown): string | null {
-  // PayPal order IDs are 12-32 alphanumeric; Stripe checkout session IDs
-  // start with `cs_` followed by 50+ alphanumerics. One regex covers both.
+  // PayPal order IDs are 10-32 alphanumeric/underscore-safe strings.
   if (typeof value !== "string") return null
   if (value.length < 10 || value.length > 80) return null
   if (!/^[A-Za-z0-9_]+$/.test(value)) return null
@@ -80,8 +79,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid orderId" }, { status: 400 })
   }
 
-  // Find the order. The same column holds both PayPal order ids and
-  // Stripe checkout session ids — disjoint formats, single index.
+  // Find the order by paypal_order_id.
   const { data: order } = await supabaseAdmin
     .from(Tables.orders)
     .select("id, email, customer_name, book_id")

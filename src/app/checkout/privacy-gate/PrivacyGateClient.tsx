@@ -42,7 +42,7 @@ type PrivacyGateClientProps = {
   siteUrl: string
 }
 
-const CHECKOUT_STORAGE_PREFIXES = ["paypal_", "stripe_", "checkout_", "buyer_", "order_", "payer_", "cart_"]
+const CHECKOUT_STORAGE_PREFIXES = ["paypal_", "checkout_", "buyer_", "order_", "payer_", "cart_"]
 
 function clearCheckoutClientState(): void {
   if (typeof window === "undefined") return

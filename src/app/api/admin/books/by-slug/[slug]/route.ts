@@ -66,7 +66,6 @@ export async function GET(
       isComingSoon: book.is_coming_soon,
       allowDirectSale: book.allow_direct_sale,
       allowRetailerSale: book.allow_retailer_sale,
-      stripePaymentLink: book.stripe_payment_link,
       paypalPaymentLink: book.paypal_payment_link,
       seoTitle: book.seo_title,
       seoDescription: book.seo_description,

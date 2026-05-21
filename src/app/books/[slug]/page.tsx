@@ -208,7 +208,6 @@ export default async function BookPage({ params }: BookPageProps) {
         isComingSoon: data.is_coming_soon,
         allowDirectSale: data.allow_direct_sale,
         allowRetailerSale: data.allow_retailer_sale,
-        stripePaymentLink: data.stripe_payment_link,
         paypalPaymentLink: data.paypal_payment_link,
         // Additional fields for schema
         isbn: data.isbn,
@@ -258,7 +257,6 @@ export default async function BookPage({ params }: BookPageProps) {
     copyright: book.copyright,
     publishedAt: book.publishedAt,
     allowDirectSale: book.allowDirectSale,
-    stripePaymentLink: book.stripePaymentLink,
   } as any)
 
   // AEO: FAQ Schema for AI answer engines
@@ -277,7 +275,7 @@ export default async function BookPage({ params }: BookPageProps) {
   // Show direct sale section if:
   // 1. allowDirectSale is TRUE
   // 2. AND book has an ebook price
-  // The checkout API will create Stripe/PayPal sessions dynamically
+  // The checkout API will create PayPal orders dynamically
   // External payment links are legacy - we now use proper checkout with webhooks
   const showDirectSale = book.allowDirectSale === true && book.hasEbook && book.ebookPrice && Number(book.ebookPrice) > 0
 

@@ -9,7 +9,6 @@ import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
  *
  * This route must properly save ALL book fields including:
  * - allowDirectSale (boolean)
- * - stripePaymentLink (string)
  * - paypalPaymentLink (string)
  * - allowRetailerSale (boolean)
  * - All other book fields
@@ -79,7 +78,6 @@ export async function GET(
       isComingSoon: book.is_coming_soon,
       allowDirectSale: book.allow_direct_sale,
       allowRetailerSale: book.allow_retailer_sale,
-      stripePaymentLink: book.stripe_payment_link,
       paypalPaymentLink: book.paypal_payment_link,
       seoTitle: book.seo_title,
       seoDescription: book.seo_description,
@@ -175,7 +173,6 @@ export async function PUT(
     // CRITICAL: Direct sale fields (Issue #3A)
     if (body.allowDirectSale !== undefined) updateData.allow_direct_sale = Boolean(body.allowDirectSale)
     if (body.allowRetailerSale !== undefined) updateData.allow_retailer_sale = Boolean(body.allowRetailerSale)
-    if (body.stripePaymentLink !== undefined) updateData.stripe_payment_link = body.stripePaymentLink || null
     if (body.paypalPaymentLink !== undefined) updateData.paypal_payment_link = body.paypalPaymentLink || null
 
     // Numeric fields
@@ -255,7 +252,6 @@ export async function PUT(
       isComingSoon: updatedBook.is_coming_soon,
       allowDirectSale: updatedBook.allow_direct_sale,
       allowRetailerSale: updatedBook.allow_retailer_sale,
-      stripePaymentLink: updatedBook.stripe_payment_link,
       paypalPaymentLink: updatedBook.paypal_payment_link,
       seoTitle: updatedBook.seo_title,
       seoDescription: updatedBook.seo_description,

@@ -115,37 +115,6 @@ async function deepResend(): Promise<CheckResult> {
   }
 }
 
-function checkStripeEnv(): CheckResult {
-  const missing: string[] = []
-  if (!process.env.STRIPE_SECRET_KEY) missing.push("STRIPE_SECRET_KEY")
-  if (!process.env.STRIPE_WEBHOOK_SECRET) missing.push("STRIPE_WEBHOOK_SECRET")
-  if (missing.length === 0) return { ok: true }
-  return { ok: false, error: `Missing: ${missing.join(", ")}` }
-}
-
-async function deepStripe(): Promise<CheckResult> {
-  const t0 = Date.now()
-  const key = process.env.STRIPE_SECRET_KEY
-  if (!key) return { ok: false, error: "STRIPE_SECRET_KEY not configured" }
-  try {
-    // Cheap auth probe — list 1 balance transaction (we don't read it; we
-    // just need to know auth succeeded). Stripe returns 401 if the key is
-    // invalid, 200 if it's fine.
-    const r = await fetch("https://api.stripe.com/v1/balance", {
-      headers: { Authorization: `Bearer ${key}` },
-    })
-    const latencyMs = Date.now() - t0
-    if (!r.ok) {
-      console.error("[health] deep stripe probe failed:", r.status)
-      return { ok: false, error: `Stripe API HTTP ${r.status}`, latencyMs }
-    }
-    return { ok: true, latencyMs }
-  } catch (err: any) {
-    console.error("[health] deep stripe probe threw:", err)
-    return { ok: false, error: "Stripe API unreachable", latencyMs: Date.now() - t0 }
-  }
-}
-
 async function deepPaypal(): Promise<CheckResult> {
   const t0 = Date.now()
   const clientId = process.env.PAYPAL_CLIENT_ID
@@ -182,7 +151,6 @@ export async function GET(req: NextRequest) {
   const resend = deep ? await deepResend() : checkEnvPresent("RESEND_API_KEY")
   const blob = deep ? await deepBlob() : checkEnvPresent("BLOB_READ_WRITE_TOKEN")
   const paypal = deep ? await deepPaypal() : checkPaypalEnv()
-  const stripe = deep ? await deepStripe() : checkStripeEnv()
   const session = checkEnvPresent("SESSION_SECRET")
   const admin = checkAdminEnv()
   // Upstash: env-presence (cheap mode) or full PING (deep mode). Upstash is
@@ -195,7 +163,7 @@ export async function GET(req: NextRequest) {
       ? { ok: true }
       : { ok: false, error: "UPSTASH_REDIS_REST_URL / TOKEN not configured" }
 
-  const checks = { database, resend, blob, paypal, stripe, session, admin, upstash }
+  const checks = { database, resend, blob, paypal, session, admin, upstash }
   const allOk = Object.values(checks).every((c) => c.ok)
 
   return NextResponse.json(

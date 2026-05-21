@@ -33,7 +33,6 @@ export interface Book {
   isVisible: boolean
   isComingSoon: boolean
   allowDirectSale: boolean
-  stripePaymentLink?: string | null
   paypalPaymentLink?: string | null
   seoTitle?: string | null
   seoDescription?: string | null
@@ -157,7 +156,6 @@ export const mockBooks: Book[] = [
     isVisible: false, // Hidden by default
     isComingSoon: false,
     allowDirectSale: false,
-    stripePaymentLink: null,
     paypalPaymentLink: null,
     seoTitle: null,
     seoDescription: null,
