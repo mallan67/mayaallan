@@ -1,10 +1,19 @@
-import { streamText, convertToModelMessages, type LanguageModel } from "ai"
+import {
+  streamText,
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+  type LanguageModel,
+} from "ai"
 import { google } from "@ai-sdk/google"
 import {
-  detectCrisisLanguage,
-  getLatestUserMessageText,
+  containsCrisisInAnyUserMessage,
   CRISIS_RESPONSE_TEXT,
+  findOversizeUserMessage,
+  MAX_CONVERSATION_CHARS,
+  totalConversationCharCount,
 } from "@/lib/crisis-detection"
+import crypto from "crypto"
 
 /**
  * Model resolution — supports two providers:
@@ -324,7 +333,9 @@ BAD: "Let's question that. Do people really always judge you?"
 Why the bad one fails: argues with the content of the belief. The user will defend it harder. The good version uses the predictive-processing framing (Friston / Lisa Feldman Barrett) to change the user's relationship to the belief without challenging its content — they can still believe it, but now they can see it as a brain process, which loosens its grip.`
 
 const SYSTEM_PROMPTS: Record<string, string> = {
-  audit: BELIEF_INQUIRY_PROMPT,
+  // NOTE: legacy "audit" alias removed — unknown `tool=` values now 404.
+  // A code comment elsewhere previously claimed the alias was already
+  // gone; this commit makes that true.
   belief_inquiry: BELIEF_INQUIRY_PROMPT,
 
   reset: `You are The Nervous System Reset — an AI-guided somatic regulation tool created by Maya Allan.
@@ -626,45 +637,68 @@ export async function POST(req: Request) {
 
     const { messages } = await req.json()
 
-    // ── Crisis-language prefilter ─────────────────────────────────────
-    // Deterministic check on the most recent user message BEFORE we hand
-    // anything to the LLM. If any high-confidence self-harm / overdose /
-    // imminent-violence pattern matches, we short-circuit with a constrained
-    // crisis-resource response (no normal LLM call, no system prompt other
-    // than the crisis directive). See src/lib/crisis-detection.ts.
-    //
-    // Logged with no PII — only tool name + flag. The matched text is NEVER
-    // logged because by definition it contains sensitive content.
-    const latestUserText = getLatestUserMessageText(messages)
-    if (detectCrisisLanguage(latestUserText)) {
-      console.warn(`[chat] crisis-prefilter triggered, tool=${tool}`)
-      const crisisResult = streamText({
-        model: getModel(),
-        system:
-          "You are a crisis-resource responder. Output ONLY the text the user " +
-          "supplies, character for character, with NO additions, summaries, " +
-          "paraphrases, transitions, or closings. Do not introduce yourself. " +
-          "Do not add a greeting or sign-off. Emit the supplied text verbatim, " +
-          "then stop. This is non-negotiable.",
-        messages: [
-          {
-            role: "user",
-            content:
-              "Please emit exactly the following text verbatim, then stop:\n\n" +
-              CRISIS_RESPONSE_TEXT,
-          },
-        ],
-        maxOutputTokens: 400,
-        temperature: 0,
-      })
-      const response = crisisResult.toUIMessageStreamResponse()
-      // Belt-and-suspenders signal so a future client can render a visible
-      // crisis banner over the chat without re-detecting on the message text.
-      response.headers.set("X-Crisis-Detected", "1")
-      return response
+    // ── Input-size gates ──────────────────────────────────────────────
+    // Per-message and per-conversation caps. Both surface a generic
+    // "input too long" error to the client without revealing the exact
+    // cap (so a motivated user can't trivially calibrate against it).
+    const oversize = findOversizeUserMessage(messages)
+    if (oversize !== null) {
+      console.warn(`[chat] oversized user message, tool=${tool}, len=${oversize}`)
+      return new Response(
+        JSON.stringify({ error: "Your message is too long. Please shorten it and try again." }),
+        { status: 413, headers: { "Content-Type": "application/json" } },
+      )
+    }
+    const totalChars = totalConversationCharCount(messages)
+    if (totalChars > MAX_CONVERSATION_CHARS) {
+      console.warn(`[chat] conversation too large, tool=${tool}, chars=${totalChars}`)
+      return new Response(
+        JSON.stringify({
+          error: "This conversation has grown too long. Please start a new session.",
+        }),
+        { status: 413, headers: { "Content-Type": "application/json" } },
+      )
     }
 
-    // Cap conversation length and convert UI messages to model messages
+    // ── Crisis-language prefilter (session-sticky) ────────────────────
+    // Deterministic check across the ENTIRE conversation history, not
+    // just the latest turn. If ANY user message in the history matched a
+    // crisis pattern, every subsequent turn re-routes to safety
+    // resources WITHOUT calling the LLM. The user "exits" by clicking
+    // Start Over on the client (which clears the message history).
+    //
+    // Why session-sticky: a user who once disclosed crisis ideation
+    // shouldn't be able to bypass safety routing by saying "anyway,
+    // about my belief…" on the next turn. The stateless web request +
+    // no server-side conversation persistence means we re-derive
+    // safety state from the message history on every call.
+    //
+    // The response is generated by createUIMessageStream directly —
+    // NO LLM call. CRISIS_RESPONSE_TEXT is emitted byte-for-byte
+    // deterministically, satisfying the "do not call the LLM" safety
+    // constraint operatively rather than probabilistically.
+    if (containsCrisisInAnyUserMessage(messages)) {
+      console.warn(`[chat] crisis-prefilter triggered, tool=${tool}`)
+      const stream = createUIMessageStream({
+        execute: ({ writer }) => {
+          const id = crypto.randomBytes(8).toString("hex")
+          writer.write({ type: "text-start", id })
+          writer.write({ type: "text-delta", id, delta: CRISIS_RESPONSE_TEXT })
+          writer.write({ type: "text-end", id })
+        },
+      })
+      return createUIMessageStreamResponse({
+        stream,
+        // Belt-and-suspenders signal so the client can render a visible
+        // crisis banner without re-detecting on the message text.
+        headers: { "X-Crisis-Detected": "1" },
+      })
+    }
+
+    // ── Normal LLM path ───────────────────────────────────────────────
+    // Cap conversation length (count-based) and convert UI messages to
+    // model messages. The total-char cap above prevents motivated users
+    // from inflating token cost via many medium messages.
     const trimmedMessages = messages.slice(-MAX_MESSAGES)
     const modelMessages = await convertToModelMessages(trimmedMessages)
 
@@ -674,14 +708,26 @@ export async function POST(req: Request) {
       messages: modelMessages,
       maxOutputTokens: 1200,
       temperature: 0.7,
+      // Log structured safety + completion telemetry so a SAFETY refusal
+      // by Gemini is visible in Vercel logs instead of surfacing as a
+      // generic "Something went wrong" mystery error. No PII — only the
+      // tool, finish reason, and token usage counts.
+      onFinish: ({ finishReason, usage }) => {
+        console.log(
+          `[chat] finish tool=${tool} reason=${finishReason}`,
+          usage ? `tokens=${usage.totalTokens ?? "?"}` : "",
+        )
+      },
     })
 
     return result.toUIMessageStreamResponse()
   } catch (error) {
-    console.error("Chat API error:", error)
+    // Log + surface generic message; alertAdmin path comes in PR 5
+    // (operational alerting for silent failures across the codebase).
+    console.error("Chat API error:", error instanceof Error ? error.message : String(error))
     return new Response(
       JSON.stringify({ error: "Something went wrong. Please try again." }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json" } },
     )
   }
 }
