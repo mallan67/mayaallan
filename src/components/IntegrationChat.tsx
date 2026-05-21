@@ -283,7 +283,10 @@ export function IntegrationChat() {
                 Start Over
               </button>
             )}
-            {messages.length > 0 && !showExportCta && (
+            {/* Minimum-turn gate: paid export requires at least 3 user turns.
+                Below that, the export route rejects with "Conversation too
+                short". Hidden until then so $9.99 doesn't taunt users. */}
+            {userTurns >= 3 && !showExportCta && (
               <button
                 onClick={() => setUserRequestedExport(true)}
                 className="flex items-center gap-2 text-charcoal-soft/60 hover:text-liquid-blue text-xs transition-colors"

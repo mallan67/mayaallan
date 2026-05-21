@@ -7,6 +7,7 @@
 import { renderToBuffer } from "@react-pdf/renderer"
 import { Resend } from "resend"
 import { SessionPdf, type PdfMessage } from "@/lib/pdf/template"
+import { extractInsights } from "@/lib/pdf/extract-insights"
 import { safeLog, safeLogError, emailDomain, errorMessage } from "@/lib/safe-log"
 
 export type SessionPayload = {
@@ -23,10 +24,16 @@ const TOOL_DISPLAY = {
 } as const
 
 export async function renderAndEmailSessionPdf(payload: SessionPayload): Promise<void> {
+  // Heuristic extraction (no LLM call) — surfaces structured fields so the
+  // PDF renders the closing arc + an appendix transcript instead of the
+  // first-6-message dump that used to be the entire "Key reflections"
+  // section. The extraction is pure-function over the message array.
+  const insights = extractInsights(payload.messages)
+
   const pdfBuffer = await renderToBuffer(
     SessionPdf({
       tool: payload.tool,
-      messages: payload.messages,
+      insights,
       sessionDate: payload.sessionDate,
     })
   )

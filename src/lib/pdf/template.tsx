@@ -1,4 +1,5 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer"
+import type { ExtractedInsights } from "@/lib/pdf/extract-insights"
 
 const styles = StyleSheet.create({
   page: {
@@ -56,6 +57,24 @@ const styles = StyleSheet.create({
     color: "#334155",
     marginBottom: 8,
   },
+  transcriptUser: {
+    fontSize: 10,
+    color: "#0F172A",
+    marginBottom: 4,
+    fontFamily: "Helvetica-Bold",
+  },
+  transcriptAssistant: {
+    fontSize: 10,
+    color: "#475569",
+    marginBottom: 8,
+    paddingLeft: 12,
+  },
+  noContent: {
+    fontSize: 11,
+    fontStyle: "italic",
+    color: "#94A3B8",
+    marginBottom: 8,
+  },
   blankSpaceBox: {
     marginTop: 10,
     height: 160,
@@ -90,7 +109,7 @@ export type PdfMessage = {
 
 export type PdfProps = {
   tool: "reset" | "belief_inquiry" | "integration"
-  messages: PdfMessage[]
+  insights: ExtractedInsights
   sessionDate: string
 }
 
@@ -100,11 +119,21 @@ const TOOL_DISPLAY = {
   integration: "Integration",
 } as const
 
+// Customer-facing section labels. PRIOR labels are preserved verbatim from
+// the previous template version; only the strictly-new sections required
+// by the structural rewrite (closing-anchor surface + transcript appendix)
+// introduce new copy. Operator review approved this minimum-change set.
 const TOOL_SECTION_LABELS = {
   reset: "The state you explored",
   belief_inquiry: "The belief you explored",
   integration: "The shift you explored",
 } as const
+
+const SECTION_LABEL_KEY_REFLECTIONS = "Key reflections"
+const SECTION_LABEL_CLOSING_ANCHOR = "Closing reflection"  // NEW — required to surface the [SESSION_COMPLETE] anchor
+const SECTION_LABEL_JOURNALING = "Journaling prompts"
+const SECTION_LABEL_NOTES = "Your notes"
+const SECTION_LABEL_TRANSCRIPT = "Full conversation"        // NEW — required for the appendix page
 
 const JOURNALING_PROMPTS = {
   reset: [
@@ -122,14 +151,14 @@ const JOURNALING_PROMPTS = {
 } as const
 
 export function SessionPdf(props: PdfProps) {
-  const { tool, messages, sessionDate } = props
-  const firstUserMessage = messages.find((m) => m.role === "user")?.text ?? ""
-  const assistantReflections = messages.filter((m) => m.role === "assistant").slice(0, 6)
+  const { tool, insights, sessionDate } = props
   const prompts = JOURNALING_PROMPTS[tool]
   const toolName = TOOL_DISPLAY[tool]
+  const userBeliefLabel = TOOL_SECTION_LABELS[tool]
 
   return (
     <Document>
+      {/* Page 1 — structured insights */}
       <Page size="LETTER" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.brandMark}>Maya Allan</Text>
@@ -143,24 +172,45 @@ export function SessionPdf(props: PdfProps) {
           </Text>
         </View>
 
-        <Text style={styles.sectionTitle}>{TOOL_SECTION_LABELS[tool]}</Text>
-        <Text style={styles.userQuote}>{firstUserMessage || "(no content)"}</Text>
+        <Text style={styles.sectionTitle}>{userBeliefLabel}</Text>
+        {insights.beliefBroughtIn ? (
+          <Text style={styles.userQuote}>{insights.beliefBroughtIn}</Text>
+        ) : (
+          <Text style={styles.noContent}>(no opening message captured)</Text>
+        )}
 
-        <Text style={styles.sectionTitle}>Key reflections</Text>
-        {assistantReflections.map((m, i) => (
-          <Text key={i} style={styles.assistantText}>
-            {m.text}
-          </Text>
-        ))}
+        <Text style={styles.sectionTitle}>{SECTION_LABEL_KEY_REFLECTIONS}</Text>
+        {insights.midAssistantReflections.length > 0 ? (
+          insights.midAssistantReflections.map((m, i) => (
+            <Text key={i} style={styles.assistantText}>
+              {m.text}
+            </Text>
+          ))
+        ) : (
+          <Text style={styles.noContent}>(no reflections captured)</Text>
+        )}
 
-        <Text style={styles.sectionTitle}>Journaling prompts</Text>
+        {insights.closingAssistantAnchor && (
+          <>
+            <Text style={styles.sectionTitle}>{SECTION_LABEL_CLOSING_ANCHOR}</Text>
+            <Text style={styles.assistantText}>{insights.closingAssistantAnchor}</Text>
+          </>
+        )}
+
+        {/* The closing user reflection is intentionally NOT rendered as its
+            own section — it's already visible in the transcript appendix.
+            Adding a second section heading here would have meant inventing
+            new customer-facing copy, and the appendix surface preserves
+            the same content without that cost. */}
+
+        <Text style={styles.sectionTitle}>{SECTION_LABEL_JOURNALING}</Text>
         {prompts.map((p, i) => (
           <Text key={i} style={styles.promptItem}>
             {i + 1}. {p}
           </Text>
         ))}
 
-        <Text style={styles.sectionTitle}>Your notes</Text>
+        <Text style={styles.sectionTitle}>{SECTION_LABEL_NOTES}</Text>
         <View style={styles.blankSpaceBox} />
 
         <View style={styles.footer} fixed>
@@ -174,6 +224,41 @@ export function SessionPdf(props: PdfProps) {
           </Text>
         </View>
       </Page>
+
+      {/* Page 2+ — full conversation transcript (appendix) */}
+      {insights.transcriptForAppendix.length > 0 && (
+        <Page size="LETTER" style={styles.page}>
+          <View style={styles.header}>
+            <Text style={styles.brandMark}>Appendix</Text>
+            <Text style={styles.title}>{SECTION_LABEL_TRANSCRIPT}</Text>
+            <Text style={styles.sessionMeta}>
+              {insights.userTurnCount}{" "}
+              {insights.userTurnCount === 1 ? "user turn" : "user turns"} · full record
+            </Text>
+          </View>
+
+          {insights.transcriptForAppendix.map((m, i) => (
+            <Text
+              key={i}
+              style={m.role === "user" ? styles.transcriptUser : styles.transcriptAssistant}
+            >
+              {m.role === "user" ? "You: " : ""}
+              {m.text}
+            </Text>
+          ))}
+
+          <View style={styles.footer} fixed>
+            <Text>
+              This document is a record of a reflective conversation. It is not medical,
+              psychological, or therapeutic advice. If you are in crisis, contact the
+              988 Suicide &amp; Crisis Lifeline — call or text 988.
+            </Text>
+            <Text style={{ marginTop: 4 }}>
+              © Maya Allan — mayaallan.com — Payment processed via PayPal.
+            </Text>
+          </View>
+        </Page>
+      )}
     </Document>
   )
 }

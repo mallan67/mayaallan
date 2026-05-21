@@ -4,6 +4,7 @@ import { renderAndEmailSessionPdf, isValidPromoCode } from "@/lib/deliver-pdf"
 import { alertAdmin } from "@/lib/alert-admin"
 import { safeLog, safeLogError, emailDomain, errorMessage } from "@/lib/safe-log"
 import { putSession } from "@/lib/session-store"
+import { MIN_USER_TURNS_FOR_EXPORT } from "@/lib/pdf/extract-insights"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -38,6 +39,7 @@ function validateRequest(body: unknown): ExportRequest {
   }
 
   const normalized: ExportRequest["messages"] = []
+  let userTurnCount = 0
   for (const m of messages) {
     if (!m || typeof m !== "object") throw new Error("Invalid message")
     const role = (m as Record<string, unknown>).role
@@ -46,6 +48,16 @@ function validateRequest(body: unknown): ExportRequest {
     if (typeof text !== "string" || text.length === 0) throw new Error("Invalid text")
     if (text.length > MAX_TEXT_LEN) throw new Error("Text too long")
     normalized.push({ role, text })
+    if (role === "user") userTurnCount += 1
+  }
+
+  // Minimum-conversation gate. The previous behavior allowed the "Print
+  // this session — $9.99" button to fire at turn 1, which let a buyer
+  // pay $9.99 for a PDF containing one question and no anchor. Below
+  // MIN_USER_TURNS_FOR_EXPORT the conversation is too thin to produce
+  // a useful keepsake — and a refund risk for the operator.
+  if (userTurnCount < MIN_USER_TURNS_FOR_EXPORT) {
+    throw new Error("Conversation too short")
   }
 
   const promoCode = typeof b.promoCode === "string" ? b.promoCode : undefined
