@@ -23,7 +23,10 @@ interface Props {
 // Simple fetch function for edge runtime
 async function getBookData(slug: string) {
   const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY
+  // Server-only key chain (pre-RLS cleanup): see books/opengraph-image.tsx
+  // for full rationale. Public keys removed; null fallback path renders
+  // the default visual when no server key is set.
+  const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseKey) {
     return null

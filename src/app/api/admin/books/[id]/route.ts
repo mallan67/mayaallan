@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
+import { bookUpdateSchema, formatZodError } from "@/lib/admin-schemas"
 
 /**
  * BOOK API ROUTE (Issue #3A Fix):
@@ -128,7 +129,12 @@ export async function PUT(
   }
 
   try {
-    const body = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const parsed = bookUpdateSchema.safeParse(rawBody)
+    if (!parsed.success) {
+      return NextResponse.json(formatZodError(parsed.error), { status: 400 })
+    }
+    const input = parsed.data
 
     // Verify book exists
     const { data: existingBook, error: fetchError } = await supabaseAdmin
@@ -141,63 +147,49 @@ export async function PUT(
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 
-    // Build update data with explicit type handling
-    const updateData: any = {}
-
-    // String fields
-    if (body.title !== undefined) updateData.title = String(body.title || "")
-    if (body.slug !== undefined) updateData.slug = String(body.slug || "")
-    if (body.subtitle1 !== undefined) updateData.subtitle1 = body.subtitle1 || null
-    if (body.subtitle2 !== undefined) updateData.subtitle2 = body.subtitle2 || null
-    if (body.subtitle3 !== undefined) updateData.subtitle3 = body.subtitle3 || null
-    if (body.tagsCsv !== undefined) updateData.tags_csv = body.tagsCsv || null
-    if (body.blurb !== undefined) updateData.blurb = body.blurb || null
-    if (body.coverUrl !== undefined) updateData.cover_url = body.coverUrl || null
-    if (body.backCoverUrl !== undefined) updateData.back_cover_url = body.backCoverUrl || null
-
-    // Debug logging for cover_url
-    if (body.ebookFileUrl !== undefined) updateData.ebook_file_url = body.ebookFileUrl || null
-    if (body.seoTitle !== undefined) updateData.seo_title = body.seoTitle || null
-    if (body.seoDescription !== undefined) updateData.seo_description = body.seoDescription || null
-
-    // Boolean fields - explicit conversion
-    if (body.hasEbook !== undefined) updateData.has_ebook = Boolean(body.hasEbook)
-    if (body.hasPaperback !== undefined) updateData.has_paperback = Boolean(body.hasPaperback)
-    if (body.hasHardcover !== undefined) updateData.has_hardcover = Boolean(body.hasHardcover)
-    if (body.hasAudiobook !== undefined) updateData.has_audiobook = Boolean(body.hasAudiobook)
-    if (body.isFeatured !== undefined) updateData.is_featured = Boolean(body.isFeatured)
-    if (body.isPublished !== undefined) updateData.is_published = Boolean(body.isPublished)
-    if (body.isVisible !== undefined) updateData.is_visible = Boolean(body.isVisible)
-    if (body.isComingSoon !== undefined) updateData.is_coming_soon = Boolean(body.isComingSoon)
-
-    // CRITICAL: Direct sale fields (Issue #3A)
-    if (body.allowDirectSale !== undefined) updateData.allow_direct_sale = Boolean(body.allowDirectSale)
-    if (body.allowRetailerSale !== undefined) updateData.allow_retailer_sale = Boolean(body.allowRetailerSale)
-    if (body.paypalPaymentLink !== undefined) updateData.paypal_payment_link = body.paypalPaymentLink || null
-
-    // Numeric fields
-    if (body.ebookPrice !== undefined) {
-      updateData.ebook_price = body.ebookPrice !== null && body.ebookPrice !== ""
-        ? parseFloat(body.ebookPrice)
-        : null
+    // Build snake_case update payload from validated camelCase input.
+    // Only columns whose camelCase field was present in the request body
+    // are written — preserves the "partial update" semantics the admin
+    // form depends on. Field-by-field mapping (no Object.entries loop)
+    // because the column names diverge from the input names.
+    const FIELD_MAP: Record<keyof typeof input, string> = {
+      title: "title",
+      slug: "slug",
+      subtitle1: "subtitle1",
+      subtitle2: "subtitle2",
+      subtitle3: "subtitle3",
+      tagsCsv: "tags_csv",
+      isbn: "isbn",
+      copyright: "copyright",
+      blurb: "blurb",
+      coverUrl: "cover_url",
+      backCoverUrl: "back_cover_url",
+      ebookFileUrl: "ebook_file_url",
+      hasEbook: "has_ebook",
+      hasPaperback: "has_paperback",
+      hasHardcover: "has_hardcover",
+      hasAudiobook: "has_audiobook",
+      ebookPrice: "ebook_price",
+      paperbackPrice: "paperback_price",
+      hardcoverPrice: "hardcover_price",
+      audiobookPrice: "audiobook_price",
+      isFeatured: "is_featured",
+      isPublished: "is_published",
+      isVisible: "is_visible",
+      isComingSoon: "is_coming_soon",
+      allowDirectSale: "allow_direct_sale",
+      allowRetailerSale: "allow_retailer_sale",
+      paypalPaymentLink: "paypal_payment_link",
+      seoTitle: "seo_title",
+      seoDescription: "seo_description",
+      ogImageUrl: "og_image_url",
+      publishedAt: "published_at",
     }
-    if (body.paperbackPrice !== undefined) {
-      updateData.paperback_price = body.paperbackPrice !== null && body.paperbackPrice !== ""
-        ? parseFloat(body.paperbackPrice)
-        : null
+    const updateData: Record<string, unknown> = {}
+    for (const key of Object.keys(input) as Array<keyof typeof input>) {
+      const col = FIELD_MAP[key]
+      if (col) updateData[col] = input[key]
     }
-    if (body.audiobookPrice !== undefined) {
-      updateData.audiobook_price = body.audiobookPrice !== null && body.audiobookPrice !== ""
-        ? parseFloat(body.audiobookPrice)
-        : null
-    }
-    if (body.hardcoverPrice !== undefined) {
-      updateData.hardcover_price = body.hardcoverPrice !== null && body.hardcoverPrice !== ""
-        ? parseFloat(body.hardcoverPrice)
-        : null
-    }
-
-    // Debug logging
 
     // Perform update
     const { data: updatedBook, error: updateError } = await supabaseAdmin
