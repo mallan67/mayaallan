@@ -1,6 +1,6 @@
 import "server-only"
 import bcrypt from "bcryptjs"
-import { randomBytes, createHash, timingSafeEqual } from "crypto"
+import { randomBytes, createHash } from "crypto"
 import { supabaseAdmin } from "@/lib/supabaseAdmin"
 
 /**
@@ -61,12 +61,14 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
     console.error("[admin-credentials] DB hash read failed, using env fallback:", err instanceof Error ? err.message : String(err))
   }
   if (dbHash) {
-    if (await bcrypt.compare(password, dbHash)) return true
-    // DB hash present but didn't match — still allow the env fallback below so
-    // the operator is never locked out of the emergency credential.
+    // A DB-managed password is the source of truth once set. Do NOT fall
+    // through to the env hash on mismatch — otherwise a reset never truly
+    // rotates the credential (the old ADMIN_PASSWORD_HASH would authenticate
+    // forever). When a DB hash exists, only it is accepted.
+    return await bcrypt.compare(password, dbHash)
   }
 
-  // 2. Env-var fallback (emergency credential).
+  // 2. Env-var fallback — only used until the first reset writes a DB hash.
   const envHash = process.env.ADMIN_PASSWORD_HASH
   if (envHash) {
     // bcrypt.compare throws on a malformed hash; let it propagate so the login
@@ -97,23 +99,6 @@ export async function createResetToken(): Promise<string> {
   if (error) throw new Error(`admin_auth reset-token write failed: ${error.message}`)
 
   return rawToken
-}
-
-/**
- * Validate a raw reset token against the stored hash + expiry, WITHOUT
- * consuming it. Constant-time compare on the hashes. Returns true only if a
- * token is pending, unexpired, and matches.
- */
-export async function isResetTokenValid(rawToken: string): Promise<boolean> {
-  if (!rawToken) return false
-  const row = await readRow()
-  if (!row?.reset_token_hash || !row.reset_token_expires_at) return false
-  if (Date.now() > new Date(row.reset_token_expires_at).getTime()) return false
-
-  const provided = Buffer.from(sha256Hex(rawToken), "hex")
-  const stored = Buffer.from(row.reset_token_hash, "hex")
-  if (provided.length !== stored.length) return false
-  return timingSafeEqual(provided, stored)
 }
 
 /**

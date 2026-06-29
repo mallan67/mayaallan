@@ -9,8 +9,12 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url)
-  const page = parseInt(searchParams.get("page") || "1")
-  const limit = parseInt(searchParams.get("limit") || "20")
+  // Clamp pagination: a NaN page → 500 (range(NaN,NaN)); an unbounded limit
+  // (?limit=1000000) loads ~1M rows. Bound both.
+  const pageRaw = parseInt(searchParams.get("page") || "1", 10)
+  const limitRaw = parseInt(searchParams.get("limit") || "20", 10)
+  const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1
+  const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 20
   const offset = (page - 1) * limit
 
   const [contactsResult, countResult] = await Promise.all([

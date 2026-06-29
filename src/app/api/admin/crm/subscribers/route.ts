@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
+import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { buildCsv } from "@/lib/csv"
 
-export async function GET(_request: Request) {
+export async function GET(request: Request) {
+  // Same-origin guard for parity with the analytics CSV export — this is a
+  // PII attachment (subscriber emails), so don't serve it cross-origin.
+  const guard = assertAdminSameOrigin(request)
+  if (!guard.ok) return guard.response
+
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }

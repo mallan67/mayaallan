@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   // alternates / openGraph deliberately omitted — this page is one-shot post-purchase, not shareable
 }
 
-type SearchParams = Promise<{ orderId?: string; bookSlug?: string; via?: string }>
+type SearchParams = Promise<{ orderId?: string; bookSlug?: string; via?: string; status?: string }>
 
 export default async function CheckoutSuccessPage({
   searchParams,
@@ -62,12 +62,18 @@ export default async function CheckoutSuccessPage({
     ? `/books/${params.bookSlug}`
     : "/"
 
+  // PENDING mode: a capture came back not-yet-COMPLETED (eCheck / risk hold).
+  // The payment was accepted but funds aren't settled, so we must NOT tell the
+  // buyer the purchase is complete or that a download is on the way — the
+  // download is delivered later, when the webhook receives a COMPLETED event.
+  const isPending = params.status === "pending"
+
   return (
     <main className="min-h-[60vh] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full text-center space-y-6">
-        <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+        <div className={`mx-auto w-14 h-14 rounded-full flex items-center justify-center ${isPending ? "bg-amber-100" : "bg-green-100"}`}>
           <svg
-            className="w-7 h-7 text-green-700"
+            className={`w-7 h-7 ${isPending ? "text-amber-700" : "text-green-700"}`}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -76,16 +82,25 @@ export default async function CheckoutSuccessPage({
             strokeLinejoin="round"
             aria-hidden="true"
           >
-            <polyline points="20 6 9 17 4 12" />
+            {isPending ? (
+              <>
+                <circle cx="12" cy="12" r="9" />
+                <polyline points="12 7 12 12 15 14" />
+              </>
+            ) : (
+              <polyline points="20 6 9 17 4 12" />
+            )}
           </svg>
         </div>
 
         <div className="space-y-2">
           <h1 className="font-serif text-2xl font-semibold text-slate-900">
-            Your purchase is complete
+            {isPending ? "Your payment is processing" : "Your purchase is complete"}
           </h1>
           <p className="text-slate-600 leading-relaxed">
-            Check your email for access. The download link will arrive within a minute or two — please check spam if it doesn&apos;t appear.
+            {isPending
+              ? "PayPal is still confirming your payment — this can happen with eChecks or when extra verification is needed. As soon as it clears, your download link will arrive by email. No further action is needed."
+              : "Check your email for access. The download link will arrive within a minute or two — please check spam if it doesn't appear."}
           </p>
         </div>
 
@@ -95,7 +110,7 @@ export default async function CheckoutSuccessPage({
           </p>
         )}
 
-        {orderRef && <ResendEmailButton orderId={orderRef} />}
+        {!isPending && orderRef && <ResendEmailButton orderId={orderRef} />}
 
         <ClearAndExitButton exitHref={exitHref} />
 

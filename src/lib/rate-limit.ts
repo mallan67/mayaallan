@@ -98,10 +98,53 @@ function isProduction(): boolean {
   return process.env.NODE_ENV === "production"
 }
 
-/** Pull the client IP from forwarded headers. Same contract as before. */
+/**
+ * Pull the client IP from a TRUSTED source.
+ *
+ * The previous version used the left-most `x-forwarded-for` value, which is
+ * client-controlled — an attacker could send a random leftmost XFF per request
+ * and land in a fresh rate-limit bucket every time, defeating every per-IP cap
+ * (login brute-force, forgot-password spam, etc.).
+ *
+ * On Vercel, `x-vercel-forwarded-for` (and `x-real-ip`) are set by the platform
+ * and OVERWRITE any client-supplied value, so they're trustworthy — but ONLY on
+ * Vercel. Off Vercel (or behind a proxy that merely normalizes X-Forwarded-For)
+ * a client could forge `x-vercel-forwarded-for` / `x-real-ip` to rotate through
+ * fresh rate-limit buckets, so we must NOT trust them there. We gate those
+ * headers behind a Vercel-runtime check; everywhere else we take the RIGHT-most
+ * XFF hop (appended by the closest trusted proxy), never the spoofable left-most.
+ */
 export function getClientIp(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for") ?? ""
-  return forwardedFor.split(",")[0]?.trim() || "unknown"
+  // VERCEL / VERCEL_ENV are injected by the Vercel runtime, never by a client.
+  const onVercel = !!process.env.VERCEL || !!process.env.VERCEL_ENV
+  if (onVercel) {
+    const vercelForwarded = req.headers.get("x-vercel-forwarded-for")
+    if (vercelForwarded) return vercelForwarded.split(",")[0]?.trim() || "unknown"
+
+    const realIp = req.headers.get("x-real-ip")
+    if (realIp) return realIp.trim() || "unknown"
+  }
+
+  // Off-Vercel fallback (this app runs on Vercel, so this is best-effort for
+  // self-hosted use). The RIGHT-most XFF hop is the address the closest trusted
+  // proxy observed. NOTE: this assumes exactly ONE trusted reverse proxy in
+  // front of the app. Behind N chained proxies the real client is the
+  // N-th-from-right entry, so a self-hosted multi-proxy deployment should set
+  // TRUSTED_PROXY_HOPS to skip its own hops (defaults to 1). Taking the
+  // right-most is still strictly safer than the spoofable left-most.
+  const xff = req.headers.get("x-forwarded-for")
+  if (xff) {
+    const hops = xff.split(",").map((s) => s.trim()).filter(Boolean)
+    if (hops.length > 0) {
+      const parsedHops = Number.parseInt(process.env.TRUSTED_PROXY_HOPS ?? "1", 10)
+      const trustedHops = Number.isFinite(parsedHops) && parsedHops > 0 ? parsedHops : 1
+      // Index from the right by the number of trusted proxy hops.
+      const idx = hops.length - trustedHops
+      return hops[idx >= 0 ? idx : 0]
+    }
+  }
+
+  return "unknown"
 }
 
 // ─── In-memory fallback (dev / local without Upstash) ────────────────

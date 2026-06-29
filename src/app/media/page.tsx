@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 300 // 5 minutes
 
-async function getVisibleMedia() {
+async function getVisibleMedia(): Promise<{ mediaItems: any[]; dbErrorOccurred: boolean }> {
   try {
     const { data, error } = await supabaseAdmin
       .from(Tables.mediaItems)
@@ -45,11 +45,11 @@ async function getVisibleMedia() {
 
     if (error) {
       console.error("Error fetching media:", error)
-      return []
+      return { mediaItems: [], dbErrorOccurred: true }
     }
 
     // Map snake_case to camelCase
-    return (data || []).map((item: any) => ({
+    const mediaItems = (data || []).map((item: any) => ({
       id: item.id,
       slug: item.slug,
       title: item.title,
@@ -62,14 +62,15 @@ async function getVisibleMedia() {
       isPublished: item.is_published ?? item.is_visible ?? false,
       isVisible: item.is_visible ?? false,
     }))
+    return { mediaItems, dbErrorOccurred: false }
   } catch (error) {
     console.error("Failed to fetch media:", error)
-    return []
+    return { mediaItems: [], dbErrorOccurred: true }
   }
 }
 
 export default async function MediaPage() {
-  const mediaItems = await getVisibleMedia()
+  const { mediaItems, dbErrorOccurred } = await getVisibleMedia()
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
@@ -83,7 +84,11 @@ export default async function MediaPage() {
         />
       </div>
 
-      {mediaItems.length === 0 ? (
+      {dbErrorOccurred ? (
+        <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 inline-block">
+          We&rsquo;re having trouble loading media right now. Please refresh in a moment.
+        </p>
+      ) : mediaItems.length === 0 ? (
         <p className="text-sm text-slate-700">
           No media available yet. Check back soon for music, guided audios, videos, and PDF guides.
         </p>

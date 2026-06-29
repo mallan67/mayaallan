@@ -40,4 +40,27 @@ URGENT-FIX-*.md
 *-STATUS-*.md
 *-STATUS.md
 PAYPAL-STATUS-*.md
+AUDIOBOOK-AND-COMPANION-PLAN.md
+
+# =============================================================================
+# One-off local tooling / generated artifacts (kept locally, not committed).
+# The 3 package.json-referenced scripts are intentionally NOT matched here:
+#   scripts/eval-prompts.mjs, scripts/publish-to-medium.mjs,
+#   scripts/check-translations.mjs
+# =============================================================================
+# One-off Python tooling (extraction, audiobook generation, doc builders).
+scripts/*.py
+scripts/clone-*.py
+# One-off node inspect/fix utilities.
+scripts/inspect-*.mjs
+scripts/fix-nav-items-hrefs.mjs
+scripts/test-resend.mjs
+scripts/find-author-photo.mjs
+scripts/restore-author-photo.mjs
+# One-off PowerShell helpers.
+scripts/*.ps1
+# Generated review documents.
+docs/book-review/*.docx
+# Admin password hashing tool — must never be committed.
+hash-admin-password.mjs
 
