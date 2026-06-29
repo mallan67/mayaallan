@@ -107,16 +107,23 @@ function isProduction(): boolean {
  * (login brute-force, forgot-password spam, etc.).
  *
  * On Vercel, `x-vercel-forwarded-for` (and `x-real-ip`) are set by the platform
- * and OVERWRITE any client-supplied value, so they're trustworthy. We prefer
- * those. As a last resort off-Vercel we take the RIGHT-most XFF hop (the value
- * appended by the closest trusted proxy), never the spoofable left-most one.
+ * and OVERWRITE any client-supplied value, so they're trustworthy — but ONLY on
+ * Vercel. Off Vercel (or behind a proxy that merely normalizes X-Forwarded-For)
+ * a client could forge `x-vercel-forwarded-for` / `x-real-ip` to rotate through
+ * fresh rate-limit buckets, so we must NOT trust them there. We gate those
+ * headers behind a Vercel-runtime check; everywhere else we take the RIGHT-most
+ * XFF hop (appended by the closest trusted proxy), never the spoofable left-most.
  */
 export function getClientIp(req: Request): string {
-  const vercelForwarded = req.headers.get("x-vercel-forwarded-for")
-  if (vercelForwarded) return vercelForwarded.split(",")[0]?.trim() || "unknown"
+  // VERCEL / VERCEL_ENV are injected by the Vercel runtime, never by a client.
+  const onVercel = !!process.env.VERCEL || !!process.env.VERCEL_ENV
+  if (onVercel) {
+    const vercelForwarded = req.headers.get("x-vercel-forwarded-for")
+    if (vercelForwarded) return vercelForwarded.split(",")[0]?.trim() || "unknown"
 
-  const realIp = req.headers.get("x-real-ip")
-  if (realIp) return realIp.trim() || "unknown"
+    const realIp = req.headers.get("x-real-ip")
+    if (realIp) return realIp.trim() || "unknown"
+  }
 
   const xff = req.headers.get("x-forwarded-for")
   if (xff) {
