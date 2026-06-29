@@ -454,23 +454,22 @@ export async function POST(request: Request) {
       }
 
       // ----------------------------------------------------------------
-      // M4: CURRENCY (hard guard) + AMOUNT (alert-only) checks before fulfilling.
-      // `amount` (Number) and `currency` (lowercased) were parsed above from the
-      // capture resource's amount.value / amount.currency_code.
+      // CURRENCY guard (hard block). `currency` (lowercased) was parsed above
+      // from the capture resource's amount.currency_code.
       //
-      // CURRENCY — hard block: this is a USD-only store and our checkout route
-      // always creates USD orders, so a non-USD capture is genuinely anomalous
-      // (forged / manual PayPal order). Refuse to fulfill.
-      //
-      // AMOUNT — alert only, STILL fulfill: PayPal enforces that a capture
-      // matches the amount on the order WE created server-side, so the captured
-      // value is exactly what our checkout charged. If it's below the book's
-      // CURRENT ebook_price, that almost always means an admin edited the price
-      // between order-creation and capture (a legitimate in-flight price change),
-      // not underpayment. Rejecting would strand a buyer who paid what we charged,
-      // so we alert for visibility and proceed.
+      // Why no AMOUNT-vs-price check here: PayPal enforces that a capture equals
+      // the amount on the order, and our checkout route creates orders
+      // server-side under our merchant account (the client cannot set the
+      // price), so the captured value is always exactly what we charged.
+      // Comparing to the CURRENT ebook_price would only false-positive on a
+      // legit mid-flight price edit (stranding a paying buyer), and a real
+      // underpayment would require an attacker to create a cheap order under our
+      // account (which needs our PayPal credentials). Proper defense-in-depth —
+      // comparing against the amount recorded at order-creation time — needs an
+      // expected_amount column and is tracked as a follow-up. Currency, however,
+      // is unambiguous: this is a USD-only store, so a non-USD capture is a
+      // genuine anomaly (forged / manual order) and we hard-block it.
       // ----------------------------------------------------------------
-      const expectedPrice = Number(book.ebook_price)
       if (currency.toUpperCase() !== "USD") {
         await alertAdmin({
           severity: "critical",
@@ -489,27 +488,6 @@ export async function POST(request: Request) {
           dedupKey: `paypal:currency-mismatch:${paypalOrderId}`,
         })
         return NextResponse.json({ received: true, ignored: "currency-mismatch" })
-      }
-      // +0.01 tolerance absorbs float / rounding noise.
-      if (Number.isFinite(expectedPrice) && amount + 0.01 < expectedPrice) {
-        await alertAdmin({
-          severity: "warning",
-          subject: "PayPal: captured amount below current book price (fulfilling anyway)",
-          body:
-            "A signature-verified capture came in BELOW the book's current ebook_price. This " +
-            "usually means the price was changed after the buyer's order was created — PayPal " +
-            "enforces capture==order amount, so the buyer paid exactly what our checkout " +
-            "charged. Fulfilling to avoid stranding a paying customer; flagged for awareness.",
-          details: {
-            paypalOrderId,
-            bookId: book.id,
-            currentPrice: expectedPrice,
-            actualAmount: amount,
-            actualCurrency: currency,
-          },
-          dedupKey: `paypal:amount-below-current-price:${paypalOrderId}`,
-        })
-        // Intentionally NO early return — proceed to fulfillment.
       }
 
       // ----------------------------------------------------------------
