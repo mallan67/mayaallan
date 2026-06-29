@@ -101,8 +101,8 @@ export async function POST(req: Request) {
     <div style="font-family: Georgia, serif; max-width: 560px; color: #14110d; line-height: 1.6;">
       <h2 style="font-size: 20px; font-weight: 600;">Reset your admin password</h2>
       <p>Someone requested a password reset for the mayaallan.com admin panel.
-      If that was you, click the button below. This link expires in 1 hour and
-      can only be used once.</p>
+      If that was you, click the button below. This link expires in 10 minutes
+      and can only be used once.</p>
       <p style="margin: 28px 0;">
         <a href="${resetUrl}"
            style="background:#14110d;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-family:Helvetica,Arial,sans-serif;font-size:15px;">

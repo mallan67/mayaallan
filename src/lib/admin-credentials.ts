@@ -16,7 +16,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin"
  */
 
 const BCRYPT_ROUNDS = 12
-const RESET_TOKEN_TTL_MS = 60 * 60 * 1000 // 1 hour
+const RESET_TOKEN_TTL_MS = 10 * 60 * 1000 // 10 minutes
 const ADMIN_AUTH_ROW_ID = 1
 
 const sha256Hex = (s: string) => createHash("sha256").update(s).digest("hex")

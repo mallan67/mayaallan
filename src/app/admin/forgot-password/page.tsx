@@ -29,7 +29,7 @@ export default function ForgotPassword() {
           <>
             <p className="text-sm text-muted-foreground">
               If that email matches the admin account, a reset link is on its way.
-              It expires in 1 hour. Check your inbox (and spam).
+              It expires in 10 minutes. Check your inbox (and spam).
             </p>
             <p className="text-center text-sm">
               <a href="/admin/login" className="underline underline-offset-4">Back to login</a>
