@@ -35,4 +35,5 @@ begin
   alter table public.pending_paypal_orders
     add constraint pending_paypal_orders_status_check
     check (status in ('pending', 'consumed', 'expired', 'held'));
-end $$;
+end;
+$$;
