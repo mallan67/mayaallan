@@ -192,6 +192,18 @@ export function PrivacyGateClient({
               body: JSON.stringify({ orderId: data.orderId }),
             })
             const capData = await capRes.json()
+
+            // PENDING (202): PayPal accepted the capture but it isn't settled
+            // yet (eCheck / risk hold). The payment did NOT fail — don't show an
+            // error or let the buyer retry. Send them to the success page in its
+            // pending mode; fulfillment follows when the webhook delivers
+            // COMPLETED.
+            if (capRes.ok && capData.pending) {
+              const pendingUrl = `${siteUrl}/checkout/success?via=paypal&status=pending&orderId=${encodeURIComponent(data.orderId)}&bookSlug=${encodeURIComponent(bookSlug)}`
+              window.location.replace(pendingUrl)
+              return
+            }
+
             if (!capRes.ok || !capData.success) {
               setError(capData.error || "Capture failed. Please contact support.")
               setLoading(false)
