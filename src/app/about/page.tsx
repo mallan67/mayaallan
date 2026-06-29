@@ -38,7 +38,6 @@ async function getAuthorInfo() {
       authorBio: settings.author_bio as string | null,
       authorPhotoUrl: settings.author_photo_url as string | null,
     }
-    console.log("About page - Loaded settings id:", mapped.id, "authorName:", mapped.authorName)
     return mapped
   } catch (error) {
     console.error("About page - Failed to fetch author info:", error)

@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 60 // 1 minute
 
-async function getVisibleEvents() {
+async function getVisibleEvents(): Promise<{ events: any[]; dbErrorOccurred: boolean }> {
   try {
     const { data, error } = await supabaseAdmin
       .from(Tables.events)
@@ -51,19 +51,19 @@ async function getVisibleEvents() {
 
     if (error) {
       console.error("Error fetching visible events:", error)
-      return []
+      return { events: [], dbErrorOccurred: true }
     }
 
     // Map snake_case DB rows → camelCase shape the render code consumes.
-    return (data ?? []).map(eventRowToObject)
+    return { events: (data ?? []).map(eventRowToObject), dbErrorOccurred: false }
   } catch (error) {
     console.error("Failed to fetch events:", error)
-    return []
+    return { events: [], dbErrorOccurred: true }
   }
 }
 
 export default async function EventsPage() {
-  const events = await getVisibleEvents()
+  const { events, dbErrorOccurred } = await getVisibleEvents()
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 md:py-12">
@@ -77,7 +77,11 @@ export default async function EventsPage() {
         />
       </div>
 
-      {events.length === 0 ? (
+      {dbErrorOccurred ? (
+        <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 inline-block">
+          We&rsquo;re having trouble loading events right now. Please refresh in a moment.
+        </p>
+      ) : events.length === 0 ? (
         <p className="text-sm text-slate-700">
           No events are currently scheduled. Check back soon for upcoming talks, readings, and workshops.
         </p>

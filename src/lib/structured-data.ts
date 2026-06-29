@@ -1,4 +1,4 @@
-import type { Book, MediaItem, Event } from "@/lib/mock-data"
+import type { Book, MediaItem, Event } from "@/lib/types"
 import {
   AUTHOR_PROFILES,
   AUTHOR_IDENTIFIERS,

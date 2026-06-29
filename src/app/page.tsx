@@ -568,15 +568,23 @@ export default async function HomePage() {
               <h2 className="font-serif text-[clamp(1.8rem,3.5vw,2.6rem)] font-semibold tracking-[-0.02em] mb-6 text-white">
                 About Me
               </h2>
-              <p className="text-[1.1rem] text-white font-medium leading-[1.75] mb-4">
-                I believe deep inner clarity is a fundamental human birthright.
-              </p>
-              <p className="text-[0.95rem] text-white/85 leading-[1.85] mb-4">
-                It&apos;s a capacity we all have — but it gets buried under inherited narratives, the pressure of who we&apos;re &ldquo;supposed&rdquo; to be, and a world that profits from our confusion. My work starts with a simple conviction: no one can heal us but ourselves.
-              </p>
-              <p className="text-[0.95rem] text-white/85 leading-[1.85] mb-7">
-                I&apos;m not a guru, and I&apos;m not interested in being one. I&apos;m a writer who cares about practical tools over abstract theories. True healing is grounded work — self-knowledge, radical acceptance, and finally feeling at home in your own skin.
-              </p>
+              {authorInfo?.authorBio ? (
+                <div className="text-[0.95rem] text-white/85 leading-[1.85] mb-7 whitespace-pre-wrap">
+                  {authorInfo.authorBio}
+                </div>
+              ) : (
+                <>
+                  <p className="text-[1.1rem] text-white font-medium leading-[1.75] mb-4">
+                    I believe deep inner clarity is a fundamental human birthright.
+                  </p>
+                  <p className="text-[0.95rem] text-white/85 leading-[1.85] mb-4">
+                    It&apos;s a capacity we all have — but it gets buried under inherited narratives, the pressure of who we&apos;re &ldquo;supposed&rdquo; to be, and a world that profits from our confusion. My work starts with a simple conviction: no one can heal us but ourselves.
+                  </p>
+                  <p className="text-[0.95rem] text-white/85 leading-[1.85] mb-7">
+                    I&apos;m not a guru, and I&apos;m not interested in being one. I&apos;m a writer who cares about practical tools over abstract theories. True healing is grounded work — self-knowledge, radical acceptance, and finally feeling at home in your own skin.
+                  </p>
+                </>
+              )}
 
               {/* Pillars */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-7">
