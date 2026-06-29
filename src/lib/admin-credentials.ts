@@ -128,22 +128,35 @@ export async function resetPasswordWithToken(
   rawToken: string,
   newPassword: string,
 ): Promise<{ ok: true } | { ok: false; reason: "invalid_token" }> {
-  if (!(await isResetTokenValid(rawToken))) {
-    return { ok: false, reason: "invalid_token" }
-  }
+  if (!rawToken) return { ok: false, reason: "invalid_token" }
 
+  const nowIso = new Date().toISOString()
   const password_hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS)
 
-  const { error } = await supabaseAdmin
+  // Atomic consume-and-set: the UPDATE only matches if the token hash is still
+  // present (not yet consumed) AND unexpired. The first request flips
+  // reset_token_hash to NULL, so a concurrent second request with the same
+  // token matches zero rows and is rejected — the single-use guarantee holds
+  // under concurrency without a separate read. `.select("id")` returns the
+  // affected rows so we can tell whether the conditional matched.
+  const { data, error } = await supabaseAdmin
     .from("admin_auth")
     .update({
       password_hash,
       reset_token_hash: null,
       reset_token_expires_at: null,
-      updated_at: new Date().toISOString(),
+      updated_at: nowIso,
     })
     .eq("id", ADMIN_AUTH_ROW_ID)
+    .eq("reset_token_hash", sha256Hex(rawToken))
+    .gt("reset_token_expires_at", nowIso)
+    .select("id")
   if (error) throw new Error(`admin_auth password write failed: ${error.message}`)
+
+  if (!data || data.length === 0) {
+    // No row matched → token was wrong, already used, or expired.
+    return { ok: false, reason: "invalid_token" }
+  }
 
   return { ok: true }
 }

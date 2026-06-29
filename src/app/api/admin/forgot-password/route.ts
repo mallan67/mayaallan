@@ -23,8 +23,9 @@ export const runtime = "nodejs"
 const Body = z.object({ email: z.string().email() })
 
 // Generic response — identical whether or not the email matched. Don't leak
-// admin-account existence.
-const GENERIC_OK = NextResponse.json({ ok: true })
+// admin-account existence. Built fresh per call: a NextResponse body is a
+// one-shot stream, so a shared module-level instance can't be returned twice.
+const genericOk = () => NextResponse.json({ ok: true })
 
 export async function POST(req: Request) {
   const guard = assertAdminSameOrigin(req)
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
   const parsed = Body.safeParse(await req.json().catch(() => null))
   if (!parsed.success) {
     // Even on bad input, keep the response generic so timing/shape doesn't leak.
-    return GENERIC_OK
+    return genericOk()
   }
 
   const adminEmail = process.env.ADMIN_EMAIL
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
   // a non-secret value (the admin email is public), so constant-time isn't
   // needed here.
   if (!adminEmail || parsed.data.email !== adminEmail) {
-    return GENERIC_OK
+    return genericOk()
   }
 
   if (!resendKey) {
@@ -71,7 +72,7 @@ export async function POST(req: Request) {
       body: "A reset link was requested but email can't be sent. Set RESEND_API_KEY.",
       dedupKey: "auth:forgot-no-resend",
     })
-    return GENERIC_OK
+    return genericOk()
   }
 
   let rawToken: string
@@ -89,7 +90,7 @@ export async function POST(req: Request) {
       details: { errorMessage: err instanceof Error ? err.message : String(err) },
       dedupKey: "auth:forgot-token-failed",
     })
-    return GENERIC_OK
+    return genericOk()
   }
 
   // Build an absolute reset link from the request origin (so it works on prod,
@@ -131,5 +132,5 @@ export async function POST(req: Request) {
     console.error("[forgot-password] send threw:", err)
   }
 
-  return GENERIC_OK
+  return genericOk()
 }
