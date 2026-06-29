@@ -39,6 +39,10 @@ import { alertAdmin } from "@/lib/alert-admin"
  */
 
 export const runtime = "nodejs"
+// Cap the function so a hung blob fetch can't run to the platform ceiling. The
+// 15s fetch timeout below trips first, letting the catch block compensate the
+// download-attempt counter + alert instead of the function being killed mid-await.
+export const maxDuration = 30
 
 /** Build a customer-friendly filename from the book title + URL extension. */
 function buildDownloadFilename(bookTitle: string | null, fileUrl: string): string {
@@ -312,7 +316,10 @@ export async function GET(
     // ------------------------------------------------------------------
     let upstream: Response
     try {
-      upstream = await fetch(book.ebook_file_url)
+      // 15s cap: a hung Blob fetch must throw (→ compensate + alert below)
+      // rather than let the function be killed at the platform ceiling, which
+      // would silently burn the customer's download attempt with no recovery.
+      upstream = await fetch(book.ebook_file_url, { signal: AbortSignal.timeout(15_000) })
     } catch (fetchErr) {
       console.error("Blob fetch threw:", fetchErr)
       await alertAdmin({

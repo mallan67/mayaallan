@@ -98,10 +98,33 @@ function isProduction(): boolean {
   return process.env.NODE_ENV === "production"
 }
 
-/** Pull the client IP from forwarded headers. Same contract as before. */
+/**
+ * Pull the client IP from a TRUSTED source.
+ *
+ * The previous version used the left-most `x-forwarded-for` value, which is
+ * client-controlled — an attacker could send a random leftmost XFF per request
+ * and land in a fresh rate-limit bucket every time, defeating every per-IP cap
+ * (login brute-force, forgot-password spam, etc.).
+ *
+ * On Vercel, `x-vercel-forwarded-for` (and `x-real-ip`) are set by the platform
+ * and OVERWRITE any client-supplied value, so they're trustworthy. We prefer
+ * those. As a last resort off-Vercel we take the RIGHT-most XFF hop (the value
+ * appended by the closest trusted proxy), never the spoofable left-most one.
+ */
 export function getClientIp(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for") ?? ""
-  return forwardedFor.split(",")[0]?.trim() || "unknown"
+  const vercelForwarded = req.headers.get("x-vercel-forwarded-for")
+  if (vercelForwarded) return vercelForwarded.split(",")[0]?.trim() || "unknown"
+
+  const realIp = req.headers.get("x-real-ip")
+  if (realIp) return realIp.trim() || "unknown"
+
+  const xff = req.headers.get("x-forwarded-for")
+  if (xff) {
+    const hops = xff.split(",").map((s) => s.trim()).filter(Boolean)
+    if (hops.length > 0) return hops[hops.length - 1]
+  }
+
+  return "unknown"
 }
 
 // ─── In-memory fallback (dev / local without Upstash) ────────────────

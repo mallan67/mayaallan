@@ -55,12 +55,17 @@ export default async function PrivacyGatePage({ searchParams }: { searchParams: 
     redirect("/books")
   }
 
-  const { data: book } = await supabaseAdmin
+  const { data: book, error } = await supabaseAdmin
     .from(Tables.books)
     .select("id, slug, title, ebook_price, allow_direct_sale, ebook_file_url")
     .eq("id", bookId)
     .single()
 
+  // A transient DB error must not collapse to a 404 mid-checkout — throw to the
+  // retryable error boundary. Only a true 0-rows result (PGRST116) is a 404.
+  if (error && error.code !== "PGRST116") {
+    throw new Error(`Checkout book lookup failed: ${error.message}`)
+  }
   if (!book) notFound()
   if (!book.allow_direct_sale || !book.ebook_price || !book.ebook_file_url) {
     // Book exists but isn't sellable via direct PayPal — back to book page.

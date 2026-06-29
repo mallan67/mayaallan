@@ -76,7 +76,13 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
 
   const downloadToken = rawDownloadToken as unknown as DownloadTokenRow | null
 
-  if (error || !downloadToken) {
+  // Distinguish a genuine "no such token" (PGRST116 = 0 rows → 404) from a
+  // transient/infra DB error. A buyer holding a VALID token must not be shown
+  // "Not Found" during a Supabase blip — throw to the retryable error boundary.
+  if (error && error.code !== "PGRST116") {
+    throw new Error(`Download token lookup failed: ${error.message}`)
+  }
+  if (!downloadToken) {
     notFound()
   }
 
