@@ -372,10 +372,22 @@ export async function GET(request: NextRequest) {
     return redirectToBook(pending.book_slug, "error")
   }
 
+  // H2: A 2xx capture response does NOT by itself mean the money settled.
+  // PayPal can return 2xx with the capture in a non-COMPLETED state (PENDING
+  // for eCheck / risk-hold, etc). Parse the real capture status before we
+  // send the customer to the success page. Canonical path is
+  // purchase_units[0].payments.captures[0].status; fall back to body.status.
+  const captureBody = await captureResponse.json().catch(() => ({} as any))
+  const captureStatus: string | undefined =
+    captureBody?.purchase_units?.[0]?.payments?.captures?.[0]?.status ??
+    captureBody?.status
+
   // SUCCESS — PayPal captured. Mark the pending row consumed so reload of
-  // this URL doesn't re-attempt. The webhook handler does the real
-  // fulfillment work (creating the orders row, download_token row, email)
-  // and dedupes idempotently on its own end via paypal_order_id (PR A).
+  // this URL doesn't re-attempt. This happens REGARDLESS of capture status
+  // (the capture call was made — the order must not be replayable). The
+  // webhook handler does the real fulfillment work (creating the orders row,
+  // download_token row, email) and dedupes idempotently on its own end via
+  // paypal_order_id (PR A) — and only on the webhook's COMPLETED event.
   const { error: consumedUpdateError } = await supabaseAdmin
     .from("pending_paypal_orders")
     .update({ status: "consumed", consumed_at: new Date().toISOString() })
@@ -394,6 +406,37 @@ export async function GET(request: NextRequest) {
       details: { paypalOrderId: orderId, errorCode: consumedUpdateError.code },
       dedupKey: "paypal:consumed-update-failed-success",
     })
+  }
+
+  // H2: capture is 2xx but NOT COMPLETED (e.g. PENDING eCheck/risk hold). Do
+  // NOT send the customer to the success page — fulfillment correctly waits
+  // for the webhook's COMPLETED event. Redirect to the existing success page
+  // in its pending mode (?status=pending) instead.
+  if (captureStatus !== "COMPLETED") {
+    await alertAdmin({
+      severity: "critical",
+      subject: "PayPal return: capture not COMPLETED (held/pending)",
+      body:
+        "A redirect-flow capture returned 2xx but the capture status is not COMPLETED. " +
+        "The funds are likely PENDING (eCheck / risk hold). The customer was sent to the " +
+        "pending outcome, NOT success; fulfillment will happen if/when the webhook delivers " +
+        "a COMPLETED event for this order.",
+      details: {
+        paypalOrderId: orderId,
+        bookSlug: pending.book_slug,
+        captureStatus: captureStatus ?? null,
+        paypalEnv: safePaypalEnvLabel(),
+      },
+      dedupKey: `paypal:return-capture-not-completed:${orderId}`,
+    })
+    const pendingUrl = `${siteUrl()}/checkout/success?status=pending`
+    const res = NextResponse.redirect(pendingUrl, { status: 303 })
+    // Same no-store headers redirectToBook applies — the token in the URL is
+    // single-use and the destination must always re-render fresh.
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private")
+    res.headers.set("Pragma", "no-cache")
+    res.headers.set("Expires", "0")
+    return res
   }
 
   return redirectToBook(pending.book_slug, "success", orderId)

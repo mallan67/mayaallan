@@ -122,6 +122,24 @@ async function sendPurchaseEmail(args: {
   }
 }
 
+/**
+ * M8: Strictly parse a PayPal custom_id into a positive-integer book id.
+ *
+ * Loose parseInt is dangerous here: parseInt("12abc", 10) === 12 would
+ * silently fulfill the WRONG book, and parseInt("", 10) / parseInt("x", 10)
+ * yield NaN. We accept ONLY a clean radix-10 string of digits that parses to
+ * an integer > 0. Anything else returns null and funnels into the existing
+ * "no-book-id" alert + 200 path (so PayPal stops retrying an unfulfillable
+ * event instead of retry-storming).
+ */
+function parseBookId(raw: unknown): number | null {
+  if (typeof raw !== "string") return null
+  const trimmed = raw.trim()
+  if (!/^[0-9]+$/.test(trimmed)) return null
+  const n = parseInt(trimmed, 10)
+  return Number.isInteger(n) && n > 0 ? n : null
+}
+
 export async function POST(request: Request) {
   const bodyText = await request.text()
   const headersList = await headers()
@@ -290,7 +308,7 @@ export async function POST(request: Request) {
 
       if (body.event_type === "PAYMENT.CAPTURE.COMPLETED") {
         // Modern checkout flow - capture completed
-        bookId = resource.custom_id ? parseInt(resource.custom_id) : null
+        bookId = parseBookId(resource.custom_id) // M8: strict positive-int parse
         // CRITICAL: for PAYMENT.CAPTURE.COMPLETED, resource.id is the CAPTURE id,
         // not the order id. Using it as paypal_order_id would create a different
         // dedup key than a CHECKOUT.ORDER.COMPLETED event for the same purchase,
@@ -327,7 +345,7 @@ export async function POST(request: Request) {
       } else if (body.event_type === "CHECKOUT.ORDER.COMPLETED") {
         // Checkout order completed
         const purchaseUnit = resource.purchase_units?.[0]
-        bookId = purchaseUnit?.custom_id ? parseInt(purchaseUnit.custom_id) : null
+        bookId = parseBookId(purchaseUnit?.custom_id) // M8: strict positive-int parse
         paypalOrderId = resource.id
         amount = parseFloat(purchaseUnit?.amount?.value || "0")
         currency = purchaseUnit?.amount?.currency_code?.toLowerCase() || "usd"
@@ -337,7 +355,7 @@ export async function POST(request: Request) {
           : null
       } else {
         // Legacy PAYMENT.SALE.COMPLETED
-        bookId = resource.custom ? parseInt(resource.custom) : null
+        bookId = parseBookId(resource.custom) // M8: strict positive-int parse
         paypalOrderId = resource.id
         amount = parseFloat(resource.amount?.total || "0")
         currency = resource.amount?.currency?.toLowerCase() || "usd"
@@ -433,6 +451,42 @@ export async function POST(request: Request) {
           dedupKey: `paypal:no-email:${paypalOrderId}`,
         })
         return NextResponse.json({ received: true, ignored: "no-customer-email" })
+      }
+
+      // ----------------------------------------------------------------
+      // M4: AMOUNT + CURRENCY GUARD — verify the captured money matches the
+      // server-side price BEFORE we mint a download token / order row.
+      // `amount` (Number) and `currency` (lowercased) were parsed above from
+      // the capture resource's amount.value / amount.currency_code. A
+      // signature-verified webhook can still carry a wrong-currency or
+      // underpaid amount (tampered/replayed order, manual PayPal order, or a
+      // book price changed mid-checkout). We never deliver a book for less
+      // than its configured ebook_price.
+      // ----------------------------------------------------------------
+      const expectedPrice = Number(book.ebook_price)
+      const currencyOk = currency.toUpperCase() === "USD"
+      // +0.01 tolerance absorbs floating-point / rounding noise on the value.
+      const amountOk = Number.isFinite(expectedPrice) && amount + 0.01 >= expectedPrice
+      if (!currencyOk || !amountOk) {
+        await alertAdmin({
+          severity: "critical",
+          subject: "PayPal: captured amount/currency mismatch — NOT fulfilling",
+          body:
+            "A signature-verified PayPal payment captured an amount or currency that does " +
+            "not match the book's server-side ebook_price. Refusing to fulfill (no token, " +
+            "no email). Returning 200 so PayPal stops retrying; reconcile manually — this " +
+            "can indicate a tampered/replayed order or a price change mid-checkout.",
+          details: {
+            paypalOrderId,
+            bookId: book.id,
+            expectedPrice,
+            expectedCurrency: "USD",
+            actualAmount: amount,
+            actualCurrency: currency,
+          },
+          dedupKey: `paypal:amount-mismatch:${paypalOrderId}`,
+        })
+        return NextResponse.json({ received: true, ignored: "amount-mismatch" })
       }
 
       // ----------------------------------------------------------------

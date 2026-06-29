@@ -5,6 +5,7 @@ import {
   decodeCustomId,
   extractWebhookHeaders,
   safePaypalEnvLabel,
+  SESSION_PRICE_USD,
   verifyPaypalWebhook,
 } from "@/lib/paypal"
 import { renderAndEmailSessionPdf } from "@/lib/deliver-pdf"
@@ -16,6 +17,7 @@ export const maxDuration = 60
 
 type CaptureResource = {
   custom_id?: string
+  amount?: { value?: string; currency_code?: string }
   supplementary_data?: {
     related_ids?: { order_id?: string }
   }
@@ -28,6 +30,16 @@ type CaptureResource = {
 function extractCustomId(resource: unknown): string | null {
   if (!resource || typeof resource !== "object") return null
   return (resource as CaptureResource).custom_id ?? null
+}
+
+// M4: pull the captured amount/currency off the PAYMENT.CAPTURE.COMPLETED
+// resource so we can assert it matches the fixed session-export price before
+// delivering the PDF.
+function extractCaptureAmount(
+  resource: unknown,
+): { value?: string; currency_code?: string } | null {
+  if (!resource || typeof resource !== "object") return null
+  return (resource as CaptureResource).amount ?? null
 }
 
 export async function POST(req: NextRequest) {
@@ -221,6 +233,39 @@ export async function POST(req: NextRequest) {
   }
 
   const { sessionId, tool } = decoded
+
+  // ── M4: AMOUNT + CURRENCY GUARD ──────────────────────────────────────
+  // Verify the captured money matches the fixed session-export price before
+  // delivering the PDF. A signature-verified capture can still carry a
+  // wrong-currency or underpaid amount (tampered/replayed custom_id, manual
+  // PayPal order). Refuse to deliver and 200 so PayPal stops retrying.
+  const capturedAmount = extractCaptureAmount(event.resource)
+  const exportCurrencyOk = capturedAmount?.currency_code?.toUpperCase() === "USD"
+  // +0.01 tolerance absorbs floating-point / rounding noise. Number(undefined)
+  // is NaN, so a missing amount fails closed (does NOT deliver).
+  const exportAmountOk = Number(capturedAmount?.value) + 0.01 >= Number(SESSION_PRICE_USD)
+  if (!exportCurrencyOk || !exportAmountOk) {
+    await alertAdmin({
+      severity: "critical",
+      subject: "Export webhook: captured amount/currency mismatch — NOT delivering",
+      body:
+        "A signature-verified session-export capture had an amount or currency that does " +
+        "not match the fixed session price. Refusing to deliver the PDF. Returning 200 so " +
+        "PayPal stops retrying; reconcile manually — this can indicate a tampered/replayed " +
+        "order.",
+      details: {
+        sessionId,
+        tool,
+        expectedPrice: SESSION_PRICE_USD,
+        expectedCurrency: "USD",
+        actualAmount: capturedAmount?.value ?? null,
+        actualCurrency: capturedAmount?.currency_code ?? null,
+        paymentResourceId: (event.resource as any)?.id ?? null,
+      },
+      dedupKey: `export:amount-mismatch:${sessionId}`,
+    })
+    return NextResponse.json({ received: true, ignored: "amount-mismatch" })
+  }
 
   // ── Fetch session payload from storage (Upstash; blob fallback for in-flight)
   const readResult = await readSession(sessionId)
