@@ -933,6 +933,25 @@ export async function POST(request: Request) {
           })
         }
 
+        // Reconcile the pending_paypal_orders lifecycle. A capture that came
+        // back PENDING was marked status='held' by the capture/return routes so
+        // the buyer saw "processing" instead of success. Now that THIS
+        // COMPLETED event has fulfilled the order (email sent), flip that 'held'
+        // row to 'consumed' so a buyer who reloads the return URL sees success
+        // rather than the stale "processing" page. Scoped to status='held' so we
+        // never disturb an in-flight 'pending' row or a row already 'consumed'.
+        // Best-effort: the email already went out — a failure here must never
+        // fail the webhook (which would trigger a PayPal retry of a fulfilled
+        // order). supabase-js returns the error in-band, so just log it.
+        const { error: holdFlipError } = await supabaseAdmin
+          .from("pending_paypal_orders")
+          .update({ status: "consumed", consumed_at: new Date().toISOString() })
+          .eq("paypal_order_id", paypalOrderId)
+          .eq("status", "held")
+        if (holdFlipError) {
+          console.error("Best-effort held→consumed flip failed (non-fatal):", holdFlipError)
+        }
+
         // Track conversion. Webhooks don't carry the buyer's browser cookies
         // (PayPal posts server-to-server), so we look up the attribution
         // snapshot the checkout route persisted to pending_paypal_orders
