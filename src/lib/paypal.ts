@@ -186,7 +186,9 @@ export async function getAccessToken(): Promise<string> {
   return data.access_token
 }
 
-const SESSION_PRICE_USD = "9.99"
+// Exported so the export webhook (/api/export/webhook) can assert the
+// captured amount matches this fixed session-export price before delivering.
+export const SESSION_PRICE_USD = "9.99"
 const SEPARATOR = "|"
 
 /**
