@@ -454,39 +454,62 @@ export async function POST(request: Request) {
       }
 
       // ----------------------------------------------------------------
-      // M4: AMOUNT + CURRENCY GUARD — verify the captured money matches the
-      // server-side price BEFORE we mint a download token / order row.
-      // `amount` (Number) and `currency` (lowercased) were parsed above from
-      // the capture resource's amount.value / amount.currency_code. A
-      // signature-verified webhook can still carry a wrong-currency or
-      // underpaid amount (tampered/replayed order, manual PayPal order, or a
-      // book price changed mid-checkout). We never deliver a book for less
-      // than its configured ebook_price.
+      // M4: CURRENCY (hard guard) + AMOUNT (alert-only) checks before fulfilling.
+      // `amount` (Number) and `currency` (lowercased) were parsed above from the
+      // capture resource's amount.value / amount.currency_code.
+      //
+      // CURRENCY — hard block: this is a USD-only store and our checkout route
+      // always creates USD orders, so a non-USD capture is genuinely anomalous
+      // (forged / manual PayPal order). Refuse to fulfill.
+      //
+      // AMOUNT — alert only, STILL fulfill: PayPal enforces that a capture
+      // matches the amount on the order WE created server-side, so the captured
+      // value is exactly what our checkout charged. If it's below the book's
+      // CURRENT ebook_price, that almost always means an admin edited the price
+      // between order-creation and capture (a legitimate in-flight price change),
+      // not underpayment. Rejecting would strand a buyer who paid what we charged,
+      // so we alert for visibility and proceed.
       // ----------------------------------------------------------------
       const expectedPrice = Number(book.ebook_price)
-      const currencyOk = currency.toUpperCase() === "USD"
-      // +0.01 tolerance absorbs floating-point / rounding noise on the value.
-      const amountOk = Number.isFinite(expectedPrice) && amount + 0.01 >= expectedPrice
-      if (!currencyOk || !amountOk) {
+      if (currency.toUpperCase() !== "USD") {
         await alertAdmin({
           severity: "critical",
-          subject: "PayPal: captured amount/currency mismatch — NOT fulfilling",
+          subject: "PayPal: captured currency is not USD — NOT fulfilling",
           body:
-            "A signature-verified PayPal payment captured an amount or currency that does " +
-            "not match the book's server-side ebook_price. Refusing to fulfill (no token, " +
-            "no email). Returning 200 so PayPal stops retrying; reconcile manually — this " +
-            "can indicate a tampered/replayed order or a price change mid-checkout.",
+            "A signature-verified PayPal capture used a non-USD currency for a USD-only store. " +
+            "Refusing to fulfill (no token, no email). Returning 200 so PayPal stops retrying; " +
+            "reconcile manually — this can indicate a forged / manual order.",
           details: {
             paypalOrderId,
             bookId: book.id,
-            expectedPrice,
             expectedCurrency: "USD",
             actualAmount: amount,
             actualCurrency: currency,
           },
-          dedupKey: `paypal:amount-mismatch:${paypalOrderId}`,
+          dedupKey: `paypal:currency-mismatch:${paypalOrderId}`,
         })
-        return NextResponse.json({ received: true, ignored: "amount-mismatch" })
+        return NextResponse.json({ received: true, ignored: "currency-mismatch" })
+      }
+      // +0.01 tolerance absorbs float / rounding noise.
+      if (Number.isFinite(expectedPrice) && amount + 0.01 < expectedPrice) {
+        await alertAdmin({
+          severity: "warning",
+          subject: "PayPal: captured amount below current book price (fulfilling anyway)",
+          body:
+            "A signature-verified capture came in BELOW the book's current ebook_price. This " +
+            "usually means the price was changed after the buyer's order was created — PayPal " +
+            "enforces capture==order amount, so the buyer paid exactly what our checkout " +
+            "charged. Fulfilling to avoid stranding a paying customer; flagged for awareness.",
+          details: {
+            paypalOrderId,
+            bookId: book.id,
+            currentPrice: expectedPrice,
+            actualAmount: amount,
+            actualCurrency: currency,
+          },
+          dedupKey: `paypal:amount-below-current-price:${paypalOrderId}`,
+        })
+        // Intentionally NO early return — proceed to fulfillment.
       }
 
       // ----------------------------------------------------------------
