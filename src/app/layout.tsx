@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next"
+import { jsonLdScript } from "@/lib/json-ld"
 import { Space_Grotesk, Fraunces } from "next/font/google"
 import { headers } from "next/headers"
 import "./globals.css"
@@ -203,13 +204,13 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteSchema),
+            __html: jsonLdScript(websiteSchema),
           }}
         />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema),
+            __html: jsonLdScript(organizationSchema),
           }}
         />
       </head>

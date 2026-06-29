@@ -33,3 +33,11 @@ scripts/output/
 # Debug HTML from one-off search engine fetches.
 google-*.html
 
+# Operator runbooks / status notes. These tend to accumulate real
+# credentials, env-var values, and infra details. Keep them local-only —
+# a tracked runbook leaked the production admin password once (see audit).
+URGENT-FIX-*.md
+*-STATUS-*.md
+*-STATUS.md
+PAYPAL-STATUS-*.md
+

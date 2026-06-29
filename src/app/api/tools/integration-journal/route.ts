@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { renderToBuffer } from "@react-pdf/renderer"
 import { IntegrationJournalDocument, type JourneyPhase } from "@/lib/pdf/integration-journal"
 import { alertAdmin } from "@/lib/alert-admin"
+import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { assertPublicSameOrigin } from "@/lib/marketing-origin"
 
 // =============================================================================
 // POST /api/tools/integration-journal — generates a downloadable journal PDF.
@@ -21,6 +23,28 @@ const VALID_PHASES: JourneyPhase[] = ["preparation", "journey", "integration", "
 export const maxDuration = 30
 
 export async function POST(req: NextRequest) {
+  // CSRF: only our own pages should drive this PDF generator.
+  const origin = assertPublicSameOrigin(req)
+  if (!origin.ok) return origin.response
+
+  // Resource-exhaustion guard. renderToBuffer() is CPU/memory-heavy and this
+  // route is public + unauthenticated, so an attacker could otherwise fire
+  // concurrent requests to saturate serverless compute and run up cost.
+  const ip = getClientIp(req)
+  const limit = await rateLimit({
+    scope: "integration-journal",
+    ip,
+    windowMs: 60 * 1000,
+    maxAttempts: 8,
+    lockoutMs: 5 * 60 * 1000,
+  })
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment and try again." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds ?? 60) } },
+    )
+  }
+
   let body: any
   try {
     body = await req.json()

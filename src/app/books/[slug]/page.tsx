@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { jsonLdScript } from "@/lib/json-ld"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ShareButtons } from "@/components/share-buttons"
@@ -331,21 +332,21 @@ export default async function BookPage({ params }: BookPageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(bookSchema),
+          __html: jsonLdScript(bookSchema),
         }}
       />
       {/* AEO: FAQ Schema for AI answer engines */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqSchema),
+          __html: jsonLdScript(faqSchema),
         }}
       />
       {/* AEO: Breadcrumb Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbSchema),
+          __html: jsonLdScript(breadcrumbSchema),
         }}
       />
       <Link href="/books" className="text-sm text-slate-500 hover:text-slate-700 transition-colors inline-flex items-center gap-1">

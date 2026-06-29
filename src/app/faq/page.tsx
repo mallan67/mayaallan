@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { jsonLdScript } from "@/lib/json-ld"
 import type { Metadata } from "next"
 import { loadFaq, groupByCategory } from "@/lib/faq"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
@@ -68,9 +69,9 @@ export default async function FaqPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10 md:py-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(speakableSchema) }} />
 
       {/* Breadcrumb — uses the shortTitle so the trail reads cleanly */}
       <nav className="text-sm text-slate-500 mb-6" aria-label="Breadcrumb">

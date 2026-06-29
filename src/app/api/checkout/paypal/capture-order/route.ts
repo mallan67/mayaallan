@@ -26,6 +26,7 @@ import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, getAccessToken, safePaypalEnvLabel } from "@/lib/paypal"
 import { supabaseAdmin } from "@/lib/supabaseAdmin"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { assertPublicSameOrigin } from "@/lib/marketing-origin"
 import { z } from "zod"
 
 export const runtime = "nodejs"
@@ -38,6 +39,13 @@ const captureSchema = z.object({
 })
 
 export async function POST(request: Request) {
+  // CSRF: this endpoint is invoked by our own client JS (PayPal SDK popup
+  // onApprove), never server-to-server by PayPal, so a same-origin gate is
+  // safe here and blocks cross-site capture triggers. The pending-order gate
+  // below is the primary defense; this is defense-in-depth.
+  const origin = assertPublicSameOrigin(request)
+  if (!origin.ok) return origin.response
+
   const ip = getClientIp(request)
 
   // Coarse rate-limit — prevents brute-force capture-id probing.

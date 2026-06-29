@@ -5,6 +5,8 @@ import { alertAdmin } from "@/lib/alert-admin"
 import { safeLog, safeLogError, emailDomain, errorMessage } from "@/lib/safe-log"
 import { putSession } from "@/lib/session-store"
 import { MIN_USER_TURNS_FOR_EXPORT } from "@/lib/pdf/extract-insights"
+import { rateLimit, getClientIp } from "@/lib/rate-limit"
+import { assertPublicSameOrigin } from "@/lib/marketing-origin"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -66,6 +68,29 @@ function validateRequest(body: unknown): ExportRequest {
 }
 
 export async function POST(req: NextRequest) {
+  // CSRF: only our own tools pages should drive session export.
+  const originGuard = assertPublicSameOrigin(req)
+  if (!originGuard.ok) return originGuard.response
+
+  const ip = getClientIp(req)
+
+  // General per-IP envelope across BOTH the paid and promo paths. Bounds
+  // unauthenticated abuse: staging Upstash sessions, creating PayPal orders,
+  // and rendering/emailing PDFs all cost resources.
+  const limit = await rateLimit({
+    scope: "export",
+    ip,
+    windowMs: 60 * 60 * 1000,
+    maxAttempts: 15,
+    lockoutMs: 60 * 60 * 1000,
+  })
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds ?? 60) } },
+    )
+  }
+
   let body: ExportRequest
   try {
     body = validateRequest(await req.json())
@@ -80,6 +105,24 @@ export async function POST(req: NextRequest) {
 
   // ── Promo-code path: skip PayPal, deliver PDF directly ─────────
   if (body.promoCode) {
+    // Stricter per-IP limit on the promo branch specifically. This runs
+    // BEFORE the validity check so it throttles brute-force guessing of the
+    // (human-memorable) promo codes — and the attachment-email send that a
+    // valid code triggers — independent of the general envelope above.
+    const promoLimit = await rateLimit({
+      scope: "export-promo",
+      ip,
+      windowMs: 60 * 60 * 1000,
+      maxAttempts: 5,
+      lockoutMs: 60 * 60 * 1000,
+    })
+    if (!promoLimit.allowed) {
+      return NextResponse.json(
+        { error: "Too many promo attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(promoLimit.retryAfterSeconds ?? 60) } },
+      )
+    }
+
     if (!isValidPromoCode(body.promoCode)) {
       return NextResponse.json({ error: "Invalid promo code" }, { status: 400 })
     }
