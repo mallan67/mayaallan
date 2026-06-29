@@ -11,22 +11,25 @@ export default async function AdminAuthGuard({ children }: { children: React.Rea
   const headersList = await headers()
   const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || ""
 
-  // Skip auth check for login page
-  if (pathname === "/admin/login" || pathname.startsWith("/admin/login")) {
+  // Skip auth for the public auth pages: login + the password-recovery flow.
+  // These MUST render without a session (the whole point of "forgot password"
+  // is that you can't log in). Keep this list in sync with the PUBLIC_ADMIN_PATHS
+  // allowlist in middleware.ts.
+  const PUBLIC_ADMIN_PATHS = ["/admin/login", "/admin/forgot-password", "/admin/reset-password"]
+  if (PUBLIC_ADMIN_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`) || pathname.startsWith(`${p}?`))) {
     return <>{children}</>
   }
 
-  // CRITICAL: Check if admin authentication is configured
+  // CRITICAL: Check if admin authentication is configured.
+  // Only SESSION_SECRET (cookie encryption) + ADMIN_EMAIL are hard requirements.
+  // The password credential is NOT required here: it can live in the DB
+  // (admin_auth, set via the reset flow) rather than ADMIN_PASSWORD_HASH, so a
+  // missing env hash is no longer a misconfiguration. Login resolves DB-then-env.
   const hasSessionSecret = !!process.env.SESSION_SECRET
   const hasAdminEmail = !!process.env.ADMIN_EMAIL
-  // Bcrypt-hashed credential is required. The legacy ADMIN_PASSWORD plaintext
-  // env var path was removed — Vercel env vars are visible to anyone with
-  // project read access, so plaintext storage there was a credential leak
-  // surface.
-  const hasAdminCredential = !!process.env.ADMIN_PASSWORD_HASH
 
   // EMERGENCY BLOCK: If environment variables are missing, show error instead of allowing access
-  if (!hasSessionSecret || !hasAdminEmail || !hasAdminCredential) {
+  if (!hasSessionSecret || !hasAdminEmail) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-50 p-6">
         <div className="max-w-2xl w-full bg-white border-2 border-red-500 rounded-lg p-8">
@@ -39,7 +42,6 @@ export default async function AdminAuthGuard({ children }: { children: React.Rea
             <ul className="list-disc list-inside space-y-1 text-sm">
               {!hasSessionSecret && <li>SESSION_SECRET</li>}
               {!hasAdminEmail && <li>ADMIN_EMAIL</li>}
-              {!hasAdminCredential && <li>ADMIN_PASSWORD_HASH (bcrypt)</li>}
             </ul>
           </div>
           <div className="bg-yellow-50 border border-yellow-300 rounded p-4">
