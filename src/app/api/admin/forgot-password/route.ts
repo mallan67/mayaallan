@@ -95,12 +95,17 @@ export async function POST(req: Request) {
   }
 
   // Build the reset link from a TRUSTED origin, never from the request's Host
-  // header. In production the host is pinned to SITE_URL so a poisoned
-  // Host/x-forwarded-host can't redirect a live reset token to an attacker
-  // domain (the same-origin guard validates Origin, not the Host used here).
-  // Dev/preview fall back to the request origin so local + preview links work.
-  const isProd = process.env.VERCEL_ENV === "production"
-  const baseOrigin = isProd ? SITE_URL : new URL(req.url).origin
+  // header. In ANY production-like runtime the host is pinned to SITE_URL so a
+  // poisoned Host/x-forwarded-host can't redirect a live reset token to an
+  // attacker domain (the same-origin guard validates Origin, not the Host used
+  // here). This covers Vercel production AND a non-Vercel `next start` with
+  // NODE_ENV=production (where VERCEL_ENV is unset) — the latter previously fell
+  // through to the spoofable request origin. Only Vercel preview (so preview
+  // links resolve to the preview deployment) and true local dev use req.url.
+  const isProductionRuntime =
+    process.env.VERCEL_ENV === "production" ||
+    (!process.env.VERCEL_ENV && process.env.NODE_ENV === "production")
+  const baseOrigin = isProductionRuntime ? SITE_URL : new URL(req.url).origin
   const resetUrl = `${baseOrigin}/admin/reset-password?token=${encodeURIComponent(rawToken)}`
 
   const html = `
