@@ -28,6 +28,11 @@ export default function AdminLogin() {
         <input className="w-full border rounded-xl p-3" placeholder="Password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} />
         {err ? <p className="text-sm text-red-600">{err}</p> : null}
         <button className="w-full rounded-xl border p-3">Sign in</button>
+        <p className="text-center text-sm">
+          <a href="/admin/forgot-password" className="text-muted-foreground underline underline-offset-4 hover:text-foreground">
+            Forgot password?
+          </a>
+        </p>
       </form>
     </div>
   );
