@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { NavigationItem } from "@/lib/mock-data"
+import type { NavigationItem } from "@/lib/types"
 
 export default function AdminNavigationPage() {
   const [items, setItems] = useState<NavigationItem[]>([])

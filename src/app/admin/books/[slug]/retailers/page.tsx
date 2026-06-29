@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import type { Book, Retailer, BookRetailerLink } from "@/lib/mock-data"
+import type { Book, Retailer, BookRetailerLink } from "@/lib/types"
 
 export default function AdminBookRetailersPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter()

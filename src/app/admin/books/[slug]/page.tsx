@@ -218,12 +218,6 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
         hardcoverPrice: book.hardcoverPrice !== null ? Number(book.hardcoverPrice) : null,
       }
 
-      // Debug: Log what we're sending
-      console.log("=== BOOK SAVE DEBUG ===")
-      console.log("Current book state coverUrl:", book.coverUrl)
-      console.log("Payload coverUrl:", payload.coverUrl)
-      console.log("Full payload:", JSON.stringify(payload, null, 2))
-
       const bookUrl = isNew ? "/api/admin/books" : `/api/admin/books/${book.id}`
       const bookMethod = isNew ? "POST" : "PUT"
 
@@ -239,8 +233,6 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
       }
 
       const savedBook = await bookRes.json()
-      console.log("=== API RESPONSE DEBUG ===")
-      console.log("Saved book response coverUrl:", savedBook.coverUrl)
       const bookId = savedBook.id
 
       // Save retailer links if enabled
@@ -407,8 +399,6 @@ export default function AdminBookForm({ params }: { params: { slug: string } | P
                 currentUrl={book.coverUrl}
                 accept="image/*"
                 onUpload={(url) => {
-                  console.log("=== IMAGE UPLOAD DEBUG ===")
-                  console.log("Cover image uploaded, URL:", url)
                   setBook((prev) => ({ ...prev, coverUrl: url }))
                 }}
                 onRemove={() => setBook((prev) => ({ ...prev, coverUrl: null }))}
