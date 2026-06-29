@@ -39,6 +39,13 @@ import { alertAdmin } from "@/lib/alert-admin"
  */
 
 export const runtime = "nodejs"
+// NOTE: deliberately NO low maxDuration here. This route STREAMS the ebook body
+// to the buyer, and the download-attempt counter is incremented before
+// streaming begins with no mid-stream compensation. A low function cap would
+// truncate large/slow (mobile) downloads after the buyer was charged an
+// attempt. The hung-CONNECT case is handled by the headers-only fetch timeout
+// below (it trips before any bytes stream); the transfer itself relies on the
+// platform default ceiling.
 
 /** Build a customer-friendly filename from the book title + URL extension. */
 function buildDownloadFilename(bookTitle: string | null, fileUrl: string): string {
@@ -311,8 +318,16 @@ export async function GET(
     // 2) Stream the file through the function with Content-Disposition.
     // ------------------------------------------------------------------
     let upstream: Response
+    // HEADERS-ONLY timeout: a hung connection (no response headers within 15s)
+    // must throw → compensate + alert below. The timer is CLEARED the instant
+    // headers arrive (the finally), so this signal can never abort the streamed
+    // body afterward — a large or slow-but-healthy download must not be
+    // truncated mid-stream (that would silently burn the attempt with no
+    // compensation, since the abort would fire outside this catch).
+    const headersController = new AbortController()
+    const headersTimeout = setTimeout(() => headersController.abort(), 15_000)
     try {
-      upstream = await fetch(book.ebook_file_url)
+      upstream = await fetch(book.ebook_file_url, { signal: headersController.signal })
     } catch (fetchErr) {
       console.error("Blob fetch threw:", fetchErr)
       await alertAdmin({
@@ -332,6 +347,10 @@ export async function GET(
         { error: "Download temporarily unavailable. Please try again in a moment." },
         { status: 502 }
       )
+    } finally {
+      // Headers received (or fetch errored) — stop the timer so it can't fire
+      // during body streaming.
+      clearTimeout(headersTimeout)
     }
 
     if (!upstream.ok) {

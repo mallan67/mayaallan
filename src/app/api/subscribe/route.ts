@@ -40,13 +40,20 @@ const transporter = process.env.SMTP_USER && process.env.SMTP_PASS
   : null
 
 export async function POST(request: Request) {
-  const limit = await rateLimit({
-    scope: "subscribe",
-    ip: getClientIp(request),
-    windowMs: 60 * 60 * 1000,
-    maxAttempts: 10,
-    lockoutMs: 60 * 60 * 1000,
-  })
+  // FAIL-OPEN: an Upstash outage must not 500 a real newsletter signup.
+  let limit: { allowed: boolean; retryAfterSeconds?: number }
+  try {
+    limit = await rateLimit({
+      scope: "subscribe",
+      ip: getClientIp(request),
+      windowMs: 60 * 60 * 1000,
+      maxAttempts: 10,
+      lockoutMs: 60 * 60 * 1000,
+    })
+  } catch (rlErr) {
+    console.error("[subscribe] rate-limit unavailable, allowing through:", rlErr)
+    limit = { allowed: true }
+  }
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },

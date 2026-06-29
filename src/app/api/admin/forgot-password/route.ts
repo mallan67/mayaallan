@@ -5,6 +5,7 @@ import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { createResetToken } from "@/lib/admin-credentials"
 import { alertAdmin } from "@/lib/alert-admin"
+import { SITE_URL } from "@/lib/identity"
 
 // =============================================================================
 // POST /api/admin/forgot-password
@@ -93,10 +94,19 @@ export async function POST(req: Request) {
     return genericOk()
   }
 
-  // Build an absolute reset link from the request origin (so it works on prod,
-  // preview, and local without a hardcoded host).
-  const origin = new URL(req.url).origin
-  const resetUrl = `${origin}/admin/reset-password?token=${encodeURIComponent(rawToken)}`
+  // Build the reset link from a TRUSTED origin, never from the request's Host
+  // header. In ANY production-like runtime the host is pinned to SITE_URL so a
+  // poisoned Host/x-forwarded-host can't redirect a live reset token to an
+  // attacker domain (the same-origin guard validates Origin, not the Host used
+  // here). This covers Vercel production AND a non-Vercel `next start` with
+  // NODE_ENV=production (where VERCEL_ENV is unset) — the latter previously fell
+  // through to the spoofable request origin. Only Vercel preview (so preview
+  // links resolve to the preview deployment) and true local dev use req.url.
+  const isProductionRuntime =
+    process.env.VERCEL_ENV === "production" ||
+    (!process.env.VERCEL_ENV && process.env.NODE_ENV === "production")
+  const baseOrigin = isProductionRuntime ? SITE_URL : new URL(req.url).origin
+  const resetUrl = `${baseOrigin}/admin/reset-password?token=${encodeURIComponent(rawToken)}`
 
   const html = `
     <div style="font-family: Georgia, serif; max-width: 560px; color: #14110d; line-height: 1.6;">

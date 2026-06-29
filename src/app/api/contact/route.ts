@@ -52,13 +52,22 @@ const transporter = process.env.SMTP_USER && process.env.SMTP_PASS
 
 export async function POST(request: Request) {
   // Throttle to 5 submissions per IP per hour to deter form spam.
-  const limit = await rateLimit({
-    scope: "contact",
-    ip: getClientIp(request),
-    windowMs: 60 * 60 * 1000,
-    maxAttempts: 5,
-    lockoutMs: 60 * 60 * 1000,
-  })
+  // FAIL-OPEN: rateLimit() throws in prod if Upstash is unreachable. For a
+  // public conversion form, a Redis blip must NOT 500 a real visitor — degrade
+  // to "allowed" (spam protection temporarily off) instead of blocking.
+  let limit: { allowed: boolean; retryAfterSeconds?: number }
+  try {
+    limit = await rateLimit({
+      scope: "contact",
+      ip: getClientIp(request),
+      windowMs: 60 * 60 * 1000,
+      maxAttempts: 5,
+      lockoutMs: 60 * 60 * 1000,
+    })
+  } catch (rlErr) {
+    console.error("[contact] rate-limit unavailable, allowing through:", rlErr)
+    limit = { allowed: true }
+  }
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many submissions. Please try again later." },
