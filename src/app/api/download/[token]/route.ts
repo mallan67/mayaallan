@@ -39,10 +39,13 @@ import { alertAdmin } from "@/lib/alert-admin"
  */
 
 export const runtime = "nodejs"
-// Cap the function so a hung blob fetch can't run to the platform ceiling. The
-// 15s fetch timeout below trips first, letting the catch block compensate the
-// download-attempt counter + alert instead of the function being killed mid-await.
-export const maxDuration = 30
+// NOTE: deliberately NO low maxDuration here. This route STREAMS the ebook body
+// to the buyer, and the download-attempt counter is incremented before
+// streaming begins with no mid-stream compensation. A low function cap would
+// truncate large/slow (mobile) downloads after the buyer was charged an
+// attempt. The hung-CONNECT case is handled by the headers-only fetch timeout
+// below (it trips before any bytes stream); the transfer itself relies on the
+// platform default ceiling.
 
 /** Build a customer-friendly filename from the book title + URL extension. */
 function buildDownloadFilename(bookTitle: string | null, fileUrl: string): string {
