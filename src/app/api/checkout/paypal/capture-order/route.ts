@@ -108,9 +108,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unknown order" }, { status: 404 })
   }
 
-  // Already consumed — buyer reload after a successful capture. Benign.
+  // Already consumed — buyer reload after a successful (COMPLETED) capture. Benign.
   if (pending.status === "consumed") {
     return NextResponse.json({ success: true, alreadyConsumed: true, bookSlug: pending.book_slug })
+  }
+
+  // Held — a prior capture came back PENDING (eCheck / risk hold). A reload must
+  // NOT report success; fulfillment waits for the webhook's COMPLETED event.
+  if (pending.status === "held") {
+    return NextResponse.json(
+      { pending: true, message: "Your payment is processing and you'll get an email once it clears." },
+      { status: 202 },
+    )
   }
 
   if (pending.status === "expired") {
@@ -240,13 +249,16 @@ export async function POST(request: Request) {
     captureBody?.purchase_units?.[0]?.payments?.captures?.[0]?.status ??
     captureBody?.status
 
-  // Mark pending row consumed. This happens REGARDLESS of capture status: the
-  // capture call was made, so this orderId must never be replayable. Webhook
-  // handles the rest of fulfillment (orders row, download token, email)
-  // idempotently — and only on the webhook's COMPLETED event.
+  // Mark the pending row terminal REGARDLESS of capture status (the capture
+  // call was made, so this orderId must never be replayable) — but with a
+  // status that DISTINGUISHES a settled sale from a held one:
+  //   COMPLETED → "consumed" (a reload returns success)
+  //   anything else (PENDING / held) → "held" (a reload returns pending, never
+  //   success — fulfillment waits for the webhook's COMPLETED event).
+  const terminalStatus = captureStatus === "COMPLETED" ? "consumed" : "held"
   const { error: consumedUpdateError } = await supabaseAdmin
     .from("pending_paypal_orders")
-    .update({ status: "consumed", consumed_at: new Date().toISOString() })
+    .update({ status: terminalStatus, consumed_at: new Date().toISOString() })
     .eq("id", pending.id)
   if (consumedUpdateError) {
     await alertAdmin({

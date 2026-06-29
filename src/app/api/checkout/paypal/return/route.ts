@@ -177,6 +177,18 @@ export async function GET(request: NextRequest) {
     return redirectToBook(pending.book_slug, "success", orderId)
   }
 
+  // Held — a prior capture came back PENDING (eCheck / risk hold). A reload of
+  // the return URL must go to the pending page, NOT success (no download email
+  // has been sent; fulfillment waits for the webhook's COMPLETED event).
+  if (pending.status === "held") {
+    const pendingUrl = `${siteUrl()}/checkout/success?status=pending`
+    const res = NextResponse.redirect(pendingUrl, { status: 303 })
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, private")
+    res.headers.set("Pragma", "no-cache")
+    res.headers.set("Expires", "0")
+    return res
+  }
+
   if (pending.status === "expired") {
     // The pending row was reaped before the customer returned.
     await alertAdmin({
@@ -382,15 +394,16 @@ export async function GET(request: NextRequest) {
     captureBody?.purchase_units?.[0]?.payments?.captures?.[0]?.status ??
     captureBody?.status
 
-  // SUCCESS — PayPal captured. Mark the pending row consumed so reload of
-  // this URL doesn't re-attempt. This happens REGARDLESS of capture status
-  // (the capture call was made — the order must not be replayable). The
-  // webhook handler does the real fulfillment work (creating the orders row,
-  // download_token row, email) and dedupes idempotently on its own end via
-  // paypal_order_id (PR A) — and only on the webhook's COMPLETED event.
+  // PayPal captured. Mark the pending row terminal so a reload of this URL
+  // doesn't re-attempt — but with a status that DISTINGUISHES a settled sale
+  // from a held one, so a reload doesn't wrongly land on the success page:
+  //   COMPLETED → "consumed" (reload → success page)
+  //   anything else (PENDING / held) → "held" (reload → pending page; the
+  //   webhook delivers fulfillment only on its COMPLETED event).
+  const terminalStatus = captureStatus === "COMPLETED" ? "consumed" : "held"
   const { error: consumedUpdateError } = await supabaseAdmin
     .from("pending_paypal_orders")
-    .update({ status: "consumed", consumed_at: new Date().toISOString() })
+    .update({ status: terminalStatus, consumed_at: new Date().toISOString() })
     .eq("id", pending.id)
   if (consumedUpdateError) {
     // Customer still got their capture; don't fail their session over it.
