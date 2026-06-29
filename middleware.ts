@@ -24,8 +24,11 @@ export function middleware(request: NextRequest) {
   requestHeaders.set("x-pathname", pathname)
   requestHeaders.set("x-locale", detectLocale(pathname))
 
-  // Skip login page and API routes
-  if (pathname === "/admin/login" || pathname.startsWith("/api/")) {
+  // Skip the public auth pages (login + the password-recovery flow) and API
+  // routes. The recovery pages MUST be reachable without a session — that's
+  // the whole point of "forgot password."
+  const PUBLIC_ADMIN_PATHS = ["/admin/login", "/admin/forgot-password", "/admin/reset-password"]
+  if (PUBLIC_ADMIN_PATHS.includes(pathname) || pathname.startsWith("/api/")) {
     return NextResponse.next({
       request: { headers: requestHeaders },
     })
@@ -33,18 +36,19 @@ export function middleware(request: NextRequest) {
 
   // Protect admin routes - always require login
   if (pathname.startsWith("/admin")) {
-    // CRITICAL: If admin auth is not configured, BLOCK ALL ACCESS
+    // CRITICAL: If admin auth is not configured, BLOCK ALL ACCESS.
+    // SESSION_SECRET (cookie encryption) and ADMIN_EMAIL are the hard
+    // requirements. The password credential itself is NOT checked here: it can
+    // now live in the DB (admin_auth, set via the reset flow) rather than the
+    // ADMIN_PASSWORD_HASH env var, so a missing env hash is no longer a
+    // misconfiguration. Login (verifyAdminPassword) resolves DB-then-env; this
+    // gate only needs to confirm sessions can be issued/validated.
     const hasSessionSecret = !!process.env.SESSION_SECRET
     const hasAdminEmail = !!process.env.ADMIN_EMAIL
-    // Bcrypt-hashed credential is required; the legacy plaintext
-    // ADMIN_PASSWORD path was removed (Vercel env vars are visible to
-    // anyone with project read access — plaintext storage there was a
-    // credential leak waiting to happen).
-    const hasAdminCredential = !!process.env.ADMIN_PASSWORD_HASH
 
     // EMERGENCY BLOCK: If environment variables are missing, redirect to login
     // (AdminAuthGuard will show the error message)
-    if (!hasSessionSecret || !hasAdminEmail || !hasAdminCredential) {
+    if (!hasSessionSecret || !hasAdminEmail) {
       return NextResponse.redirect(new URL("/admin/login", request.url))
     }
 

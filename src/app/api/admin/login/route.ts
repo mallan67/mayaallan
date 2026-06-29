@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import bcrypt from "bcryptjs"
 import { getAdminSession } from "@/lib/session"
 import { rateLimit, clearRateLimit, getClientIp } from "@/lib/rate-limit"
 import { alertAdmin } from "@/lib/alert-admin"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
+import { verifyAdminPassword } from "@/lib/admin-credentials"
 
 const Body = z.object({
   email: z.string().email(),
@@ -41,13 +41,12 @@ export async function POST(req: Request) {
   const { email, password } = parsed.data
 
   const adminEmail = process.env.ADMIN_EMAIL
-  const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH
 
-  // ADMIN_PASSWORD (plaintext) is no longer accepted. Storing the admin
-  // password as a plaintext env var meant anyone with Vercel project read
-  // access could see it. ADMIN_PASSWORD_HASH (bcrypt) is required.
-  if (!adminEmail || !adminPasswordHash) {
-    console.error("ADMIN_EMAIL and ADMIN_PASSWORD_HASH must be set")
+  // The password credential may live in the DB (admin_auth, set via the reset
+  // flow) and/or in ADMIN_PASSWORD_HASH. Only ADMIN_EMAIL is strictly required
+  // here — verifyAdminPassword() resolves the hash from DB-then-env.
+  if (!adminEmail) {
+    console.error("ADMIN_EMAIL must be set")
     return NextResponse.json({ ok: false, error: "Server configuration error" }, { status: 500 })
   }
 
@@ -56,14 +55,14 @@ export async function POST(req: Request) {
   let passwordMatches = false
   let bcryptThrew = false
   try {
-    passwordMatches = await bcrypt.compare(password, adminPasswordHash)
+    passwordMatches = await verifyAdminPassword(password)
   } catch (err) {
-    // bcrypt.compare throws when the hash itself is malformed (e.g. an
-    // env var got truncated or double-quoted). Previously this silently
-    // became "Invalid credentials" forever, locking the admin out with
-    // a misleading message. Now: alert + return 500 so the operator
-    // knows it's a server config issue, not their password.
-    console.error("bcrypt.compare failed:", err)
+    // bcrypt.compare throws when a stored hash is malformed (e.g. the env var
+    // got truncated or double-quoted). Previously this silently became
+    // "Invalid credentials" forever, locking the admin out with a misleading
+    // message. Now: alert + return 500 so the operator knows it's a server
+    // config issue, not their password.
+    console.error("verifyAdminPassword failed:", err)
     bcryptThrew = true
     await alertAdmin({
       severity: "critical",
