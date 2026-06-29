@@ -315,11 +315,16 @@ export async function GET(
     // 2) Stream the file through the function with Content-Disposition.
     // ------------------------------------------------------------------
     let upstream: Response
+    // HEADERS-ONLY timeout: a hung connection (no response headers within 15s)
+    // must throw → compensate + alert below. The timer is CLEARED the instant
+    // headers arrive (the finally), so this signal can never abort the streamed
+    // body afterward — a large or slow-but-healthy download must not be
+    // truncated mid-stream (that would silently burn the attempt with no
+    // compensation, since the abort would fire outside this catch).
+    const headersController = new AbortController()
+    const headersTimeout = setTimeout(() => headersController.abort(), 15_000)
     try {
-      // 15s cap: a hung Blob fetch must throw (→ compensate + alert below)
-      // rather than let the function be killed at the platform ceiling, which
-      // would silently burn the customer's download attempt with no recovery.
-      upstream = await fetch(book.ebook_file_url, { signal: AbortSignal.timeout(15_000) })
+      upstream = await fetch(book.ebook_file_url, { signal: headersController.signal })
     } catch (fetchErr) {
       console.error("Blob fetch threw:", fetchErr)
       await alertAdmin({
@@ -339,6 +344,10 @@ export async function GET(
         { error: "Download temporarily unavailable. Please try again in a moment." },
         { status: 502 }
       )
+    } finally {
+      // Headers received (or fetch errored) — stop the timer so it can't fire
+      // during body streaming.
+      clearTimeout(headersTimeout)
     }
 
     if (!upstream.ok) {
