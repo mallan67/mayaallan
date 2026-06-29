@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { jsonLdScript } from "@/lib/json-ld"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import ReactMarkdown from "react-markdown"
@@ -157,11 +158,11 @@ export default async function ScenarioPage({ params }: PageProps) {
   return (
     <article className="max-w-3xl mx-auto px-4 py-12 md:py-16">
       {/* All schema in one block — each as its own <script> per spec */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(speakableSchema) }} />
       {faqSchema && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(faqSchema) }} />
       )}
 
       {/* Breadcrumb */}

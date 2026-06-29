@@ -33,6 +33,15 @@ scripts/output/
 # Debug HTML from one-off search engine fetches.
 google-*.html
 
+# Operator runbooks / status notes. These tend to accumulate real
+# credentials, env-var values, and infra details. Keep them local-only —
+# a tracked runbook leaked the production admin password once (see audit).
+URGENT-FIX-*.md
+*-STATUS-*.md
+*-STATUS.md
+PAYPAL-STATUS-*.md
+AUDIOBOOK-AND-COMPANION-PLAN.md
+
 # =============================================================================
 # One-off local tooling / generated artifacts (kept locally, not committed).
 # The 3 package.json-referenced scripts are intentionally NOT matched here:
@@ -52,9 +61,6 @@ scripts/restore-author-photo.mjs
 scripts/*.ps1
 # Generated review documents.
 docs/book-review/*.docx
-# Local status notes / planning docs.
-*-STATUS-*.md
-AUDIOBOOK-AND-COMPANION-PLAN.md
 # Admin password hashing tool — must never be committed.
 hash-admin-password.mjs
 

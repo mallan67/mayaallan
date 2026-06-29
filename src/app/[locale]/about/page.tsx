@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { jsonLdScript } from "@/lib/json-ld"
 import { notFound } from "next/navigation"
 import ReactMarkdown from "react-markdown"
 import { LOCALES, LOCALE_LABELS, SITE_URL, AUTHOR_NAME, type Locale } from "@/lib/identity"
@@ -52,7 +53,7 @@ export default async function LocalizedAboutPage({ params }: PageProps) {
     <article className="max-w-3xl mx-auto px-4 py-12 md:py-16" dir={dir}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(authorSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(authorSchema) }}
       />
 
       <h1 className="font-serif text-4xl md:text-5xl font-bold leading-tight text-slate-900">

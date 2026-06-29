@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { jsonLdScript } from "@/lib/json-ld"
 import type { Metadata } from "next"
 import { loadGlossary, groupTermsByCategory } from "@/lib/glossary"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
@@ -89,9 +90,9 @@ export default async function GlossaryPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10 md:py-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(definedTermSetSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(speakableSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(definedTermSetSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(speakableSchema) }} />
 
       <nav className="text-sm text-slate-500 mb-6" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-slate-700">Home</Link>

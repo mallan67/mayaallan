@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { jsonLdScript } from "@/lib/json-ld"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { MessageCircle, Dna, Brain, ListChecks, HeartPulse, PenLine, Star, Calendar, MapPin, ArrowRight } from "lucide-react"
@@ -279,7 +280,7 @@ export default async function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(authorSchema),
+          __html: jsonLdScript(authorSchema),
         }}
       />
 

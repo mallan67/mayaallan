@@ -5,6 +5,12 @@ import { listPosts } from "@/lib/posts"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { SITE_URL } from "@/lib/identity"
 import { alertAdmin } from "@/lib/alert-admin"
+import { safeCompare } from "@/lib/safe-compare"
+
+// IndexNow accepts at most 10,000 URLs per submission. Cap the manual
+// `urls[]` input well within that so a caller can't push an oversized
+// payload at the upstream API (or balloon memory building the request).
+const MAX_MANUAL_URLS = 10_000
 
 // =============================================================================
 // POST /api/indexnow/submit — manually trigger an IndexNow submission.
@@ -31,7 +37,7 @@ export async function POST(req: NextRequest) {
   // Auth — simple shared-secret header. Set INDEXNOW_SUBMIT_SECRET in env.
   const secret = process.env.INDEXNOW_SUBMIT_SECRET
   const provided = req.headers.get("x-indexnow-secret")
-  if (!secret || provided !== secret) {
+  if (!secret || !provided || !safeCompare(provided, secret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
@@ -46,6 +52,12 @@ export async function POST(req: NextRequest) {
 
   if (Array.isArray(body?.urls)) {
     urls = body.urls.filter((u: unknown): u is string => typeof u === "string")
+    if (urls.length > MAX_MANUAL_URLS) {
+      return NextResponse.json(
+        { error: `Too many URLs. Submit at most ${MAX_MANUAL_URLS} per request.` },
+        { status: 400 }
+      )
+    }
   } else if (body?.mode === "all") {
     urls = await collectAllPublicUrls()
   } else {

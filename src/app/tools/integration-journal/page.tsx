@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { jsonLdScript } from "@/lib/json-ld"
 import { IntegrationJournalForm } from "./IntegrationJournalForm"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
 import { generateBreadcrumbSchema, generateFAQSchema } from "@/lib/structured-data"
@@ -94,9 +95,9 @@ export default function IntegrationJournalPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12 md:py-16">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(softwareSchema) }} />
 
       <header className="mb-10">
         <p className="text-xs uppercase tracking-wider text-blue-700 font-semibold mb-3">Free tool</p>

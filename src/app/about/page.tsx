@@ -1,4 +1,5 @@
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { jsonLdScript } from "@/lib/json-ld"
 import Image from "next/image"
 import Link from "next/link"
 import type { Metadata } from "next"
@@ -121,21 +122,21 @@ export default async function AboutPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(authorSchema),
+          __html: jsonLdScript(authorSchema),
         }}
       />
       {/* AEO: FAQ Schema for AI answer engines */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(faqSchema),
+          __html: jsonLdScript(faqSchema),
         }}
       />
       {/* AEO: Breadcrumb Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbSchema),
+          __html: jsonLdScript(breadcrumbSchema),
         }}
       />
 

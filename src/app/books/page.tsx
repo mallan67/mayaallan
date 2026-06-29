@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { jsonLdScript } from "@/lib/json-ld"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { RetailerIcon } from "@/lib/retailer-icons"
@@ -120,7 +121,7 @@ export default async function BooksPage() {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(breadcrumbSchema),
+            __html: jsonLdScript(breadcrumbSchema),
           }}
         />
         <h1 className="font-serif text-3xl font-semibold mb-4">Books</h1>
@@ -141,7 +142,7 @@ export default async function BooksPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(breadcrumbSchema),
+          __html: jsonLdScript(breadcrumbSchema),
         }}
       />
       <h1 className="font-serif text-3xl md:text-4xl font-semibold text-center mb-10">

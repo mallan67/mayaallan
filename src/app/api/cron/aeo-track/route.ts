@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { executeRun } from "@/lib/aeo/runner"
+import { safeCompare } from "@/lib/safe-compare"
 
 // =============================================================================
 // /api/cron/aeo-track — weekly AEO probe (Vercel Cron entry point).
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
 async function run(req: NextRequest) {
   const secret = process.env.CRON_SECRET
   const auth = req.headers.get("authorization")
-  if (!secret || auth !== `Bearer ${secret}`) {
+  if (!secret || !auth || !safeCompare(auth, `Bearer ${secret}`)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

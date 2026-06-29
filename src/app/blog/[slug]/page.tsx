@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { jsonLdScript } from "@/lib/json-ld"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import ReactMarkdown from "react-markdown"
@@ -85,7 +86,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
     <article className="bg-white min-h-[calc(100dvh-80px)] px-4 sm:px-8 py-10 sm:py-14">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(articleSchema) }}
       />
 
       <div className="max-w-2xl mx-auto">

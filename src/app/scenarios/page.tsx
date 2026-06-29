@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { jsonLdScript } from "@/lib/json-ld"
 import type { Metadata } from "next"
 import { listScenarios } from "@/lib/scenarios"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
@@ -93,11 +94,11 @@ export default async function ScenariosIndexPage() {
     <div className="max-w-4xl mx-auto px-4 py-12 md:py-16">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbSchema) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(collectionSchema) }}
       />
 
       <header className="mb-12">
