@@ -1,25 +1,16 @@
 import { requireAdminAuth } from "@/lib/adminAuth"
-import { headers } from "next/headers"
 import type React from "react"
 
 /**
  * Server Component that checks authentication before rendering children
- * This creates a server-side authentication barrier
+ * This creates a server-side authentication barrier.
+ *
+ * NOTE: This guard only wraps the authenticated admin pages (the (app) route
+ * group). The public auth pages (login / forgot-password / reset-password) live
+ * in the sibling (auth) route group and are never wrapped by this guard, so no
+ * pathname-based skip is needed here.
  */
 export default async function AdminAuthGuard({ children }: { children: React.ReactNode }) {
-  // Get current path to skip auth for login page
-  const headersList = await headers()
-  const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || ""
-
-  // Skip auth for the public auth pages: login + the password-recovery flow.
-  // These MUST render without a session (the whole point of "forgot password"
-  // is that you can't log in). Keep this list in sync with the PUBLIC_ADMIN_PATHS
-  // allowlist in middleware.ts.
-  const PUBLIC_ADMIN_PATHS = ["/admin/login", "/admin/forgot-password", "/admin/reset-password"]
-  if (PUBLIC_ADMIN_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`) || pathname.startsWith(`${p}?`))) {
-    return <>{children}</>
-  }
-
   // CRITICAL: Check if admin authentication is configured.
   // Only SESSION_SECRET (cookie encryption) + ADMIN_EMAIL are hard requirements.
   // The password credential is NOT required here: it can live in the DB
