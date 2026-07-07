@@ -97,7 +97,7 @@ You have 3 drafted posts in `content/posts/`. Each one publishes in ~15 minutes 
    - LinkedIn's algorithm rewards long-form writing in wellness/psychology niches
 6. **In your site's home page** — link to the post from the Resources section (the content/posts files can eventually become blog posts on the site itself — ask AI to do this)
 
-That's it. Close the tabs. Go back to real estate.
+That's it. Close the tabs. Go back to your day.
 
 ---
 
