@@ -50,10 +50,9 @@ export const supabaseAdmin = new Proxy({} as SupabaseClient, {
  * All names below resolve to snake_case Postgres tables. The historical
  * Prisma PascalCase tables ("Event", "SiteSettings") were reconciled to
  * snake_case by supabase/migrations/2026-05-21-events-and-site-settings-
- * snake-case.sql. The PascalCase tables are intentionally kept for now
- * as a rollback safety net — they'll be dropped in a separate PR after
- * the snake_case path has been verified live for at least one release
- * cycle.
+ * snake-case.sql, and the dormant PascalCase duplicates were dropped by
+ * supabase/migrations/2026-07-07-drop-legacy-pascalcase-event-sitesettings.sql
+ * after verifying their rows were identical/older copies of the live data.
  */
 export const Tables = {
   books: "books",
