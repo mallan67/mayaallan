@@ -16,11 +16,9 @@
 --   - password_hash is a bcrypt hash (never plaintext).
 --   - reset_token_hash stores a SHA-256 of the reset token, NOT the token
 --     itself — so a database leak never yields a usable reset link.
---   - RLS is enabled with NO policies. The app reaches this table only through
---     the Supabase service-role key (which bypasses RLS); enabling RLS with no
---     policies means that if the anon/publishable key is ever introduced, it
---     gets zero access to this table by default. Defense-in-depth for the most
---     sensitive row in the database.
+--   - The app reaches this table only through the Supabase service-role/secret
+--     key, server-side. The browser-exposed publishable key is never used for
+--     admin credentials.
 -- =============================================================================
 
 create table if not exists admin_auth (
@@ -41,7 +39,3 @@ create table if not exists admin_auth (
 
 -- Seed the single row so the app can always UPDATE id=1 (no INSERT race).
 insert into admin_auth (id) values (1) on conflict (id) do nothing;
-
--- Deny-all RLS: no policies => only the service-role key (which bypasses RLS)
--- can touch this table. The app uses exactly that key server-side.
-alter table admin_auth enable row level security;
