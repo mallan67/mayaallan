@@ -8,7 +8,7 @@ export function Footer() {
     <footer className="bg-navy pt-16 pb-10 text-white">
       <div className="max-w-[1160px] mx-auto px-5 md:px-9">
         {/* Top Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-10 md:gap-12 pb-10 mb-8 border-b border-white/10 text-center md:text-left">
+        <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr_1fr] gap-10 md:gap-12 pb-10 mb-8 border-b border-white/10 text-center md:text-left">
           {/* Brand Column */}
           <div className="mb-2 md:mb-0">
             <p className="font-sans text-lg font-bold tracking-[0.06em] uppercase mb-4">
@@ -60,6 +60,27 @@ export function Footer() {
               </Link>
               <Link href="/methods" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
                 Methods
+              </Link>
+            </nav>
+          </div>
+
+          {/* Resources Column */}
+          <div>
+            <h4 className="font-sans text-[0.72rem] font-bold tracking-[0.12em] uppercase text-gold mb-5">
+              Resources
+            </h4>
+            <nav className="flex flex-col gap-1">
+              <Link href="/blog" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                Blog
+              </Link>
+              <Link href="/scenarios" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                Scenarios
+              </Link>
+              <Link href="/glossary" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                Glossary
+              </Link>
+              <Link href="/faq" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                FAQ
               </Link>
             </nav>
           </div>
