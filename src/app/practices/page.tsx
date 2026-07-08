@@ -1,18 +1,18 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ListChecks, Wind, Sparkles } from "lucide-react"
+import { ListChecks, Wind, Sparkles, BookOpen } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Tools — Belief Inquiry, Nervous System Reset, Integration | Maya Allan",
+  title: "Practices — Belief Inquiry, Nervous System Reset, Integration Reflection, Integration Journal | Maya Allan",
   description:
-    "Three free AI-guided reflection tools: Nervous System Reset for regulation, Belief Inquiry for examining inherited beliefs, and Integration for letting new insight land.",
+    "Four free practices: Nervous System Reset for regulation, Belief Inquiry for examining inherited beliefs, Integration Reflection for letting new insight land, and the Integration Journal PDF.",
   alternates: {
-    canonical: "https://www.mayaallan.com/tools",
+    canonical: "https://www.mayaallan.com/practices",
   },
   openGraph: {
-    title: "Tools — Free AI-Guided Reflection Tools",
-    description: "Nervous System Reset, Belief Inquiry, Integration. Free, no signup.",
-    url: "https://www.mayaallan.com/tools",
+    title: "Practices — Free AI-Guided Reflection Practices",
+    description: "Nervous System Reset, Belief Inquiry, Integration Reflection, and the Integration Journal. Free, no signup.",
+    url: "https://www.mayaallan.com/practices",
     siteName: "Maya Allan",
     type: "website",
   },
@@ -36,9 +36,16 @@ const TOOLS = [
   {
     href: "/integration-reflection",
     icon: Sparkles,
-    title: "Integration",
+    title: "Integration Reflection",
     blurb: "Help a new insight or experience land. Hold the new alongside the old and let the shift consolidate.",
     time: "~10 min",
+  },
+  {
+    href: "/integration-journal",
+    icon: BookOpen,
+    title: "Integration Journal",
+    blurb: "A structured 7-day PDF journal to capture insights, patterns, and next steps after an experience.",
+    time: "PDF",
   },
 ]
 
@@ -48,20 +55,21 @@ export default function ToolsPage() {
       <div className="max-w-4xl mx-auto">
         <header className="text-center mb-10 sm:mb-16">
           <h1 className="font-serif text-[clamp(1.8rem,4vw,2.75rem)] font-semibold text-charcoal tracking-[-0.02em] mb-4">
-            Tools
+            Practices
           </h1>
           <p className="text-charcoal-soft text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
-            Three free AI-guided reflection tools. No signup. Save a session as
-            a PDF for $9.99 if you want to keep it.
+            Four free practices for regulating, examining, integrating, and journaling.
+            No signup. Save a session as a PDF for $9.99 if you want to keep it.
           </p>
         </header>
 
         <section className="mb-8 sm:mb-12 p-5 sm:p-6 rounded-2xl bg-[#F0F7FF]/40 border border-[#D6E8FA]/50">
           <p className="text-charcoal-mid text-sm sm:text-base leading-relaxed">
             <strong className="font-semibold text-charcoal">New here?</strong>{" "}
-            Start with <strong>Reset</strong> if your body feels activated or foggy.
+            Start with <strong>Nervous System Reset</strong> if your body feels activated or foggy.
             Start with <strong>Belief Inquiry</strong> if you want to examine a belief.
-            Come back to <strong>Integration</strong> after insight — it&apos;s where the new experience lands.
+            Come back to <strong>Integration Reflection</strong> after insight — it&apos;s where the new experience lands.
+            Keep an <strong>Integration Journal</strong> to track it over the days after.
           </p>
         </section>
 
@@ -92,7 +100,7 @@ export default function ToolsPage() {
 
         <footer className="mt-10 sm:mt-14 text-center">
           <p className="text-charcoal-soft/70 text-xs sm:text-sm leading-relaxed max-w-xl mx-auto">
-            These tools are educational reflection aids, not therapy. If you&apos;re in crisis,
+            These practices are educational reflection aids, not therapy. If you&apos;re in crisis,
             please reach out to the 988 Suicide &amp; Crisis Lifeline — call or text 988.
           </p>
         </footer>

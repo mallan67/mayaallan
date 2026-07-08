@@ -130,7 +130,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
               kind of work on the site.
             </p>
             <Link
-              href={post.tool_link.replace(SITE_URL, "") || "/tools"}
+              href={post.tool_link.replace(SITE_URL, "") || "/practices"}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-liquid-blue text-white font-medium text-sm hover:bg-liquid-blue-bright transition-colors"
             >
               Try the {post.tool_name} tool

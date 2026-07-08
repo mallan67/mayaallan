@@ -132,7 +132,7 @@ export default function MethodsPage() {
         </section>
 
         <footer className="mt-10 text-charcoal-soft/70 text-xs">
-          <Link href="/tools" className="hover:text-liquid-blue transition-colors">
+          <Link href="/practices" className="hover:text-liquid-blue transition-colors">
             Explore the Practices →
           </Link>
         </footer>

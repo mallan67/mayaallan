@@ -33,10 +33,10 @@ export default async function ExportSuccessPage({ searchParams }: { searchParams
           If you don&apos;t see it, check your spam folder.
         </p>
         <Link
-          href="/tools"
+          href="/practices"
           className="inline-block px-6 py-3 rounded-xl bg-liquid-blue text-white font-medium text-sm hover:bg-liquid-blue-bright transition-colors"
         >
-          Back to Tools
+          Back to Practices
         </Link>
       </div>
     </div>

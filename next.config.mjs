@@ -191,6 +191,11 @@ const nextConfig = {
         destination: "/integration-journal",
         permanent: true,
       },
+      {
+        source: "/tools",
+        destination: "/practices",
+        permanent: true,
+      },
     ];
   },
 };
