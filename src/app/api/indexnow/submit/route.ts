@@ -83,7 +83,6 @@ async function collectAllPublicUrls(): Promise<string[]> {
     `${SITE_URL}/scenarios`,
     `${SITE_URL}/integration`,
     `${SITE_URL}/blog`,
-    `${SITE_URL}/articles`,
     `${SITE_URL}/events`,
     `${SITE_URL}/media`,
     `${SITE_URL}/contact`,

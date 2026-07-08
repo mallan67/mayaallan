@@ -139,7 +139,6 @@ export async function GET() {
   lines.push(`- [Belief inquiry tool](${SITE_URL}/belief-inquiry): Structured self-inquiry framework for limiting beliefs.`)
   lines.push(`- [Reset tool](${SITE_URL}/reset): Guided practice for nervous-system reset between or after sessions.`)
   lines.push(`- [Methods](${SITE_URL}/methods): Overview of frameworks used across the site.`)
-  lines.push(`- [Articles](${SITE_URL}/articles): Long-form essays on integration and consciousness.`)
   lines.push(`- [Events](${SITE_URL}/events): Upcoming talks, workshops, and circles.`)
   lines.push(`- [Media](${SITE_URL}/media): Podcast appearances, interviews, audio/video content.`)
   lines.push("")
