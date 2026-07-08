@@ -70,6 +70,12 @@ export default function BeliefInquiryPage() {
               </p>
             </div>
 
+            <p className="mt-3">
+              <Link href="/methods#belief-inquiry" className="text-[0.75rem] font-medium text-liquid-blue underline-offset-2 hover:underline">
+                Learn the method →
+              </Link>
+            </p>
+
             {/* Minimal legal cluster — the chat page hides the global footer
                 to maximize chat space, but GDPR Art. 13 requires privacy /
                 terms / contact to remain discoverable. */}

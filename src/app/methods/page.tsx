@@ -26,7 +26,7 @@ export default function MethodsPage() {
           tools are educational reflection aids, not therapy.
         </p>
 
-        <section className="mb-8">
+        <section id="nervous-system-reset" className="mb-8 scroll-mt-24">
           <h2 className="font-serif text-xl font-semibold text-charcoal mb-2">
             Internal Family Systems (IFS)
           </h2>
@@ -38,9 +38,14 @@ export default function MethodsPage() {
             Family Systems&rdquo; and &ldquo;IFS&rdquo; are trademarks of the IFS
             Institute. Further reading: <em>No Bad Parts</em> (Schwartz, 2021).
           </p>
+          <p className="mt-3">
+            <Link href="/nervous-system-reset" className="text-sm font-medium text-liquid-blue hover:underline">
+              Start Nervous System Reset →
+            </Link>
+          </p>
         </section>
 
-        <section className="mb-8">
+        <section id="belief-inquiry" className="mb-8 scroll-mt-24">
           <h2 className="font-serif text-xl font-semibold text-charcoal mb-2">
             Clean Language
           </h2>
@@ -53,9 +58,14 @@ export default function MethodsPage() {
             facilitator&apos;s metaphors or frames. Further reading:{" "}
             <em>Metaphors in Mind</em> (Lawley &amp; Tompkins, 2000).
           </p>
+          <p className="mt-3">
+            <Link href="/belief-inquiry" className="text-sm font-medium text-liquid-blue hover:underline">
+              Start Belief Inquiry →
+            </Link>
+          </p>
         </section>
 
-        <section className="mb-8">
+        <section id="integration-reflection" className="mb-8 scroll-mt-24">
           <h2 className="font-serif text-xl font-semibold text-charcoal mb-2">
             Coherence Therapy
           </h2>
@@ -68,6 +78,29 @@ export default function MethodsPage() {
             experience. Further reading:{" "}
             <em>Unlocking the Emotional Brain</em> (Ecker, Ticic &amp; Hulley,
             2012).
+          </p>
+          <p className="mt-3">
+            <Link href="/integration-reflection" className="text-sm font-medium text-liquid-blue hover:underline">
+              Start Integration Reflection →
+            </Link>
+          </p>
+        </section>
+
+        <section id="integration-journal" className="mb-8 scroll-mt-24">
+          <h2 className="font-serif text-xl font-semibold text-charcoal mb-2">
+            Integration Journal
+          </h2>
+          <p className="text-charcoal-soft text-sm leading-relaxed">
+            The Integration Journal is a structured reflection practice for
+            capturing insights, patterns, emotional shifts, and next steps after
+            an experience. It helps turn a temporary realization into something
+            usable by organizing what happened, what it revealed, and how it can
+            be integrated into daily life.
+          </p>
+          <p className="mt-3">
+            <Link href="/integration-journal" className="text-sm font-medium text-liquid-blue hover:underline">
+              Open Integration Journal →
+            </Link>
           </p>
         </section>
 
