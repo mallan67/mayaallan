@@ -8,7 +8,7 @@ export function Footer() {
     <footer className="bg-navy pt-16 pb-10 text-white">
       <div className="max-w-[1160px] mx-auto px-5 md:px-9">
         {/* Top Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr] gap-10 md:gap-12 pb-10 mb-8 border-b border-white/10 text-center md:text-left">
+        <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1fr] gap-10 md:gap-12 pb-10 mb-8 border-b border-white/10 text-center md:text-left">
           {/* Brand Column */}
           <div className="mb-2 md:mb-0">
             <p className="font-sans text-lg font-bold tracking-[0.06em] uppercase mb-4">
@@ -40,6 +40,30 @@ export function Footer() {
             </nav>
           </div>
 
+          {/* Practices Column */}
+          <div>
+            <h4 className="font-sans text-[0.72rem] font-bold tracking-[0.12em] uppercase text-gold mb-5">
+              Practices
+            </h4>
+            <nav className="flex flex-col gap-1">
+              <Link href="/belief-inquiry" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                Belief Inquiry
+              </Link>
+              <Link href="/nervous-system-reset" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                Nervous System Reset
+              </Link>
+              <Link href="/integration-reflection" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                Integration Reflection
+              </Link>
+              <Link href="/integration-journal" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                Integration Journal
+              </Link>
+              <Link href="/methods" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
+                Methods
+              </Link>
+            </nav>
+          </div>
+
           {/* Info Column */}
           <div>
             <h4 className="font-sans text-[0.72rem] font-bold tracking-[0.12em] uppercase text-gold mb-5">
@@ -48,9 +72,6 @@ export function Footer() {
             <nav className="flex flex-col gap-1">
               <Link href="/contact" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
                 Contact
-              </Link>
-              <Link href="/methods" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
-                Methods &amp; Attributions
               </Link>
               <Link href="/privacy" className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors">
                 Privacy
