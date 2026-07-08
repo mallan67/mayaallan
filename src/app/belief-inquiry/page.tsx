@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Belief Inquiry — A Curious Exploration of Limiting Beliefs",
   description:
     "An AI-guided self-inquiry tool that uses curiosity, not evaluation, to help you explore inherited beliefs. Based on Clean Language and Coherence Therapy research. Free. No signup.",
+  alternates: {
+    canonical: "https://www.mayaallan.com/belief-inquiry",
+  },
   keywords: [
     "belief inquiry", "limiting beliefs", "curious inquiry",
     "clean language", "coherence therapy", "self-inquiry tool",

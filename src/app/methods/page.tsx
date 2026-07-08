@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "Methods & Attributions | Maya Allan",
   description:
     "The research and practitioners whose work informs the reflection tools on this site. Attribution to the originators of Internal Family Systems, Clean Language, Coherence Therapy, and Motivational Interviewing.",
+  alternates: {
+    canonical: "https://www.mayaallan.com/methods",
+  },
 }
 
 export default function MethodsPage() {

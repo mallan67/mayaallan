@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Tools — Belief Inquiry, Nervous System Reset, Integration | Maya Allan",
   description:
     "Three free AI-guided reflection tools: Nervous System Reset for regulation, Belief Inquiry for examining inherited beliefs, and Integration for letting new insight land.",
+  alternates: {
+    canonical: "https://www.mayaallan.com/tools",
+  },
   openGraph: {
     title: "Tools — Free AI-Guided Reflection Tools",
     description: "Nervous System Reset, Belief Inquiry, Integration. Free, no signup.",

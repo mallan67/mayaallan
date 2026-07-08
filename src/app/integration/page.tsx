@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   title: "Integration Tool — Help a New Insight or Experience Land | Maya Allan",
   description:
     "An AI-guided reflection tool that helps you hold a new experience or insight alongside an old belief. Based on Coherence Therapy and memory reconsolidation research. Not therapy.",
+  alternates: {
+    canonical: "https://www.mayaallan.com/integration",
+  },
   keywords: [
     "integration tool", "belief integration", "insight integration",
     "reflection tool", "coherence therapy", "memory reconsolidation",
