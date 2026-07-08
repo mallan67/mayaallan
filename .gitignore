@@ -68,3 +68,6 @@ hash-admin-password.mjs
 # Python bytecode cache
 __pycache__/
 *.pyc
+
+# Playwright MCP session artifacts
+.playwright-mcp/
