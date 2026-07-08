@@ -4,6 +4,9 @@ import Link from "next/link"
 import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
 import { SITE_URL } from "@/lib/identity"
+import { jsonLdScript } from "@/lib/json-ld"
+import { generateEventSchema } from "@/lib/structured-data"
+import type { Event } from "@/lib/types"
 
 interface EventPageProps {
   params: Promise<{ slug: string }>
@@ -20,32 +23,43 @@ async function getEvent(slug: string) {
     return null
   }
 
-  try {
-    // Canonical snake_case table + column names (post-migration). The
-    // PascalCase /rest/v1/Event orphan path was retired here.
-    const response = await fetch(
-      `${supabaseUrl}/rest/v1/events?slug=eq.${encodeURIComponent(slug)}&is_visible=eq.true&select=*&limit=1`,
-      {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-        next: { revalidate: 60 },
-      }
-    )
+  // Canonical snake_case table + column names (post-migration). The
+  // PascalCase /rest/v1/Event orphan path was retired here.
+  //
+  // Distinguish a genuine 404 (fetch succeeded, no matching row) from a
+  // TRANSIENT failure (network error / 5xx). On a transient failure we THROW
+  // so Next renders the retryable error boundary — returning null here would
+  // notFound() and 404 a real event on a momentary DB blip, which Google
+  // could then drop from the index.
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/events?slug=eq.${encodeURIComponent(slug)}&is_visible=eq.true&select=*&limit=1`,
+    {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      next: { revalidate: 60 },
+    }
+  )
 
-    if (!response.ok) return null
-
-    const data = await response.json()
-    return data?.[0] || null
-  } catch {
-    return null
+  if (!response.ok) {
+    throw new Error(`events fetch failed: ${response.status} ${response.statusText}`)
   }
+
+  const data = await response.json()
+  return data?.[0] || null
 }
 
 export async function generateMetadata({ params }: EventPageProps): Promise<Metadata> {
   const { slug } = await params
-  const event = await getEvent(slug)
+  let event
+  try {
+    event = await getEvent(slug)
+  } catch {
+    // Transient fetch failure — emit neutral metadata rather than
+    // "Not Found"; the page component surfaces the error boundary.
+    return { title: "Event" }
+  }
 
   if (!event) {
     return { title: "Event Not Found" }
@@ -96,8 +110,30 @@ export default async function EventPage({ params }: EventPageProps) {
   // Snake_case columns from the canonical events table (post-migration).
   const eventDate = new Date(event.starts_at)
 
+  // Map the raw snake_case row to the camelCase Event shape the schema
+  // builder expects, then emit Event JSON-LD.
+  const eventSchema = generateEventSchema({
+    id: event.id,
+    slug: event.slug,
+    title: event.title,
+    description: event.description,
+    startsAt: event.starts_at,
+    endsAt: event.ends_at,
+    locationText: event.location_text,
+    locationUrl: event.location_url,
+    photoUrls: event.event_image_url ? [event.event_image_url] : undefined,
+    isPublished: event.is_published,
+    isVisible: event.is_visible,
+    keepVisibleAfterEnd: event.keep_visible_after_end,
+    seoTitle: event.seo_title,
+    seoDescription: event.seo_description,
+    createdAt: event.created_at,
+    updatedAt: event.updated_at,
+  } satisfies Event)
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 md:py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(eventSchema) }} />
       <Link href="/events" className="text-sm text-slate-500 hover:text-slate-700 transition-colors inline-flex items-center gap-1 mb-6">
         ← Back to Events
       </Link>

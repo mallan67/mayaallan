@@ -4,6 +4,9 @@ import Link from "next/link"
 import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
 import { SITE_URL } from "@/lib/identity"
+import { jsonLdScript } from "@/lib/json-ld"
+import { generateMediaSchema } from "@/lib/structured-data"
+import type { MediaItem } from "@/lib/types"
 
 interface MediaPageProps {
   params: Promise<{ slug: string }>
@@ -20,30 +23,38 @@ async function getMediaItem(slug: string) {
     return null
   }
 
-  try {
-    const response = await fetch(
-      `${supabaseUrl}/rest/v1/media_items?slug=eq.${encodeURIComponent(slug)}&is_visible=eq.true&select=*&limit=1`,
-      {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-        next: { revalidate: 300 },
-      }
-    )
+  // Distinguish a genuine 404 (fetch ok, no row) from a TRANSIENT failure
+  // (network / 5xx). Throw on transient errors so Next renders the retryable
+  // error boundary instead of 404-ing a real media item on a momentary blip.
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/media_items?slug=eq.${encodeURIComponent(slug)}&is_visible=eq.true&select=*&limit=1`,
+    {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      next: { revalidate: 300 },
+    }
+  )
 
-    if (!response.ok) return null
-
-    const data = await response.json()
-    return data?.[0] || null
-  } catch {
-    return null
+  if (!response.ok) {
+    throw new Error(`media_items fetch failed: ${response.status} ${response.statusText}`)
   }
+
+  const data = await response.json()
+  return data?.[0] || null
 }
 
 export async function generateMetadata({ params }: MediaPageProps): Promise<Metadata> {
   const { slug } = await params
-  const item = await getMediaItem(slug)
+  let item
+  try {
+    item = await getMediaItem(slug)
+  } catch {
+    // Transient fetch failure — neutral metadata; the page component
+    // surfaces the error boundary rather than a false 404.
+    return { title: "Media" }
+  }
 
   if (!item) {
     return { title: "Media Not Found" }
@@ -91,8 +102,30 @@ export default async function MediaItemPage({ params }: MediaPageProps) {
     notFound()
   }
 
+  // Map the raw snake_case row to the camelCase MediaItem shape the schema
+  // builder expects, then emit Audio/Video/ImageObject JSON-LD.
+  const mediaSchema = generateMediaSchema({
+    id: item.id,
+    kind: item.kind,
+    slug: item.slug,
+    title: item.title,
+    description: item.description,
+    coverUrl: item.cover_url,
+    fileUrl: item.file_url,
+    externalUrl: item.external_url,
+    duration: item.duration,
+    isPublished: item.is_published,
+    isVisible: item.is_visible,
+    seoTitle: item.seo_title,
+    seoDescription: item.seo_description,
+    publishedAt: item.published_at,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  } satisfies MediaItem)
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-10 md:py-12">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(mediaSchema) }} />
       <Link href="/media" className="text-sm text-slate-500 hover:text-slate-700 transition-colors inline-flex items-center gap-1 mb-6">
         ← Back to Media
       </Link>

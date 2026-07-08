@@ -633,7 +633,7 @@ export function generateEventSchema(event: Event, siteUrl = SITE_URL) {
       name: "Maya Allan",
       url: siteUrl,
     },
-    url: `${siteUrl}/events#${event.slug}`,
+    url: `${siteUrl}/events/${event.slug}`,
   }
 }
 
@@ -647,7 +647,7 @@ export function generateMediaSchema(media: MediaItem, siteUrl = SITE_URL) {
       "@type": "Person",
       name: "Maya Allan",
     },
-    url: `${siteUrl}/media#${media.slug}`,
+    url: `${siteUrl}/media/${media.slug}`,
   }
 
   if (media.kind === "audio") {
@@ -656,6 +656,14 @@ export function generateMediaSchema(media: MediaItem, siteUrl = SITE_URL) {
       "@type": "AudioObject",
       ...(media.fileUrl && { contentUrl: media.fileUrl }),
       ...(media.externalUrl && { embedUrl: media.externalUrl }),
+    }
+  } else if (media.kind === "image") {
+    return {
+      ...baseSchema,
+      "@type": "ImageObject",
+      ...((media.fileUrl || media.coverUrl) && {
+        contentUrl: media.fileUrl || media.coverUrl,
+      }),
     }
   } else {
     return {
