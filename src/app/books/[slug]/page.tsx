@@ -438,7 +438,7 @@ export default async function BookPage({ params }: BookPageProps) {
                 It&apos;s a natural companion to the work in this guide.
               </p>
               <Link
-                href="/integration"
+                href="/integration-reflection"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-liquid-blue text-white font-medium text-sm hover:bg-liquid-blue-bright transition-colors"
               >
                 Open the Integration tool

@@ -77,7 +77,7 @@ export default async function LocalizedHomePage({ params }: PageProps) {
             {dict.home.heroCta}
           </Link>
           <Link
-            href="/integration"
+            href="/integration-reflection"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-300 text-slate-900 font-medium hover:bg-slate-50 transition-colors"
           >
             {dict.cta.tryItFree}
@@ -107,7 +107,7 @@ export default async function LocalizedHomePage({ params }: PageProps) {
         </h2>
         <p className="text-slate-700 leading-relaxed mb-5">{dict.home.integrationBody}</p>
         <Link
-          href="/integration"
+          href="/integration-reflection"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 transition-colors"
         >
           {dict.cta.tryItFree}

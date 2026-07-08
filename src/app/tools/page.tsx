@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 const TOOLS = [
   {
-    href: "/reset",
+    href: "/nervous-system-reset",
     icon: Wind,
     title: "Nervous System Reset",
     blurb: "Return to a regulated state. Body-first. For when you feel activated, shutdown, or overwhelmed.",
@@ -34,7 +34,7 @@ const TOOLS = [
     time: "~15 min",
   },
   {
-    href: "/integration",
+    href: "/integration-reflection",
     icon: Sparkles,
     title: "Integration",
     blurb: "Help a new insight or experience land. Hold the new alongside the old and let the shift consolidate.",

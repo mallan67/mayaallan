@@ -120,13 +120,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/reset`,
+      url: `${baseUrl}/nervous-system-reset`,
       lastModified: currentDate,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/integration`,
+      url: `${baseUrl}/integration-reflection`,
+      lastModified: currentDate,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/integration-journal`,
       lastModified: currentDate,
       changeFrequency: "monthly",
       priority: 0.7,

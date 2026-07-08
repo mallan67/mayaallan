@@ -6,9 +6,9 @@ import { HeaderClient } from "./header-client"
 const fallbackNavItems = [
   { href: "/", label: "Home" },
   { href: "/books", label: "Books" },
-  { href: "/belief-inquiry", label: "Belief Audit" },
-  { href: "/reset", label: "Nervous System Reset" },
-  { href: "/integration", label: "Integration" },
+  { href: "/belief-inquiry", label: "Belief Inquiry" },
+  { href: "/nervous-system-reset", label: "Nervous System Reset" },
+  { href: "/integration-reflection", label: "Integration Reflection" },
   { href: "/media", label: "Media" },
   { href: "/events", label: "Events" },
   { href: "/about", label: "About" },

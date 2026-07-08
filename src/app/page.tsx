@@ -675,7 +675,7 @@ export default async function HomePage() {
             </Link>
 
             {/* Nervous System Reset */}
-            <Link href="/reset" className="block">
+            <Link href="/nervous-system-reset" className="block">
               <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
                 <div className="w-14 h-14 rounded-[14px] bg-gold-wash flex items-center justify-center mb-6 text-gold-deep">
                   <HeartPulse className="w-[26px] h-[26px]" />
@@ -691,7 +691,7 @@ export default async function HomePage() {
             </Link>
 
             {/* Integration Reflections */}
-            <Link href="/integration" className="block">
+            <Link href="/integration-reflection" className="block">
               <article className="bg-white border border-[#CDCDD2] rounded-2xl p-8 md:p-11 transition-all hover:border-liquid-blue hover:shadow-[0_12px_40px_rgba(21,101,160,0.12)] hover:-translate-y-1">
                 <div className="w-14 h-14 rounded-[14px] bg-gold-wash flex items-center justify-center mb-6 text-gold-deep">
                   <PenLine className="w-[26px] h-[26px]" />
