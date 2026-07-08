@@ -140,11 +140,15 @@ test("different scopes don't share counters for the same IP", async () => {
   assert.equal(b1.allowed, true)
 })
 
-test("getClientIp pulls the first IP from x-forwarded-for", () => {
+test("getClientIp uses the right-most (trusted) x-forwarded-for hop, not the spoofable left-most", () => {
+  // The left-most XFF entry is client-controlled and MUST NOT be trusted for
+  // rate limiting — an attacker could forge it to land in a fresh bucket every
+  // request. With one trusted proxy hop (the default), the real client is the
+  // right-most entry: the address the closest trusted proxy actually observed.
   const req = new Request("http://localhost", {
     headers: { "x-forwarded-for": "203.0.113.1, 10.0.0.1, 192.168.1.1" },
   })
-  assert.equal(getClientIp(req), "203.0.113.1")
+  assert.equal(getClientIp(req), "192.168.1.1")
 })
 
 test("getClientIp returns 'unknown' when x-forwarded-for is absent", () => {
