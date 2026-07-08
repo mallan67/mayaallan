@@ -64,3 +64,7 @@ docs/book-review/*.docx
 # Admin password hashing tool — must never be committed.
 hash-admin-password.mjs
 
+
+# Python bytecode cache
+__pycache__/
+*.pyc
