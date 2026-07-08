@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description:
     "An AI-guided reflection tool that helps you hold a new experience or insight alongside an old belief. Based on Coherence Therapy and memory reconsolidation research. Not therapy.",
   alternates: {
-    canonical: "https://www.mayaallan.com/integration",
+    canonical: "https://www.mayaallan.com/integration-reflection",
   },
   keywords: [
     "integration tool", "belief integration", "insight integration",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: "Integration — Help a New Insight Land",
     description:
       "Hold a new experience alongside an old pattern, and let the shift consolidate. A free AI-guided reflection tool.",
-    url: "https://www.mayaallan.com/integration",
+    url: "https://www.mayaallan.com/integration-reflection",
     siteName: "Maya Allan",
     type: "website",
   },
@@ -65,6 +65,12 @@ export default function IntegrationPage() {
                 Not therapy or a substitute for professional mental health care.
               </p>
             </div>
+
+            <p className="mt-3">
+              <Link href="/methods#integration-reflection" className="text-[0.75rem] font-medium text-liquid-blue underline-offset-2 hover:underline">
+                Learn the method →
+              </Link>
+            </p>
 
             {/* Minimal legal cluster — the chat page hides the global footer
                 to maximize chat space, but GDPR Art. 13 requires privacy /

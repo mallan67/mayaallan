@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description:
     "A free AI-guided somatic regulation tool to help you calm anxiety, release tension, and return to a grounded state. No signup required. Your body already knows how to regulate — this tool helps you practice it consciously.",
   alternates: {
-    canonical: "https://www.mayaallan.com/reset",
+    canonical: "https://www.mayaallan.com/nervous-system-reset",
   },
   keywords: [
     "nervous system regulation", "calm anxiety", "somatic grounding",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     title: "Free Nervous System Reset — Calm Anxiety & Regulate Your Body",
     description:
       "A free AI-guided somatic regulation tool to help you calm anxiety, release tension, and return to a grounded state. No signup required.",
-    url: "https://www.mayaallan.com/reset",
+    url: "https://www.mayaallan.com/nervous-system-reset",
     siteName: "Maya Allan",
     type: "website",
   },
@@ -69,6 +69,12 @@ export default function ResetPage() {
                 Not therapy or a substitute for professional mental health care.
               </p>
             </div>
+
+            <p className="mt-3">
+              <Link href="/methods#nervous-system-reset" className="text-[0.75rem] font-medium text-liquid-blue underline-offset-2 hover:underline">
+                Learn the method →
+              </Link>
+            </p>
 
             {/* Minimal legal cluster — the chat page hides the global footer
                 to maximize chat space, but GDPR Art. 13 requires privacy /

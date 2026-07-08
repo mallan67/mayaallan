@@ -173,6 +173,24 @@ const nextConfig = {
         destination: "/belief-inquiry/:path*",
         permanent: true,
       },
+      // Tool slug migration (2026-07): descriptive slugs that match the nav
+      // labels. Old paths 301 to the new canonical URLs so existing links,
+      // bookmarks, and any indexed pages carry over without loss.
+      {
+        source: "/reset",
+        destination: "/nervous-system-reset",
+        permanent: true,
+      },
+      {
+        source: "/integration",
+        destination: "/integration-reflection",
+        permanent: true,
+      },
+      {
+        source: "/tools/integration-journal",
+        destination: "/integration-journal",
+        permanent: true,
+      },
     ];
   },
 };

@@ -5,7 +5,7 @@ import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
 import { generateBreadcrumbSchema, generateFAQSchema } from "@/lib/structured-data"
 
 // =============================================================================
-// /tools/integration-journal — public free tool + linkable asset.
+// /integration-journal — public free tool + linkable asset.
 // =============================================================================
 // Rich on-page content for SEO + a small form that POSTs to
 // /api/tools/integration-journal and downloads a customized PDF.
@@ -20,7 +20,7 @@ import { generateBreadcrumbSchema, generateFAQSchema } from "@/lib/structured-da
 // in some search engines.
 // =============================================================================
 
-const URL_PATH = `${SITE_URL}/tools/integration-journal`
+const URL_PATH = `${SITE_URL}/integration-journal`
 
 export const metadata: Metadata = {
   title: "Free Integration Journal — 7-Day PDF Template",
@@ -73,7 +73,6 @@ const FAQS = [
 export default function IntegrationJournalPage() {
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: SITE_URL },
-    { name: "Tools", url: `${SITE_URL}/tools` },
     { name: "Integration Journal", url: URL_PATH },
   ])
 
@@ -108,6 +107,11 @@ export default function IntegrationJournalPage() {
           A customizable 7-day integration journal for psilocybin journeys. Four versions, one
           focused prompt per day, printable handwriting space. Free, no email required, no
           login.
+        </p>
+        <p className="mt-4">
+          <a href="/methods#integration-journal" className="text-sm text-blue-700 underline hover:text-blue-900">
+            Learn how to use the journal →
+          </a>
         </p>
       </header>
 
