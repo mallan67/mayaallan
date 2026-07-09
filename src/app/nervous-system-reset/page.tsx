@@ -38,68 +38,35 @@ export default function ResetPage() {
     <>
       <style>{`
         footer { display: none !important; }
-        @media (min-width: 640px) {
-          body { overflow: hidden; height: 100dvh; height: 100vh; }
-          @supports (height: 100dvh) { body { height: 100dvh; } }
-          main { display: flex; flex-direction: column; min-height: 0; flex: 1; }
-        }
       `}</style>
 
-      <div className="bg-white flex flex-col sm:flex-1 sm:min-h-0">
+      <div className="bg-white">
         {/* ── Hero Header ────────────────────────────────────── */}
-        <div className="shrink-0 px-5 sm:px-8 pt-2 sm:pt-8 pb-2 sm:pb-5 text-center relative overflow-hidden">
-          {/* Soft ambient orb */}
-          <div className="orb orb-blue w-[400px] h-[400px] top-[-100px] left-1/2 -translate-x-1/2 absolute opacity-[0.04]" />
-
-          <div className="relative z-10 max-w-2xl mx-auto">
-            <div className="hidden sm:flex w-12 h-12 rounded-2xl bg-violet-50 items-center justify-center mx-auto mb-4">
-              <HeartPulse className="w-6 h-6 text-violet-400" />
-            </div>
-            <h1 className="font-serif text-[clamp(1.3rem,3.5vw,2.25rem)] font-semibold text-charcoal tracking-[-0.02em] mb-1 sm:mb-2">
-              Nervous System Reset
-            </h1>
-            <p className="hidden sm:block text-charcoal-soft text-sm leading-[1.7] max-w-lg mx-auto mb-4">
-              A guided somatic regulation tool to help you check in with your body, identify your nervous system state,
-              and practice simple techniques to return to a grounded, regulated place.
-            </p>
-
-            {/* Disclosure banner */}
-            <div className="inline-block bg-violet-50 border border-violet-200 rounded-xl px-3 sm:px-4 py-1.5 sm:py-2.5">
-              <p className="text-charcoal-mid text-[0.7rem] sm:text-xs leading-relaxed">
-                Not therapy or a substitute for professional mental health care.
-              </p>
-            </div>
-
-            <p className="mt-3">
-              <Link href="/methods#nervous-system-reset" className="text-[0.75rem] font-medium text-liquid-blue underline-offset-2 hover:underline">
-                Learn the method →
-              </Link>
-            </p>
-
-            {/* Minimal legal cluster — the chat page hides the global footer
-                to maximize chat space, but GDPR Art. 13 requires privacy /
-                terms / contact to remain discoverable. */}
-            <nav aria-label="Legal" className="mt-3 text-[0.7rem] text-charcoal-mid/70 flex flex-wrap gap-x-3 gap-y-1 justify-center">
-              <Link href="/privacy" className="hover:text-charcoal-mid underline-offset-2 hover:underline">
-                Privacy
-              </Link>
-              <span aria-hidden="true">·</span>
-              <Link href="/terms" className="hover:text-charcoal-mid underline-offset-2 hover:underline">
-                Terms
-              </Link>
-              <span aria-hidden="true">·</span>
-              <Link href="/contact" className="hover:text-charcoal-mid underline-offset-2 hover:underline">
-                Contact
-              </Link>
-            </nav>
-          </div>
+        <div className="px-5 sm:px-8 pt-4 pb-3 text-center max-w-2xl mx-auto">
+          <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-charcoal tracking-[-0.02em] mb-1.5">
+            Nervous System Reset
+          </h1>
+          <p className="text-charcoal-soft text-sm leading-relaxed mb-2.5 max-w-lg mx-auto">
+            A guided somatic regulation tool to help you check in with your body, identify your nervous system state,
+            and practice simple techniques to return to a grounded, regulated place.
+          </p>
+          {/* Compact meta row: disclaimer + method + legal. The global footer is
+              hidden on this chat page, so privacy / terms / contact stay here. */}
+          <nav aria-label="About this tool" className="text-[0.72rem] text-charcoal-mid/70 flex flex-wrap gap-x-2.5 gap-y-1 justify-center items-center">
+            <span>Not therapy</span>
+            <span aria-hidden="true">·</span>
+            <Link href="/methods#nervous-system-reset" className="font-medium text-liquid-blue hover:underline">Learn the method →</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/privacy" className="hover:text-charcoal-mid underline-offset-2 hover:underline">Privacy</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/terms" className="hover:text-charcoal-mid underline-offset-2 hover:underline">Terms</Link>
+            <span aria-hidden="true">·</span>
+            <Link href="/contact" className="hover:text-charcoal-mid underline-offset-2 hover:underline">Contact</Link>
+          </nav>
         </div>
 
-        {/* ── Chat Container — fills remaining height ────────── */}
-        <div className="h-[calc(100dvh-170px)] sm:h-auto sm:flex-1 flex flex-col min-h-0 max-w-3xl mx-auto w-full px-3 sm:px-6 pb-0 sm:pb-4">
-          <div className="flex-1 flex flex-col min-h-0 bg-white/80 rounded-3xl shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden">
-            <ResetChat />
-          </div>
+        <div className="max-w-3xl mx-auto w-full px-3 sm:px-6">
+          <ResetChat />
         </div>
       </div>
     </>

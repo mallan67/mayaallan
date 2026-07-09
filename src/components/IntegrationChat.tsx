@@ -48,7 +48,7 @@ export function IntegrationChat() {
   const [sessionComplete, setSessionComplete] = useState(false)
   const [userRequestedExport, setUserRequestedExport] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  const textareaRef = useRef<HTMLInputElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const TOOL: AnalyticsTool = "integration"
   const viewedTrackedRef = useRef(false)
@@ -69,7 +69,11 @@ export function IntegrationChat() {
   useEffect(() => {
     const container = messagesContainerRef.current
     if (container && messages.length > 0) {
-      container.scrollTop = container.scrollHeight
+      // Scroll the PAGE (not an inner box) to the latest message, unless the
+      // user has scrolled up to read back.
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 240
+      if (nearBottom) window.scrollTo({ top: document.documentElement.scrollHeight })
     }
 
     const userMessages = messages.filter((m) => m.role === "user").length
@@ -113,6 +117,14 @@ export function IntegrationChat() {
     sendMessage({ text })
   }, [input, isStreaming, sendMessage])
 
+  // Auto-grow the composer as a longer entry is written, up to a comfortable cap.
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value)
+    const el = e.target
+    el.style.height = "auto"
+    el.style.height = `${Math.min(el.scrollHeight, 220)}px`
+  }, [])
+
   const handleStarterClick = useCallback(
     (prompt: string) => {
       setInput("")
@@ -126,8 +138,10 @@ export function IntegrationChat() {
     setInput("")
   }, [setMessages])
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // A plain Enter inserts a new line so longer reflective entries can be
+    // written and reviewed. Cmd/Ctrl+Enter (or the Send button) submits.
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault()
       handleSend()
     }
@@ -157,7 +171,7 @@ export function IntegrationChat() {
     .filter((m) => m.text.length > 0)
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div>
       <div
         ref={messagesContainerRef}
         role="log"
@@ -165,7 +179,7 @@ export function IntegrationChat() {
         aria-relevant="additions"
         aria-atomic="false"
         aria-label="Integration conversation"
-        className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-6 space-y-4 sm:space-y-5 min-h-0"
+        className="px-4 sm:px-6 pt-4 sm:pt-6 pb-16 sm:pb-20 space-y-5 sm:space-y-6"
       >
         {messages.length === 0 && !isStreaming && (
           <div className="flex flex-col items-center justify-center py-4 sm:py-20">
@@ -189,47 +203,45 @@ export function IntegrationChat() {
           </div>
         )}
 
+        {/* Messages — journal-style reflection cards */}
         {messages.map((message) => {
           const text = getMessageText(message)
           if (!text) return null
+          const isUser = message.role === "user"
           return (
-            <div
+            <article
               key={message.id}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`rounded-2xl border px-5 py-5 sm:px-7 sm:py-6 ${
+                isUser
+                  ? "bg-liquid-blue-wash/40 border-liquid-blue/15"
+                  : "bg-white border-[#E8ECF0] shadow-[0_1px_3px_rgba(0,0,0,0.03)] select-none"
+              }`}
             >
-              <div
-                className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-4 ${
-                  message.role === "user"
-                    ? "bg-liquid-blue text-white rounded-br-md"
-                    : "bg-white/90 border border-[#E8ECF0]/50 text-charcoal rounded-bl-md shadow-[0_2px_10px_rgba(0,0,0,0.03)]"
+              <span
+                className={`text-[0.62rem] font-bold tracking-[0.14em] uppercase block mb-2.5 ${
+                  isUser ? "text-liquid-blue/70" : "text-liquid-blue"
                 }`}
               >
-                {message.role === "assistant" && (
-                  <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-liquid-blue block mb-2">
-                    Integration
-                  </span>
-                )}
-                <div className="text-[0.88rem] sm:text-[0.92rem] leading-[1.8] whitespace-pre-wrap font-normal">
-                  {text}
-                </div>
+                {isUser ? "Your reflection" : "Guided response"}
+              </span>
+              <div className="text-[0.95rem] sm:text-base leading-[1.85] whitespace-pre-wrap text-charcoal">
+                {text}
               </div>
-            </div>
+            </article>
           )
         })}
 
         {status === "submitted" && (
-          <div className="flex justify-start" role="status" aria-label="Assistant is typing">
-            <div className="bg-white/90 border border-[#E8ECF0]/50 rounded-2xl rounded-bl-md px-5 py-4 shadow-[0_2px_10px_rgba(0,0,0,0.03)]">
-              <span className="text-[0.65rem] font-bold tracking-[0.1em] uppercase text-liquid-blue block mb-2">
-                Integration
-              </span>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-liquid-blue/30 animate-pulse" />
-                <span className="w-2 h-2 rounded-full bg-liquid-blue/30 animate-pulse [animation-delay:150ms]" />
-                <span className="w-2 h-2 rounded-full bg-liquid-blue/30 animate-pulse [animation-delay:300ms]" />
-              </div>
+          <article className="rounded-2xl border border-[#E8ECF0] bg-white px-5 py-5 sm:px-7 sm:py-6 shadow-[0_1px_3px_rgba(0,0,0,0.03)] select-none" role="status" aria-label="Reflecting">
+            <span className="text-[0.62rem] font-bold tracking-[0.14em] uppercase text-liquid-blue block mb-2.5">
+              Guided response
+            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-liquid-blue/30 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-liquid-blue/30 animate-pulse [animation-delay:150ms]" />
+              <span className="w-2 h-2 rounded-full bg-liquid-blue/30 animate-pulse [animation-delay:300ms]" />
             </div>
-          </div>
+          </article>
         )}
 
         {error && (
@@ -256,18 +268,18 @@ export function IntegrationChat() {
         <SessionFeedback tool={TOOL} userTurnCount={userTurns} />
       </div>
 
-      <div className="shrink-0 border-t border-[#E8ECF0]/40 px-4 sm:px-6 pt-1.5 sm:pt-3 pb-1 sm:pb-3">
-        <div className="flex items-center gap-3 max-w-3xl mx-auto">
-          <input
+      <div className="sticky bottom-0 z-20 border-t border-[#E8ECF0]/40 bg-white/95 backdrop-blur-sm px-4 sm:px-6 pt-1.5 sm:pt-3 pb-2 sm:pb-3">
+        <div className="flex items-end gap-3 max-w-3xl mx-auto">
+          <textarea
             ref={textareaRef}
-            type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Share what you're integrating..."
+            placeholder="Describe the experience, insight, or emotional material you want to integrate..."
             aria-label="Your message"
+            rows={1}
             disabled={isStreaming}
-            className="flex-1 bg-white border border-[#B8BCC0] rounded-2xl px-4 py-3 h-12 text-charcoal text-[0.9rem] sm:text-base placeholder:text-charcoal-soft focus:outline-none focus:border-liquid-blue/50 focus:ring-2 focus:ring-liquid-blue/15 disabled:opacity-50 transition-colors shadow-sm"
+            className="flex-1 bg-white border border-[#B8BCC0] rounded-2xl px-4 py-3 min-h-[96px] max-h-[220px] resize-none overflow-y-auto text-charcoal text-[0.95rem] sm:text-base leading-relaxed placeholder:text-charcoal-soft focus:outline-none focus:border-liquid-blue/50 focus:ring-2 focus:ring-liquid-blue/15 disabled:opacity-50 transition-colors shadow-sm"
           />
           <button
             type="button"
@@ -279,6 +291,11 @@ export function IntegrationChat() {
             <Send className="w-[18px] h-[18px]" />
           </button>
         </div>
+
+        {/* Small, calm helper — reinforces "space to write" without a copy affordance. */}
+        <p className="text-[0.68rem] text-charcoal-mid/50 mt-1.5 mb-0.5 max-w-3xl mx-auto px-1">
+          Take your time — write as much as you need.<span className="hidden sm:inline"> Press ⌘/Ctrl + Enter to send.</span>
+        </p>
 
         <div className="flex items-center justify-between gap-3 mt-2 sm:mt-3 max-w-3xl mx-auto">
           <div className="flex items-center gap-4">
