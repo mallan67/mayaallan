@@ -184,15 +184,15 @@ export function InquiryChat() {
         aria-relevant="additions"
         aria-atomic="false"
         aria-label="Belief Inquiry conversation"
-        className="px-4 sm:px-6 pt-4 sm:pt-6 pb-16 sm:pb-20 space-y-5 sm:space-y-6"
+        className="px-4 sm:px-6 pt-3 sm:pt-4 pb-10 sm:pb-12 space-y-5 sm:space-y-6"
       >
         {/* Empty state with starter prompts */}
         {messages.length === 0 && !isStreaming && (
-          <div className="flex flex-col items-center justify-center py-4 sm:py-20">
+          <div className="flex flex-col items-center justify-center py-3 sm:py-8">
             <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-liquid-blue-wash items-center justify-center mb-6">
               <ListChecks className="w-7 h-7 text-liquid-blue" />
             </div>
-            <p className="text-charcoal-mid text-center text-[0.9rem] sm:text-base leading-relaxed max-w-md mb-4 sm:mb-8">
+            <p className="text-charcoal-mid text-center text-[0.9rem] sm:text-base leading-relaxed max-w-md mb-3 sm:mb-6">
               Tell me a belief you&apos;d like to get curious about, or choose a prompt below.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-lg">
