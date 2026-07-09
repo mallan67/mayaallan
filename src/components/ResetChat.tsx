@@ -173,7 +173,7 @@ export function ResetChat() {
     .filter((m) => m.text.length > 0)
 
   return (
-    <div>
+    <div className="flex-1 flex flex-col">
       {/* ── Messages Area ──────────────────────────────────── */}
       <div
         ref={messagesContainerRef}
@@ -182,15 +182,15 @@ export function ResetChat() {
         aria-relevant="additions"
         aria-atomic="false"
         aria-label="Nervous System Reset conversation"
-        className="px-4 sm:px-6 pt-3 sm:pt-4 pb-10 sm:pb-12 space-y-5 sm:space-y-6"
+        className="flex-1 flex flex-col px-4 sm:px-6 pt-3 sm:pt-4 pb-10 sm:pb-12 space-y-5 sm:space-y-6"
       >
         {/* Empty state with starter prompts */}
         {messages.length === 0 && !isStreaming && (
-          <div className="flex flex-col items-center justify-center py-3 sm:py-8">
-            <div className="hidden sm:flex w-14 h-14 rounded-2xl bg-violet-50 items-center justify-center mb-6">
-              <HeartPulse className="w-7 h-7 text-violet-400" />
+          <div className="flex-1 flex flex-col items-center justify-center py-2">
+            <div className="hidden sm:flex w-11 h-11 rounded-xl bg-violet-50 items-center justify-center mb-3">
+              <HeartPulse className="w-5 h-5 text-violet-400" />
             </div>
-            <p className="text-charcoal-mid text-center text-[0.9rem] sm:text-base leading-relaxed max-w-md mb-3 sm:mb-6">
+            <p className="text-charcoal-mid text-center text-[0.9rem] sm:text-base leading-relaxed max-w-md mb-2 sm:mb-4">
               Start by describing how your body feels right now, or choose a prompt below.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-lg">

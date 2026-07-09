@@ -40,7 +40,7 @@ export default function ResetPage() {
         footer { display: none !important; }
       `}</style>
 
-      <div className="bg-white">
+      <div className="bg-white min-h-[calc(100dvh-71px)] flex flex-col">
         {/* ── Hero Header ────────────────────────────────────── */}
         <div className="px-5 sm:px-8 pt-4 pb-3 text-center max-w-2xl mx-auto">
           <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-charcoal tracking-[-0.02em] mb-1.5">
@@ -65,7 +65,7 @@ export default function ResetPage() {
           </nav>
         </div>
 
-        <div className="max-w-3xl mx-auto w-full px-3 sm:px-6">
+        <div className="max-w-3xl mx-auto w-full px-3 sm:px-6 flex-1 flex flex-col">
           <ResetChat />
         </div>
       </div>
