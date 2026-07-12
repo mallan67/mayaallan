@@ -8,6 +8,10 @@ import {
   classifyConversationSafety,
   detectExplicitDanger,
   detectPossibleAcuteState,
+  findOversizeUserMessage,
+  totalConversationCharCount,
+  MAX_MESSAGE_CHARS,
+  MAX_CONVERSATION_CHARS,
 } from "../src/lib/crisis-classifier.mjs"
 
 let failures = 0
@@ -133,6 +137,36 @@ check("detectPossibleAcuteState: vague sleep is NOT acute", () =>
 check("detectPossibleAcuteState: coercion 'won't let me leave' is acute", () =>
   assert.equal(detectPossibleAcuteState("my partner won't let me leave"), true),
 )
+
+// ─── 7. Conversation-size caps (folded in from the retired tests/lib file) ─
+check("size cap: oversize single message is detected", () => {
+  const text = "a".repeat(MAX_MESSAGE_CHARS + 100)
+  assert.equal(findOversizeUserMessage([userMsg(text)]), text.length)
+})
+check("size cap: in-bounds messages return null", () => {
+  assert.equal(
+    findOversizeUserMessage([userMsg("short"), userMsg("x".repeat(MAX_MESSAGE_CHARS))]),
+    null,
+  )
+})
+check("size cap: total char count sums user + assistant text", () => {
+  const convo = [
+    { role: "user", content: "hello" }, // 5
+    assistantMsg("world!"), // 6
+    userMsg("again"), // 5
+    userMsg("more"), // 4
+  ]
+  assert.equal(totalConversationCharCount(convo), 20)
+})
+check("size cap: non-arrays are tolerated", () => {
+  assert.equal(totalConversationCharCount(null), 0)
+  assert.equal(totalConversationCharCount("not an array"), 0)
+  assert.equal(totalConversationCharCount([]), 0)
+})
+check("size cap: MAX_CONVERSATION_CHARS is a sane number", () => {
+  assert.equal(typeof MAX_CONVERSATION_CHARS, "number")
+  assert.ok(MAX_CONVERSATION_CHARS >= 10_000)
+})
 
 console.log(`\n${ran - failures}/${ran} checks passed, ${failures} failed`)
 if (failures > 0) process.exit(1)

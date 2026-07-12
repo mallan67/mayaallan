@@ -244,3 +244,48 @@ If you can, take one slow breath and name one thing you can see or touch around 
 It would really help to have someone with you in this — a person you trust, or a professional. You can find support options for your country at findahelpline.com (in the US, call or text 988).
 
 Nothing here has been lost — your reflection is still saved, and we can continue whenever you feel ready.`
+
+// ─── Conversation-size caps (pure; consumed by the chat route) ────────
+
+/** Maximum allowed length of a single user message, in characters.
+ *  Mirrors MAX_TEXT_LEN in /api/export/route.ts so the two surfaces
+ *  have aligned input-size policy. */
+export const MAX_MESSAGE_CHARS = 8000
+
+/** Maximum allowed total characters across the full conversation. At
+ *  ~4 chars/token this caps a session at roughly 25k input tokens — a hard
+ *  per-request cost cap, well below model context limits. */
+export const MAX_CONVERSATION_CHARS = 100_000
+
+/** First offending single-message length over the cap, or null. */
+export function findOversizeUserMessage(messages) {
+  if (!Array.isArray(messages)) return null
+  for (const msg of messages) {
+    const text = extractUserMessageText(msg)
+    if (text !== null && text.length > MAX_MESSAGE_CHARS) return text.length
+  }
+  return null
+}
+
+/** Total character count across every message's text (user AND assistant),
+ *  so many medium messages can't bypass the per-message cap. */
+export function totalConversationCharCount(messages) {
+  if (!Array.isArray(messages)) return 0
+  let total = 0
+  for (const msg of messages) {
+    if (!msg || typeof msg !== "object") continue
+    if (typeof msg.content === "string") {
+      total += msg.content.length
+      continue
+    }
+    const parts = msg.parts
+    if (Array.isArray(parts)) {
+      for (const part of parts) {
+        if (part && typeof part === "object" && typeof part.text === "string") {
+          total += part.text.length
+        }
+      }
+    }
+  }
+  return total
+}
