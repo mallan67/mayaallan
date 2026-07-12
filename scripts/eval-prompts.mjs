@@ -18,13 +18,13 @@ const SCENARIOS = [
     forbiddenReason: "toxic positivity / skipping the self-critical part",
   },
   {
-    tool: "audit",
+    tool: "belief_inquiry",
     input: "I believe I'm not good enough",
     forbidden: [/core limiting belief/i, /childhood/i, /family conditioning/i, /truer statement/i],
     forbiddenReason: "diagnosing, imposing childhood frame, or installing replacement",
   },
   {
-    tool: "audit",
+    tool: "belief_inquiry",
     input: "I don't know, I never thought about it",
     forbidden: [/family conditioning/i, /were there people in your life/i, /\bmost limiting beliefs\b/i],
     forbiddenReason: "filling silence with AI hypothesis (forbidden before 2 stuck turns)",

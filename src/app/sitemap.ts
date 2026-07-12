@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { listPosts } from "@/lib/posts"
 import { listScenarios } from "@/lib/scenarios"
-import { LOCALES, SITE_URL, type Locale } from "@/lib/identity"
+import { LOCALES, SITE_URL } from "@/lib/identity"
 import { sitemapAlternates } from "@/lib/i18n/hreflang"
 import { upcomingEventsOrClause } from "@/lib/events-visibility"
 
@@ -11,15 +11,19 @@ import { upcomingEventsOrClause } from "@/lib/events-visibility"
 // them. Google reads these to serve the right language to the right user.
 const TRANSLATED_PATHS = new Set<string>(["/", "/about"])
 
+function validDate(value: string | null | undefined): Date | undefined {
+  if (!value) return undefined
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_URL
-  const currentDate = new Date()
   const posts = await listPosts()
   const scenarios = await listScenarios()
 
-  // Build a list of {path, lastModified, priority} for translated pages —
-  // these need both their English entry AND per-locale entries with
-  // hreflang alternates.
+  // Translated pages get both their own URL and reciprocal hreflang alternates.
+  // Do not invent a lastModified date: only content-backed dates are emitted.
   const translatedLocaleEntries: MetadataRoute.Sitemap = []
   for (const path of TRANSLATED_PATHS) {
     for (const locale of LOCALES) {
@@ -27,179 +31,59 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const url = path === "/" ? `${baseUrl}/${locale}` : `${baseUrl}/${locale}${path}`
       translatedLocaleEntries.push({
         url,
-        lastModified: currentDate,
-        changeFrequency: "weekly",
-        priority: 0.8,
         alternates: { languages: sitemapAlternates(path) },
       })
     }
   }
 
-  // Static pages
+  // Static pages. `lastModified` is intentionally omitted because these routes
+  // do not currently expose a reliable content revision timestamp. Emitting the
+  // request time made every page look freshly changed on every sitemap render.
   const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: currentDate,
-      changeFrequency: "weekly",
-      priority: 1.0,
-      // hreflang alternates for the homepage — declared on the canonical
-      // English entry so Google can serve the right language version.
       alternates: { languages: sitemapAlternates("/") },
     },
     {
       url: `${baseUrl}/about`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.8,
       alternates: { languages: sitemapAlternates("/about") },
     },
-    {
-      url: `${baseUrl}/books`,
-      lastModified: currentDate,
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/events`,
-      lastModified: currentDate,
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/media`,
-      lastModified: currentDate,
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/legal`,
-      lastModified: currentDate,
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified: currentDate,
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/terms`,
-      lastModified: currentDate,
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/refunds`,
-      lastModified: currentDate,
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/practices`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/methods`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/belief-inquiry`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/nervous-system-reset`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/integration-reflection`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/integration-journal`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: currentDate,
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/scenarios`,
-      lastModified: currentDate,
-      changeFrequency: "weekly",
-      // High priority — this is a hub page for the 40-scenario content
-      // cluster, the highest-leverage SEO + AI-citation asset on the site.
-      priority: 0.9,
-    },
-    {
-      // FAQ page — 20 short answers to top reader queries, AI-citation
-      // optimized. Same logic as scenarios: pure citation-magnet content.
-      url: `${baseUrl}/faq`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      // Glossary — canonical "what is X" reference for psilocybin +
-      // integration vocabulary. DefinedTermSet schema makes this the
-      // citation target for AI engines answering definition queries.
-      url: `${baseUrl}/glossary`,
-      lastModified: currentDate,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
+    { url: `${baseUrl}/books` },
+    { url: `${baseUrl}/events` },
+    { url: `${baseUrl}/media` },
+    { url: `${baseUrl}/contact` },
+    { url: `${baseUrl}/legal` },
+    { url: `${baseUrl}/privacy` },
+    { url: `${baseUrl}/terms` },
+    { url: `${baseUrl}/refunds` },
+    { url: `${baseUrl}/practices` },
+    { url: `${baseUrl}/methods` },
+    { url: `${baseUrl}/belief-inquiry` },
+    { url: `${baseUrl}/nervous-system-reset` },
+    { url: `${baseUrl}/integration-reflection` },
+    { url: `${baseUrl}/integration-journal` },
+    { url: `${baseUrl}/blog` },
+    { url: `${baseUrl}/scenarios` },
+    { url: `${baseUrl}/faq` },
+    { url: `${baseUrl}/glossary` },
   ]
 
-  // Scenario pages — each is an AI-citation-optimized landing page targeting
-  // one specific user query. Crawled and indexed alongside everything else.
-  const scenarioPages: MetadataRoute.Sitemap = scenarios.map((s) => {
-    const parsed = new Date(s.dateModified ?? s.datePublished)
-    const lastModified = isNaN(parsed.getTime()) ? currentDate : parsed
-    return {
-      url: `${baseUrl}/scenarios/${s.slug}`,
-      lastModified,
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    }
-  })
+  const scenarioPages: MetadataRoute.Sitemap = scenarios.map((scenario) => ({
+    url: `${baseUrl}/scenarios/${scenario.slug}`,
+    lastModified: validDate(scenario.dateModified ?? scenario.datePublished),
+  }))
 
-  const blogPostPages: MetadataRoute.Sitemap = posts.map((post) => {
-    const parsed = new Date(post.date)
-    const lastModified = isNaN(parsed.getTime()) ? currentDate : parsed
-    return {
-      url: `${baseUrl}/blog/${post.slug}`,
-      lastModified,
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    }
-  })
+  const blogPostPages: MetadataRoute.Sitemap = posts.map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: validDate(post.date),
+  }))
 
   let bookPages: MetadataRoute.Sitemap = []
   let eventPages: MetadataRoute.Sitemap = []
   let mediaPages: MetadataRoute.Sitemap = []
 
   try {
-    // Dynamic book pages - fetch published and visible books from Supabase
+    // Dynamic book pages — only published and publicly visible records.
     const { data: books, error: booksError } = await supabaseAdmin
       .from(Tables.books)
       .select("slug, updated_at")
@@ -209,16 +93,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!booksError && books) {
       bookPages = books.map((book) => ({
         url: `${baseUrl}/books/${book.slug}`,
-        lastModified: book.updated_at ? new Date(book.updated_at) : currentDate,
-        changeFrequency: "monthly" as const,
-        priority: 0.8,
+        lastModified: validDate(book.updated_at),
       }))
     }
 
-    // Dynamic event pages — events table is canonical snake_case
-    // post-migration. Past events excluded unless pinned via
-    // keep_visible_after_end, same rule as /events listing. Keeps
-    // Googlebot from indexing dead "Upcoming Events" links.
+    // The public event surfaces are explicitly framed as upcoming. Completed
+    // events belong in a separately labelled archive and are not advertised here.
     const { data: events, error: eventsError } = await supabaseAdmin
       .from(Tables.events)
       .select("slug, updated_at")
@@ -226,15 +106,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .or(upcomingEventsOrClause())
 
     if (!eventsError && events) {
-      eventPages = events.map((event: any) => ({
+      eventPages = events.map((event) => ({
         url: `${baseUrl}/events/${event.slug}`,
-        lastModified: event.updated_at ? new Date(event.updated_at) : currentDate,
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
+        lastModified: validDate(event.updated_at),
       }))
     }
 
-    // Dynamic media pages - fetch visible media from Supabase
+    // Dynamic media pages — only publicly visible records.
     const { data: media, error: mediaError } = await supabaseAdmin
       .from(Tables.mediaItems)
       .select("slug, updated_at")
@@ -243,13 +121,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (!mediaError && media) {
       mediaPages = media.map((item) => ({
         url: `${baseUrl}/media/${item.slug}`,
-        lastModified: item.updated_at ? new Date(item.updated_at) : currentDate,
-        changeFrequency: "monthly" as const,
-        priority: 0.6,
+        lastModified: validDate(item.updated_at),
       }))
     }
   } catch (error) {
-    // During build or if DB unavailable, just use static pages
+    // A database outage must not make the sitemap endpoint fail completely.
+    // Static and file-backed editorial routes still remain discoverable.
     console.warn("Sitemap dynamic content fetch failed:", error)
   }
 

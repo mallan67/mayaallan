@@ -17,19 +17,21 @@
 //   - YouTube + Vimeo for embedded video iframes (admin can paste these into
 //     media items).
 //   - data: + blob: for inline images and dynamic blob downloads.
-//   - 'unsafe-inline' / 'unsafe-eval' are ONLY in script-src — Next.js needs
-//     these for App Router runtime hydration; removing them breaks the site.
 //
 // frame-ancestors 'none' blocks every clickjacking attempt site-wide. This
 // supersedes X-Frame-Options (which is kept below as a belt-and-braces
 // header for legacy browsers).
 // ----------------------------------------------------------------------------
+const IS_PRODUCTION =
+  process.env.VERCEL_ENV === "production" ||
+  (!process.env.VERCEL_ENV && process.env.NODE_ENV === "production")
+
 const CSP_DIRECTIVES = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.paypal.com https://*.paypal.com https://*.paypalobjects.com https://va.vercel-scripts.com",
+  `script-src 'self' 'unsafe-inline'${IS_PRODUCTION ? "" : " 'unsafe-eval'"} https://www.paypal.com https://*.paypal.com https://*.paypalobjects.com https://va.vercel-scripts.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https: ",
+  "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https://*.public.blob.vercel-storage.com",
   "connect-src 'self' https://*.supabase.co https://*.paypal.com https://api-m.paypal.com https://api-m.sandbox.paypal.com https://vitals.vercel-insights.com",
   // Pin PayPal to the specific hostnames the SDK actually loads. Wildcards
@@ -89,6 +91,7 @@ const SECURITY_HEADERS = [
 ]
 
 const nextConfig = {
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {
@@ -119,7 +122,19 @@ const nextConfig = {
       { key: "Referrer-Policy", value: "no-referrer" },
     ]
 
+    const previewHeaders = IS_PRODUCTION
+      ? []
+      : [
+          {
+            source: "/:path*",
+            headers: [
+              { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+            ],
+          },
+        ]
+
     return [
+      ...previewHeaders,
       {
         // Apply security headers to every route.
         source: "/:path*",
@@ -151,7 +166,7 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // Redirect non-www to www for SEO consistency
+      // Redirect non-www to www for SEO consistency.
       {
         source: "/:path*",
         has: [
@@ -196,8 +211,13 @@ const nextConfig = {
         destination: "/practices",
         permanent: true,
       },
-    ];
+      {
+        source: "/articles",
+        destination: "/blog",
+        permanent: true,
+      },
+    ]
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 
 export function NewsletterSection() {
   const [email, setEmail] = useState("")
@@ -39,16 +40,16 @@ export function NewsletterSection() {
   }
 
   return (
-    <section className="py-24">
+    <section className="py-24" aria-labelledby="newsletter-heading">
       <div className="max-w-[740px] mx-auto px-5 md:px-9 text-center">
-        <p className="text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-3">
+        <p className="text-[0.72rem] font-bold tracking-[0.14em] uppercase text-[#806000] mb-3">
           Newsletter
         </p>
-        <h2 className="font-serif text-[clamp(1.8rem,4vw,2.6rem)] font-semibold mb-4">
+        <h2 id="newsletter-heading" className="font-serif text-[clamp(1.8rem,4vw,2.6rem)] font-semibold mb-4">
           Stay Connected
         </h2>
-        <p className="text-charcoal-mid text-base leading-[1.8] max-w-[480px] mx-auto mb-9">
-          Honest reflections on awareness, self-agency, and whatever I&apos;m questioning at the moment. 1–2 emails per month — no noise, no selling, just the work.
+        <p className="text-charcoal-mid text-base leading-[1.8] max-w-[520px] mx-auto mb-9">
+          Honest reflections on awareness, self-agency, new releases, and the questions I am exploring. Expect 1–2 emails per month.
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 justify-center flex-wrap">
           {/* Honeypot — hidden from sighted users + screen readers + tab order. */}
@@ -64,12 +65,17 @@ export function NewsletterSection() {
               onChange={(e) => setCompany(e.target.value)}
             />
           </div>
+          <label htmlFor="newsletter-email" className="sr-only">
+            Email address
+          </label>
           <input
+            id="newsletter-email"
+            name="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Your email address"
-            aria-label="Email address"
+            autoComplete="email"
             required
             disabled={isLoading}
             className="px-6 py-[15px] w-full sm:w-[300px] text-[0.92rem] border-2 border-[#CDCDD2] rounded-full bg-white outline-none font-sans text-charcoal transition-all focus:border-liquid-blue focus:shadow-[0_0_0_3px_rgba(13,110,191,0.07)] disabled:opacity-50"
@@ -82,11 +88,23 @@ export function NewsletterSection() {
             {isLoading ? "Subscribing..." : "Subscribe"}
           </button>
         </form>
-        <p className="mt-4 text-[0.8rem] text-charcoal-mid">We respect your inbox</p>
+        <p className="mt-4 text-[0.8rem] text-charcoal-mid">
+          To stop receiving emails, contact us through the{" "}
+          <Link href="/contact" className="underline hover:text-charcoal">
+            contact page
+          </Link>
+          . See our{" "}
+          <Link href="/privacy" className="underline hover:text-charcoal">
+            Privacy Policy
+          </Link>
+          .
+        </p>
         {message && (
           <p
+            role={message.type === "error" ? "alert" : "status"}
+            aria-live="polite"
             className={`mt-4 text-sm font-semibold ${
-              message.type === "success" ? "text-green-600" : "text-red-600"
+              message.type === "success" ? "text-green-700" : "text-red-700"
             }`}
           >
             {message.text}

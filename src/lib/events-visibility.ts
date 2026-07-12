@@ -1,26 +1,18 @@
 /**
- * Past-events visibility filter for public-facing event listings.
+ * Upcoming-event visibility filter for public-facing views.
  *
  * Rule:
- *   Show an event if EITHER:
- *     - startsAt is in the future (still "upcoming"), OR
- *     - keepVisibleAfterEnd === true (operator opted in to keep visible)
- *
- *   Hide otherwise (past event the operator didn't pin).
+ *   Show an event only when `starts_at` is now or later.
  *
  * Why:
- *   The "Upcoming Events" homepage block + /events listing + sitemap
- *   were leaking past events into views framed as "upcoming." Operator
- *   feedback: this looked broken / embarrassing on the live site.
+ *   The homepage, /events listing, and sitemap all use this helper in surfaces
+ *   described as "upcoming." The previous query also included any past event
+ *   with `keep_visible_after_end = true`, which made completed events appear as
+ *   upcoming. Retained past events need a separately labelled archive/recap
+ *   surface; they must not leak into future-event views.
  *
- *   `keepVisibleAfterEnd` is the existing column on the Event table (set
- *   from the admin event-edit form) — used for events the operator wants
- *   to keep listed after the date passes (e.g., a recap-pending workshop).
- *
- * Schema note:
- *   Targets the canonical snake_case `events` table (post table-reconciliation
- *   migration 2026-05-21). The PascalCase `"Event"` orphan still exists as
- *   a rollback safety net but is not read by application code.
+ * `keep_visible_after_end` remains part of the event model so an archive can use
+ * it later without changing the database. This helper deliberately ignores it.
  *
  * Usage (Supabase PostgREST `.or()` syntax):
  *
@@ -37,13 +29,12 @@
 
 /**
  * Returns the `.or()` clause string for Supabase PostgREST that filters to
- * upcoming-or-pinned events. Anchored to the current wall-clock at call time
- * (so a long-running cron pulling sitemap data over minutes will be consistent
- * within a single request, then refreshed on the next request).
+ * future events. It is anchored to the wall clock at call time, so one request
+ * uses a consistent boundary and the next request gets a fresh one.
  */
 export function upcomingEventsOrClause(): string {
   const nowIso = new Date().toISOString()
-  return `starts_at.gte.${nowIso},keep_visible_after_end.eq.true`
+  return `starts_at.gte.${nowIso}`
 }
 
 /**

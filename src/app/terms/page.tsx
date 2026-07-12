@@ -1,14 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
-// Starting template drafted 2026-05-19. Review with counsel before relying
-// on these terms in a dispute. Key things to confirm: (a) governing-law
-// state (currently a placeholder), (b) age requirement, (c) AI-tools
-// disclaimer wording matches Maya's actual positioning, (d) limitation of
-// liability cap is appropriate for the product price points, (e) the
-// existing /legal disclaimer about psilocybin is referenced rather than
-// duplicated.
-const LAST_UPDATED = "May 19, 2026"
+// Baseline operating terms. These still require counsel review before they are
+// treated as final dispute-defense language, especially for international sales,
+// consumer rights, and the AI reflection tools.
+const LAST_UPDATED = "July 10, 2026"
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -185,10 +181,10 @@ export default function TermsPage() {
       <section className="space-y-3">
         <h2 className="font-serif text-lg font-semibold text-slate-900">14. Governing law and disputes</h2>
         <p>
-          These Terms are governed by the laws of the State of [STATE-TO-BE-CONFIRMED], United States, without regard
-          to its conflict-of-laws principles. Any dispute arising out of or relating to these Terms or the Site that is
-          not resolved through informal good-faith discussion will be brought in the state or federal courts located in
-          [COUNTY-TO-BE-CONFIRMED], [STATE-TO-BE-CONFIRMED], and you consent to the jurisdiction of those courts.
+          These Terms are governed by applicable law, including any mandatory consumer-protection law that cannot be
+          waived by contract. Any dispute arising out of or relating to these Terms or the Site that is not resolved
+          through informal good-faith discussion will be brought in a court that has lawful jurisdiction over the
+          parties and the subject matter. Nothing in this section limits rights that applicable consumer law gives you.
         </p>
       </section>
 
