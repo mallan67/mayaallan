@@ -181,7 +181,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Contact form messages and newsletter subscriptions</strong> are kept until you ask us to delete
-            them or until you unsubscribe.
+            them or to stop receiving emails.
           </li>
         </ul>
       </section>
@@ -189,8 +189,8 @@ export default function PrivacyPage() {
       <section className="space-y-3">
         <h2 className="font-serif text-lg font-semibold text-slate-900">6. Your rights</h2>
         <p>
-          You can ask us to access, correct, or delete the personal information we hold about you. You can also
-          unsubscribe from any marketing email at any time using the link in the email or by writing to us. We will
+          You can ask us to access, correct, or delete the personal information we hold about you. You may stop
+          receiving marketing emails by contacting us through the contact page. We will
           respond to requests within a reasonable time and in line with applicable law.
         </p>
         <p>
