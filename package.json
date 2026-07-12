@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "node scripts/test-crisis-detection.mjs && next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",

@@ -11,7 +11,9 @@ import {
 } from "../src/lib/crisis-classifier.mjs"
 
 let failures = 0
+let ran = 0
 function check(name, fn) {
+  ran++
   try {
     fn()
     console.log(`PASS  ${name}`)
@@ -37,6 +39,13 @@ const CASES = [
   ["I can't do this anymore, this project is exhausting", "normal"],
   ["I want to explore a belief about not being good enough", "normal"],
 
+  // Tier 3 — coercion-tightening regression: benign obstacle / work / rule
+  // phrasing must NOT trip the acute classifier.
+  ["Work keeps me from seeing my family.", "normal"],
+  ["Traffic keeps me from leaving on time.", "normal"],
+  ["My boss won't let me leave early.", "normal"],
+  ["My manager monitors every move we make.", "normal"],
+
   // Tier 1 — explicit danger (hard, sticky)
   ["Everyone would be better off without me", "explicit"],
   ["I have a plan to hurt myself tonight", "explicit"],
@@ -50,6 +59,11 @@ const CASES = [
   ["Nothing feels real right now", "acute"],
   ["My partner won't let me leave the apartment", "acute"],
   ["I hear voices sometimes", "acute"],
+
+  // Tier 2 — genuine coercion / confinement / isolation / fear still caught.
+  ["I'm not allowed to leave the house.", "acute"],
+  ["They took my keys so I can't leave.", "acute"],
+  ["I'm afraid of what he'll do if I leave.", "acute"],
 ]
 for (const [text, tier] of CASES) {
   check(`classify: "${text}" -> ${tier}`, () => assert.equal(tierOf(text), tier))
@@ -120,6 +134,5 @@ check("detectPossibleAcuteState: coercion 'won't let me leave' is acute", () =>
   assert.equal(detectPossibleAcuteState("my partner won't let me leave"), true),
 )
 
-const total = CASES.length + 12
-console.log(`\n${total - failures}/${total} checks passed, ${failures} failed`)
+console.log(`\n${ran - failures}/${ran} checks passed, ${failures} failed`)
 if (failures > 0) process.exit(1)

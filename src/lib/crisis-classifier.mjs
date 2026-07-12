@@ -116,12 +116,19 @@ const ACUTE_STATE_PATTERNS = [
   /\b(?:i\s+)?(?:hear|hearing|heard)\s+voices?\b/i,
   /\bvoices?\s+in\s+my\s+head\b/i,
 
-  // Coercion / control of movement — requires control context ("let me
-  // leave"), NOT preference ("doesn't want me to leave the party").
-  /\b(?:won'?t|will\s+not|does\s*n'?t|doesn'?t|do\s+not)\s+let\s+me\s+(?:leave|go|out|see)\b/i,
-  /\b(?:not\s+allowed|won'?t\s+allow\s+me)\s+to\s+(?:leave|go\s+out|see\s+(?:my\s+)?(?:friends|family))\b/i,
-  /\bkeeps\s+me\s+from\s+(?:leaving|seeing|going)\b/i,
-  /\b(?:controls|monitors|tracks)\s+(?:everything\s+i\s+do|every\s+move|where\s+i\s+go|who\s+i\s+(?:see|talk|call))\b/i,
+  // Coercion / control of movement or isolation — requires a relational
+  // subject (partner/spouse/…) OR explicit confinement / isolation / fear.
+  // Deliberately does NOT match generic obstacle language such as "work/
+  // traffic keeps me from …", "my boss won't let me leave early", or
+  // "monitors every move" — all common, benign, non-abuse phrasings.
+  /\b(?:partner|spouse|husband|wife|boyfriend|girlfriend)\s+(?:won'?t|will\s+not|does\s*n'?t|doesn'?t|do\s+not)\s+let\s+me\s+(?:leave|go\s+out|go\b|out\b)/i,
+  /\bnot\s+allowed\s+to\s+leave\s+(?:the\s+)?(?:house|apartment|flat|room|home)\b/i,
+  /\b(?:won'?t|will\s+not|does\s*n'?t|doesn'?t|do\s+not)\s+let\s+me\s+leave\s+(?:the\s+)?(?:house|apartment|flat|room|home)\b/i,
+  /\b(?:won'?t|will\s+not|does\s*n'?t|doesn'?t|do\s+not)\s+let\s+me\s+see\s+(?:my\s+)?(?:friends|family|kids|children|parents|mom|dad|mother|father)\b/i,
+  /\bcontrols?\s+(?:where\s+i\s+(?:go|can\s+go)|who\s+i\s+(?:see|talk\s+to|can\s+see|can\s+talk\s+to))\b/i,
+  /\btook\s+(?:my|the)\s+(?:keys|phone|car\s+keys|wallet|passport)\b[^.!?]{0,40}?\b(?:can'?t|cannot|couldn'?t|could\s+not)\s+leave\b/i,
+  /\b(?:afraid|scared|terrified)\s+(?:of\s+)?what\s+(?:he|she|they)(?:'?ll|'?s|\s+will|\s+would|\s+might)?\s+(?:do|happen)\s+if\s+i\s+leave\b/i,
+  /\b(?:afraid|scared|terrified)\s+of\s+what\s+will\s+happen\s+if\s+i\s+leave\b/i,
 ]
 
 /** Cap scan length to bound regex work on adversarial input. */
