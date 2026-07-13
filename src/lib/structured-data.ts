@@ -254,7 +254,7 @@ export const AUTHOR_FAQS: FAQItem[] = [
   },
   {
     question: "What does Maya Allan write about?",
-    answer: "Maya Allan writes about psilocybin integration, post-journey reflection, and self-inquiry. Her books offer educational guidance for readers navigating and making sense of their own psychedelic experiences.",
+    answer: "Maya Allan writes about psilocybin integration, post-journey reflection, and self-inquiry. Her books offer educational guidance for readers reflecting on and integrating their own psychedelic experiences.",
   },
   {
     question: "What is psilocybin integration?",
@@ -323,7 +323,7 @@ export const PSILOCYBIN_GUIDANCE_FAQS: FAQItem[] = [
   },
   {
     question: "Can psilocybin help with depression?",
-    answer: "This is educational information, not medical advice or a treatment claim. Depression is a serious condition that should be addressed with a qualified professional. Psilocybin is an active area of research, but it is not an approved treatment in most places, is not appropriate for everyone, and carries real risks. Please consult a licensed healthcare provider.",
+    answer: "This is educational information, not medical advice or a treatment claim. Depression is a serious condition that should be addressed with a qualified professional. Psilocybin is an active area of research, but it is not generally approved as a treatment, is not appropriate for everyone, and carries real risks. Please consult a licensed healthcare provider.",
   },
   {
     question: "Is psilocybin used in trauma work?",
