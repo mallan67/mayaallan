@@ -8,6 +8,8 @@ import {
   BOOK_PROFILES,
   BOOK_ASINS,
   SITE_URL,
+  SITE_SEO_DESCRIPTION,
+  bookMachineSummary,
 } from "@/lib/identity"
 
 // Re-export so existing imports from structured-data keep working.
@@ -315,7 +317,7 @@ export function generateWebSiteSchema(siteName = "Maya Allan", siteUrl = SITE_UR
     "@type": "WebSite",
     name: siteName,
     url: siteUrl,
-    description: "Maya Allan is an author and educator offering non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry.",
+    description: SITE_SEO_DESCRIPTION,
     publisher: {
       "@type": "Person",
       name: "Maya Allan",
@@ -411,7 +413,8 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
     "@type": "Book",
     name: book.title,
     ...(book.subtitle1 && { alternativeHeadline: book.subtitle1 }),
-    ...(book.blurb && { description: book.blurb }),
+    // Machine-facing summary, NEVER the mutable sales blurb (book.blurb).
+    description: bookMachineSummary(book.slug, book.title),
     ...(book.isbn && { isbn: book.isbn }),
     ...(bookIdentifiers.length > 0 && { identifier: bookIdentifiers }),
     ...(book.copyright && { copyrightNotice: book.copyright }),

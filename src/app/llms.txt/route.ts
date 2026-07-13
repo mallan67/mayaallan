@@ -7,6 +7,7 @@ import {
   AUTHOR_BIO,
   AUTHOR_PROFILES,
   BOOK_PROFILES,
+  bookMachineSummary,
 } from "@/lib/identity"
 
 // Friendly display label per retailer host. Falls back to the bare hostname for
@@ -105,11 +106,12 @@ export async function GET() {
   try {
     const { data: books } = await supabaseAdmin
       .from(Tables.books)
-      .select("slug, title, subtitle1, blurb")
+      .select("slug, title, subtitle1")
       .eq("is_published", true)
       .eq("is_visible", true)
     for (const book of books ?? []) {
-      const summary = book.subtitle1 || book.blurb?.slice(0, 200) || ""
+      // Machine-facing summary, never the mutable Supabase sales blurb.
+      const summary = bookMachineSummary(book.slug, book.title)
       lines.push(`- [${book.title}](${SITE_URL}/books/${book.slug}): ${summary}`)
 
       // Retailer / catalog links from BOOK_PROFILES — same entity graph as the

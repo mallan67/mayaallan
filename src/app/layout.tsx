@@ -9,7 +9,7 @@ import ConsentBanner from "@/components/ConsentBanner"
 import { GatedAnalytics, GatedMarketing } from "@/components/AnalyticsGated"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structured-data"
-import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL } from "@/lib/identity"
+import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL, SITE_SEO_DESCRIPTION } from "@/lib/identity"
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -56,7 +56,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
 
   const siteName = settings?.siteName || "Maya Allan"
-  const description = settings?.tagline || "Maya Allan is an author and educator offering non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
+  // Canonical SEO description — intentionally NOT settings.tagline, so an
+  // admin-edited tagline can never silently override site-wide positioning
+  // in <meta description>, OpenGraph, or Twitter cards.
+  const description = SITE_SEO_DESCRIPTION
 
   // Build icons array - use custom icon if available, otherwise use defaults
   const icons: Metadata["icons"] = {

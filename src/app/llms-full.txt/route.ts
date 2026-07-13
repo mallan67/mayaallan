@@ -4,7 +4,7 @@ import { listPosts, getPost } from "@/lib/posts"
 import { listScenarios, getScenario } from "@/lib/scenarios"
 import { loadFaq } from "@/lib/faq"
 import { loadGlossary } from "@/lib/glossary"
-import { SITE_URL, AUTHOR_NAME, AUTHOR_BIO } from "@/lib/identity"
+import { SITE_URL, AUTHOR_NAME, AUTHOR_BIO, bookMachineSummary } from "@/lib/identity"
 
 // =============================================================================
 // /llms-full.txt — the FULL-CONTENT companion to /llms.txt.
@@ -76,14 +76,15 @@ export async function GET() {
   try {
     const { data: books } = await supabaseAdmin
       .from(Tables.books)
-      .select("slug, title, subtitle1, blurb")
+      .select("slug, title, subtitle1")
       .eq("is_published", true)
       .eq("is_visible", true)
     for (const book of books ?? []) {
       lines.push(`### ${book.title}`)
       if (book.subtitle1) lines.push(`_${book.subtitle1}_`)
       lines.push("")
-      if (book.blurb) lines.push(book.blurb)
+      // Machine-facing summary, never the mutable Supabase sales blurb.
+      lines.push(bookMachineSummary(book.slug, book.title))
       lines.push("")
       lines.push(`Source: ${SITE_URL}/books/${book.slug}`)
       lines.push("")

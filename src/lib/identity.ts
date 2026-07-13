@@ -111,6 +111,34 @@ export const BOOK_ASINS: Record<string, string> = {
 }
 
 // -----------------------------------------------------------------------------
+// BOOK_MACHINE_SUMMARIES — machine-facing book descriptions
+// -----------------------------------------------------------------------------
+// DELIBERATELY SEPARATE from the mutable marketing blurb stored in Supabase
+// (`books.blurb`), which is human sales copy and may be edited freely in admin.
+// A sales blurb must never become machine-readable authority copy: these
+// curated summaries feed the Book JSON-LD `description`, the book FAQ
+// ("What is this book about?"), and the /llms.txt + /llms-full.txt feeds, so
+// structured/authority positioning stays non-clinical no matter what the blurb
+// says. Editorial copy only — never regex-sanitized blurb.
+export const BOOK_MACHINE_SUMMARIES: Record<string, string> = {
+  "psilocybin-integration-guide":
+    "Psilocybin Integration Guide is an educational resource for post-experience reflection, integration, and self-inquiry. It offers practical frameworks for making sense of meaningful or difficult experiences and applying insights to everyday life. It does not provide instructions for obtaining, dosing, or using psilocybin and is not a substitute for medical, legal, or professional advice.",
+}
+
+/**
+ * Machine-facing summary for a book — the single source used by JSON-LD, the
+ * book FAQ, and the llms.txt feeds. Never returns the mutable sales blurb.
+ * Falls back to a generic non-clinical sentence for books without a curated
+ * summary (so a new book can never silently leak an unsanitized blurb).
+ */
+export function bookMachineSummary(slug: string, title?: string): string {
+  return (
+    BOOK_MACHINE_SUMMARIES[slug] ??
+    `${title ? `"${title}"` : "This book"} by Maya Allan is a non-clinical, educational resource for post-experience reflection, integration, and self-inquiry. It does not provide instructions for obtaining, dosing, or using psilocybin and is not a substitute for medical, legal, or professional advice.`
+  )
+}
+
+// -----------------------------------------------------------------------------
 // AUTHOR_IDENTIFIERS — structured identifiers that some schema types accept
 // -----------------------------------------------------------------------------
 // These are emitted as Person.identifier[] in JSON-LD so search engines can
@@ -141,6 +169,16 @@ export const AUTHOR_BIO =
 
 export const AUTHOR_NAME = "Maya Allan"
 export const AUTHOR_JOB_TITLE = "Author and Educator"
+
+// -----------------------------------------------------------------------------
+// SITE_SEO_DESCRIPTION — canonical machine-facing site description
+// -----------------------------------------------------------------------------
+// Used for the global <meta name="description">, OpenGraph, and Twitter cards.
+// Kept independent of the admin-editable `site_settings.tagline` so a future
+// tagline edit can never silently reintroduce off-brand positioning into the
+// SEO surface. The tagline may still be used for visible display copy.
+export const SITE_SEO_DESCRIPTION =
+  "Maya Allan is an author and educator offering non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
 
 // -----------------------------------------------------------------------------
 // SUPPORTED_LOCALES — i18n configuration

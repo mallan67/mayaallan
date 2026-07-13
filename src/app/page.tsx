@@ -6,7 +6,7 @@ import { MessageCircle, Dna, Brain, ListChecks, HeartPulse, PenLine, Star, Calen
 import { NewsletterSection } from "@/components/NewsletterSection"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateAuthorSchema } from "@/lib/structured-data"
-import { SITE_URL } from "@/lib/identity"
+import { SITE_URL, SITE_SEO_DESCRIPTION } from "@/lib/identity"
 import { upcomingEventsOrClause } from "@/lib/events-visibility"
 
 export const revalidate = 300 // 5 minutes
@@ -15,7 +15,7 @@ async function getFeaturedBookForMetadata() {
   try {
     const { data, error } = await supabaseAdmin
       .from(Tables.books)
-      .select("title, blurb, cover_url, og_image_url")
+      .select("title, cover_url, og_image_url")
       .eq("is_featured", true)
       .eq("is_published", true)
       .eq("is_visible", true)
@@ -36,17 +36,9 @@ export async function generateMetadata(): Promise<Metadata> {
   // Use absolute title (no template suffix) to control exact SERP wording
   const title = { absolute: "Maya Allan — Author of the Psilocybin Integration Guide" }
 
-  // Truncate at the last whole word boundary so descriptions don't cut mid-word.
-  const truncateAtWord = (str: string, max = 155) => {
-    if (str.length <= max) return str
-    const slice = str.slice(0, max)
-    const lastSpace = slice.lastIndexOf(" ")
-    return slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…"
-  }
-
-  const description = featuredBook?.blurb
-    ? truncateAtWord(featuredBook.blurb, 155)
-    : "Maya Allan — author and integration guide. Practical, research-informed writing on belief work, nervous-system regulation, and psilocybin integration."
+  // Canonical SEO description — never the mutable book sales blurb, so the
+  // homepage meta/OG/Twitter positioning stays non-clinical and consistent.
+  const description = SITE_SEO_DESCRIPTION
 
   // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
   // The dynamic image generator creates properly sized images that work on Facebook, LinkedIn, etc.

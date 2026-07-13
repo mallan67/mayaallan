@@ -29,7 +29,7 @@ async function getFeaturedBook() {
 
   try {
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/books?is_featured=eq.true&is_published=eq.true&is_visible=eq.true&select=title,cover_url,blurb&limit=1`,
+      `${supabaseUrl}/rest/v1/books?is_featured=eq.true&is_published=eq.true&is_visible=eq.true&select=title,cover_url&limit=1`,
       {
         headers: {
           apikey: supabaseKey,
