@@ -250,11 +250,11 @@ export function generateHowToSchema(
 export const AUTHOR_FAQS: FAQItem[] = [
   {
     question: "Who is Maya Allan?",
-    answer: "Maya Allan is an author and researcher exploring consciousness, psychedelic integration, and self-agency. She writes practical guides for practitioners, healers, facilitators, and individuals navigating transformative experiences with psilocybin and plant medicine.",
+    answer: "Maya Allan is an author and educator exploring consciousness, psychedelic integration, and self-agency. She writes non-clinical, educational resources for readers making sense of their own psilocybin experiences and building a personal reflective practice.",
   },
   {
     question: "What does Maya Allan write about?",
-    answer: "Maya Allan writes about psilocybin integration, psychedelic healing, and inner transformation. Her books provide practical guidance for solo journeyers, practitioners, healers, and facilitators working with plant medicine and consciousness exploration.",
+    answer: "Maya Allan writes about psilocybin integration, post-journey reflection, and self-inquiry. Her books offer non-clinical, educational guidance for readers navigating and making sense of their own psychedelic experiences.",
   },
   {
     question: "What is psilocybin integration?",
@@ -262,7 +262,7 @@ export const AUTHOR_FAQS: FAQItem[] = [
   },
   {
     question: "Who are Maya Allan's books for?",
-    answer: "Maya Allan's books are designed for practitioners, healers, facilitators, psychedelic guides, therapists, integration specialists, and solo journeyers seeking practical guidance for navigating transformative psilocybin experiences with clarity and self-agency.",
+    answer: "Maya Allan's books are written for readers navigating their own psilocybin experiences — anyone seeking clear, educational, non-clinical guidance for reflection, integration, and self-agency.",
   },
 ]
 
@@ -297,7 +297,7 @@ export const PSILOCYBIN_GUIDANCE_FAQS: FAQItem[] = [
   },
   {
     question: "Why do mushrooms bring up difficult emotions?",
-    answer: "Psilocybin can surface suppressed emotions, unprocessed memories, and psychological material that normally stays hidden. This isn't a sign something is wrong—it's often the healing process at work. The mushroom experience can help you face and process what you've been avoiding, leading to emotional release and integration when approached with acceptance.",
+    answer: "Psilocybin can surface suppressed emotions, unprocessed memories, and psychological material that normally stays hidden. This isn't necessarily a sign something is wrong. Many people find that facing what they've been avoiding — when approached with acceptance and support — becomes part of their reflection and integration afterward.",
   },
   {
     question: "How long does a mushroom trip last?",
@@ -322,18 +322,18 @@ export const PSILOCYBIN_GUIDANCE_FAQS: FAQItem[] = [
     answer: "Making sense of psychedelic insights takes time and patience. Write everything down without judgment, then revisit your notes over several days. Look for themes and patterns. Discuss your experience with someone you trust. Some insights are immediately clear while others reveal meaning gradually. Not everything needs to be understood intellectually—some wisdom integrates through changed behavior and perspective.",
   },
 
-  // HEALING & GROWTH - Therapeutic potential
+  // RESEARCH & RISK — educational overview, not treatment claims
   {
     question: "Can psilocybin help with anxiety?",
-    answer: "Research suggests psilocybin may help reduce anxiety by promoting new perspectives, emotional processing, and breaking rigid thought patterns. Many people report decreased anxiety following meaningful psilocybin experiences, particularly when combined with proper preparation and integration. However, psilocybin isn't appropriate for everyone—those with certain conditions should consult healthcare providers.",
+    answer: "This is an educational overview, not medical advice, and nothing here is a treatment claim. Some research has explored psilocybin and anxiety, and some people report shifts in perspective afterward, but findings vary and psilocybin is not appropriate for everyone. Anyone considering it in relation to a health concern should speak with a qualified healthcare professional.",
   },
   {
     question: "Can mushrooms help with depression?",
-    answer: "Clinical research shows promising results for psilocybin-assisted therapy in treating depression, including treatment-resistant cases. Psilocybin may help by promoting neuroplasticity, breaking negative thought loops, and facilitating emotional breakthroughs. The therapeutic benefit comes not just from the substance but from the full process of preparation, experience, and integration.",
+    answer: "This is educational information, not medical advice or a treatment claim. Depression is a serious condition that should be addressed with a qualified professional. Psilocybin is an active area of research, but it is not an approved treatment in most places, is not appropriate for everyone, and carries real risks. Please consult a licensed healthcare provider.",
   },
   {
-    question: "How can psilocybin support healing from trauma?",
-    answer: "Psilocybin may support trauma healing by allowing access to difficult memories with reduced fear response, promoting emotional processing, and helping reframe traumatic narratives. The experience can create distance from pain while maintaining connection to the memory, enabling new perspectives. Trauma work with psilocybin is best done with professional support and careful integration.",
+    question: "Is psilocybin used in trauma work?",
+    answer: "This is educational information, not medical advice or a treatment claim. Trauma is best worked with alongside a qualified, trauma-informed professional. Psilocybin is not an approved trauma treatment, is not right for everyone, and can be destabilizing without proper support. If you are processing trauma, please work with a licensed professional.",
   },
   {
     question: "Can psychedelics help with self-discovery?",
@@ -363,7 +363,7 @@ export const BOOK_FAQS = (bookTitle: string, bookDescription?: string): FAQItem[
   // What the book is about
   {
     question: `What is "${bookTitle}" about?`,
-    answer: bookDescription || `"${bookTitle}" by Maya Allan is a comprehensive guide for understanding and integrating psilocybin experiences, offering practical wisdom for practitioners, healers, and individuals on their journey of inner transformation.`,
+    answer: bookDescription || `"${bookTitle}" by Maya Allan is an educational guide for understanding and reflecting on psilocybin experiences, offering practical, non-clinical wisdom for readers doing their own integration.`,
   },
   {
     question: `What topics does "${bookTitle}" cover?`,
@@ -372,15 +372,15 @@ export const BOOK_FAQS = (bookTitle: string, bookDescription?: string): FAQItem[
   // Who benefits from the book
   {
     question: `Who is "${bookTitle}" for?`,
-    answer: `"${bookTitle}" is written for practitioners, healers, facilitators, psychedelic guides, therapists, integration coaches, and solo journeyers who want practical, grounded guidance for navigating transformative experiences with psilocybin and plant medicine.`,
+    answer: `"${bookTitle}" is written for readers navigating their own psilocybin experiences who want practical, grounded, non-clinical guidance for reflection and integration.`,
   },
   {
     question: `Can beginners use "${bookTitle}"?`,
-    answer: `Yes, "${bookTitle}" is accessible to beginners while also offering depth for experienced practitioners. It provides foundational concepts for those new to psilocybin work alongside advanced integration frameworks for seasoned guides and facilitators.`,
+    answer: `Yes, "${bookTitle}" is accessible to beginners while also offering depth for experienced readers. It provides foundational concepts for those new to integration alongside more advanced reflection frameworks.`,
   },
   {
     question: `Is "${bookTitle}" suitable for therapists and mental health professionals?`,
-    answer: `Yes, "${bookTitle}" offers valuable frameworks for therapists, counselors, and mental health professionals interested in psychedelic-assisted therapy, integration support, and understanding the therapeutic potential of psilocybin experiences.`,
+    answer: `"${bookTitle}" is an educational resource, not a clinical or professional text, and it makes no therapeutic claims. Readers from many backgrounds have found its reflection frameworks useful, but it is not a substitute for professional training or care.`,
   },
   {
     question: `Can I use "${bookTitle}" for solo psilocybin experiences?`,
@@ -393,12 +393,12 @@ export const BOOK_FAQS = (bookTitle: string, bookDescription?: string): FAQItem[
   },
   {
     question: `How is "${bookTitle}" different from other psilocybin books?`,
-    answer: `"${bookTitle}" by Maya Allan focuses on practical integration rather than just the experience itself. It provides actionable frameworks for practitioners and individuals, emphasizing self-agency, grounded wisdom, and sustainable transformation.`,
+    answer: `"${bookTitle}" by Maya Allan focuses on practical integration rather than just the experience itself. It offers actionable frameworks for readers doing their own reflection, emphasizing self-agency and grounded, non-clinical wisdom.`,
   },
   // Author credibility
   {
     question: `Who wrote "${bookTitle}"?`,
-    answer: `"${bookTitle}" was written by Maya Allan, an author and researcher specializing in psilocybin integration, psychedelic healing, consciousness exploration, and practical guides for inner transformation.`,
+    answer: `"${bookTitle}" was written by Maya Allan, an author and educator focused on psilocybin integration, post-journey reflection, self-inquiry, and consciousness exploration.`,
   },
 ]
 
@@ -408,7 +408,7 @@ export function generateWebSiteSchema(siteName = "Maya Allan", siteUrl = SITE_UR
     "@type": "WebSite",
     name: siteName,
     url: siteUrl,
-    description: "Official website of Maya Allan - Author, Speaker, and Wellness Advocate",
+    description: "Maya Allan is an author and educator offering non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry.",
     publisher: {
       "@type": "Person",
       name: "Maya Allan",
@@ -479,7 +479,7 @@ export interface BookSchemaOptions {
 export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: BookSchemaOptions) {
   // Combine book tags with relevant audience keywords for better discoverability
   const baseKeywords = book.tagsCsv || ""
-  const audienceKeywords = "practitioners, healers, facilitators, psychedelic guides, solo journeyers, therapists, integration specialists"
+  const audienceKeywords = "readers, self-guided journeyers, people exploring psilocybin integration and self-inquiry"
   const combinedKeywords = baseKeywords ? `${baseKeywords}, ${audienceKeywords}` : audienceKeywords
 
   // Per-book external listings (Amazon, Goodreads, Google Books, etc.) so the
@@ -531,12 +531,12 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
     genre: ["Self-Help", "Body, Mind & Spirit", "Spirituality"],
     audience: {
       "@type": "Audience",
-      audienceType: "Practitioners, Healers, Facilitators, Guides, Solo Experiencers",
+      audienceType: "Readers exploring psilocybin integration, reflection, and self-inquiry",
     },
     about: [
       { "@type": "Thing", name: "Psilocybin" },
       { "@type": "Thing", name: "Psychedelic Integration" },
-      { "@type": "Thing", name: "Plant Medicine" },
+      { "@type": "Thing", name: "Post-Journey Reflection" },
       { "@type": "Thing", name: "Consciousness" },
       { "@type": "Thing", name: "Inner Transformation" },
       { "@type": "Thing", name: "Shadow Work" },
@@ -594,10 +594,9 @@ export function generateAuthorSchema(siteUrl = SITE_URL, bio?: string, imageUrl?
     ...(identifiers && { identifier: identifiers }),
     knowsAbout: [
       "Psilocybin integration",
-      "Psychedelic-assisted therapy",
+      "Post-journey reflection",
+      "Self-inquiry",
       "Consciousness studies",
-      "Inner transformation",
-      "Plant medicine",
       "Shadow work",
       "Spiritual integration",
     ],

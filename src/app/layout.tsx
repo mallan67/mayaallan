@@ -56,7 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
 
   const siteName = settings?.siteName || "Maya Allan"
-  const description = settings?.tagline || "Official website of Maya Allan - Author, Speaker, and Wellness Advocate"
+  const description = settings?.tagline || "Maya Allan is an author and educator offering non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
 
   // Build icons array - use custom icon if available, otherwise use defaults
   const icons: Metadata["icons"] = {
@@ -74,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(SITE_URL),
     title: {
-      default: `${siteName} | Author`,
+      default: `${siteName} | Psilocybin Integration Author & Educator`,
       template: `%s | ${siteName}`,
     },
     description,
@@ -84,25 +84,16 @@ export async function generateMetadata(): Promise<Metadata> {
     publisher: "Maya Allan",
     keywords: [
       "Maya Allan",
-      "author",
-      "books",
+      "Maya Allan author",
+      "Psilocybin Integration Guide",
       "psilocybin integration",
-      "mushroom guide",
       "psychedelic integration",
-      "integration guide",
-      "practitioners",
-      "healers",
-      "facilitators",
-      "psychedelic guides",
-      "solo journey",
-      "mushroom experiences",
-      "psilocybin therapy",
-      "psychedelic healing",
-      "inner transformation",
+      "post-journey reflection",
+      "integration journaling",
+      "self-inquiry",
+      "consciousness author",
       "self-agency",
-      "wellness",
-      "consciousness",
-      "plant medicine",
+      "books",
     ],
     robots: {
       index: true,

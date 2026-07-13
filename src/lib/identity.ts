@@ -133,14 +133,14 @@ export const AUTHOR_IDENTIFIERS: AuthorIdentifier[] = [
 // Keep this in sync with Amazon Author Central + Goodreads bio for consistency.
 // Google rewards consistent bios across the web — it's a "same entity" signal.
 export const AUTHOR_BIO =
-  "Maya Allan is an author and researcher specializing in psilocybin integration, " +
-  "consciousness exploration, and the practical work of inner transformation. Her work " +
-  "draws on peer-reviewed psychedelic research, traditional wisdom, and decades of " +
-  "facilitation experience to support practitioners, healers, facilitators, and solo " +
-  "journeyers navigating non-ordinary states of consciousness."
+  "Maya Allan is an author and educator focused on psilocybin integration, post-journey " +
+  "reflection, and self-inquiry. She writes non-clinical, educational resources — including " +
+  "the Psilocybin Integration Guide — that help readers make sense of their own experiences " +
+  "and build a personal reflective practice. Her work centers on personal agency: the " +
+  "meaning-making after an experience is the reader's own to do."
 
 export const AUTHOR_NAME = "Maya Allan"
-export const AUTHOR_JOB_TITLE = "Author and Researcher"
+export const AUTHOR_JOB_TITLE = "Author and Educator"
 
 // -----------------------------------------------------------------------------
 // SUPPORTED_LOCALES — i18n configuration

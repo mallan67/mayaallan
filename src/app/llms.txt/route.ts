@@ -52,10 +52,11 @@ function retailerLabel(url: string): string {
 // Spec: https://llmstxt.org/
 //
 // What this file does:
-//   ChatGPT, Claude, Perplexity, Google AI Overviews, and other AI engines
-//   read /llms.txt to figure out (a) what this site is about and (b) which
-//   specific pages are worth citing. Sites with a clean llms.txt get cited
-//   noticeably more often because the AI doesn't have to guess.
+//   ChatGPT, Claude, Perplexity, Google AI Overviews, and other AI engines can
+//   read /llms.txt to help identify (a) what this site is about and (b) which
+//   specific pages are worth citing. NOTE: llms.txt is an emerging, unproven
+//   convention — treat it as an experimental discovery aid, not a guaranteed
+//   ranking or citation mechanism.
 //
 // Why it's dynamic (route handler vs static public/llms.txt):
 //   So newly-published books, blog posts, and scenario pages appear in the
@@ -80,9 +81,9 @@ export async function GET() {
   lines.push("- Psychedelic-assisted self-inquiry and shadow work")
   lines.push("- Consciousness exploration and non-ordinary states")
   lines.push("- Ego dissolution, mystical experience, and re-entry")
-  lines.push("- Inner child healing, trauma integration, and self-agency")
-  lines.push("- Preparation, set & setting, dosage safety")
-  lines.push("- Practical guidance for practitioners, healers, facilitators, and solo journeyers")
+  lines.push("- Inner-child reflection, integrating difficult experiences, and self-agency")
+  lines.push("- Preparation, set & setting, and risk-awareness information")
+  lines.push("- Educational resources for readers navigating their own integration and reflection")
   lines.push("")
 
   // Author profiles — verified external presences. Mirrors the Person schema's
@@ -133,7 +134,7 @@ export async function GET() {
   lines.push("## Reference content")
   lines.push("")
   lines.push(`- [Glossary of Psilocybin & Integration Terms](${SITE_URL}/glossary): Canonical definitions for the vocabulary that comes up around psilocybin journeys and integration — ego dissolution, set & setting, default mode network, REBUS model, shadow work, inner child, mystical experience, and ~20 more. DefinedTermSet schema; each term is a deep-link target.`)
-  lines.push(`- [Reader Questions from Psilocybin Integration Guide](${SITE_URL}/faq): Direct answers from Maya Allan's book on ego dissolution, integration, set and setting, shadow work, inner child healing, mystical experience, REBUS model, trauma, and safety. Companion reference to the 40-scenario book.`)
+  lines.push(`- [Reader Questions from Psilocybin Integration Guide](${SITE_URL}/faq): Direct answers from Maya Allan's book on ego dissolution, integration, set and setting, shadow work, inner-child reflection, mystical experience, REBUS model, and safety. Companion reference to the 40-scenario book.`)
   lines.push(`- [About ${AUTHOR_NAME}](${SITE_URL}/about): Author biography, background, work focus.`)
   lines.push(`- [Integration Reflection tool](${SITE_URL}/integration-reflection): Free AI-guided post-journey integration session.`)
   lines.push(`- [Belief Inquiry tool](${SITE_URL}/belief-inquiry): Structured self-inquiry framework for limiting beliefs.`)
