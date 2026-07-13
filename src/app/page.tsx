@@ -320,7 +320,7 @@ export default async function HomePage() {
             </h1>
 
             <p className="text-[1.05rem] text-white/80 leading-[1.8] mb-10">
-              I write about what most people are afraid to question — inherited beliefs, old patterns, the stories that quietly run our lives. My work is for anyone ready to stop outsourcing their inner work and start authoring their own path.
+              I write about what most people are afraid to question — inherited beliefs, old patterns, the stories that quietly run our lives. My work is for anyone ready to take ownership of their own reflection and start authoring their own path.
             </p>
 
             <div className="flex flex-wrap gap-3.5 mb-12">
@@ -397,7 +397,7 @@ export default async function HomePage() {
               </div>
               <h3 className="font-serif text-xl font-medium mb-3.5">Mental Reshaping</h3>
               <p className="text-[0.9rem] text-charcoal-mid leading-[1.8]">
-                The mind forms in ways we rarely examine. I focus on practical, research-informed tools for examining it — not abstract theories, but things you can actually use.
+                The mind forms in ways we rarely examine. I focus on practical tools for examining it — not abstract theories, but things you can actually use.
               </p>
             </article>
           </div>

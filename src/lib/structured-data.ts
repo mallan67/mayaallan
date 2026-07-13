@@ -254,7 +254,7 @@ export const AUTHOR_FAQS: FAQItem[] = [
   },
   {
     question: "What does Maya Allan write about?",
-    answer: "Maya Allan writes about psilocybin integration, post-journey reflection, and self-inquiry. Her books offer non-clinical, educational guidance for readers navigating and making sense of their own psychedelic experiences.",
+    answer: "Maya Allan writes about psilocybin integration, post-journey reflection, and self-inquiry. Her books offer educational guidance for readers navigating and making sense of their own psychedelic experiences.",
   },
   {
     question: "What is psilocybin integration?",
@@ -262,7 +262,7 @@ export const AUTHOR_FAQS: FAQItem[] = [
   },
   {
     question: "Who are Maya Allan's books for?",
-    answer: "Maya Allan's books are written for readers navigating their own psilocybin experiences — anyone seeking clear, educational, non-clinical guidance for reflection, integration, and self-agency.",
+    answer: "Maya Allan's books are written for readers navigating their own psilocybin experiences — anyone seeking clear, educational guidance for reflection, integration, and self-agency.",
   },
 ]
 
@@ -272,54 +272,48 @@ export const AUTHOR_FAQS: FAQItem[] = [
 // =============================================================================
 
 export const PSILOCYBIN_GUIDANCE_FAQS: FAQItem[] = [
-  // PREPARATION - Before the experience
+  // This site is about reflection, integration, and education AFTER an
+  // experience — not how to obtain, dose, or use psilocybin. Every answer is
+  // educational only and is not medical, legal, or professional advice.
+
+  // BOUNDARY
   {
-    question: "How do I prepare for my first mushroom experience?",
-    answer: "Preparing for your first mushroom experience involves creating a safe physical environment (set and setting), clarifying your intentions, arranging for uninterrupted time, having water and comfort items nearby, and ideally having a trusted person available. Mental preparation includes being in a stable emotional state and approaching the experience with openness and respect.",
-  },
-  {
-    question: "What should I know before taking psilocybin?",
-    answer: "Before taking psilocybin, understand that experiences vary widely, effects typically last 4-6 hours, and integration afterward is essential for lasting benefit. Prepare your environment, set clear intentions, avoid mixing with other substances, ensure you're in a stable mental state, and have support available. Research any medication interactions and consider starting with a lower dose.",
-  },
-  {
-    question: "Is it safe to take mushrooms alone?",
-    answer: "Solo mushroom journeys can be meaningful but require extra preparation. Ensure you're in a safe, comfortable environment, start with a lower dose, have emergency contacts available, and remove potential hazards. Many people benefit from having a trip sitter, especially for early experiences. Solo journeys are best suited for those with prior experience who feel emotionally stable.",
-  },
-  {
-    question: "How do I set intentions for a psilocybin journey?",
-    answer: "Setting intentions involves reflecting on what you hope to explore, heal, or understand. Write down 1-3 clear intentions without being too rigid about outcomes. Common intentions include seeking clarity on life decisions, processing grief or trauma, connecting with creativity, or simply being open to what arises. Hold intentions lightly—the medicine often reveals what you need, not what you expect.",
+    question: "Does this site explain how to use or dose psilocybin?",
+    answer: "No. This site is about reflection and integration after an experience, and general education. It does not provide instructions for obtaining, dosing, or using psilocybin. Psilocybin is illegal in many places and carries real risks; for anything about use, dosing, or safety, consult qualified professionals and check your local laws.",
   },
 
-  // DURING - Navigating the experience
+  // REFLECTION & MEANING-MAKING
   {
-    question: "What do I do during a difficult mushroom experience?",
-    answer: "During a challenging moment, remember: breathe deeply, change your environment slightly (different room, lighting, or music), remind yourself the effects are temporary, and surrender rather than resist. Difficult experiences often carry the deepest insights. Ground yourself by feeling your body, focusing on breath, or holding a comforting object. Having a trusted person nearby can help.",
-  },
-  {
-    question: "Why do mushrooms bring up difficult emotions?",
-    answer: "Psilocybin can surface suppressed emotions, unprocessed memories, and psychological material that normally stays hidden. This isn't necessarily a sign something is wrong. Many people find that facing what they've been avoiding — when approached with acceptance and support — becomes part of their reflection and integration afterward.",
-  },
-  {
-    question: "How long does a mushroom trip last?",
-    answer: "A typical psilocybin experience lasts 4-6 hours, with peak effects occurring 2-3 hours after ingestion. The come-up takes 30-60 minutes, the peak lasts 2-3 hours, and the gradual return to baseline takes another 2-3 hours. Plan for the full day to be free, as you'll likely want rest and reflection time afterward.",
-  },
-
-  // AFTER - Integration and meaning-making
-  {
-    question: "What should I do after a mushroom experience?",
-    answer: "After a mushroom experience, prioritize rest and gentle activities. Journal your insights while they're fresh, even if they seem unclear. Avoid major decisions for a few days. Spend time in nature, practice meditation, and allow yourself to process. The real work of integration—applying insights to your life—unfolds over days and weeks following the experience.",
+    question: "What is psilocybin integration?",
+    answer: "Integration is the personal process of making meaning from a psilocybin experience and applying any insights to everyday life. It usually involves reflection, journaling, and unhurried processing over days and weeks. It is ongoing personal work rather than a fixed technique or a treatment.",
   },
   {
     question: "How do I integrate a psilocybin experience?",
-    answer: "Integration involves making meaning from your experience and applying insights to daily life. Key practices include journaling, discussing with a trusted person or therapist, meditation, creative expression, and making concrete changes aligned with your insights. Integration is ongoing—revisit your notes periodically and notice how your perspective evolves over time.",
-  },
-  {
-    question: "Why do I feel different after taking mushrooms?",
-    answer: "Feeling different after mushrooms is common and can include increased openness, shifted perspectives, emotional sensitivity, or a sense of renewed purpose. Psilocybin can create lasting changes in how you perceive yourself and the world. This \"afterglow\" period is valuable for integration. If difficult feelings persist beyond a few weeks, consider speaking with an integration-informed therapist.",
+    answer: "People commonly write down what they remember, revisit those notes over time, and notice how their perspective evolves. Many find it helpful to talk things through with someone they trust or a qualified professional. There is no single right way, and it is fine to move slowly.",
   },
   {
     question: "How do I make sense of my psychedelic insights?",
-    answer: "Making sense of psychedelic insights takes time and patience. Write everything down without judgment, then revisit your notes over several days. Look for themes and patterns. Discuss your experience with someone you trust. Some insights are immediately clear while others reveal meaning gradually. Not everything needs to be understood intellectually—some wisdom integrates through changed behavior and perspective.",
+    answer: "Making sense of insights takes time. Writing things down without judgment and revisiting them over several days can help patterns emerge. Some insights feel immediately clear, others reveal meaning gradually, and some fade. Not everything needs to be understood intellectually.",
+  },
+  {
+    question: "Should I journal after a psychedelic experience?",
+    answer: "Many people find journaling one of the most useful reflection practices. Writing down images, feelings, and questions soon after — even if they seem unclear — and revisiting them over the following weeks can help meaning emerge. There is no right or wrong way to do it.",
+  },
+  {
+    question: "Why might difficult emotions or memories come up?",
+    answer: "Some people report that emotions or memories they usually keep at a distance surface during or after a psychedelic experience. This isn't necessarily a sign something is wrong — and it is not automatically beneficial either. Acceptance, support, and, where needed, a qualified professional matter more than the experience itself.",
+  },
+  {
+    question: "What can help after a difficult experience?",
+    answer: "A difficult experience does not automatically carry meaning or benefit. Focus first on safety, grounding, rest, and support. If distress is intense or lasting, reach out to a licensed mental-health professional; in a crisis, contact emergency services or a crisis line — 988 in the US, or findahelpline.com internationally.",
+  },
+  {
+    question: "Why might someone feel different afterward?",
+    answer: "Some people report feeling more open, reflective, or emotionally sensitive for a while after a meaningful experience — sometimes called an \"afterglow.\" Reports vary widely, any effects are personal and not guaranteed, and no particular outcome is promised. If difficult feelings persist beyond a couple of weeks, consider speaking with a licensed professional.",
+  },
+  {
+    question: "Can reflection support self-discovery?",
+    answer: "Many people use reflection after meaningful experiences to notice their patterns, values, and priorities. This is a personal, educational practice — not therapy or treatment — and it tends to be most useful when approached with openness and honesty rather than pressure for a particular outcome.",
   },
 
   // RESEARCH & RISK — educational overview, not treatment claims
@@ -328,34 +322,18 @@ export const PSILOCYBIN_GUIDANCE_FAQS: FAQItem[] = [
     answer: "This is an educational overview, not medical advice, and nothing here is a treatment claim. Some research has explored psilocybin and anxiety, and some people report shifts in perspective afterward, but findings vary and psilocybin is not appropriate for everyone. Anyone considering it in relation to a health concern should speak with a qualified healthcare professional.",
   },
   {
-    question: "Can mushrooms help with depression?",
+    question: "Can psilocybin help with depression?",
     answer: "This is educational information, not medical advice or a treatment claim. Depression is a serious condition that should be addressed with a qualified professional. Psilocybin is an active area of research, but it is not an approved treatment in most places, is not appropriate for everyone, and carries real risks. Please consult a licensed healthcare provider.",
   },
   {
     question: "Is psilocybin used in trauma work?",
     answer: "This is educational information, not medical advice or a treatment claim. Trauma is best worked with alongside a qualified, trauma-informed professional. Psilocybin is not an approved trauma treatment, is not right for everyone, and can be destabilizing without proper support. If you are processing trauma, please work with a licensed professional.",
   },
-  {
-    question: "Can psychedelics help with self-discovery?",
-    answer: "Many people use psilocybin as a tool for self-discovery, gaining insights into their patterns, values, relationships, and life purpose. The experience can reveal blind spots, clarify what matters most, and catalyze personal growth. Self-discovery through psychedelics is most effective when approached with intention, openness, and commitment to integrating insights into meaningful life changes.",
-  },
-  {
-    question: "How do mushrooms change your perspective?",
-    answer: "Psilocybin can shift perspective by temporarily reducing activity in the brain's default mode network, which maintains our usual sense of self. This allows fresh ways of seeing yourself, relationships, and life situations. Many report feeling more connected to nature, others, and something greater than themselves. These perspective shifts can persist long after the experience when properly integrated.",
-  },
 
-  // PRACTICAL - Guidance seekers
+  // SUPPORT & LEGALITY
   {
-    question: "What is a psilocybin guide or facilitator?",
-    answer: "A psilocybin guide or facilitator is someone trained to support others through psychedelic experiences. They help with preparation, hold space during the journey, and assist with integration afterward. Good facilitators create safety, offer grounded presence without directing the experience, and help you make meaning from what arises. They may be therapists, trained practitioners, or experienced community members.",
-  },
-  {
-    question: "Should I journal after a mushroom experience?",
-    answer: "Yes, journaling after a mushroom experience is one of the most valuable integration practices. Write as soon as you're able, capturing images, feelings, insights, and questions—even if they seem nonsensical. Don't edit or judge; just record. Revisit your journal over the following days and weeks. Patterns and meanings often emerge that weren't clear immediately after the experience.",
-  },
-  {
-    question: "How often can you take psilocybin?",
-    answer: "Most traditions and practitioners recommend spacing significant psilocybin experiences at least 2-4 weeks apart, with many suggesting longer intervals of months between deep journeys. Integration takes time—rushing back for another experience before processing the last one can be counterproductive. Quality of integration matters more than frequency of experiences.",
+    question: "What is a psilocybin facilitator, and is it legal?",
+    answer: "In a few places, trained and licensed professionals support people through psychedelic experiences within legal, regulated programs. Laws vary widely and, in many places, this activity is not legal. Training, licensure, and legality are not interchangeable, and experience alone is not a qualification. Anyone seeking support should check what is lawful where they live and work only with appropriately qualified professionals.",
   },
 ]
 
@@ -363,16 +341,16 @@ export const BOOK_FAQS = (bookTitle: string, bookDescription?: string): FAQItem[
   // What the book is about
   {
     question: `What is "${bookTitle}" about?`,
-    answer: bookDescription || `"${bookTitle}" by Maya Allan is an educational guide for understanding and reflecting on psilocybin experiences, offering practical, non-clinical wisdom for readers doing their own integration.`,
+    answer: bookDescription || `"${bookTitle}" by Maya Allan is an educational guide for understanding and reflecting on psilocybin experiences, offering practical wisdom for readers doing their own integration.`,
   },
   {
     question: `What topics does "${bookTitle}" cover?`,
-    answer: `"${bookTitle}" covers psilocybin integration practices, preparation and set/setting guidance, navigating challenging experiences, post-journey reflection techniques, and frameworks for translating insights into lasting personal growth and transformation.`,
+    answer: `"${bookTitle}" covers post-experience reflection and integration practices, ways of working with challenging or confusing experiences, and frameworks for translating insights into everyday life.`,
   },
   // Who benefits from the book
   {
     question: `Who is "${bookTitle}" for?`,
-    answer: `"${bookTitle}" is written for readers navigating their own psilocybin experiences who want practical, grounded, non-clinical guidance for reflection and integration.`,
+    answer: `"${bookTitle}" is written for readers navigating their own psilocybin experiences who want practical, grounded guidance for reflection and integration.`,
   },
   {
     question: `Can beginners use "${bookTitle}"?`,
@@ -383,17 +361,17 @@ export const BOOK_FAQS = (bookTitle: string, bookDescription?: string): FAQItem[
     answer: `"${bookTitle}" is an educational resource, not a clinical or professional text, and it makes no therapeutic claims. Readers from many backgrounds have found its reflection frameworks useful, but it is not a substitute for professional training or care.`,
   },
   {
-    question: `Can I use "${bookTitle}" for solo psilocybin experiences?`,
-    answer: `Yes, "${bookTitle}" provides guidance specifically designed for solo journeyers, including preparation practices, safety considerations, self-reflection techniques, and integration methods for those exploring psilocybin independently.`,
+    question: `Is "${bookTitle}" a guide to using psilocybin?`,
+    answer: `No. "${bookTitle}" is intended for post-experience reflection and education. It is not a guide to obtaining, dosing, or using psilocybin, and it does not replace medical, legal, or professional advice.`,
   },
   // What readers will learn/gain
   {
     question: `What will I learn from "${bookTitle}"?`,
-    answer: `Readers of "${bookTitle}" will learn practical integration techniques, how to prepare for meaningful psilocybin experiences, methods for processing and applying insights, and frameworks for supporting others through transformative journeys.`,
+    answer: `Readers of "${bookTitle}" will find practical reflection and integration frameworks, ways to process and apply insights over time, and language for making sense of difficult or meaningful experiences.`,
   },
   {
     question: `How is "${bookTitle}" different from other psilocybin books?`,
-    answer: `"${bookTitle}" by Maya Allan focuses on practical integration rather than just the experience itself. It offers actionable frameworks for readers doing their own reflection, emphasizing self-agency and grounded, non-clinical wisdom.`,
+    answer: `"${bookTitle}" by Maya Allan focuses on practical integration rather than just the experience itself. It offers actionable frameworks for readers doing their own reflection, emphasizing self-agency and grounded, practical wisdom.`,
   },
   // Author credibility
   {
@@ -479,7 +457,7 @@ export interface BookSchemaOptions {
 export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: BookSchemaOptions) {
   // Combine book tags with relevant audience keywords for better discoverability
   const baseKeywords = book.tagsCsv || ""
-  const audienceKeywords = "readers, self-guided journeyers, people exploring psilocybin integration and self-inquiry"
+  const audienceKeywords = "readers exploring post-experience integration and self-inquiry"
   const combinedKeywords = baseKeywords ? `${baseKeywords}, ${audienceKeywords}` : audienceKeywords
 
   // Per-book external listings (Amazon, Goodreads, Google Books, etc.) so the

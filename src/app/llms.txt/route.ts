@@ -78,11 +78,11 @@ export async function GET() {
   lines.push("")
   lines.push("Topics covered on this site:")
   lines.push("- Psilocybin integration and post-journey practice")
-  lines.push("- Psychedelic-assisted self-inquiry and shadow work")
+  lines.push("- Post-experience self-inquiry and shadow work")
   lines.push("- Consciousness exploration and non-ordinary states")
   lines.push("- Ego dissolution, mystical experience, and re-entry")
   lines.push("- Inner-child reflection, integrating difficult experiences, and self-agency")
-  lines.push("- Preparation, set & setting, and risk-awareness information")
+  lines.push("- Safety and risk-awareness information, and post-experience reflection")
   lines.push("- Educational resources for readers navigating their own integration and reflection")
   lines.push("")
 
