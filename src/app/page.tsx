@@ -4,27 +4,22 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { MessageCircle, Dna, Brain, ListChecks, HeartPulse, PenLine, Star, Calendar, MapPin, ArrowRight } from "lucide-react"
 import { NewsletterSection } from "@/components/NewsletterSection"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { generateAuthorSchema } from "@/lib/structured-data"
 import { SITE_URL } from "@/lib/identity"
-import { upcomingEventsOrClause } from "@/lib/events-visibility"
 
 export const revalidate = 300 // 5 minutes
 
 async function getFeaturedBookForMetadata() {
   try {
-    const { data, error } = await supabaseAdmin
-      .from(Tables.books)
-      .select("title, blurb, cover_url, og_image_url")
-      .eq("is_featured", true)
-      .eq("is_published", true)
-      .eq("is_visible", true)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single()
-
-    if (error || !data) return null
-    return data
+    const [data] = await sql`
+      select title, blurb, cover_url, og_image_url
+      from books
+      where is_featured = true and is_published = true and is_visible = true
+      order by created_at desc
+      limit 1
+    `
+    return data ?? null
   } catch {
     return null
   }
@@ -138,37 +133,31 @@ export default async function HomePage() {
   // fallbacks (null / empty array) are preserved exactly as in the original
   // sequential implementation.
   const [featuredBookResult, authorInfoResult, upcomingEventsResult] = await Promise.allSettled([
-    supabaseAdmin
-      .from(Tables.books)
-      .select("*")
-      .eq("is_featured", true)
-      .eq("is_published", true)
-      .eq("is_visible", true)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single(),
-    supabaseAdmin
-      .from(Tables.siteSettings)
-      .select("author_name, author_bio, author_photo_url")
-      .limit(1)
-      .single(),
-    supabaseAdmin
-      .from(Tables.events)
-      .select("id, slug, title, description, starts_at, location_text")
-      .eq("is_visible", true)
-      // Hide past events from the homepage "Upcoming Events" block
-      // unless the operator pinned them via keep_visible_after_end.
-      .or(upcomingEventsOrClause())
-      .order("starts_at", { ascending: true })
-      .limit(3),
+    sql`
+      select * from books
+      where is_featured = true and is_published = true and is_visible = true
+      order by created_at desc
+      limit 1
+    `,
+    sql`
+      select author_name, author_bio, author_photo_url
+      from site_settings
+      limit 1
+    `,
+    // Hide past events from the homepage "Upcoming Events" block.
+    // Was .eq("is_visible",true).or("starts_at.gte.<now>").
+    sql`
+      select id, slug, title, description, starts_at, location_text
+      from events
+      where is_visible = true and starts_at >= now()
+      order by starts_at asc
+      limit 3
+    `,
   ])
 
   // Featured book
   if (featuredBookResult.status === "fulfilled") {
-    const { data, error } = featuredBookResult.value
-    if (error) {
-      console.error("Homepage featured book query error:", error.message, error.code, error.details)
-    }
+    const data = featuredBookResult.value[0]
     if (data) {
       featuredBook = {
         id: data.id,
@@ -199,7 +188,7 @@ export default async function HomePage() {
   // Author info — DB returns snake_case (post-migration); map to camelCase
   // for the JS-side `authorInfo` shape (keeps UI consumers unchanged).
   if (authorInfoResult.status === "fulfilled") {
-    const { data } = authorInfoResult.value
+    const data = authorInfoResult.value[0]
     if (data) {
       authorInfo = {
         authorName: data.author_name,
@@ -216,7 +205,7 @@ export default async function HomePage() {
   // so the existing render code (event.startsAt / event.locationText) keeps
   // working without per-component refactor.
   if (upcomingEventsResult.status === "fulfilled") {
-    const { data } = upcomingEventsResult.value
+    const data = upcomingEventsResult.value
     if (data && data.length > 0) {
       upcomingEvents = data.map((row: any) => ({
         id: row.id,

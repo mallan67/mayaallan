@@ -1,4 +1,4 @@
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { HeaderClient } from "./header-client"
 
 // Fallback navigation items for build time or when DB is unavailable.
@@ -20,15 +20,16 @@ export async function Header() {
 
   try {
     // Fetch active navigation items from database
-    const { data: dbNavItems, error } = await supabaseAdmin
-      .from(Tables.navigationItems)
-      .select("label, href")
-      .eq("is_visible", true)
-      .order("sort_order", { ascending: true })
+    const dbNavItems = await sql`
+      select label, href
+      from navigation_items
+      where is_visible = true
+      order by sort_order asc
+    `
 
     // Only use DB items if we got results
-    if (!error && dbNavItems && dbNavItems.length > 0) {
-      navItems = dbNavItems
+    if (dbNavItems.length > 0) {
+      navItems = dbNavItems.map((r) => ({ href: r.href as string, label: r.label as string }))
     }
   } catch (error) {
     // During build or if DB unavailable, use fallback

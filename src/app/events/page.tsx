@@ -1,10 +1,10 @@
 import Image from "next/image"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { ShareButtons } from "@/components/share-buttons"
 import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
 import { SITE_URL } from "@/lib/identity"
-import { upcomingEventsOrClause, eventRowToObject } from "@/lib/events-visibility"
+import { eventRowToObject } from "@/lib/events-visibility"
 
 export const metadata: Metadata = {
   title: "Events",
@@ -38,24 +38,20 @@ export const revalidate = 60 // 1 minute
 
 async function getVisibleEvents(): Promise<{ events: any[]; dbErrorOccurred: boolean }> {
   try {
-    const { data, error } = await supabaseAdmin
-      .from(Tables.events)
-      .select("*")
-      .eq("is_visible", true)
-      // Hide past events from the /events listing unless the operator
-      // explicitly pinned them via keep_visible_after_end. The framing of
-      // this page is "Upcoming talks, readings, and workshops" (per
-      // the page metadata) — past events leak misleadingly into that view.
-      .or(upcomingEventsOrClause())
-      .order("starts_at", { ascending: true })
-
-    if (error) {
-      console.error("Error fetching visible events:", error)
-      return { events: [], dbErrorOccurred: true }
-    }
+    // Hide past events from the /events listing. The framing of this page is
+    // "Upcoming talks, readings, and workshops" (per the page metadata) — past
+    // events leak misleadingly into that view. Was .or("starts_at.gte.<now>").
+    const data = await sql`
+      select * from events
+      where is_visible = true and starts_at >= now()
+      order by starts_at asc
+    `
 
     // Map snake_case DB rows → camelCase shape the render code consumes.
-    return { events: (data ?? []).map(eventRowToObject), dbErrorOccurred: false }
+    return {
+      events: data.map((row) => eventRowToObject(row as Record<string, unknown>)),
+      dbErrorOccurred: false,
+    }
   } catch (error) {
     console.error("Failed to fetch events:", error)
     return { events: [], dbErrorOccurred: true }

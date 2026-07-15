@@ -3,7 +3,7 @@ import { jsonLdScript } from "@/lib/json-ld"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { RetailerIcon } from "@/lib/retailer-icons"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { generateBreadcrumbSchema } from "@/lib/structured-data"
 import { SITE_URL } from "@/lib/identity"
 
@@ -44,33 +44,36 @@ export default async function BooksPage() {
   let dbErrorOccurred = false
 
   try {
-    // Get books with retailer links
-    const { data: booksData, error } = await supabaseAdmin
-      .from(Tables.books)
-      .select(`
-        *,
-        book_retailer_links!left (
-          id,
-          url,
-          format_type,
-          is_active,
-          retailer:retailers (
-            id,
-            name,
-            slug
-          )
-        )
-      `)
-      .eq("is_published", true)
-      .eq("is_visible", true)
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Books page query error:", error.message, error.code, error.details)
-      dbErrorOccurred = true
-    }
-    if (booksData) {
-      books = booksData.map((book) => ({
+    // Get books with their retailer links. Was a PostgREST embed
+    // book_retailer_links!left(... retailer:retailers(...)); rebuilt as a
+    // json_agg subquery. `!left` is preserved by the coalesce([]) — a book
+    // with no links still returns with an empty array. All links (active and
+    // inactive) are returned; the is_active filter stays in the JS map below,
+    // exactly as before.
+    const booksData = await sql`
+      select
+        b.*,
+        coalesce(
+          (
+            select json_agg(json_build_object(
+              'id', l.id,
+              'url', l.url,
+              'format_type', l.format_type,
+              'is_active', l.is_active,
+              'retailer', case when r.id is null then null
+                else json_build_object('id', r.id, 'name', r.name, 'slug', r.slug) end
+            ))
+            from book_retailer_links l
+            left join retailers r on r.id = l.retailer_id
+            where l.book_id = b.id
+          ),
+          '[]'::json
+        ) as book_retailer_links
+      from books b
+      where b.is_published = true and b.is_visible = true
+      order by b.created_at desc
+    `
+    books = booksData.map((book) => ({
         id: book.id,
         slug: book.slug,
         title: book.title,
@@ -101,7 +104,6 @@ export default async function BooksPage() {
             } : null,
           })),
       }))
-    }
   } catch (error) {
     // During build or if DB unavailable
     console.error("Books fetch failed:", error)

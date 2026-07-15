@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { submitToIndexNow } from "@/lib/indexnow"
 import { listScenarios } from "@/lib/scenarios"
 import { listPosts } from "@/lib/posts"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { SITE_URL } from "@/lib/identity"
 import { alertAdmin } from "@/lib/alert-admin"
 import { safeCompare } from "@/lib/safe-compare"
@@ -130,12 +130,12 @@ async function collectAllPublicUrls(): Promise<string[]> {
 
   // Books (Supabase)
   try {
-    const { data: books } = await supabaseAdmin
-      .from(Tables.books)
-      .select("slug")
-      .eq("is_published", true)
-      .eq("is_visible", true)
-    for (const b of books ?? []) urls.push(`${SITE_URL}/books/${b.slug}`)
+    const books = await sql`
+      select slug
+      from books
+      where is_published = true and is_visible = true
+    `
+    for (const b of books) urls.push(`${SITE_URL}/books/${b.slug}`)
   } catch (err) {
     await alertAdmin({
       severity: "warning",

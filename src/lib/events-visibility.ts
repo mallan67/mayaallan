@@ -14,28 +14,12 @@
  * `keep_visible_after_end` remains part of the event model so an archive can use
  * it later without changing the database. This helper deliberately ignores it.
  *
- * Usage (Supabase PostgREST `.or()` syntax):
- *
- *   import { upcomingEventsOrClause, eventRowToObject } from "@/lib/events-visibility"
- *
- *   const { data } = await supabaseAdmin
- *     .from(Tables.events)
- *     .select("*")
- *     .eq("is_visible", true)
- *     .or(upcomingEventsOrClause())
- *     .order("starts_at", { ascending: true })
- *   const events = (data ?? []).map(eventRowToObject)
+ * Usage (direct SQL): callers filter upcoming events inline with
+ *   where is_visible = true and starts_at >= now()
+ * and map the resulting rows through `eventRowToObject`. The former
+ * `upcomingEventsOrClause()` PostgREST `.or()` helper was removed when the app
+ * moved off the Supabase Data API to a direct Postgres connection.
  */
-
-/**
- * Returns the `.or()` clause string for Supabase PostgREST that filters to
- * future events. It is anchored to the wall clock at call time, so one request
- * uses a consistent boundary and the next request gets a fresh one.
- */
-export function upcomingEventsOrClause(): string {
-  const nowIso = new Date().toISOString()
-  return `starts_at.gte.${nowIso}`
-}
 
 /**
  * Public event shape used by render code — camelCase, post-migration-safe.

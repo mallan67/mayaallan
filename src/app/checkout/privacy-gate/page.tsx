@@ -30,7 +30,7 @@ import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { PrivacyGateClient } from "./PrivacyGateClient"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { siteUrl } from "@/lib/site-url"
 import Link from "next/link"
 
@@ -55,16 +55,21 @@ export default async function PrivacyGatePage({ searchParams }: { searchParams: 
     redirect("/books")
   }
 
-  const { data: book, error } = await supabaseAdmin
-    .from(Tables.books)
-    .select("id, slug, title, ebook_price, allow_direct_sale, ebook_file_url")
-    .eq("id", bookId)
-    .single()
-
-  // A transient DB error must not collapse to a 404 mid-checkout — throw to the
-  // retryable error boundary. Only a true 0-rows result (PGRST116) is a 404.
-  if (error && error.code !== "PGRST116") {
-    throw new Error(`Checkout book lookup failed: ${error.message}`)
+  let book: Record<string, any> | undefined
+  try {
+    const rows = await sql`
+      select id, slug, title, ebook_price, allow_direct_sale, ebook_file_url
+      from books
+      where id = ${bookId}
+      limit 1
+    `
+    book = rows[0]
+  } catch (err) {
+    // A transient DB error must not collapse to a 404 mid-checkout — throw to
+    // the retryable error boundary. A missing row (checked below) is the 404.
+    throw new Error(
+      `Checkout book lookup failed: ${err instanceof Error ? err.message : String(err)}`,
+    )
   }
   if (!book) notFound()
   if (!book.allow_direct_sale || !book.ebook_price || !book.ebook_file_url) {

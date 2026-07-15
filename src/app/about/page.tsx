@@ -1,4 +1,4 @@
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { jsonLdScript } from "@/lib/json-ld"
 import Image from "next/image"
 import Link from "next/link"
@@ -20,24 +20,25 @@ async function getAuthorInfo() {
   try {
     // site_settings is snake_case post-migration; map to camelCase
     // before returning so existing UI consumers (`.authorName` etc.)
-    // continue working.
-    const { data: settings, error } = await supabaseAdmin
-      .from(Tables.siteSettings)
-      .select("id, author_name, author_bio, author_photo_url")
-      .order("id", { ascending: true })
-      .limit(1)
-      .single()
+    // continue working. Was .order("id",{ascending:true}).limit(1).single();
+    // a missing row now yields undefined `settings` -> return null (same as
+    // the old PGRST116 "no rows" branch).
+    const [settings] = await sql`
+      select id, author_name, author_bio, author_photo_url
+      from site_settings
+      order by id asc
+      limit 1
+    `
 
-    if (error) {
-      console.error("About page - Error fetching author info:", error.message, error.code)
+    if (!settings) {
       return null
     }
 
     const mapped = {
       id: settings.id,
-      authorName: settings.author_name as string | null,
-      authorBio: settings.author_bio as string | null,
-      authorPhotoUrl: settings.author_photo_url as string | null,
+      authorName: (settings.author_name ?? null) as string | null,
+      authorBio: (settings.author_bio ?? null) as string | null,
+      authorPhotoUrl: (settings.author_photo_url ?? null) as string | null,
     }
     return mapped
   } catch (error) {

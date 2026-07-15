@@ -1,10 +1,9 @@
 import type { MetadataRoute } from "next"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { listPosts } from "@/lib/posts"
 import { listScenarios } from "@/lib/scenarios"
 import { LOCALES, SITE_URL } from "@/lib/identity"
 import { sitemapAlternates } from "@/lib/i18n/hreflang"
-import { upcomingEventsOrClause } from "@/lib/events-visibility"
 
 // Pages that have translated versions live. As more pages get translated, add
 // their root-relative path here so the sitemap emits hreflang alternates for
@@ -84,46 +83,39 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     // Dynamic book pages — only published and publicly visible records.
-    const { data: books, error: booksError } = await supabaseAdmin
-      .from(Tables.books)
-      .select("slug, updated_at")
-      .eq("is_published", true)
-      .eq("is_visible", true)
-
-    if (!booksError && books) {
-      bookPages = books.map((book) => ({
-        url: `${baseUrl}/books/${book.slug}`,
-        lastModified: validDate(book.updated_at),
-      }))
-    }
+    const books = await sql`
+      select slug, updated_at
+      from books
+      where is_published = true and is_visible = true
+    `
+    bookPages = books.map((book) => ({
+      url: `${baseUrl}/books/${book.slug}`,
+      lastModified: validDate(book.updated_at as string | null),
+    }))
 
     // The public event surfaces are explicitly framed as upcoming. Completed
     // events belong in a separately labelled archive and are not advertised here.
-    const { data: events, error: eventsError } = await supabaseAdmin
-      .from(Tables.events)
-      .select("slug, updated_at")
-      .eq("is_visible", true)
-      .or(upcomingEventsOrClause())
-
-    if (!eventsError && events) {
-      eventPages = events.map((event) => ({
-        url: `${baseUrl}/events/${event.slug}`,
-        lastModified: validDate(event.updated_at),
-      }))
-    }
+    // Was .eq("is_visible",true).or("starts_at.gte.<now>") — i.e. upcoming only.
+    const events = await sql`
+      select slug, updated_at
+      from events
+      where is_visible = true and starts_at >= now()
+    `
+    eventPages = events.map((event) => ({
+      url: `${baseUrl}/events/${event.slug}`,
+      lastModified: validDate(event.updated_at as string | null),
+    }))
 
     // Dynamic media pages — only publicly visible records.
-    const { data: media, error: mediaError } = await supabaseAdmin
-      .from(Tables.mediaItems)
-      .select("slug, updated_at")
-      .eq("is_visible", true)
-
-    if (!mediaError && media) {
-      mediaPages = media.map((item) => ({
-        url: `${baseUrl}/media/${item.slug}`,
-        lastModified: validDate(item.updated_at),
-      }))
-    }
+    const media = await sql`
+      select slug, updated_at
+      from media_items
+      where is_visible = true
+    `
+    mediaPages = media.map((item) => ({
+      url: `${baseUrl}/media/${item.slug}`,
+      lastModified: validDate(item.updated_at as string | null),
+    }))
   } catch (error) {
     // A database outage must not make the sitemap endpoint fail completely.
     // Static and file-backed editorial routes still remain discoverable.

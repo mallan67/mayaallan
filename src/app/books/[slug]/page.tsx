@@ -7,7 +7,7 @@ import { PaymentButtons } from "@/components/PaymentButtons"
 import BookViewTracker from "@/components/BookViewTracker"
 import { RetailerIcon } from "@/lib/retailer-icons"
 import type { Metadata } from "next"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import {
   generateBookSchema,
   generateFAQSchema,
@@ -30,12 +30,11 @@ export const revalidate = 300 // 5 minutes
  */
 export async function generateStaticParams() {
   try {
-    const { data } = await supabaseAdmin
-      .from(Tables.books)
-      .select("slug")
-      .eq("is_published", true)
-      .eq("is_visible", true)
-    return (data ?? []).map((b: { slug: string }) => ({ slug: b.slug }))
+    const data = await sql`
+      select slug from books
+      where is_published = true and is_visible = true
+    `
+    return data.map((b) => ({ slug: b.slug as string }))
   } catch (err) {
     console.warn("generateStaticParams (books) failed — falling back to dynamic rendering:", err)
     return []
@@ -47,16 +46,14 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
   const decodedSlug = decodeURIComponent(slug)
 
   try {
-    // Use simple .eq() filter - the slug should match directly
-    const { data: book, error } = await supabaseAdmin
-      .from(Tables.books)
-      .select("title, seo_title, seo_description, blurb, subtitle1, subtitle2, subtitle3, cover_url, og_image_url")
-      .eq("slug", decodedSlug)
-      .limit(1)
-      .single()
+    const [book] = await sql`
+      select title, seo_title, seo_description, blurb, subtitle1, subtitle2, subtitle3, cover_url, og_image_url
+      from books
+      where slug = ${decodedSlug}
+      limit 1
+    `
 
-    if (error || !book) {
-      console.error("Book metadata fetch error:", error?.message)
+    if (!book) {
       return { title: "Book Not Found" }
     }
 
@@ -158,35 +155,35 @@ export default async function BookPage({ params }: BookPageProps) {
   let dbErrorOccurred = false
 
   try {
-    // Find the book - must be published to view
-    const { data, error } = await supabaseAdmin
-      .from(Tables.books)
-      .select(`
-        *,
-        book_retailer_links!left (
-          id,
-          url,
-          format_type,
-          is_active,
-          retailer:retailers (
-            id,
-            name,
-            slug
-          )
-        )
-      `)
-      .eq("slug", decodedSlug)
-      .eq("is_published", true)
-      .limit(1)
-      .single()
+    // Find the book - must be published to view. Retailer links via json_agg
+    // (was a PostgREST embed book_retailer_links!left(... retailer:retailers)).
+    const rows = await sql`
+      select
+        b.*,
+        coalesce(
+          (
+            select json_agg(json_build_object(
+              'id', l.id,
+              'url', l.url,
+              'format_type', l.format_type,
+              'is_active', l.is_active,
+              'retailer', case when r.id is null then null
+                else json_build_object('id', r.id, 'name', r.name, 'slug', r.slug) end
+            ))
+            from book_retailer_links l
+            left join retailers r on r.id = l.retailer_id
+            where l.book_id = b.id
+          ),
+          '[]'::json
+        ) as book_retailer_links
+      from books b
+      where b.slug = ${decodedSlug} and b.is_published = true
+      limit 1
+    `
 
-    // Distinguish "no rows" (real 404) from infrastructure errors (transient).
-    // PGRST116 = "no rows found" (single() with no match). Anything else is a real failure.
-    if (error && error.code !== "PGRST116") {
-      console.error("Book detail query error:", error.code, error.message, error.details)
-      dbErrorOccurred = true
-    }
-
+    // No rows = real 404 (notFound() below). A thrown DB error is a transient
+    // infra failure caught below and surfaced as 5xx — never a permanent 404.
+    const data = rows[0]
     if (data) {
       book = {
         id: data.id,

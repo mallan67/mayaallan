@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import nodemailer from "nodemailer"
 import { z } from "zod"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
@@ -71,17 +71,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: "Subscribed successfully" })
     }
 
-    // Use upsert to avoid duplicate email errors
-    const { error } = await supabaseAdmin
-      .from(Tables.emailSubscribers)
-      .upsert(
-        { email },
-        { onConflict: "email", ignoreDuplicates: true }
-      )
-
-    if (error) {
-      console.error("Supabase insert error:", error.message, error.code, error.details)
-      throw error
+    // Insert, ignoring duplicates (was a supabase upsert with onConflict:email,
+    // ignoreDuplicates:true — i.e. INSERT ... ON CONFLICT DO NOTHING).
+    try {
+      await sql`
+        insert into email_subscribers (email)
+        values (${email})
+        on conflict (email) do nothing
+      `
+    } catch (dbErr) {
+      console.error("Subscribe insert error:", dbErr instanceof Error ? dbErr.message : String(dbErr))
+      throw dbErr
     }
 
     // Track conversion. Wrapped — trackMarketingEvent itself never throws,

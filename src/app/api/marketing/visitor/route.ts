@@ -16,7 +16,7 @@
  */
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { alertAdmin } from "@/lib/alert-admin"
 import { hashForAttribution } from "@/lib/marketing-events"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
@@ -84,57 +84,61 @@ export async function POST(request: Request) {
     // If it returns a unique-violation (23505) the visitor already exists;
     // we follow up with an UPDATE that touches ONLY last_seen_at + hashes
     // — never first_* fields.
-    const { error: insertError } = await supabaseAdmin
-      .from("marketing_visitors")
-      .insert({
-        visitor_id: visitorId,
-        first_seen_at: nowIso,
-        last_seen_at: nowIso,
-        first_landing_page: firstTouch?.landing_page ?? null,
-        first_referrer: firstTouch?.referrer ?? null,
-        first_utm_source: firstTouch?.utm_source ?? null,
-        first_utm_medium: firstTouch?.utm_medium ?? null,
-        first_utm_campaign: firstTouch?.utm_campaign ?? null,
-        first_utm_content: firstTouch?.utm_content ?? null,
-        first_utm_term: firstTouch?.utm_term ?? null,
-        user_agent_hash: uaHash,
-        ip_hash: ipHash,
-      })
-
-    if (insertError && insertError.code === "23505") {
-      // Returning visitor — update last_seen_at + refresh hashes. First-touch
-      // columns are deliberately omitted so they remain immutable.
-      const { error: updateError } = await supabaseAdmin
-        .from("marketing_visitors")
-        .update({
-          last_seen_at: nowIso,
-          user_agent_hash: uaHash,
-          ip_hash: ipHash,
-        })
-        .eq("visitor_id", visitorId)
-
-      if (updateError) {
-        console.error("[marketing-visitor] last_seen update failed:", updateError.message, updateError.code)
+    // INSERT first. postgres.js throws on a unique-violation (SQLSTATE 23505)
+    // instead of returning an error object — so the "returning visitor" branch
+    // lives in the catch. First-touch columns are only ever written on INSERT;
+    // the UPDATE path deliberately touches only last_seen_at + the hashes.
+    try {
+      await sql`
+        insert into marketing_visitors
+          (visitor_id, first_seen_at, last_seen_at, first_landing_page, first_referrer,
+           first_utm_source, first_utm_medium, first_utm_campaign, first_utm_content,
+           first_utm_term, user_agent_hash, ip_hash)
+        values
+          (${visitorId}, ${nowIso}, ${nowIso}, ${firstTouch?.landing_page ?? null},
+           ${firstTouch?.referrer ?? null}, ${firstTouch?.utm_source ?? null},
+           ${firstTouch?.utm_medium ?? null}, ${firstTouch?.utm_campaign ?? null},
+           ${firstTouch?.utm_content ?? null}, ${firstTouch?.utm_term ?? null},
+           ${uaHash}, ${ipHash})
+      `
+    } catch (insertErr) {
+      const insertCode = (insertErr as { code?: string })?.code
+      const insertMsg = insertErr instanceof Error ? insertErr.message : String(insertErr)
+      if (insertCode === "23505") {
+        // Returning visitor — update last_seen_at + refresh hashes.
+        try {
+          await sql`
+            update marketing_visitors
+            set last_seen_at = ${nowIso},
+                user_agent_hash = ${uaHash},
+                ip_hash = ${ipHash}
+            where visitor_id = ${visitorId}
+          `
+        } catch (updateErr) {
+          const updateCode = (updateErr as { code?: string })?.code
+          const updateMsg = updateErr instanceof Error ? updateErr.message : String(updateErr)
+          console.error("[marketing-visitor] last_seen update failed:", updateMsg, updateCode)
+          await alertAdmin({
+            severity: "warning",
+            subject: "Marketing attribution: visitor last_seen update failed",
+            body: "Returning visitors' last_seen_at can't be refreshed.",
+            details: { errorCode: updateCode, errorMessage: updateMsg },
+            dedupKey: "marketing:visitor-last-seen-failed",
+          })
+        }
+      } else {
+        console.error("[marketing-visitor] insert failed:", insertMsg, insertCode)
         await alertAdmin({
           severity: "warning",
-          subject: "Marketing attribution: visitor last_seen update failed",
-          body: "Returning visitors' last_seen_at can't be refreshed.",
-          details: { errorCode: updateError.code, errorMessage: updateError.message },
-          dedupKey: "marketing:visitor-last-seen-failed",
+          subject: "Marketing attribution: visitor insert failed",
+          body:
+            "marketing_visitors insert is failing. Visitor identification continues " +
+            "via cookies, but the visitors table won't reflect new arrivals. Check " +
+            "the database / schema.",
+          details: { errorCode: insertCode, errorMessage: insertMsg },
+          dedupKey: "marketing:visitor-upsert-failed",
         })
       }
-    } else if (insertError) {
-      console.error("[marketing-visitor] insert failed:", insertError.message, insertError.code)
-      await alertAdmin({
-        severity: "warning",
-        subject: "Marketing attribution: visitor insert failed",
-        body:
-          "marketing_visitors insert is failing. Visitor identification continues " +
-          "via cookies, but the visitors table won't reflect new arrivals. Check " +
-          "supabase / schema.",
-        details: { errorCode: insertError.code, errorMessage: insertError.message },
-        dedupKey: "marketing:visitor-upsert-failed",
-      })
     }
   } catch (err) {
     console.error("[marketing-visitor] threw:", err instanceof Error ? err.message : String(err))

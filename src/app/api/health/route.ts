@@ -17,7 +17,7 @@
  */
 import { NextRequest, NextResponse } from "next/server"
 import { list } from "@vercel/blob"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { apiBase as paypalApiBase } from "@/lib/paypal"
 import { hasUpstash, probeUpstash } from "@/lib/upstash"
 
@@ -34,16 +34,9 @@ async function checkDatabase(): Promise<CheckResult> {
   const t0 = Date.now()
   try {
     // Single-row PK read — fast, no count/scan, exercises auth and connectivity.
-    const { error } = await supabaseAdmin
-      .from(Tables.books)
-      .select("id")
-      .limit(1)
-    const latencyMs = Date.now() - t0
-    if (error) {
-      console.error("[health] database probe failed:", error.message, error.code, error.details)
-      return { ok: false, error: "Database unreachable", latencyMs }
-    }
-    return { ok: true, latencyMs }
+    // Direct Postgres throws on any DB/connection error (caught below).
+    await sql`select id from books limit 1`
+    return { ok: true, latencyMs: Date.now() - t0 }
   } catch (err: any) {
     console.error("[health] database probe threw:", err)
     return { ok: false, error: "Database unreachable", latencyMs: Date.now() - t0 }

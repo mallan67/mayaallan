@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { ShareButtons } from "@/components/share-buttons"
 import { isOptimizableImageHost } from "@/lib/image-host"
 import type { Metadata } from "next"
@@ -37,19 +37,14 @@ export const revalidate = 300 // 5 minutes
 
 async function getVisibleMedia(): Promise<{ mediaItems: any[]; dbErrorOccurred: boolean }> {
   try {
-    const { data, error } = await supabaseAdmin
-      .from(Tables.mediaItems)
-      .select("*")
-      .eq("is_visible", true)
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching media:", error)
-      return { mediaItems: [], dbErrorOccurred: true }
-    }
+    const data = await sql`
+      select * from media_items
+      where is_visible = true
+      order by created_at desc
+    `
 
     // Map snake_case to camelCase
-    const mediaItems = (data || []).map((item: any) => ({
+    const mediaItems = data.map((item: any) => ({
       id: item.id,
       slug: item.slug,
       title: item.title,

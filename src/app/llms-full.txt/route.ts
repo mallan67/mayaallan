@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { listPosts, getPost } from "@/lib/posts"
 import { listScenarios, getScenario } from "@/lib/scenarios"
 import { loadFaq } from "@/lib/faq"
@@ -74,12 +74,12 @@ export async function GET() {
   lines.push("## Books by " + AUTHOR_NAME)
   lines.push("")
   try {
-    const { data: books } = await supabaseAdmin
-      .from(Tables.books)
-      .select("slug, title, subtitle1, blurb")
-      .eq("is_published", true)
-      .eq("is_visible", true)
-    for (const book of books ?? []) {
+    const books = await sql`
+      select slug, title, subtitle1, blurb
+      from books
+      where is_published = true and is_visible = true
+    `
+    for (const book of books) {
       lines.push(`### ${book.title}`)
       if (book.subtitle1) lines.push(`_${book.subtitle1}_`)
       lines.push("")

@@ -27,7 +27,7 @@
  */
 import "server-only"
 import { createHash } from "node:crypto"
-import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { alertAdmin } from "@/lib/alert-admin"
 import {
   ATTRIBUTION_COOKIES,
@@ -221,38 +221,40 @@ export async function trackMarketingEvent(input: TrackInput): Promise<void> {
 
     const properties = boundProperties(input.properties)
 
-    const { error } = await supabaseAdmin.from("marketing_events").insert({
-      visitor_id: visitorId,
-      session_id: sessionId,
-      event_name: input.eventName,
-      path: input.path ? input.path.slice(0, 256) : touch?.landing_page ?? null,
-      referrer: touch?.referrer ?? null,
-      utm_source: touch?.utm_source ?? null,
-      utm_medium: touch?.utm_medium ?? null,
-      utm_campaign: touch?.utm_campaign ?? null,
-      utm_content: touch?.utm_content ?? null,
-      utm_term: touch?.utm_term ?? null,
-      properties,
-    })
-
-    if (error) {
-      console.error("[marketing-events] insert failed:", error.message, error.code)
+    // Direct Postgres insert. postgres.js throws on error, so the specific
+    // insert-failed alert lives in a catch scoped to just this statement — it
+    // does NOT rethrow (the function contract is "never throws"); the outer
+    // catch remains for any other failure in this method.
+    try {
+      await sql`
+        insert into marketing_events
+          (visitor_id, session_id, event_name, path, referrer,
+           utm_source, utm_medium, utm_campaign, utm_content, utm_term, properties)
+        values
+          (${visitorId}, ${sessionId}, ${input.eventName},
+           ${input.path ? input.path.slice(0, 256) : touch?.landing_page ?? null},
+           ${touch?.referrer ?? null},
+           ${touch?.utm_source ?? null}, ${touch?.utm_medium ?? null},
+           ${touch?.utm_campaign ?? null}, ${touch?.utm_content ?? null},
+           ${touch?.utm_term ?? null}, ${sql.json(properties as Parameters<typeof sql.json>[0])})
+      `
+    } catch (insertErr) {
+      const message = insertErr instanceof Error ? insertErr.message : String(insertErr)
+      const code = (insertErr as { code?: string })?.code
+      console.error("[marketing-events] insert failed:", message, code)
       // Surface a one-time-per-cold-start alert so a sustained DB schema
-      // regression doesn't silently empty the analytics stream. The catch
-      // block intentionally never throws back to the caller (the function
-      // contract is "never throws"), but losing all analytics without
-      // visibility was the pre-PR-5B failure mode.
+      // regression doesn't silently empty the analytics stream.
       await alertAdmin({
         severity: "warning",
         subject: "Marketing events: insert failed",
         body:
-          "trackMarketingEvent() supabase insert returned an error. If this " +
+          "trackMarketingEvent() database insert failed. If this " +
           "persists, every event in the analytics stream is being lost — " +
           "revenue-by-campaign + funnel reporting will go quiet. Most common " +
-          "causes: missing column, table renamed, or supabase auth issue.",
+          "causes: missing column, table renamed, or a database connectivity issue.",
         details: {
-          errorMessage: error.message,
-          errorCode: error.code,
+          errorMessage: message,
+          errorCode: code,
           eventName: input.eventName,
         },
         dedupKey: "marketing-events:insert-failed",

@@ -7,7 +7,7 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import ConsentBanner from "@/components/ConsentBanner"
 import { GatedAnalytics, GatedMarketing } from "@/components/AnalyticsGated"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structured-data"
 import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL } from "@/lib/identity"
 
@@ -36,16 +36,16 @@ async function getSiteSettings() {
   try {
     // site_settings is snake_case post-migration; map to camelCase
     // for the consumers below (`siteName`, `tagline`, `siteIconUrl`).
-    const { data: settings } = await supabaseAdmin
-      .from(Tables.siteSettings)
-      .select("site_name, tagline, site_icon_url")
-      .limit(1)
-      .single()
+    const [settings] = await sql`
+      select site_name, tagline, site_icon_url
+      from site_settings
+      limit 1
+    `
     if (!settings) return null
     return {
-      siteName: settings.site_name as string | null,
-      tagline: settings.tagline as string | null,
-      siteIconUrl: settings.site_icon_url as string | null,
+      siteName: (settings.site_name ?? null) as string | null,
+      tagline: (settings.tagline ?? null) as string | null,
+      siteIconUrl: (settings.site_icon_url ?? null) as string | null,
     }
   } catch (error) {
     return null

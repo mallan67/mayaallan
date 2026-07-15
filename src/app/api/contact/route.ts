@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import nodemailer from "nodemailer"
 import { z } from "zod"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
@@ -84,19 +84,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: "Message sent successfully" })
     }
 
-    // Save to database
-    const { error } = await supabaseAdmin
-      .from(Tables.contactSubmissions)
-      .insert({
-        name: data.name,
-        email: data.email,
-        message: data.message,
-        subject: data.subject || null,
-      })
-
-    if (error) {
-      console.error("Supabase insert error:", error.message, error.code, error.details)
-      throw error
+    // Save to database (direct Postgres; unqualified name resolves via search_path).
+    try {
+      await sql`
+        insert into contact_submissions (name, email, message, subject)
+        values (${data.name}, ${data.email}, ${data.message}, ${data.subject || null})
+      `
+    } catch (dbErr) {
+      console.error("Contact insert error:", dbErr instanceof Error ? dbErr.message : String(dbErr))
+      throw dbErr
     }
 
     // Track conversion.
