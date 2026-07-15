@@ -1,29 +1,35 @@
 # Resend Broadcasts Newsletter Integration — Design
 
 - **Date (UTC):** 2026-07-15
-- **Status:** Approved for spec review (no implementation yet)
+- **Status:** Approved-in-direction; revised spec pending review (no implementation yet)
 - **Owner:** Maya Allan
+- **Installed SDK:** `resend@6.8.0` (all API details below verified against this version's `dist/index.d.cts`)
 - **Related:** outstanding item #8 (proper one-click newsletter unsubscribe)
 
 ## Problem
 
 The site collects newsletter signups into Supabase (`email_subscribers`) and currently
 tells subscribers to use the contact page to unsubscribe — a mechanism that does not
-exist. Before any newsletter campaign is sent at scale, we need compliant one-click
+exist. Before any newsletter campaign is sent at scale we need compliant one-click
 unsubscribe, suppression, and unsubscribe headers on outgoing marketing mail.
 
 ## Decision
 
 Use **Resend Broadcasts** as the external newsletter platform rather than building an
-in-app bulk sender, signed-token unsubscribe system, or RFC 8058 endpoint. Resend owns
-deliverability, suppression, unsubscribe flow, bounce/complaint handling, and the
-`List-Unsubscribe` headers.
+in-app bulk sender, signed-token unsubscribe system, or RFC 8058 endpoint.
 
-Resend's current model (verified against Resend docs, 2026-07-15):
+Scope of what Resend provides (precise — no over-claiming): Resend provides the
+**Broadcast sending infrastructure, global unsubscribe suppression, the managed
+unsubscribe link/mechanics, and the associated `List-Unsubscribe` headers.** Resend does
+**not** assume all legal compliance and does **not** guarantee deliverability. Compliant
+sender identity and footer content remain our responsibility (see the pre-send checklist).
 
-- **Contacts are global** — `resend.contacts.create({ email, unsubscribed })` (`POST /contacts`); there is **no** `audienceId`. The legacy **Audiences** API is deprecated and must not be used.
-- **Segments** group contacts explicitly — `resend.segments.create({ name })` returns a segment id; membership is added via `POST /contacts/{id_or_email}/segments/{segment_id}` (an explicit, idempotent add — segments here are not filter/rule-based).
-- Each Contact has a single **global** `unsubscribed` status.
+Resend model as exposed by the installed `resend@6.8.0` SDK:
+
+- **Contacts are global** — `resend.contacts.create({ email, unsubscribed })`. `CreateContactOptions` fields in 6.8.0 are: `email`, `unsubscribed?`, `firstName?`, `lastName?`, `properties?`, `audienceId?` (deprecated). There is **no `segments` field** — a Contact cannot be created into a Segment atomically in this version (see "Create + Segment" below).
+- **Segments** group contacts explicitly. `resend.segments.create({ name })` returns `{ id }`. Per-contact segment membership is managed by `resend.contacts.segments`: `.list(...)`, `.add({ email|contactId, segmentId })`, `.remove(...)`.
+- Each Contact has a single **global** `unsubscribed` status (applies across all Broadcasts).
+- **Error model:** every call returns `{ data, error }`. On a real HTTP response the SDK sets `error.statusCode = response.status` (`number | null`). A missing Contact is `error.statusCode === 404`. Calls can also throw on transport failure, so callers must handle both the returned `error` and thrown exceptions — the returned `error` is not the sole failure path.
 
 ### Source-of-truth split
 
@@ -32,77 +38,139 @@ Resend's current model (verified against Resend docs, 2026-07-15):
 
 ## Non-goals / scope guardrails
 
-- No database migration, no new database columns, no change to `email_subscribers` schema.
+- No database migration, no new columns, no change to `email_subscribers` schema.
 - No DNS or sending-domain changes (Broadcasts use the already-verified Resend domain).
 - No custom unsubscribe endpoint, signed-token system, or in-app bulk sender.
-- No change to transactional email: purchase receipts, download/PDF delivery, contact
-  confirmations, and admin alerts remain exactly as-is and are unrelated to newsletter
-  unsubscribe status.
-- The internal **operator "new subscriber" notification** (email to Maya, not to the
-  subscriber) is unchanged and out of scope.
-- The pre-existing unawaited-`.catch()` behavior of the operator-notification send is a
-  latent serverless issue and is **explicitly out of scope** — this change must not turn
-  into a general email-system rewrite.
+- No change to transactional email (purchase receipts, download/PDF delivery, contact
+  confirmations, admin alerts) — unrelated to newsletter unsubscribe status.
+- The internal **operator "new subscriber" notification** (email to Maya, not the
+  subscriber) is unchanged and out of scope, including its pre-existing unawaited-`.catch()`
+  send. This change must not become a general email-system rewrite.
 
 ## Architecture
 
 ```
 Website signup (/api/subscribe)
   → upsert email_subscribers (Supabase ledger, unchanged; onConflict ignoreDuplicates)
-  → await syncSubscriberToResend(email)  [short timeout, nonfatal]
+  → await syncSubscriberToResend(email)   [awaited normally; nonfatal; NO Promise.race]
         → global Contact + "Maya Allan Newsletter" Segment membership
 
 One-time import (scripts/import-subscribers-to-resend.mjs)
   → read email_subscribers WHERE unsubscribed_at IS NULL
-  → SAME syncSubscriberToResend rules per row (dry-run default, throttled, idempotent)
+  → reuse the SAME shared module's rules per row (dry-run default, throttled, idempotent)
 
 Campaigns
   → Resend Broadcasts, composed in dashboard, target "Maya Allan Newsletter" Segment,
-    must include {{{RESEND_UNSUBSCRIBE_URL}}} (Resend-managed unsubscribe + suppression)
+    must include {{{RESEND_UNSUBSCRIBE_URL}}}  (managed unsubscribe + suppression)
 ```
 
-## Components (file-by-file) — to be implemented only after spec review
+## Shared-module strategy (resolved — no guesswork)
 
-### 1. `src/lib/resend-newsletter.ts` (new)
+The sync logic lives in **`src/lib/resend-newsletter.mjs`** — a plain ESM JavaScript module
+with JSDoc types. It is imported by **both**:
 
-`syncSubscriberToResend(email): Promise<Result>` where `Result` is a discriminated union
-(`created` | `added-to-segment` | `skipped-unsubscribed` | `noop-no-segment-id` | `error`).
-The helper **never throws**.
+- the TS route `src/app/api/subscribe/route.ts` (works because `tsconfig` has `allowJs: true`
+  and `moduleResolution: "bundler"`), and
+- the plain-node script `scripts/import-subscribers-to-resend.mjs` (run via `node`).
 
-Logic:
+This mirrors the existing, working precedent `src/lib/crisis-classifier.mjs`, which is
+imported by both a TS file (`src/lib/crisis-detection.ts` → `export * from "./crisis-classifier.mjs"`)
+and a node script (`scripts/test-crisis-detection.mjs`). **No `tsx` runner and no new
+dependency are required.** Imports use the explicit `.mjs` extension.
 
-1. Resolve `RESEND_NEWSLETTER_SEGMENT_ID`. If unset → return `noop-no-segment-id` and emit a
-   one-time (dedup'd) `alertAdmin`. Never break the caller.
-2. `resend.contacts.get({ email })`:
-   - **404 / not-found only** → contact does not exist → `resend.contacts.create({ email, unsubscribed: false })`, then add to the Segment (`POST /contacts/{email}/segments/{RESEND_NEWSLETTER_SEGMENT_ID}`). Return `created`.
-   - **Any other retrieval error** (429, 5xx, network, auth) → treat as a **sync failure**; return `error`. Do **NOT** create a contact on a non-404 error (a transient GET failure must never be interpreted as "does not exist").
-   - **Found + `unsubscribed === true`** → return `skipped-unsubscribed`. Do nothing: no update, no reactivate, no add-to-segment.
-   - **Found + active (`unsubscribed === false`)** → add to Segment (idempotent). Never modify unsubscribe state. Return `added-to-segment`.
-3. **Never** call `resend.contacts.update({ unsubscribed: false })` anywhere in this codebase.
+## Components (file-by-file) — implemented only after spec review
 
-Shared Resend client construction follows the existing pattern (`new Resend(process.env.RESEND_API_KEY)`); if `RESEND_API_KEY` is missing the helper no-ops + alerts, never throws.
+### 1. `src/lib/resend-newsletter.mjs` (new)
+
+Exports `syncSubscriberToResend(email): Promise<Result>`. `Result.status` is one of:
+`created` | `added-to-segment` | `already-member` | `skipped-unsubscribed` |
+`noop-no-segment-id` | `noop-no-api-key` | `error`. **The helper never throws** (it wraps
+every Resend call and catches thrown exceptions in addition to inspecting `{ data, error }`).
+
+Config gates (checked first):
+- **`RESEND_API_KEY` missing** → return `noop-no-api-key` after a prominent
+  `console.error("[resend-newsletter] RESEND_API_KEY missing — subscriber not synced")`.
+  It does **not** call `alertAdmin`, because `alertAdmin` itself requires `RESEND_API_KEY`
+  and would only log a dropped alert.
+- **`RESEND_NEWSLETTER_SEGMENT_ID` missing** → return `noop-no-segment-id` and emit a
+  **deduplicated** `alertAdmin` (safe here — the Resend key is present).
+
+Per-contact logic (`{ data, error }` inspected on every call; 404 recognized via
+`error.statusCode === 404`):
+
+1. `resend.contacts.get({ email })`
+   - **`error.statusCode === 404`** → contact does not exist → go to (2, create).
+   - **`data` returned** → contact exists → go to (3, existing).
+   - **any other `error` or thrown exception** → return `error`. **Never create on a non-404
+     failure** — a transient GET error must not be read as "does not exist".
+2. **Create + add to Segment** (2 calls — 6.8.0 cannot create into a Segment atomically):
+   - `resend.contacts.create({ email, unsubscribed: false })`.
+     - **success** → `resend.contacts.segments.add({ email, segmentId })`; on success return
+       `created`. If the add fails, return `error` (partial state: contact exists but is not
+       in the Segment — self-healing: a re-run or the next signup finds the contact active,
+       sees it is not a member, and adds it).
+     - **create error indicating the contact already exists (duplicate/conflict)** → this is
+       the concurrent-signup race (two requests both saw 404). **Re-fetch once** with
+       `contacts.get({ email })` and apply the existing-contact rules (3). The exact
+       statusCode/error-name for the duplicate case in 6.8.0 is confirmed by the controlled
+       test (Rollout step 3); treat only that indicator as the race path.
+     - **any other create error / exception** → return `error`.
+3. **Existing contact** (`data.unsubscribed` is authoritative):
+   - **`unsubscribed === true`** → return `skipped-unsubscribed`. Do nothing: no update, no
+     reactivate, no segment add. (We **never** call `contacts.update({ unsubscribed: false })`
+     anywhere in the codebase.)
+   - **active (`unsubscribed === false`)** → `resend.contacts.segments.list({ email })`; if
+     the target `segmentId` is **absent**, `resend.contacts.segments.add({ email, segmentId })`
+     and return `added-to-segment`; if already present return `already-member`. Membership is
+     checked via `list` rather than assuming `add` is idempotent. Any list/add error → `error`.
+
+The helper does **not** call `alertAdmin` for per-contact operational `error`s — it returns
+the typed result and lets the caller decide (single-layer alerting).
 
 ### 2. `src/app/api/subscribe/route.ts` (edit)
 
-- After the existing Supabase upsert + `trackMarketingEvent`, **`await syncSubscriberToResend(email)`** wrapped in `Promise.race` with a short timeout (~3–5s) and a try/catch. Failure is **nonfatal**: on `error`/timeout, emit a dedup'd `alertAdmin` and still return `{ success: true }`. **No unawaited promise is launched after the HTTP response returns.**
-- **Verify the Supabase upsert does not clear or overwrite `unsubscribed_at`** on an existing subscriber. The current call is `upsert({ email }, { onConflict: "email", ignoreDuplicates: true })`; `ignoreDuplicates: true` means an existing row is left untouched, preserving historical suppression. This invariant must be preserved and asserted in review — a future edit that switches to a non-ignoring upsert or adds column writes must not stomp `unsubscribed_at`.
-- **Disable the subscriber-facing welcome email** (the "Welcome to the Newsletter!" send to the subscriber). Keep the **operator** "new subscriber" notification to Maya unchanged. Restoring a compliant welcome via a Resend marketing Automation with `{{{RESEND_UNSUBSCRIBE_URL}}}` is a separate follow-up (see Follow-ups).
+- After the existing Supabase upsert + `trackMarketingEvent`, **`await syncSubscriberToResend(email)` normally** (no `Promise.race`, no artificial timeout — `Promise.race` would not cancel the underlying Resend request and would leave async work running after the response). The route/platform function timeout is the backstop.
+- Failure is **nonfatal**: wrap in try/catch; if the result is `error` (or the call throws), the route emits **one** deduplicated `alertAdmin` (this is the single alerting layer for live-signup operational failures) and still returns `{ success: true }`. Supabase signup succeeds regardless of Resend availability.
+- **Preserve `unsubscribed_at`.** The existing write must remain conflict-ignoring:
+  ```ts
+  const { error } = await supabaseAdmin
+    .from(Tables.emailSubscribers)
+    .upsert({ email }, { onConflict: "email", ignoreDuplicates: true })
+  ```
+  The payload is `{ email }` only and `ignoreDuplicates: true` makes a conflict a no-op
+  (`INSERT ... ON CONFLICT DO NOTHING`), so an existing row's `unsubscribed_at` is never
+  touched. Review must reject any change to a non-ignoring upsert or added column writes.
+- **Disable only the subscriber-facing welcome email** (the "Welcome to the Newsletter!"
+  send to the subscriber). The **operator** "new subscriber" notification to Maya is
+  unchanged. A compliant welcome via a Resend marketing Automation with
+  `{{{RESEND_UNSUBSCRIBE_URL}}}` is a separate follow-up.
 
 ### 3. `scripts/import-subscribers-to-resend.mjs` (new)
 
-One-time backfill of existing active subscribers.
+One-time backfill; **imports and reuses `src/lib/resend-newsletter.mjs`** (no separate,
+looser logic).
 
-- Read only `email_subscribers WHERE unsubscribed_at IS NULL` via `supabaseAdmin`.
-- Apply the **exact same rules** as live signup by reusing `syncSubscriberToResend` (no separate, looser implementation). Existing globally-unsubscribed Resend contacts are skipped and never added to the Segment or reactivated.
-- `--dry-run` is the **default**; a real run requires an explicit flag. Prints per-outcome counts (`created`, `added-to-segment`, `skipped-unsubscribed`, `error`).
+- Reads only `email_subscribers WHERE unsubscribed_at IS NULL` via `supabaseAdmin`.
+- **`--dry-run` is the default and is completely write-free:** it may `contacts.get` and
+  `contacts.segments.list` to classify each row but must **never** `contacts.create` or
+  `contacts.segments.add`. Dry-run counters: **`would-create`, `would-add`,
+  `would-skip-unsubscribed`, `error`**. A real run (explicit `--apply` flag) performs the
+  writes and reports `created`, `added-to-segment`, `already-member`,
+  `skipped-unsubscribed`, `error`.
+- Existing globally-unsubscribed contacts are skipped and never added/reactivated.
 - **Idempotent** and safe to re-run.
-- **Rate limiting:** honor Resend `429` responses and `Retry-After`, with safe retry/backoff; steady-state throttle to stay under Resend's API rate limit.
+- **Rate limiting:** conservative concurrency (well under Resend's documented default of
+  ~10 requests/second). Detect throttling via `error.statusCode === 429`; honor a
+  `Retry-After` / `ratelimit-*` value when the installed SDK surfaces response headers, and
+  otherwise fall back to exponential backoff with jitter. **No hardcoded requests-per-second
+  assumption.** (Whether 6.8.0 surfaces response headers is confirmed during implementation;
+  the 429-driven backoff is the guaranteed mechanism.)
 
 ### 4. Website copy (edit)
 
-Replace the "contact the contact page to unsubscribe" wording — everywhere it appears
+Replace the "contact the contact page to unsubscribe" wording everywhere it appears
 (at least `src/app/privacy/page.tsx` and `src/components/NewsletterSection.tsx`; grep for
-all occurrences) — with exactly:
+all occurrences) with exactly:
 
 > You can unsubscribe at any time using the link included in every newsletter.
 
@@ -110,66 +178,102 @@ all occurrences) — with exactly:
 
 Document `RESEND_NEWSLETTER_SEGMENT_ID` (not a secret; no real value committed).
 
+## Alerting responsibility (single layer per failure)
+
+| Failure | Where alerted | Mechanism |
+|---|---|---|
+| `RESEND_API_KEY` missing | helper | prominent `console.error` (no email — `alertAdmin` needs the key) |
+| `RESEND_NEWSLETTER_SEGMENT_ID` missing | helper | deduplicated `alertAdmin` |
+| Per-contact sync `error` at **live signup** | route | one deduplicated `alertAdmin` |
+| Per-row `error` during **import** | script | aggregated into counts + a summary log (no per-row alert flood) |
+
+No single failure is alerted by two layers.
+
 ## Account setup (Maya, in Resend dashboard — at implementation, NOT now)
 
-1. Create a **Segment** named **"Maya Allan Newsletter"**; copy its Segment ID.
+1. Create the **Segment** named **"Maya Allan Newsletter"** (this is the real production
+   Segment — there is no separate "test Segment"). Copy its Segment ID.
 2. Set `RESEND_NEWSLETTER_SEGMENT_ID` in Vercel env (preview + production).
-3. Broadcasts target the "Maya Allan Newsletter" Segment and **must include `{{{RESEND_UNSUBSCRIBE_URL}}}`**, which renders Resend's managed unsubscribe link; Resend manages the unsubscribe flow and suppression.
+3. Broadcasts target the "Maya Allan Newsletter" Segment.
+
+## Broadcast pre-send checklist (manual, every Broadcast)
+
+- Body includes the managed unsubscribe placeholder **`{{{RESEND_UNSUBSCRIBE_URL}}}`**
+  (renders Resend's managed unsubscribe link; drives suppression + `List-Unsubscribe`).
+- Compliant **sender identity** (recognizable from-name/address on the verified domain).
+- Compliant **footer** (physical mailing address / who is sending / why they're receiving it),
+  as required by applicable law — Resend does not supply this for us.
+- Targeted to the "Maya Allan Newsletter" Segment.
 
 ## Rollout / import procedure (order-safe; all steps idempotent)
 
 1. Maya creates the Segment and sets `RESEND_NEWSLETTER_SEGMENT_ID`.
 2. Deploy the signup-sync code so new signups flow to Resend.
-3. **Single controlled-email test (before importing real subscribers):** run one email
-   through the flow and confirm: (a) Contact creation, (b) Segment membership,
-   (c) re-signup idempotency (no duplicate, no change), (d) unsubscribe preservation
-   (unsubscribe the test contact in Resend, re-signup on site, confirm it stays
-   unsubscribed and is not re-added/reactivated).
-4. Run the import `--dry-run` (verify counts, `unsubscribed_at` rows excluded), then the
-   real run.
-5. Compose/send campaigns via Resend Broadcasts.
+3. **Single controlled-email test against the real Segment (before importing anyone else):**
+   run one controlled address through the flow and confirm (a) Contact creation, (b) Segment
+   membership, (c) re-signup idempotency (no duplicate, no change), (d) unsubscribe
+   preservation (unsubscribe the test Contact in Resend, re-signup on site, confirm it stays
+   unsubscribed and is neither reactivated nor re-added). Also confirm the exact
+   duplicate/conflict error indicator used by the race path. Delete the test Contact
+   afterward if desired.
+4. Run the import `--dry-run` (verify counters; `unsubscribed_at` rows excluded), then the
+   real `--apply` run.
+5. Compose/send campaigns via Resend Broadcasts (using the pre-send checklist).
 
-## Failure handling
+## Failure handling (summary)
 
-- **Signup sync failure:** Supabase ledger row is saved; `alertAdmin` (dedup'd); signup
-  still returns success; reconcilable by re-running the import (idempotent).
-- **Missing `RESEND_NEWSLETTER_SEGMENT_ID`:** helper no-ops + one-time alert; signup never breaks.
-- **Non-404 `contacts.get` error:** treated as sync failure — no contact is created.
-- **Existing unsubscribed contact:** never updated, reactivated, or added to the Segment.
-- **Resend 429:** honor `Retry-After`, backoff; import is safe to re-run.
+- **Signup sync failure:** Supabase ledger row saved; route emits one dedup'd `alertAdmin`;
+  signup still returns success; reconcilable by re-running the import (idempotent).
+- **Missing `RESEND_API_KEY`:** helper logs prominently, returns `noop-no-api-key`; no email.
+- **Missing `RESEND_NEWSLETTER_SEGMENT_ID`:** helper dedup-alerts, returns `noop-no-segment-id`.
+- **Non-404 `contacts.get` error:** treated as failure — no contact created.
+- **Create race (duplicate after 404):** single re-fetch, then normal rules; never overwrite status.
+- **Partial state (created but segment-add failed):** returns `error`; self-heals on re-run.
+- **Existing unsubscribed contact:** never updated, reactivated, or segment-added.
+- **429:** conservative concurrency + backoff honoring `Retry-After` when available; import safe to re-run.
 
 ## Testing plan
 
-Against a Resend **test** Segment (not the production Segment):
+Against the real "Maya Allan Newsletter" Segment, using one controlled address (per Rollout 3):
 
-1. New signup → Contact created, `unsubscribed:false`, present in the Segment.
-2. Re-signup same email → still one Contact, status unchanged, no duplicate membership.
-3. Unsubscribe a test Contact in Resend → re-signup on site → **stays unsubscribed**, not
-   reactivated, not re-added.
-4. Simulate a non-404 `contacts.get` error → helper returns `error`, no Contact created.
-5. Import `--dry-run` counts correct and exclude `unsubscribed_at` rows; real run
-   idempotent on re-run; 429 handling backs off.
-6. Send a test Broadcast → `{{{RESEND_UNSUBSCRIBE_URL}}}` renders a working unsubscribe
-   that suppresses future sends.
-7. Transactional emails (purchase, PDF, alerts, contact) unaffected; website copy shows
-   the new wording; `tsc --noEmit` and production build clean.
+1. New signup → Contact created, `unsubscribed:false`, present in the Segment (`created`).
+2. Re-signup same active email → `already-member`; still one Contact; status unchanged.
+3. Unsubscribe the Contact in Resend → re-signup on site → `skipped-unsubscribed`; stays
+   unsubscribed; not reactivated; not re-added.
+4. Simulate a non-404 `contacts.get` error → helper returns `error`; no Contact created.
+5. Force a create duplicate/conflict → helper re-fetches once and applies normal rules.
+6. Import `--dry-run` is write-free and reports `would-*` counters excluding `unsubscribed_at`
+   rows; `--apply` run is idempotent on re-run; 429 handling backs off.
+7. Send a test Broadcast → `{{{RESEND_UNSUBSCRIBE_URL}}}` renders a working unsubscribe that
+   suppresses future sends.
+8. Transactional emails (purchase, PDF, alerts, contact) unaffected; website copy updated;
+   `tsc --noEmit` and production build clean.
 
 ## Follow-ups (separate work, not in this spec)
 
-- Restore a subscriber welcome message as a **Resend marketing Automation** with
-  `{{{RESEND_UNSUBSCRIBE_URL}}}` (after the core integration works).
+- Restore a subscriber welcome as a **Resend marketing Automation** with `{{{RESEND_UNSUBSCRIBE_URL}}}`.
 - (Optional, out of scope) Address the pre-existing unawaited operator-notification send.
+- (Optional) If true atomic create-into-Segment is later required, evaluate upgrading `resend`
+  to a version whose `CreateContactOptions` exposes a `segments` field — a separate dependency
+  decision, verified against that version.
 
 ## Recorded decisions
 
 1. External platform = Resend Broadcasts; no in-app bulk sender / token system / RFC 8058 endpoint.
-2. Resend model = global Contacts + explicit Segment membership; Audiences API is deprecated and not used.
-3. Env var = `RESEND_NEWSLETTER_SEGMENT_ID`; Segment name = "Maya Allan Newsletter".
-4. Sync rule = check-then-create with strict 404-only creation; never `contacts.update({ unsubscribed:false })`; unsubscribed contacts are never touched or segment-added.
-5. Subscribe route awaits the sync (short timeout, nonfatal); no post-response unawaited promise.
-6. Supabase upsert must preserve `unsubscribed_at` (currently via `ignoreDuplicates: true`).
-7. Import reuses the same sync helper; `--dry-run` default; idempotent; honors 429/`Retry-After`.
-8. Welcome email = **disable-now** (subscriber-facing only); operator notification unchanged/out of scope; Automation restore is a follow-up.
-9. Website copy = "You can unsubscribe at any time using the link included in every newsletter."
-10. Scope = no DB migration/columns, no DNS/sending-domain change, no custom unsubscribe endpoint.
-11. Single controlled-email test precedes any real import.
+2. Resend model = global Contacts + explicit Segment membership; Audiences deprecated/unused.
+3. Env var = `RESEND_NEWSLETTER_SEGMENT_ID`; Segment name = "Maya Allan Newsletter" (the real Segment; no separate test Segment).
+4. **Create + Segment is two calls** (create, then `contacts.segments.add`) because `resend@6.8.0` `CreateContactOptions` has no `segments` field. Atomic create-with-segments is not available in the installed version.
+5. **Race handling:** a create duplicate/conflict after an initial 404 triggers one re-fetch, then the normal existing-contact rules; unsubscribe status is never overwritten.
+6. **Segment membership uses `contacts.segments.list` then `add`** — no idempotency assumption about `add`.
+7. **No `Promise.race` timeout** — it would not cancel the Resend request. The sync is awaited normally; the route/platform timeout is the backstop.
+8. **`{ data, error }` handling on every call**, with `error.statusCode === 404` as the not-found signal; thrown exceptions are also caught but are not the sole error path.
+9. **Single-layer alerting** (see table): helper handles config conditions (missing key → server log; missing segment id → dedup alert); route handles live-signup operational errors; import aggregates.
+10. **Missing `RESEND_API_KEY` → prominent server log, not `alertAdmin`** (which needs that key).
+11. **Shared module = `src/lib/resend-newsletter.mjs`** imported by the TS route and the node script (`allowJs:true` + bundler; precedent `crisis-classifier.mjs`); no `tsx`, no new dependency.
+12. **`--dry-run` default and write-free**; counters `would-create`, `would-add`, `would-skip-unsubscribed`, `error`; real run behind `--apply`.
+13. **Rate limiting** honors 429 + `Retry-After`/`ratelimit-*` when surfaced, with conservative concurrency and backoff; no hardcoded requests-per-second rule (Resend default ~10 req/s).
+14. Supabase upsert preserves `unsubscribed_at` via the existing `ignoreDuplicates: true` write.
+15. Welcome email = disable-now (subscriber-facing only); operator notification unchanged/out of scope; Automation restore is a follow-up.
+16. Website copy = "You can unsubscribe at any time using the link included in every newsletter."
+17. Scope = no DB migration/columns, no DNS/sending-domain change, no custom unsubscribe endpoint.
+18. Resend's role stated precisely (infrastructure + suppression + managed unsubscribe + headers), not "owns compliance/deliverability"; a manual per-Broadcast pre-send checklist covers sender/footer + the managed unsubscribe placeholder.
