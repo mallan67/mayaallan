@@ -45,12 +45,18 @@ end $$;
 -- Capture exact FK / index / sequence names in app_private, to verify by NAME after.
 create temporary table _rb_fk  (conname text primary key)  on commit drop;
 create temporary table _rb_idx (indexname text primary key) on commit drop;
-create temporary table _rb_seq (seqname text primary key)   on commit drop;
+create temporary table _rb_seq (seqname text primary key, tablename text, colname text) on commit drop;
 insert into _rb_fk  select c.conname from pg_constraint c join pg_class t on t.oid=c.conrelid
   where t.relnamespace='app_private'::regnamespace and c.contype='f';
 insert into _rb_idx select ci.relname from pg_index i join pg_class t on t.oid=i.indrelid
   join pg_class ci on ci.oid=i.indexrelid where t.relnamespace='app_private'::regnamespace;
-insert into _rb_seq select c.relname from pg_class c where c.relkind='S' and c.relnamespace='app_private'::regnamespace;
+insert into _rb_seq
+  select s.relname, t.relname, a.attname
+    from pg_class s
+    join pg_depend d on d.objid=s.oid and d.deptype in ('a','i')
+    join pg_class t on t.oid=d.refobjid
+    join pg_attribute a on a.attrelid=d.refobjid and a.attnum=d.refobjsubid
+   where s.relkind='S' and s.relnamespace='app_private'::regnamespace;
 
 -- 1) Move tables + sequences back to public.
 do $$
@@ -63,7 +69,8 @@ begin
     'pending_paypal_orders','retailers','site_settings'] loop
     execute format('alter table app_private.%I set schema public', t);
   end loop;
-  for s in select sequencename from pg_sequences where schemaname='app_private' loop
+  -- move ONLY the captured application-owned sequences (exact set)
+  for s in select seqname from _rb_seq loop
     execute format('alter sequence app_private.%I set schema public', s);
   end loop;
 end $$;
@@ -181,7 +188,7 @@ revoke all on function public.increment_download_count(text),
   public.release_download_email_claim(text, text),
   public.marketing_event_counts_since(timestamptz),
   public.marketing_campaign_summary_since(timestamptz, integer)
-  from public, anon, authenticated;
+  from public, anon, authenticated, service_role, authenticator;
 
 -- 4) Restore ownership of moved objects to postgres.
 do $$
@@ -217,8 +224,8 @@ grant execute on function public.increment_download_count(text),
 --    availability (via mayaallan_app) — it must NOT recreate the insecure
 --    Data-API privilege model. Explicitly revoke the API roles + PUBLIC on the
 --    restored objects and keep default privileges locked down.
-revoke all on all tables    in schema public from anon, authenticated, public;
-revoke all on all sequences in schema public from anon, authenticated, public;
+revoke all on all tables    in schema public from anon, authenticated, public, service_role, authenticator;
+revoke all on all sequences in schema public from anon, authenticated, public, service_role, authenticator;
 revoke all on all functions in schema public from anon, authenticated, public;
 revoke all on schema public from anon, authenticated, public;
 alter default privileges for role postgres in schema public revoke all on tables    from anon, authenticated, public;
@@ -300,12 +307,17 @@ begin
   if exists (select indexname from _rb_idx except select ci.relname from pg_index i join pg_class t on t.oid=i.indrelid
              join pg_class ci on ci.oid=i.indexrelid where t.relnamespace='public'::regnamespace) then
     raise exception 'an index is missing in public after rollback'; end if;
-  if exists (select seqname from _rb_seq except select c.relname from pg_class c where c.relkind='S' and c.relnamespace='public'::regnamespace) then
-    raise exception 'a sequence is missing in public after rollback'; end if;
-  if exists (select 1 from pg_class s where s.relkind='S' and s.relnamespace='public'::regnamespace
-             and not exists (select 1 from pg_depend d join pg_class t on t.oid=d.refobjid
-                             where d.objid=s.oid and d.deptype in ('a','i') and t.relnamespace='public'::regnamespace and t.relkind='r')) then
-    raise exception 'a public sequence is not owned by a public table column after rollback'; end if;
+  if exists (
+    select 1 from _rb_seq rs
+    where not exists (
+      select 1 from pg_class s
+        join pg_depend d on d.objid=s.oid and d.deptype in ('a','i')
+        join pg_class t on t.oid=d.refobjid
+        join pg_attribute a on a.attrelid=d.refobjid and a.attnum=d.refobjsubid
+      where s.relname=rs.seqname and s.relnamespace='public'::regnamespace
+        and t.relname=rs.tablename and t.relnamespace='public'::regnamespace
+        and a.attname=rs.colname)) then
+    raise exception 'a sequence -> table.column mapping changed on rollback'; end if;
   -- zero PUBLIC/anon/authenticated object access
   if exists (select 1 from information_schema.role_table_grants where table_schema='public' and grantee in ('anon','authenticated','PUBLIC')) then
     raise exception 'anon/authenticated/PUBLIC still hold table grants in public after rollback'; end if;
@@ -319,11 +331,26 @@ begin
         and has_table_privilege('mayaallan_app','public.'||tname,'DELETE')) then
       raise exception 'runtime role missing CRUD on public.% after rollback', tname; end if;
   end loop;
-  for rec in select c.relname from pg_class c where c.relkind='S' and c.relnamespace='public'::regnamespace loop
-    if not (has_sequence_privilege('mayaallan_app','public.'||rec.relname,'USAGE')
-        and has_sequence_privilege('mayaallan_app','public.'||rec.relname,'SELECT')) then
-      raise exception 'runtime role missing USAGE/SELECT on sequence % after rollback', rec.relname; end if;
+  for rec in select rs.seqname from _rb_seq rs loop
+    if not (has_sequence_privilege('mayaallan_app','public.'||rec.seqname,'USAGE')
+        and has_sequence_privilege('mayaallan_app','public.'||rec.seqname,'SELECT')) then
+      raise exception 'runtime role missing USAGE/SELECT on sequence % after rollback', rec.seqname; end if;
   end loop;
+  -- ENFORCED ACL ALLOWLIST on the restored application objects in public: only
+  -- mayaallan_app (+ owner) may hold a grant.
+  if exists (select 1 from pg_class c, aclexplode(c.relacl) a
+             where c.relnamespace='public'::regnamespace and c.relname = any(tbls)
+               and a.grantee not in ('postgres'::regrole, (select oid from pg_roles where rolname='mayaallan_app'))) then
+    raise exception 'a restored public table ACL has a non-allowlisted grantee'; end if;
+  if exists (select 1 from _rb_seq rs
+               join pg_class c on c.relname=rs.seqname and c.relnamespace='public'::regnamespace,
+               aclexplode(c.relacl) a
+             where a.grantee not in ('postgres'::regrole, (select oid from pg_roles where rolname='mayaallan_app'))) then
+    raise exception 'a restored public sequence ACL has a non-allowlisted grantee'; end if;
+  if exists (select 1 from pg_proc p, aclexplode(p.proacl) a
+             where p.pronamespace='public'::regnamespace and p.proname = any(fns)
+               and a.grantee not in ('postgres'::regrole, (select oid from pg_roles where rolname='mayaallan_app'))) then
+    raise exception 'a restored public function ACL has a non-allowlisted grantee'; end if;
   raise notice 'ROLLBACK FINAL ASSERTIONS: ALL PASSED';
 end $$;
 

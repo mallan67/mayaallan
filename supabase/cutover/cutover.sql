@@ -139,6 +139,29 @@ insert into _pre_idx
     join pg_class t on t.oid=i.indrelid
     join pg_class ci on ci.oid=i.indexrelid
    where t.relnamespace='public'::regnamespace;
+-- Exact application-owned sequences (name, owning table, owning column) via pg_depend.
+create temporary table _pre_seq (seqname text primary key, tablename text, colname text) on commit drop;
+insert into _pre_seq
+  select s.relname, t.relname, a.attname
+    from pg_class s
+    join pg_depend d on d.objid=s.oid and d.deptype in ('a','i')
+      and d.classid='pg_class'::regclass and d.refclassid='pg_class'::regclass
+    join pg_class t on t.oid=d.refobjid
+    join pg_attribute a on a.attrelid=d.refobjid and a.attnum=d.refobjsubid
+   where s.relkind='S' and s.relnamespace='public'::regnamespace
+     and t.relname = any(array[
+       'admin_auth','book_retailer_links','books','contact_submissions',
+       'download_tokens','email_subscribers','events','marketing_events',
+       'marketing_visitors','media_items','navigation_items','orders',
+       'pending_paypal_orders','retailers','site_settings']);
+do $$
+begin
+  -- Every public sequence must be owned by one of the 15 application tables;
+  -- fail on any unexpected standalone/foreign sequence.
+  if (select count(*) from _pre_seq) <> (select count(*) from pg_class where relkind='S' and relnamespace='public'::regnamespace) then
+    raise exception 'unexpected public sequence not owned by an application table';
+  end if;
+end $$;
 
 -- 5) REFUSE to reuse a pre-existing app_private unless it is empty and correctly
 --    owned. Otherwise create it, owned by postgres.
@@ -191,7 +214,8 @@ begin
     'pending_paypal_orders','retailers','site_settings'] loop
     execute format('alter table public.%I set schema app_private', t);
   end loop;
-  for s in select sequencename from pg_sequences where schemaname='public' loop
+  -- Move ONLY the captured application-owned sequences (exact set).
+  for s in select seqname from _pre_seq loop
     execute format('alter sequence public.%I set schema app_private', s);
   end loop;
 end $$;
@@ -322,10 +346,13 @@ end $$;
 -- 12) Revoke from the public API roles and PostgreSQL PUBLIC — new schema AND
 --     the moved objects (grants travel with a table across SET SCHEMA), AND the
 --     now-empty public schema (fully, including PUBLIC — see correction #1).
-revoke all on schema app_private from anon, authenticated, public;
-revoke all on all tables    in schema app_private from anon, authenticated, public;
-revoke all on all sequences in schema app_private from anon, authenticated, public;
-revoke all on all functions in schema app_private from anon, authenticated, public;
+-- Revoke from the API roles AND service_role + authenticator (grants travel with
+-- a table across SET SCHEMA, so any of these could carry access). The enforced
+-- ACL allowlist in the final assertions proves ONLY mayaallan_app remains.
+revoke all on schema app_private from anon, authenticated, public, service_role, authenticator;
+revoke all on all tables    in schema app_private from anon, authenticated, public, service_role, authenticator;
+revoke all on all sequences in schema app_private from anon, authenticated, public, service_role, authenticator;
+revoke all on all functions in schema app_private from anon, authenticated, public, service_role, authenticator;
 revoke all on schema public from public, anon, authenticated;
 
 -- 13) Grant the dedicated runtime role ONLY what the website needs.
@@ -420,20 +447,23 @@ begin
              where n.nspname='public' and p.proname = any(fns)) then
     raise exception 'obsolete public function still present'; end if;
 
-  -- (f) sequences: none in public; all 13 in app_private owned by a table column
+  -- (f) sequences: none left in public; exact captured set now in app_private,
+  --     each with the SAME owning table + column mapping.
   if exists (select 1 from pg_sequences where schemaname='public') then
     raise exception 'sequence still in public'; end if;
-  if (select count(*) from pg_class s where s.relkind='S' and s.relnamespace='app_private'::regnamespace) <> 13 then
-    raise exception 'expected 13 sequences in app_private, found %',
-      (select count(*) from pg_class s where s.relkind='S' and s.relnamespace='app_private'::regnamespace); end if;
+  if (select count(*) from pg_class s where s.relkind='S' and s.relnamespace='app_private'::regnamespace) <> (select count(*) from _pre_seq) then
+    raise exception 'sequence count in app_private does not match the captured application set'; end if;
   if exists (
-    select 1 from pg_class s
-     where s.relkind='S' and s.relnamespace='app_private'::regnamespace
-       and not exists (
-         select 1 from pg_depend d join pg_class t on t.oid=d.refobjid
-          where d.objid=s.oid and d.deptype in ('a','i')
-            and t.relnamespace='app_private'::regnamespace and t.relkind='r')) then
-    raise exception 'an app_private sequence is not owned by an app_private table column'; end if;
+    select 1 from _pre_seq ps
+    where not exists (
+      select 1 from pg_class s
+        join pg_depend d on d.objid=s.oid and d.deptype in ('a','i')
+        join pg_class t on t.oid=d.refobjid
+        join pg_attribute a on a.attrelid=d.refobjid and a.attnum=d.refobjsubid
+      where s.relname=ps.seqname and s.relnamespace='app_private'::regnamespace
+        and t.relname=ps.tablename and t.relnamespace='app_private'::regnamespace
+        and a.attname=ps.colname)) then
+    raise exception 'a sequence -> table.column ownership mapping changed across the move'; end if;
 
   -- (g) exact FK + index sets preserved (moved, same names, now in app_private)
   if (select count(*) from pg_constraint c join pg_class t on t.oid=c.conrelid
@@ -535,6 +565,22 @@ begin
                and a.grantee in ((select oid from pg_roles where rolname='anon'),
                                  (select oid from pg_roles where rolname='authenticated'), 0)) then
     raise exception 'public default privileges still grant an API role / PUBLIC'; end if;
+
+  -- (k) ENFORCED ACL ALLOWLIST: on every app_private object the ONLY non-owner
+  --     grantee may be mayaallan_app. Any other explicit grantee (PUBLIC=0, anon,
+  --     authenticated, service_role, authenticator, or anything else) is a failure.
+  if exists (select 1 from pg_namespace n, aclexplode(n.nspacl) a
+             where n.nspname='app_private'
+               and a.grantee not in ('postgres'::regrole, (select oid from pg_roles where rolname='mayaallan_app'))) then
+    raise exception 'app_private schema ACL has a non-allowlisted grantee'; end if;
+  if exists (select 1 from pg_class c, aclexplode(c.relacl) a
+             where c.relnamespace='app_private'::regnamespace and c.relkind in ('r','S')
+               and a.grantee not in ('postgres'::regrole, (select oid from pg_roles where rolname='mayaallan_app'))) then
+    raise exception 'an app_private table/sequence ACL has a non-allowlisted grantee'; end if;
+  if exists (select 1 from pg_proc p, aclexplode(p.proacl) a
+             where p.pronamespace='app_private'::regnamespace
+               and a.grantee not in ('postgres'::regrole, (select oid from pg_roles where rolname='mayaallan_app'))) then
+    raise exception 'an app_private function ACL has a non-allowlisted grantee'; end if;
 
   raise notice 'CUTOVER FINAL ASSERTIONS: ALL PASSED';
 end $$;

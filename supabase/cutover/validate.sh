@@ -34,6 +34,14 @@ export PGCONNECT_TIMEOUT=20
 BEFORE="$(psql "${PGURL}" -tAc "select count(*) from pg_tables where schemaname='public'")"
 BEFORE_APP="$(psql "${PGURL}" -tAc "select exists(select 1 from information_schema.schemata where schema_name='app_private')")"
 
+# Refuse to run if app_private already exists — the round trip drops it at
+# rollback, so a pre-existing schema could be deleted and the harness could still
+# report "unchanged". Require a clean starting state (BEFORE_APP = f).
+if [ "${BEFORE_APP}" != "f" ]; then
+  echo "REFUSING: app_private already exists. Run this harness only against a database with NO app_private schema." >&2
+  exit 2
+fi
+
 TMP="$(mktemp)"; LOG="$(mktemp)"
 trap 'rm -f "${TMP}" "${LOG}"' EXIT
 {
@@ -74,7 +82,8 @@ echo "markers: cutover_passed=${CUT_OK} rollback_passed=${RB_OK}"
 echo "production: public_tables before=${BEFORE} after=${AFTER}; app_private before=${BEFORE_APP} after=${AFTER_APP}"
 
 if [ "${CUT_OK}" = "1" ] && [ "${RB_OK}" = "1" ] \
-   && [ "${BEFORE}" = "${AFTER}" ] && [ "${AFTER}" = "15" ] && [ "${AFTER_APP}" = "f" ]; then
+   && [ "${BEFORE}" = "${AFTER}" ] && [ "${AFTER_APP}" = "${BEFORE_APP}" ] \
+   && [ "${AFTER}" = "15" ] && [ "${AFTER_APP}" = "f" ]; then
   echo "VALIDATION OK: psql_exit=0, exactly one CUTOVER + one ROLLBACK marker, production UNCHANGED."
   exit 0
 else

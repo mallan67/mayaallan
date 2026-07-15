@@ -74,7 +74,26 @@ grant select, insert, update, delete on
   public.marketing_visitors, public.media_items, public.navigation_items, public.orders,
   public.pending_paypal_orders, public.retailers, public.site_settings
   to mayaallan_app;
-grant usage, select on all sequences in schema public to mayaallan_app;  -- public holds only the 13 app sequences
+-- Grant USAGE/SELECT on EXACTLY the application-owned sequences (each owned by
+-- one of the 15 tables), never "all sequences".
+create temporary table _app_seq (seqname text primary key) on commit drop;
+insert into _app_seq
+  select s.relname from pg_class s
+    join pg_depend d on d.objid=s.oid and d.deptype in ('a','i')
+    join pg_class t on t.oid=d.refobjid
+   where s.relkind='S' and s.relnamespace='public'::regnamespace
+     and t.relname = any(array[
+       'admin_auth','book_retailer_links','books','contact_submissions',
+       'download_tokens','email_subscribers','events','marketing_events',
+       'marketing_visitors','media_items','navigation_items','orders',
+       'pending_paypal_orders','retailers','site_settings']);
+do $$
+declare r record;
+begin
+  for r in select seqname from _app_seq loop
+    execute format('grant usage, select on sequence public.%I to mayaallan_app', r.seqname);
+  end loop;
+end $$;
 grant execute on function
   public.increment_download_count(text),
   public.decrement_download_count(text),
@@ -114,11 +133,14 @@ begin
         and has_table_privilege('mayaallan_app','public.'||tname,'DELETE')) then
       raise exception 'runtime role missing CRUD on public.%', tname; end if;
   end loop;
-  for s in select sequencename from pg_sequences where schemaname='public' loop
-    if not (has_sequence_privilege('mayaallan_app','public.'||s.sequencename,'USAGE')
-        and has_sequence_privilege('mayaallan_app','public.'||s.sequencename,'SELECT')) then
-      raise exception 'runtime role missing USAGE/SELECT on sequence %', s.sequencename; end if;
+  for s in select seqname from _app_seq loop
+    if not (has_sequence_privilege('mayaallan_app','public.'||s.seqname,'USAGE')
+        and has_sequence_privilege('mayaallan_app','public.'||s.seqname,'SELECT')) then
+      raise exception 'runtime role missing USAGE/SELECT on sequence %', s.seqname; end if;
   end loop;
+  -- no unexpected public sequence — every one must be application-owned
+  if (select count(*) from _app_seq) <> (select count(*) from pg_class where relkind='S' and relnamespace='public'::regnamespace) then
+    raise exception 'unexpected public sequence not owned by an application table'; end if;
   foreach fn in array fns loop
     if not has_function_privilege('mayaallan_app',
          (select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname=fn),'EXECUTE') then

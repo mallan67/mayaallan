@@ -1,5 +1,51 @@
 VALIDATION TRANSCRIPT — supabase/cutover (non-destructive, rolled back)
 Branch:        security/supabase-remove-public-exposure
+
+================================================================================
+STATUS FOR THE CURRENT CORRECTIVE EDITS (review round 3, issues 2 + 3)
+================================================================================
+Date (UTC):    2026-07-15T02:55:36Z
+
+This round changed:
+  * cutover.sql / rollback.sql — enforced ACL allowlist (revoke service_role +
+    authenticator; fail if any grantee other than mayaallan_app on any
+    app_private/restored-public object) and EXACT sequence handling
+    (capture name/table/column via pg_depend+pg_attribute; move/compare only the
+    captured sequences; fail on any unexpected public sequence).
+  * prepare-runtime-role.sql — grant USAGE/SELECT on EXACTLY the application-owned
+    sequences (derived via pg_depend from the 15 tables), never ALL SEQUENCES;
+    assertion now fails on any unexpected public sequence.
+  * validate.sh — refuse to run if app_private already exists BEFORE the round
+    trip (BEFORE_APP must be 'f'), and require AFTER_APP == BEFORE_APP in the
+    success condition (production-state comparison, not a bare "== f").
+
+OFFLINE checks performed this round (all PASS):
+  * tsc --noEmit ....................... exit 0
+  * node --test tests/lib/db-coerce.test.mjs ... 5/5 pass
+  * begin/commit pairing .............. cutover=1/1, rollback=1/1, prepare=1/1
+  * dollar-quote ($$) balance ......... even in all three SQL files
+  * bash -n validate.sh ............... syntax OK
+  * _app_seq temp table created before both its grant loop and its assertion
+
+LIVE round-trip for THESE edits: PENDING RE-RUN.
+  The historical live run below passed, but at parent SHA f8e6447 — it PREDATES
+  the edits above and therefore does NOT cover them. The live harness reads an
+  ADMIN connection (SUPABASE_ADMIN_DATABASE_URL) which is intentionally NOT stored
+  in the repo or in .env.local and was not present in the session that produced
+  these edits. Re-run (non-destructive; everything rolls back) with:
+
+    SUPABASE_ADMIN_DATABASE_URL='<admin, non-pooling>' \
+      bash supabase/cutover/validate.sh
+    # expect: psql_exit=0, exactly one CUTOVER + one ROLLBACK "ALL PASSED",
+    #         production UNCHANGED (public_tables before==after==15; app_private f->f)
+    # negative test: inject a `raise exception` into cutover final assertions,
+    #         confirm psql_exit!=0 and harness exit 1, then revert.
+    # prepare: run prepare-runtime-role.sql inside a rolled-back tx and confirm
+    #         "PREPARE-RUNTIME-ROLE FINAL ASSERTIONS: ALL PASSED".
+
+================================================================================
+HISTORICAL LIVE RUN — parent SHA f8e6447 (predates the round-3 issue-2/3 edits)
+================================================================================
 Parent SHA:    f8e6447
 Date (UTC):    2026-07-15T01:27:56Z
 Command:       SUPABASE_ADMIN_DATABASE_URL=<admin, non-pooling> ./supabase/cutover/validate.sh
@@ -20,3 +66,5 @@ harness_exit=0
 psql:C:/Users/MAYAAL~1/AppData/Local/Temp/tmp.0oux7qlkyB:135: NOTICE:  PREPARE-RUNTIME-ROLE FINAL ASSERTIONS: ALL PASSED
 ROLLBACK
 prepare_psql_exit=0
+</content>
+</invoke>
