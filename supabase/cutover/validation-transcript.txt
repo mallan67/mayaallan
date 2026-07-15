@@ -2,6 +2,56 @@ VALIDATION TRANSCRIPT — supabase/cutover (non-destructive, rolled back)
 Branch:        security/supabase-remove-public-exposure
 
 ================================================================================
+CURRENT AUTHORITATIVE LIVE VALIDATION — HEAD c378723 (non-destructive, rolled back)
+================================================================================
+Result:            PASSED  (accepted by independent review; live-validation gate CLOSED)
+HEAD at run:       c3787239a876876b39a8876f2b83b20a65d3cfa1
+Operator sha256:   9cfdba8dc47ca1a447d36bb6be58010bf87a1791e2e2bf29b6e6b06e2446305b
+                   (supabase/cutover/run-live-validation.sh)
+UTC time:          2026-07-15T14:30:12Z
+Migration SHA-256: cutover/rollback/prepare/validate verified against pinned values.
+
+Credential handling:
+  The validation script did not print, log, copy or persist the credential. The
+  invoking environment supplied the existing POSTGRES_URL_NON_POOLING value from
+  the local gitignored .env.local; no new credential file was created by this
+  validation. The URL was passed only as a quoted psql argument (transient local
+  process-list exposure accepted for a private machine). This transcript contains
+  no URL, username, password, hostname, port, database name, project reference,
+  or connection parameters.
+
+Production baseline (before any step): public_tables=15, app_private_exists=f
+
+--- (2) NEGATIVE TEST — injected temporary cutover copy (tracked file untouched) ---
+outcome:            yes
+harness_exit:       1    (require 1)
+psql_exit:          3    (require nonzero)
+cutover_marker:     0    (require 0 — success marker must NOT be accepted)
+production after:   public_tables=15, app_private_exists=f  (require unchanged)
+
+--- (3) SUCCESSFUL cutover -> rollback round trip (validate.sh) ---
+outcome:            yes
+harness_exit:       0    (require 0)
+psql_exit:          0    (require 0)
+cutover_marker:     1    (require exactly 1)
+rollback_marker:    1    (require exactly 1)
+production after:   public_tables=15, app_private_exists=f  (require 15 / f)
+
+--- (4) prepare-runtime-role.sql inside an always-rolled-back transaction ---
+outcome:            yes
+psql_exit:          0    (require 0)
+prepare_marker:     1    (require exactly 1)
+role existed before/after: f/f  (require unchanged — no residual role)
+production after:   public_tables=15, app_private_exists=f  (require 15 / f)
+
+Database state: public=15, app_private=f BEFORE and AFTER every step (unchanged).
+
+All work ran inside transactions that were ALWAYS rolled back; production was
+never modified. No permanent migration, runtime-role creation, deployment,
+Vercel-variable change, PR merge, or Supabase-setting (Exposed Schemas) change
+occurred as part of this validation.
+
+================================================================================
 STATUS FOR THE CURRENT CORRECTIVE EDITS (review round 4)
 ================================================================================
 Date (UTC):    2026-07-15T05:04:50Z
@@ -41,7 +91,11 @@ OFFLINE checks performed this round (all PASS):
   * bash -n validate.sh ............... syntax OK
   * both sequence moves are guarded by an `if exists (... old schema)` check
 
-LIVE round-trip for THESE edits: PENDING RE-RUN (REQUIRED — this fix is a
+LIVE round-trip for THESE edits: COMPLETED at c378723 on 2026-07-15T14:30:12Z —
+PASSED and accepted by independent review. See "CURRENT AUTHORITATIVE LIVE
+VALIDATION" section at the top of this file. Original pending note preserved
+below for history:
+  Was PENDING RE-RUN (REQUIRED — this fix is a
 migration-execution change and MUST be proven live before the production gate is
 crossed). The harness reads an ADMIN connection (SUPABASE_ADMIN_DATABASE_URL)
 that is intentionally NOT stored in the repo or .env.local and was not present in
