@@ -80,8 +80,10 @@ create temporary table _app_seq (seqname text primary key) on commit drop;
 insert into _app_seq
   select s.relname from pg_class s
     join pg_depend d on d.objid=s.oid and d.deptype in ('a','i')
+      and d.classid='pg_class'::regclass and d.refclassid='pg_class'::regclass
     join pg_class t on t.oid=d.refobjid
    where s.relkind='S' and s.relnamespace='public'::regnamespace
+     and t.relnamespace='public'::regnamespace
      and t.relname = any(array[
        'admin_auth','book_retailer_links','books','contact_submissions',
        'download_tokens','email_subscribers','events','marketing_events',

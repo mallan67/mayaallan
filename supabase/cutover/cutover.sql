@@ -149,6 +149,7 @@ insert into _pre_seq
     join pg_class t on t.oid=d.refobjid
     join pg_attribute a on a.attrelid=d.refobjid and a.attnum=d.refobjsubid
    where s.relkind='S' and s.relnamespace='public'::regnamespace
+     and t.relnamespace='public'::regnamespace
      and t.relname = any(array[
        'admin_auth','book_retailer_links','books','contact_submissions',
        'download_tokens','email_subscribers','events','marketing_events',
@@ -203,7 +204,12 @@ begin
   end loop;
 end $$;
 
--- 8) Move all 15 tables + every owned sequence into app_private.
+-- 8) Move all 15 tables into app_private. Column-owned sequences (serial /
+--    IDENTITY, i.e. pg_depend deptype 'a'/'i') follow their owner table
+--    AUTOMATICALLY under ALTER TABLE ... SET SCHEMA — see the PostgreSQL docs.
+--    We therefore do NOT move them unconditionally (that would reference an
+--    old-schema name that no longer exists and abort). We only move a captured
+--    sequence explicitly in the defensive case that it did NOT follow its table.
 do $$
 declare t text; s text;
 begin
@@ -214,10 +220,28 @@ begin
     'pending_paypal_orders','retailers','site_settings'] loop
     execute format('alter table public.%I set schema app_private', t);
   end loop;
-  -- Move ONLY the captured application-owned sequences (exact set).
+  -- Owned sequences should already be in app_private now. Move explicitly ONLY
+  -- any captured sequence that genuinely remains in public (never assume; never
+  -- reference an old-schema name unconditionally).
   for s in select seqname from _pre_seq loop
-    execute format('alter sequence public.%I set schema app_private', s);
+    if exists (select 1 from pg_class c
+               where c.relkind='S' and c.relname=s
+                 and c.relnamespace='public'::regnamespace) then
+      execute format('alter sequence public.%I set schema app_private', s);
+    end if;
   end loop;
+end $$;
+
+-- 8b) Assert the captured owned sequences all moved (none left in public; the
+--     exact captured set is now in app_private). Full mapping is re-verified in
+--     final assertion (f).
+do $$
+begin
+  if exists (select 1 from pg_class c where c.relkind='S' and c.relnamespace='public'::regnamespace) then
+    raise exception 'a sequence unexpectedly remains in public after the table move'; end if;
+  if (select count(*) from pg_class c where c.relkind='S' and c.relnamespace='app_private'::regnamespace)
+     <> (select count(*) from _pre_seq) then
+    raise exception 'app_private sequence count does not match the captured application set'; end if;
 end $$;
 
 -- 9) The six hardened functions: SECURITY INVOKER, SET search_path = '',
@@ -367,12 +391,12 @@ grant execute on all functions in schema app_private to mayaallan_app;
 alter default privileges for role postgres in schema app_private grant select, insert, update, delete on tables to mayaallan_app;
 alter default privileges for role postgres in schema app_private grant usage, select on sequences to mayaallan_app;
 alter default privileges for role postgres in schema app_private grant execute on functions to mayaallan_app;
-alter default privileges for role postgres in schema app_private revoke all on tables from anon, authenticated, public;
-alter default privileges for role postgres in schema app_private revoke all on sequences from anon, authenticated, public;
-alter default privileges for role postgres in schema app_private revoke all on functions from anon, authenticated, public;
-alter default privileges for role postgres in schema public revoke all on tables from anon, authenticated, public;
-alter default privileges for role postgres in schema public revoke all on sequences from anon, authenticated, public;
-alter default privileges for role postgres in schema public revoke all on functions from anon, authenticated, public;
+alter default privileges for role postgres in schema app_private revoke all on tables from anon, authenticated, public, service_role, authenticator;
+alter default privileges for role postgres in schema app_private revoke all on sequences from anon, authenticated, public, service_role, authenticator;
+alter default privileges for role postgres in schema app_private revoke all on functions from anon, authenticated, public, service_role, authenticator;
+alter default privileges for role postgres in schema public revoke all on tables from anon, authenticated, public, service_role, authenticator;
+alter default privileges for role postgres in schema public revoke all on sequences from anon, authenticated, public, service_role, authenticator;
+alter default privileges for role postgres in schema public revoke all on functions from anon, authenticated, public, service_role, authenticator;
 
 -- 15) Defense-in-depth role default search_path (connection startup param is the
 --     primary mechanism; this covers ad-hoc sessions).
@@ -554,17 +578,19 @@ begin
                  where n.nspname='app_private' and d.defaclobjtype='f'
                    and a.grantee=(select oid from pg_roles where rolname='mayaallan_app')) then
     raise exception 'app_private default FUNCTION privilege not set for runtime role'; end if;
-  if exists (select 1 from pg_default_acl d join pg_namespace n on n.oid=d.defaclnamespace, aclexplode(d.defaclacl) a
-             where n.nspname='app_private'
-               and a.grantee in ((select oid from pg_roles where rolname='anon'),
-                                 (select oid from pg_roles where rolname='authenticated'), 0)) then
-    raise exception 'app_private default privileges still grant an API role / PUBLIC'; end if;
-  -- public: default privileges must NOT grant anon/authenticated/PUBLIC.
-  if exists (select 1 from pg_default_acl d join pg_namespace n on n.oid=d.defaclnamespace, aclexplode(d.defaclacl) a
-             where n.nspname='public'
-               and a.grantee in ((select oid from pg_roles where rolname='anon'),
-                                 (select oid from pg_roles where rolname='authenticated'), 0)) then
-    raise exception 'public default privileges still grant an API role / PUBLIC'; end if;
+  -- ENFORCED default-privilege ALLOWLIST: for the postgres-owned default
+  -- privileges in app_private AND public (the owner that will create future
+  -- objects), the ONLY grantees permitted are postgres (owner) and mayaallan_app.
+  -- Any other grantee (PUBLIC=0, anon, authenticated, service_role, authenticator,
+  -- or anything else) is a failure — this covers the API roles and more.
+  if exists (
+    select 1 from pg_default_acl d
+      join pg_namespace n on n.oid=d.defaclnamespace,
+      aclexplode(d.defaclacl) a
+    where d.defaclrole='postgres'::regrole
+      and n.nspname in ('app_private','public')
+      and a.grantee not in ('postgres'::regrole, (select oid from pg_roles where rolname='mayaallan_app'))) then
+    raise exception 'a postgres-owned default-privilege ACL grants a non-allowlisted grantee'; end if;
 
   -- (k) ENFORCED ACL ALLOWLIST: on every app_private object the ONLY non-owner
   --     grantee may be mayaallan_app. Any other explicit grantee (PUBLIC=0, anon,

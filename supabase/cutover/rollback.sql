@@ -56,9 +56,14 @@ insert into _rb_seq
     join pg_depend d on d.objid=s.oid and d.deptype in ('a','i')
     join pg_class t on t.oid=d.refobjid
     join pg_attribute a on a.attrelid=d.refobjid and a.attnum=d.refobjsubid
-   where s.relkind='S' and s.relnamespace='app_private'::regnamespace;
+   where s.relkind='S' and s.relnamespace='app_private'::regnamespace
+     and t.relnamespace='app_private'::regnamespace;
 
--- 1) Move tables + sequences back to public.
+-- 1) Move tables back to public. Column-owned sequences (serial / IDENTITY)
+--    follow their owner table AUTOMATICALLY under ALTER TABLE ... SET SCHEMA, so
+--    we do NOT move them unconditionally (that would reference an old-schema name
+--    that no longer exists and abort). Move a captured sequence explicitly ONLY
+--    in the defensive case that it genuinely remains in app_private.
 do $$
 declare t text; s text;
 begin
@@ -69,10 +74,22 @@ begin
     'pending_paypal_orders','retailers','site_settings'] loop
     execute format('alter table app_private.%I set schema public', t);
   end loop;
-  -- move ONLY the captured application-owned sequences (exact set)
   for s in select seqname from _rb_seq loop
-    execute format('alter sequence app_private.%I set schema public', s);
+    if exists (select 1 from pg_class c
+               where c.relkind='S' and c.relname=s
+                 and c.relnamespace='app_private'::regnamespace) then
+      execute format('alter sequence app_private.%I set schema public', s);
+    end if;
   end loop;
+end $$;
+
+-- 1b) Assert every captured sequence moved back (none left in app_private, so the
+--     RESTRICT drop of app_private below cannot fail on a stray sequence). Full
+--     mapping is re-verified in the final assertions.
+do $$
+begin
+  if exists (select 1 from pg_class c where c.relkind='S' and c.relnamespace='app_private'::regnamespace) then
+    raise exception 'a sequence unexpectedly remains in app_private after the table move-back'; end if;
 end $$;
 
 -- 2) Drop the app_private functions.
@@ -210,7 +227,15 @@ grant select, insert, update, delete on
   public.marketing_visitors, public.media_items, public.navigation_items, public.orders,
   public.pending_paypal_orders, public.retailers, public.site_settings
   to mayaallan_app;
-grant usage, select on all sequences in schema public to mayaallan_app;
+-- USAGE/SELECT on ONLY the captured application-owned sequences (never ALL
+-- SEQUENCES), matching the exact-sequence design.
+do $$
+declare rec record;
+begin
+  for rec in select seqname from _rb_seq loop
+    execute format('grant usage, select on sequence public.%I to mayaallan_app', rec.seqname);
+  end loop;
+end $$;
 -- EXECUTE on ONLY the six application functions (never ALL FUNCTIONS).
 grant execute on function public.increment_download_count(text),
   public.decrement_download_count(text),
@@ -228,9 +253,9 @@ revoke all on all tables    in schema public from anon, authenticated, public, s
 revoke all on all sequences in schema public from anon, authenticated, public, service_role, authenticator;
 revoke all on all functions in schema public from anon, authenticated, public;
 revoke all on schema public from anon, authenticated, public;
-alter default privileges for role postgres in schema public revoke all on tables    from anon, authenticated, public;
-alter default privileges for role postgres in schema public revoke all on sequences from anon, authenticated, public;
-alter default privileges for role postgres in schema public revoke all on functions from anon, authenticated, public;
+alter default privileges for role postgres in schema public revoke all on tables    from anon, authenticated, public, service_role, authenticator;
+alter default privileges for role postgres in schema public revoke all on sequences from anon, authenticated, public, service_role, authenticator;
+alter default privileges for role postgres in schema public revoke all on functions from anon, authenticated, public, service_role, authenticator;
 
 -- 7) Restore the runtime role's search_path default (drop the app_private pin).
 alter role mayaallan_app in database postgres reset search_path;
@@ -351,6 +376,17 @@ begin
              where p.pronamespace='public'::regnamespace and p.proname = any(fns)
                and a.grantee not in ('postgres'::regrole, (select oid from pg_roles where rolname='mayaallan_app'))) then
     raise exception 'a restored public function ACL has a non-allowlisted grantee'; end if;
+  -- ENFORCED default-privilege ALLOWLIST: for the postgres-owned default
+  -- privileges in public, the ONLY grantees permitted are postgres (owner) and
+  -- mayaallan_app. Any other (PUBLIC=0, anon, authenticated, service_role,
+  -- authenticator, ...) is a failure.
+  if exists (
+    select 1 from pg_default_acl d
+      join pg_namespace n on n.oid=d.defaclnamespace,
+      aclexplode(d.defaclacl) a
+    where d.defaclrole='postgres'::regrole and n.nspname='public'
+      and a.grantee not in ('postgres'::regrole, (select oid from pg_roles where rolname='mayaallan_app'))) then
+    raise exception 'a postgres-owned default-privilege ACL in public grants a non-allowlisted grantee'; end if;
   raise notice 'ROLLBACK FINAL ASSERTIONS: ALL PASSED';
 end $$;
 
