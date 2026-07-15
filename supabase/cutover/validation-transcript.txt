@@ -1,7 +1,22 @@
-=== running cutover + rollback inside one rolled-back transaction ===
-psql:C:/Users/MAYAAL~1/AppData/Local/Temp/tmp.vN5f0VVars:509: NOTICE:  CUTOVER FINAL ASSERTIONS: ALL PASSED
-psql:C:/Users/MAYAAL~1/AppData/Local/Temp/tmp.vN5f0VVars:788: NOTICE:  ROLLBACK FINAL ASSERTIONS: ALL PASSED
-=== applying rollback.sql (transaction boundaries stripped) ===
+VALIDATION TRANSCRIPT — supabase/cutover (non-destructive, rolled back)
+Branch:        security/supabase-remove-public-exposure
+Parent SHA:    f8e6447
+Date (UTC):    2026-07-15T01:27:56Z
+Command:       SUPABASE_ADMIN_DATABASE_URL=<admin, non-pooling> ./supabase/cutover/validate.sh
+
+--- NEGATIVE TEST (failure cannot be masked) ---
+Injected 'raise exception' into cutover final assertions -> psql_exit=3, harness exit=1, 'VALIDATION FAILED' (verified, then reverted).
+
+--- cutover.sql + rollback.sql round-trip (validate.sh) ---
+psql_exit=0
+psql:C:/Users/MAYAAL~1/AppData/Local/Temp/tmp.PvAe4WGZnn:542: NOTICE:  CUTOVER FINAL ASSERTIONS: ALL PASSED
+psql:C:/Users/MAYAAL~1/AppData/Local/Temp/tmp.PvAe4WGZnn:871: NOTICE:  ROLLBACK FINAL ASSERTIONS: ALL PASSED
+markers: cutover_passed=1 rollback_passed=1
+production: public_tables before=15 after=15; app_private before=f after=f
+VALIDATION OK: psql_exit=0, exactly one CUTOVER + one ROLLBACK marker, production UNCHANGED.
+harness_exit=0
+
+--- prepare-runtime-role.sql (rolled back) ---
+psql:C:/Users/MAYAAL~1/AppData/Local/Temp/tmp.0oux7qlkyB:135: NOTICE:  PREPARE-RUNTIME-ROLE FINAL ASSERTIONS: ALL PASSED
 ROLLBACK
-=== production state: public tables before=15 after=15; app_private before=f after=f ===
-VALIDATION OK: cutover + rollback assertions passed; production UNCHANGED (15 tables in public, app_private absent).
+prepare_psql_exit=0

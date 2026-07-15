@@ -42,6 +42,15 @@ begin
     execute format('insert into _rb_counts values (%L, (select count(*) from app_private.%I))', t, t);
   end loop;
 end $$;
+-- Capture exact FK / index / sequence names in app_private, to verify by NAME after.
+create temporary table _rb_fk  (conname text primary key)  on commit drop;
+create temporary table _rb_idx (indexname text primary key) on commit drop;
+create temporary table _rb_seq (seqname text primary key)   on commit drop;
+insert into _rb_fk  select c.conname from pg_constraint c join pg_class t on t.oid=c.conrelid
+  where t.relnamespace='app_private'::regnamespace and c.contype='f';
+insert into _rb_idx select ci.relname from pg_index i join pg_class t on t.oid=i.indrelid
+  join pg_class ci on ci.oid=i.indexrelid where t.relnamespace='app_private'::regnamespace;
+insert into _rb_seq select c.relname from pg_class c where c.relkind='S' and c.relnamespace='app_private'::regnamespace;
 
 -- 1) Move tables + sequences back to public.
 do $$
@@ -204,14 +213,17 @@ grant execute on function public.increment_download_count(text),
   public.marketing_campaign_summary_since(timestamptz, integer)
   to mayaallan_app;
 
--- 6) Reverse the cutover's grant/default-privilege changes on public (restore the
---    pre-cutover Supabase state). Data-API exposure remains a separate dashboard
---    toggle, so this does not by itself re-open PostgREST.
-grant usage on schema public to anon, authenticated;
-grant usage, create on schema public to public;
-alter default privileges for role postgres in schema public grant all on tables to anon, authenticated;
-alter default privileges for role postgres in schema public grant all on sequences to anon, authenticated;
-alter default privileges for role postgres in schema public grant execute on functions to public;
+-- 6) Keep public LOCKED for the API roles + PUBLIC. A rollback restores app
+--    availability (via mayaallan_app) — it must NOT recreate the insecure
+--    Data-API privilege model. Explicitly revoke the API roles + PUBLIC on the
+--    restored objects and keep default privileges locked down.
+revoke all on all tables    in schema public from anon, authenticated, public;
+revoke all on all sequences in schema public from anon, authenticated, public;
+revoke all on all functions in schema public from anon, authenticated, public;
+revoke all on schema public from anon, authenticated, public;
+alter default privileges for role postgres in schema public revoke all on tables    from anon, authenticated, public;
+alter default privileges for role postgres in schema public revoke all on sequences from anon, authenticated, public;
+alter default privileges for role postgres in schema public revoke all on functions from anon, authenticated, public;
 
 -- 7) Restore the runtime role's search_path default (drop the app_private pin).
 alter role mayaallan_app in database postgres reset search_path;
@@ -227,12 +239,19 @@ declare
   fns text[] := array['increment_download_count','decrement_download_count',
     'claim_download_email_send','release_download_email_claim',
     'marketing_event_counts_since','marketing_campaign_summary_since'];
+  sigs text[] := array[
+    'increment_download_count|p_token text',
+    'decrement_download_count|p_token text',
+    'claim_download_email_send|p_token text, p_worker_id text, p_stale_timeout_seconds integer',
+    'release_download_email_claim|p_token text, p_worker_id text',
+    'marketing_event_counts_since|p_since timestamp with time zone',
+    'marketing_campaign_summary_since|p_since timestamp with time zone, p_limit integer'];
   tbls text[] := array[
     'admin_auth','book_retailer_links','books','contact_submissions',
     'download_tokens','email_subscribers','events','marketing_events',
     'marketing_visitors','media_items','navigation_items','orders',
     'pending_paypal_orders','retailers','site_settings'];
-  tname text; fn text; v_pre bigint; v_post bigint;
+  tname text; fn text; s text; nm text; args text; v_pre bigint; v_post bigint; v_oid oid; rec record;
 begin
   if exists (select 1 from information_schema.schemata where schema_name='app_private') then
     raise exception 'app_private not fully removed'; end if;
@@ -244,35 +263,66 @@ begin
     execute format('select count(*) from public.%I', tname) into v_post;
     if v_pre is distinct from v_post then raise exception 'rollback row-count mismatch on %: %/%', tname, v_pre, v_post; end if;
   end loop;
-  -- six functions restored, hardened (INVOKER, search_path='')
+  -- exact owners (tables + sequences) = postgres
+  if exists (select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+             where n.nspname='public' and c.relkind in ('r','S') and c.relowner <> 'postgres'::regrole) then
+    raise exception 'a public table/sequence is not owned by postgres'; end if;
+  -- six functions: exact signatures, hardened (INVOKER + search_path=''), and
+  -- runtime-only EXECUTE (anon/authenticated/PUBLIC have none).
   if (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
        where n.nspname='public' and p.proname = any(fns)) <> 6 then
     raise exception 'expected 6 restored functions in public'; end if;
-  if exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-             where n.nspname='public' and p.proname = any(fns)
-               and (p.prosecdef or coalesce(array_to_string(p.proconfig,','),'') <> 'search_path=""')) then
-    raise exception 'a restored function is not hardened (INVOKER + search_path='''')'; end if;
-  -- owners, FKs, indexes, sequences intact in public
-  if exists (select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
-             where n.nspname='public' and c.relkind='r' and c.relowner <> 'postgres'::regrole) then
-    raise exception 'a public table is not owned by postgres'; end if;
-  if (select count(*) from pg_constraint c join pg_class t on t.oid=c.conrelid
-       where t.relnamespace='public'::regnamespace and c.contype='f') <> 7 then
-    raise exception 'expected 7 foreign keys back in public'; end if;
-  if (select count(*) from pg_index i join pg_class t on t.oid=i.indrelid
-       where t.relnamespace='public'::regnamespace) <> 40 then
-    raise exception 'expected 40 indexes back in public'; end if;
-  if (select count(*) from pg_class s where s.relkind='S' and s.relnamespace='public'::regnamespace) <> 13 then
-    raise exception 'expected 13 sequences back in public'; end if;
-  -- runtime role still functional on public
-  foreach tname in array tbls loop
-    if not has_table_privilege('mayaallan_app','public.'||tname,'SELECT') then
-      raise exception 'runtime role lost SELECT on public.%', tname; end if;
+  foreach s in array sigs loop
+    nm := split_part(s,'|',1); args := split_part(s,'|',2);
+    if not exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+                   where n.nspname='public' and p.proname=nm and pg_get_function_identity_arguments(p.oid)=args) then
+      raise exception 'restored function public.%(%) missing or wrong signature', nm, args; end if;
   end loop;
   foreach fn in array fns loop
-    if not has_function_privilege('mayaallan_app',
-         (select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname=fn),'EXECUTE') then
+    select p.oid into v_oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname=fn;
+    if (select prosecdef from pg_proc where oid=v_oid)
+       or coalesce((select array_to_string(proconfig,',') from pg_proc where oid=v_oid),'') <> 'search_path=""' then
+      raise exception 'restored function % not hardened (INVOKER + search_path='''')', fn; end if;
+    if not has_function_privilege('mayaallan_app', v_oid, 'EXECUTE') then
       raise exception 'runtime role lost EXECUTE on public.%', fn; end if;
+    if has_function_privilege('anon', v_oid, 'EXECUTE') or has_function_privilege('authenticated', v_oid, 'EXECUTE') then
+      raise exception 'anon/authenticated have EXECUTE on public.%', fn; end if;
+    if (select proacl is null from pg_proc where oid=v_oid)
+       or exists (select 1 from pg_proc pp, aclexplode(pp.proacl) a where pp.oid=v_oid and a.grantee=0 and a.privilege_type='EXECUTE') then
+      raise exception 'PUBLIC has (or defaults to) EXECUTE on public.%', fn; end if;
+  end loop;
+  -- exact FK / index / sequence NAMES restored to public + sequence ownership deps
+  if exists (select conname from _rb_fk except select c.conname from pg_constraint c join pg_class t on t.oid=c.conrelid
+             where t.relnamespace='public'::regnamespace and c.contype='f') then
+    raise exception 'a foreign key is missing in public after rollback'; end if;
+  if (select count(*) from pg_constraint c join pg_class t on t.oid=c.conrelid where t.relnamespace='public'::regnamespace and c.contype='f') <> (select count(*) from _rb_fk) then
+    raise exception 'foreign-key count changed on rollback'; end if;
+  if exists (select indexname from _rb_idx except select ci.relname from pg_index i join pg_class t on t.oid=i.indrelid
+             join pg_class ci on ci.oid=i.indexrelid where t.relnamespace='public'::regnamespace) then
+    raise exception 'an index is missing in public after rollback'; end if;
+  if exists (select seqname from _rb_seq except select c.relname from pg_class c where c.relkind='S' and c.relnamespace='public'::regnamespace) then
+    raise exception 'a sequence is missing in public after rollback'; end if;
+  if exists (select 1 from pg_class s where s.relkind='S' and s.relnamespace='public'::regnamespace
+             and not exists (select 1 from pg_depend d join pg_class t on t.oid=d.refobjid
+                             where d.objid=s.oid and d.deptype in ('a','i') and t.relnamespace='public'::regnamespace and t.relkind='r')) then
+    raise exception 'a public sequence is not owned by a public table column after rollback'; end if;
+  -- zero PUBLIC/anon/authenticated object access
+  if exists (select 1 from information_schema.role_table_grants where table_schema='public' and grantee in ('anon','authenticated','PUBLIC')) then
+    raise exception 'anon/authenticated/PUBLIC still hold table grants in public after rollback'; end if;
+  if has_schema_privilege('anon','public','USAGE') or has_schema_privilege('authenticated','public','USAGE') then
+    raise exception 'anon/authenticated retain USAGE on public after rollback'; end if;
+  -- runtime role CRUD + sequence privileges intact
+  foreach tname in array tbls loop
+    if not (has_table_privilege('mayaallan_app','public.'||tname,'SELECT')
+        and has_table_privilege('mayaallan_app','public.'||tname,'INSERT')
+        and has_table_privilege('mayaallan_app','public.'||tname,'UPDATE')
+        and has_table_privilege('mayaallan_app','public.'||tname,'DELETE')) then
+      raise exception 'runtime role missing CRUD on public.% after rollback', tname; end if;
+  end loop;
+  for rec in select c.relname from pg_class c where c.relkind='S' and c.relnamespace='public'::regnamespace loop
+    if not (has_sequence_privilege('mayaallan_app','public.'||rec.relname,'USAGE')
+        and has_sequence_privilege('mayaallan_app','public.'||rec.relname,'SELECT')) then
+      raise exception 'runtime role missing USAGE/SELECT on sequence % after rollback', rec.relname; end if;
   end loop;
   raise notice 'ROLLBACK FINAL ASSERTIONS: ALL PASSED';
 end $$;

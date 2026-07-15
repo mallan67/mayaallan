@@ -364,7 +364,14 @@ declare
     'download_tokens','email_subscribers','events','marketing_events',
     'marketing_visitors','media_items','navigation_items','orders',
     'pending_paypal_orders','retailers','site_settings'];
-  tname text; fn text; v_pre bigint; v_post bigint; v_n int;
+  sigs text[] := array[
+    'increment_download_count|p_token text',
+    'decrement_download_count|p_token text',
+    'claim_download_email_send|p_token text, p_worker_id text, p_stale_timeout_seconds integer',
+    'release_download_email_claim|p_token text, p_worker_id text',
+    'marketing_event_counts_since|p_since timestamp with time zone',
+    'marketing_campaign_summary_since|p_since timestamp with time zone, p_limit integer'];
+  tname text; fn text; s text; nm text; args text; v_pre bigint; v_post bigint; v_oid oid; rec record;
 begin
   -- (a) tables moved, none left in public, row counts intact
   if (select count(*) from pg_tables where schemaname='public') <> 0 then
@@ -377,10 +384,12 @@ begin
     if v_pre is distinct from v_post then raise exception 'row-count mismatch on %: %/%', tname, v_pre, v_post; end if;
   end loop;
 
-  -- (b) exact table owners = postgres
+  -- (b) exact owners = postgres (schema, tables, sequences)
+  if (select nspowner from pg_namespace where nspname='app_private') <> 'postgres'::regrole then
+    raise exception 'app_private schema not owned by postgres'; end if;
   if exists (select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
-             where n.nspname='app_private' and c.relkind='r' and c.relowner <> 'postgres'::regrole) then
-    raise exception 'an app_private table is not owned by postgres'; end if;
+             where n.nspname='app_private' and c.relkind in ('r','S') and c.relowner <> 'postgres'::regrole) then
+    raise exception 'an app_private table/sequence is not owned by postgres'; end if;
 
   -- (c) policies gone; rowsecurity + forcerowsecurity false everywhere
   if exists (select 1 from pg_policies where schemaname in ('public','app_private')) then
@@ -392,10 +401,12 @@ begin
   -- (d) exactly the 6 functions in app_private, correct signature/owner/mode/path
   if (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private') <> 6 then
     raise exception 'expected 6 functions in app_private'; end if;
-  foreach fn in array fns loop
+  foreach s in array sigs loop
+    nm := split_part(s,'|',1); args := split_part(s,'|',2);
     if not exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-                   where n.nspname='app_private' and p.proname=fn) then
-      raise exception 'function app_private.% missing', fn; end if;
+                   where n.nspname='app_private' and p.proname=nm
+                     and pg_get_function_identity_arguments(p.oid)=args) then
+      raise exception 'app_private function %(%) missing or wrong signature', nm, args; end if;
   end loop;
   if exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
              where n.nspname='app_private'
@@ -482,26 +493,48 @@ begin
              where object_schema='app_private' and grantee in ('anon','authenticated','PUBLIC')) then
     raise exception 'anon/authenticated/PUBLIC hold sequence usage in app_private'; end if;
   foreach fn in array fns loop
-    if not has_function_privilege('mayaallan_app',
-         (select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private' and p.proname=fn),'EXECUTE') then
+    select p.oid into v_oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private' and p.proname=fn;
+    if not has_function_privilege('mayaallan_app', v_oid, 'EXECUTE') then
       raise exception 'runtime role missing EXECUTE on %', fn; end if;
-    if has_function_privilege('anon',
-         (select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private' and p.proname=fn),'EXECUTE')
-       or has_function_privilege('authenticated',
-         (select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private' and p.proname=fn),'EXECUTE') then
+    if has_function_privilege('anon', v_oid, 'EXECUTE') or has_function_privilege('authenticated', v_oid, 'EXECUTE') then
       raise exception 'anon/authenticated retain EXECUTE on %', fn; end if;
+    -- PUBLIC: proacl must be explicit (non-null) and carry no grantee=0 EXECUTE.
+    if (select proacl is null from pg_proc where oid=v_oid)
+       or exists (select 1 from pg_proc pp, aclexplode(pp.proacl) a where pp.oid=v_oid and a.grantee=0 and a.privilege_type='EXECUTE') then
+      raise exception 'PUBLIC still has (or defaults to) EXECUTE on %', fn; end if;
+  end loop;
+  -- runtime role USAGE + SELECT on EVERY app_private sequence
+  for rec in select c.relname from pg_class c where c.relkind='S' and c.relnamespace='app_private'::regnamespace loop
+    if not (has_sequence_privilege('mayaallan_app','app_private.'||rec.relname,'USAGE')
+        and has_sequence_privilege('mayaallan_app','app_private.'||rec.relname,'SELECT')) then
+      raise exception 'runtime role missing USAGE/SELECT on sequence %', rec.relname; end if;
   end loop;
 
-  -- (j) default privileges: runtime role granted, API roles not, in app_private
+  -- (j) default privileges. app_private: runtime role granted for tables(r),
+  --     sequences(S), functions(f); API roles + PUBLIC granted none.
   if not exists (select 1 from pg_default_acl d join pg_namespace n on n.oid=d.defaclnamespace, aclexplode(d.defaclacl) a
                  where n.nspname='app_private' and d.defaclobjtype='r'
                    and a.grantee=(select oid from pg_roles where rolname='mayaallan_app')) then
-    raise exception 'default privileges for app_private tables not set for the runtime role'; end if;
+    raise exception 'app_private default TABLE privilege not set for runtime role'; end if;
+  if not exists (select 1 from pg_default_acl d join pg_namespace n on n.oid=d.defaclnamespace, aclexplode(d.defaclacl) a
+                 where n.nspname='app_private' and d.defaclobjtype='S'
+                   and a.grantee=(select oid from pg_roles where rolname='mayaallan_app')) then
+    raise exception 'app_private default SEQUENCE privilege not set for runtime role'; end if;
+  if not exists (select 1 from pg_default_acl d join pg_namespace n on n.oid=d.defaclnamespace, aclexplode(d.defaclacl) a
+                 where n.nspname='app_private' and d.defaclobjtype='f'
+                   and a.grantee=(select oid from pg_roles where rolname='mayaallan_app')) then
+    raise exception 'app_private default FUNCTION privilege not set for runtime role'; end if;
   if exists (select 1 from pg_default_acl d join pg_namespace n on n.oid=d.defaclnamespace, aclexplode(d.defaclacl) a
              where n.nspname='app_private'
                and a.grantee in ((select oid from pg_roles where rolname='anon'),
                                  (select oid from pg_roles where rolname='authenticated'), 0)) then
-    raise exception 'default privileges in app_private still grant an API role / PUBLIC'; end if;
+    raise exception 'app_private default privileges still grant an API role / PUBLIC'; end if;
+  -- public: default privileges must NOT grant anon/authenticated/PUBLIC.
+  if exists (select 1 from pg_default_acl d join pg_namespace n on n.oid=d.defaclnamespace, aclexplode(d.defaclacl) a
+             where n.nspname='public'
+               and a.grantee in ((select oid from pg_roles where rolname='anon'),
+                                 (select oid from pg_roles where rolname='authenticated'), 0)) then
+    raise exception 'public default privileges still grant an API role / PUBLIC'; end if;
 
   raise notice 'CUTOVER FINAL ASSERTIONS: ALL PASSED';
 end $$;
