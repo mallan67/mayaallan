@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
     // Use simple .eq() filter - the slug should match directly
     const { data: book, error } = await supabaseAdmin
       .from(Tables.books)
-      .select("title, seo_title, seo_description, blurb, subtitle1, subtitle2, subtitle3, cover_url, og_image_url")
+      .select("title, seo_title, subtitle1, subtitle2, subtitle3, cover_url, og_image_url")
       .eq("slug", decodedSlug)
       .limit(1)
       .single()
@@ -62,9 +62,10 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
 
     const title = book.seo_title || book.title
     const subtitles = [book.subtitle1, book.subtitle2, book.subtitle3].filter(Boolean).join(" | ")
-    // Prefer an intentional seo_description; otherwise the curated machine
-    // summary — never the mutable sales blurb.
-    const description = book.seo_description || bookMachineSummary(decodedSlug, book.title)
+    // Curated machine summary ONLY. No mutable admin field (seo_description,
+    // blurb) may drive protected machine-facing metadata (meta description,
+    // OpenGraph, Twitter) — that is the loophole PR #37 was meant to close.
+    const description = bookMachineSummary(decodedSlug, book.title)
     const bookUrl = `${SITE_URL}/books/${slug}`
 
     // ALWAYS use the dynamic OG image route for consistent 1200x630 social images
@@ -88,18 +89,14 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
     const bookKeywords = [
       book.title,
       "Maya Allan",
+      "Maya Allan author",
       "psilocybin integration",
-      "mushroom guide",
       "psychedelic integration",
-      "practitioners",
-      "healers",
-      "facilitators",
-      "psychedelic guides",
-      "solo mushroom experience",
-      "psilocybin therapy",
+      "post-journey reflection",
+      "integration journaling",
+      "self-inquiry",
+      "consciousness author",
       "integration book",
-      "psychedelic healing",
-      "plant medicine guide",
     ]
 
     return {
