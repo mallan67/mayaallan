@@ -22,7 +22,13 @@ import { pgTypes } from "./db-types"
  * sides of the move without any code change.
  */
 
-const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL
+// Dedicated, server-only connection string for THIS Supabase project's Postgres
+// (the transaction pooler). Intentionally does NOT fall back to DATABASE_URL /
+// POSTGRES_URL: those can be injected by unrelated Vercel integrations, and
+// silently connecting to the wrong database is worse than failing. Set
+// SUPABASE_DATABASE_URL (Vercel env + local .env) to the Supabase transaction
+// pooler connection string. Missing => fail closed.
+const connectionString = process.env.SUPABASE_DATABASE_URL
 
 let client: ReturnType<typeof postgres> | null = null
 
@@ -30,7 +36,7 @@ function getClient(): ReturnType<typeof postgres> {
   if (client) return client
   if (!connectionString) {
     throw new Error(
-      "Missing DATABASE_URL / POSTGRES_URL for the direct Postgres client",
+      "Missing SUPABASE_DATABASE_URL for the direct Postgres client",
     )
   }
   client = postgres(connectionString, {

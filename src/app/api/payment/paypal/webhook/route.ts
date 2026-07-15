@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { sql } from "@/lib/db"
+import { paypalAmountToCents } from "@/lib/db-coerce.mjs"
 import { Resend } from "resend"
 import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, extractWebhookHeaders, getAccessToken, safePaypalEnvLabel, verifyPaypalWebhook } from "@/lib/paypal"
@@ -138,23 +139,6 @@ function parseBookId(raw: unknown): number | null {
   if (!/^[0-9]+$/.test(trimmed)) return null
   const n = parseInt(trimmed, 10)
   return Number.isInteger(n) && n > 0 ? n : null
-}
-
-/**
- * Parse a PayPal decimal amount string (e.g. "19.99") to an EXACT integer
- * number of cents — no floating point. PayPal sends canonical decimal strings
- * for USD. Anything unparseable returns 0. This replaces the previous
- * `Math.round(parseFloat(value) * 100)`, which routed money through a binary
- * float before rounding.
- */
-function paypalAmountToCents(value: string | null | undefined): number {
-  if (typeof value !== "string") return 0
-  const m = value.trim().match(/^(-?)(\d+)(?:\.(\d{1,2}))?$/)
-  if (!m) return 0
-  const sign = m[1] === "-" ? -1 : 1
-  const dollars = parseInt(m[2], 10)
-  const cents = parseInt((m[3] ?? "").padEnd(2, "0"), 10)
-  return sign * (dollars * 100 + cents)
 }
 
 export async function POST(request: Request) {
@@ -320,10 +304,11 @@ export async function POST(request: Request) {
       let customerEmail: string | null = null
       let customerName: string | null = null
       let paypalOrderId: string | null = null
-      let amount: number = 0
-      // Raw PayPal decimal string (e.g. "9.99"), stored verbatim in the exact
-      // `numeric` amount column and parsed to integer cents — never floated.
+      // Money is carried as an exact decimal string (amountRaw, e.g. "9.99")
+      // AND an exact integer number of cents (amountCents) — never a JS float.
+      // amountRaw goes into the numeric column; amountCents into amount_cents.
       let amountRaw: string = "0"
+      let amountCents: number = 0
       let currency: string = "usd"
 
       if (body.event_type === "PAYMENT.CAPTURE.COMPLETED") {
@@ -356,7 +341,7 @@ export async function POST(request: Request) {
           return NextResponse.json({ received: true, ignored: "missing-order-id" })
         }
         amountRaw = resource.amount?.value || "0"
-        amount = parseFloat(amountRaw)
+        amountCents = paypalAmountToCents(amountRaw)
         currency = resource.amount?.currency_code?.toLowerCase() || "usd"
         // Note: payer info may be in supplementary_data for captures
         customerEmail = resource.payer?.email_address || resource.supplementary_data?.payer?.email_address
@@ -369,7 +354,7 @@ export async function POST(request: Request) {
         bookId = parseBookId(purchaseUnit?.custom_id) // M8: strict positive-int parse
         paypalOrderId = resource.id
         amountRaw = purchaseUnit?.amount?.value || "0"
-        amount = parseFloat(amountRaw)
+        amountCents = paypalAmountToCents(amountRaw)
         currency = purchaseUnit?.amount?.currency_code?.toLowerCase() || "usd"
         customerEmail = resource.payer?.email_address
         customerName = resource.payer?.name?.given_name
@@ -380,7 +365,7 @@ export async function POST(request: Request) {
         bookId = parseBookId(resource.custom) // M8: strict positive-int parse
         paypalOrderId = resource.id
         amountRaw = resource.amount?.total || "0"
-        amount = parseFloat(amountRaw)
+        amountCents = paypalAmountToCents(amountRaw)
         currency = resource.amount?.currency?.toLowerCase() || "usd"
         customerEmail = resource.payer?.email_address
         customerName = resource.payer?.name?.given_name && resource.payer?.name?.surname
@@ -509,7 +494,8 @@ export async function POST(request: Request) {
             paypalOrderId,
             bookId: book.id,
             expectedCurrency: "USD",
-            actualAmount: amount,
+            actualAmount: amountRaw,
+            actualAmountCents: amountCents,
             actualCurrency: currency,
           },
           dedupKey: `paypal:currency-mismatch:${paypalOrderId}`,
@@ -596,7 +582,7 @@ export async function POST(request: Request) {
           // the legacy ones still carry NOT NULL constraints and must be
           // populated or the INSERT fails. Keep both in sync.
           customer_email: customerEmail,
-          amount_cents: paypalAmountToCents(amountRaw),
+          amount_cents: amountCents,
           // Newer canonical columns the rest of the app reads from.
           email: customerEmail,
           customer_name: customerName || null,
@@ -679,7 +665,8 @@ export async function POST(request: Request) {
               details: {
                 paypalOrderId,
                 bookId,
-                amount,
+                amount: amountRaw,
+                amountCents,
                 currency,
                 errorCode: orderError?.code,
               },
@@ -1092,7 +1079,8 @@ export async function POST(request: Request) {
                  ${sql.json({
                    order_id: order.id,
                    paypal_order_id: paypalOrderId,
-                   amount: typeof amount === "number" ? amount : null,
+                   amount: amountRaw,
+                   amount_cents: amountCents,
                    currency: typeof currency === "string" ? currency : null,
                    book_id: typeof book?.id === "number" ? book.id : null,
                    title: typeof book?.title === "string" ? book.title.slice(0, 128) : null,
