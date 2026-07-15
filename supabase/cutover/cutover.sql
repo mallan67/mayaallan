@@ -2,50 +2,72 @@
 -- ATOMIC SCHEMA CUTOVER: public -> app_private
 -- =============================================================================
 -- DO NOT EXECUTE until the direct-SQL application code (this branch) is deployed
--- and healthy with the tables STILL in public. This migration is transactional
--- and self-verifying: every assertion that fails aborts the transaction, so it
--- either fully applies or fully rolls back.
+-- and healthy with the tables STILL in public. One self-verifying transaction:
+-- it either fully applies or fully rolls back (any failed assertion aborts it).
 --
--- PREREQUISITES (operator, out-of-band — not in this file, no secrets here):
---   1. A dedicated, LEAST-PRIVILEGED runtime role exists (default name below:
---      mayaallan_app) with LOGIN and NO superuser/BYPASSRLS/CREATEDB/CREATEROLE.
---      SUPABASE_DATABASE_URL must point at THIS role — never postgres,
---      supabase_admin, or service_role.
---   2. The app is deployed with src/lib/db.ts's connection search_path =
---      "app_private,public,pg_catalog" (already committed). That startup
---      parameter — not ALTER ROLE — is what keeps warm pooled connections
---      resolving correctly across the move.
+-- RUNTIME ROLE: this script uses the role name `mayaallan_app` throughout. If
+-- you created the dedicated least-privileged runtime role under a different
+-- name, find-and-replace `mayaallan_app` before running. That role must:
+--   - exist, have LOGIN, and be least-privileged (no SUPERUSER / BYPASSRLS /
+--     CREATEDB / CREATEROLE / REPLICATION), and not inherit any privileged role;
+--   - be the role SUPABASE_DATABASE_URL points at (never postgres / supabase_admin
+--     / service_role / authenticator).
 --
--- AFTER a successful run + smoke test: remove `public` from the Supabase Data
--- API "Exposed schemas" (dashboard / Data API config — not SQL), and tighten
--- the app connection search_path to "app_private,pg_catalog".
+-- The app must already be deployed with src/lib/db.ts's connection search_path =
+-- "app_private,public,pg_catalog" — that per-connection startup parameter (not
+-- ALTER ROLE) keeps warm pooled connections resolving correctly across the move.
+--
+-- Functions are SECURITY INVOKER (the runtime role has direct table CRUD, so no
+-- definer privilege is needed) with SET search_path = '' + fully-qualified refs.
+--
+-- After a successful run + smoke test: remove `public` from the Supabase Data
+-- API "Exposed schemas" (dashboard — not SQL) and tighten the app connection
+-- search_path to "app_private,pg_catalog".
 -- =============================================================================
 
 begin;
-
--- 1) Safe timeouts so a stuck lock can't hang the pooler.
 set local lock_timeout = '5s';
 set local statement_timeout = '120s';
 set local idle_in_transaction_session_timeout = '120s';
 
--- Config: role names in one place.
-create temporary table _cfg (runtime_role text, owner_role text) on commit drop;
-insert into _cfg values ('mayaallan_app', 'postgres');
-
--- 2) Precondition: runtime role exists and is least-privileged.
+-- 1) PRECONDITION: runtime role exists, LOGIN, least-privileged, no inherited
+--    privileged membership, no unexpected database privilege.
 do $$
-declare v_role text := 'mayaallan_app';
+declare v_bad text;
 begin
-  if not exists (select 1 from pg_roles where rolname = v_role) then
-    raise exception 'runtime role % missing — create it (least-privileged, LOGIN) and point SUPABASE_DATABASE_URL at it first', v_role;
+  if not exists (select 1 from pg_roles where rolname='mayaallan_app') then
+    raise exception 'runtime role mayaallan_app missing — create it least-privileged and point SUPABASE_DATABASE_URL at it first';
   end if;
-  if exists (select 1 from pg_roles where rolname = v_role
-             and (rolsuper or rolbypassrls or rolcreatedb or rolcreaterole)) then
-    raise exception 'runtime role % has elevated attributes (super/bypassrls/createdb/createrole) — must be least-privileged', v_role;
+  if not (select rolcanlogin from pg_roles where rolname='mayaallan_app') then
+    raise exception 'runtime role mayaallan_app must have LOGIN';
+  end if;
+  if exists (select 1 from pg_roles where rolname='mayaallan_app'
+             and (rolsuper or rolbypassrls or rolcreatedb or rolcreaterole or rolreplication)) then
+    raise exception 'runtime role mayaallan_app has elevated attributes (super/bypassrls/createdb/createrole/replication)';
+  end if;
+  -- Transitive membership: every role mayaallan_app is (recursively) a member of.
+  select string_agg(rolname, ', ') into v_bad from (
+    with recursive m as (
+      select am.roleid from pg_auth_members am
+        where am.member = (select oid from pg_roles where rolname='mayaallan_app')
+      union
+      select am.roleid from pg_auth_members am join m on am.member = m.roleid
+    )
+    select r.rolname from m join pg_roles r on r.oid = m.roleid
+     where r.rolname in ('postgres','supabase_admin','service_role','authenticator',
+                         'anon','authenticated','rds_superuser','supabase_auth_admin',
+                         'supabase_storage_admin','supabase_replication_admin','pg_read_all_data','pg_write_all_data')
+        or r.rolsuper or r.rolbypassrls or r.rolcreatedb or r.rolcreaterole or r.rolreplication
+  ) bad;
+  if v_bad is not null then
+    raise exception 'runtime role mayaallan_app inherits privileged role(s): %', v_bad;
+  end if;
+  if has_database_privilege('mayaallan_app', current_database(), 'CREATE') then
+    raise exception 'runtime role mayaallan_app has CREATE on the database — too broad';
   end if;
 end $$;
 
--- 3) Assert EXACTLY the 15 expected application tables exist in public.
+-- 2) Assert EXACTLY the 15 expected application tables in public.
 do $$
 declare
   expected text[] := array[
@@ -61,12 +83,11 @@ begin
     end if;
   end loop;
   if (select count(*) from pg_tables where schemaname='public') <> 15 then
-    raise exception 'public has % tables, expected exactly 15 (unexpected extra table present)',
-      (select count(*) from pg_tables where schemaname='public');
+    raise exception 'public has % tables, expected exactly 15', (select count(*) from pg_tables where schemaname='public');
   end if;
 end $$;
 
--- 4) Assert EXACTLY the 6 expected functions exist with the expected signatures.
+-- 3) Assert EXACTLY the 6 expected functions exist with the expected signatures.
 do $$
 declare
   sigs text[] := array[
@@ -84,13 +105,21 @@ begin
       select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
        where n.nspname='public' and p.proname=nm
          and pg_get_function_identity_arguments(p.oid)=args) then
-      raise exception 'expected function public.%(%) not found with that signature', nm, args;
+      raise exception 'expected function public.%(%) not found', nm, args;
     end if;
   end loop;
+  if (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+       where n.nspname='public' and p.proname = any(array[
+         'increment_download_count','decrement_download_count','claim_download_email_send',
+         'release_download_email_claim','marketing_event_counts_since','marketing_campaign_summary_since'])) <> 6 then
+    raise exception 'expected exactly 6 matching functions in public';
+  end if;
 end $$;
 
--- 5) Capture row counts BEFORE the move (verified again at the end).
+-- 4) Capture PRE-move state (row counts, FK names, index names) to compare after.
 create temporary table _pre_counts (t text primary key, n bigint) on commit drop;
+create temporary table _pre_fk (conname text primary key) on commit drop;
+create temporary table _pre_idx (indexname text primary key) on commit drop;
 do $$
 declare t text;
 begin
@@ -102,21 +131,42 @@ begin
     execute format('insert into _pre_counts values (%L, (select count(*) from public.%I))', t, t);
   end loop;
 end $$;
+insert into _pre_fk
+  select c.conname from pg_constraint c join pg_class t on t.oid=c.conrelid
+   where t.relnamespace='public'::regnamespace and c.contype='f';
+insert into _pre_idx
+  select ci.relname from pg_index i
+    join pg_class t on t.oid=i.indrelid
+    join pg_class ci on ci.oid=i.indexrelid
+   where t.relnamespace='public'::regnamespace;
 
--- 6) Create the private schema with controlled ownership.
-create schema if not exists app_private authorization postgres;
+-- 5) REFUSE to reuse a pre-existing app_private unless it is empty and correctly
+--    owned. Otherwise create it, owned by postgres.
+do $$
+begin
+  if exists (select 1 from pg_namespace where nspname='app_private') then
+    if (select nspowner from pg_namespace where nspname='app_private') <> 'postgres'::regrole then
+      raise exception 'app_private already exists but is not owned by postgres — refusing to reuse';
+    end if;
+    if exists (select 1 from pg_class where relnamespace='app_private'::regnamespace)
+       or exists (select 1 from pg_proc where pronamespace='app_private'::regnamespace) then
+      raise exception 'app_private already exists and is NOT empty — refusing to reuse';
+    end if;
+  else
+    create schema app_private authorization postgres;
+  end if;
+end $$;
 
--- 7) Drop every policy on the application tables (there are none today, but be
---    exhaustive and idempotent).
+-- 6) Drop every policy on the application tables (idempotent).
 do $$
 declare r record;
 begin
-  for r in select schemaname, tablename, policyname from pg_policies where schemaname='public' loop
+  for r in select tablename, policyname from pg_policies where schemaname='public' loop
     execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
   end loop;
 end $$;
 
--- 8) Force-off + disable row security on every application table.
+-- 7) NO FORCE + DISABLE row security on every application table.
 do $$
 declare t text;
 begin
@@ -130,10 +180,9 @@ begin
   end loop;
 end $$;
 
--- 9) Move all 15 tables into app_private. (Owned indexes, constraints and
---    identity/serial sequences move with the table.)
+-- 8) Move all 15 tables + every owned sequence into app_private.
 do $$
-declare t text;
+declare t text; s text;
 begin
   foreach t in array array[
     'admin_auth','book_retailer_links','books','contact_submissions',
@@ -142,26 +191,16 @@ begin
     'pending_paypal_orders','retailers','site_settings'] loop
     execute format('alter table public.%I set schema app_private', t);
   end loop;
-end $$;
-
--- 10) Belt-and-suspenders: move ANY sequence still left in public into
---     app_private, then assert none remain.
-do $$
-declare s text;
-begin
   for s in select sequencename from pg_sequences where schemaname='public' loop
     execute format('alter sequence public.%I set schema app_private', s);
   end loop;
-  if exists (select 1 from pg_sequences where schemaname='public') then
-    raise exception 'sequences still remain in public after move';
-  end if;
 end $$;
 
--- 11) The six hardened functions (SECURITY DEFINER, search_path = '', fully
---     qualified). Identical behavior to the public versions.
+-- 9) The six hardened functions: SECURITY INVOKER, SET search_path = '',
+--    fully-qualified app_private refs. Behavior identical to the originals.
 CREATE OR REPLACE FUNCTION app_private.increment_download_count(p_token text)
  RETURNS TABLE(status text, download_count integer, max_downloads integer, expires_at timestamp with time zone, order_id bigint, book_id bigint)
- LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
+ LANGUAGE plpgsql SECURITY INVOKER SET search_path = ''
 AS $function$
   DECLARE v_id BIGINT; v_expires TIMESTAMPTZ; v_count INTEGER; v_max INTEGER; v_order_id BIGINT; v_book_id BIGINT;
   BEGIN
@@ -189,7 +228,7 @@ $function$;
 
 CREATE OR REPLACE FUNCTION app_private.decrement_download_count(p_token text)
  RETURNS TABLE(status text, download_count integer)
- LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
+ LANGUAGE plpgsql SECURITY INVOKER SET search_path = ''
 AS $function$
   DECLARE v_id BIGINT; v_count INTEGER;
   BEGIN
@@ -206,7 +245,7 @@ $function$;
 
 CREATE OR REPLACE FUNCTION app_private.claim_download_email_send(p_token text, p_worker_id text, p_stale_timeout_seconds integer DEFAULT 600)
  RETURNS TABLE(status text, token_id bigint)
- LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
+ LANGUAGE plpgsql SECURITY INVOKER SET search_path = ''
 AS $function$
 DECLARE v_id BIGINT; v_sent_at TIMESTAMPTZ; v_claim_at TIMESTAMPTZ; v_stale_before TIMESTAMPTZ;
 BEGIN
@@ -225,7 +264,7 @@ END;
 $function$;
 
 CREATE OR REPLACE FUNCTION app_private.release_download_email_claim(p_token text, p_worker_id text)
- RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = ''
+ RETURNS void LANGUAGE sql SECURITY INVOKER SET search_path = ''
 AS $function$
   UPDATE app_private.download_tokens
      SET email_send_claimed_at = NULL, email_send_claimed_by = NULL
@@ -233,7 +272,7 @@ AS $function$
 $function$;
 
 CREATE OR REPLACE FUNCTION app_private.marketing_event_counts_since(p_since timestamp with time zone)
- RETURNS TABLE(event_name text, n bigint) LANGUAGE sql SECURITY DEFINER SET search_path = ''
+ RETURNS TABLE(event_name text, n bigint) LANGUAGE sql SECURITY INVOKER SET search_path = ''
 AS $function$
   SELECT event_name, COUNT(*)::BIGINT AS n FROM app_private.marketing_events
    WHERE created_at >= p_since GROUP BY event_name ORDER BY n DESC;
@@ -241,7 +280,7 @@ $function$;
 
 CREATE OR REPLACE FUNCTION app_private.marketing_campaign_summary_since(p_since timestamp with time zone, p_limit integer DEFAULT 10)
  RETURNS TABLE(campaign text, events bigint, checkouts bigint, purchases bigint, revenue numeric)
- LANGUAGE sql SECURITY DEFINER SET search_path = ''
+ LANGUAGE sql SECURITY INVOKER SET search_path = ''
 AS $function$
   SELECT utm_campaign AS campaign,
     COUNT(*)::BIGINT AS events,
@@ -255,7 +294,7 @@ AS $function$
   GROUP BY utm_campaign ORDER BY events DESC LIMIT GREATEST(COALESCE(p_limit,10),1);
 $function$;
 
--- 12) Drop the obsolete public-schema versions of the six functions.
+-- 10) Drop the obsolete public-schema versions.
 DROP FUNCTION IF EXISTS public.increment_download_count(text);
 DROP FUNCTION IF EXISTS public.decrement_download_count(text);
 DROP FUNCTION IF EXISTS public.claim_download_email_send(text, text, integer);
@@ -263,7 +302,7 @@ DROP FUNCTION IF EXISTS public.release_download_email_claim(text, text);
 DROP FUNCTION IF EXISTS public.marketing_event_counts_since(timestamptz);
 DROP FUNCTION IF EXISTS public.marketing_campaign_summary_since(timestamptz, integer);
 
--- 13) Explicit ownership of the schema and every moved/created object.
+-- 11) Explicit ownership (schema + every moved/created object) = postgres.
 alter schema app_private owner to postgres;
 do $$
 declare r record;
@@ -274,52 +313,42 @@ begin
   for r in select sequencename from pg_sequences where schemaname='app_private' loop
     execute format('alter sequence app_private.%I owner to postgres', r.sequencename);
   end loop;
-  for r in select p.oid, p.proname, pg_get_function_identity_arguments(p.oid) as args
+  for r in select p.proname, pg_get_function_identity_arguments(p.oid) as args
              from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private' loop
     execute format('alter function app_private.%I(%s) owner to postgres', r.proname, r.args);
   end loop;
 end $$;
 
--- 14) Revoke everything from the public API roles and PostgreSQL PUBLIC — on the
---     new schema AND on the moved objects (GRANTs travel with a table across a
---     SET SCHEMA, so any prior anon grant must be revoked here).
+-- 12) Revoke from the public API roles and PostgreSQL PUBLIC — new schema AND
+--     the moved objects (grants travel with a table across SET SCHEMA), AND the
+--     now-empty public schema (fully, including PUBLIC — see correction #1).
 revoke all on schema app_private from anon, authenticated, public;
 revoke all on all tables    in schema app_private from anon, authenticated, public;
 revoke all on all sequences in schema app_private from anon, authenticated, public;
 revoke all on all functions in schema app_private from anon, authenticated, public;
--- Also stop the (now-empty) public schema being traversable by the API roles.
-revoke usage on schema public from anon, authenticated;
+revoke all on schema public from public, anon, authenticated;
 
--- 15) Grant the dedicated runtime role ONLY what the website needs.
+-- 13) Grant the dedicated runtime role ONLY what the website needs.
 grant usage on schema app_private to mayaallan_app;
 grant select, insert, update, delete on all tables in schema app_private to mayaallan_app;
 grant usage, select on all sequences in schema app_private to mayaallan_app;
 grant execute on all functions in schema app_private to mayaallan_app;
 
--- 16) Default privileges for the owning role (postgres) so FUTURE objects in
---     app_private are auto-granted to the runtime role and never to the API
---     roles; and lock down future objects in public too.
-alter default privileges for role postgres in schema app_private
-  grant select, insert, update, delete on tables to mayaallan_app;
-alter default privileges for role postgres in schema app_private
-  grant usage, select on sequences to mayaallan_app;
-alter default privileges for role postgres in schema app_private
-  grant execute on functions to mayaallan_app;
-alter default privileges for role postgres in schema app_private
-  revoke all on tables from anon, authenticated, public;
-alter default privileges for role postgres in schema app_private
-  revoke all on sequences from anon, authenticated, public;
-alter default privileges for role postgres in schema app_private
-  revoke all on functions from anon, authenticated, public;
-alter default privileges for role postgres in schema public
-  revoke all on tables from anon, authenticated, public;
-alter default privileges for role postgres in schema public
-  revoke all on sequences from anon, authenticated, public;
-alter default privileges for role postgres in schema public
-  revoke all on functions from anon, authenticated, public;
+-- 14) Default privileges for the owning role (postgres): future app_private
+--     objects auto-granted to the runtime role, never to the API roles; and
+--     lock down future public objects.
+alter default privileges for role postgres in schema app_private grant select, insert, update, delete on tables to mayaallan_app;
+alter default privileges for role postgres in schema app_private grant usage, select on sequences to mayaallan_app;
+alter default privileges for role postgres in schema app_private grant execute on functions to mayaallan_app;
+alter default privileges for role postgres in schema app_private revoke all on tables from anon, authenticated, public;
+alter default privileges for role postgres in schema app_private revoke all on sequences from anon, authenticated, public;
+alter default privileges for role postgres in schema app_private revoke all on functions from anon, authenticated, public;
+alter default privileges for role postgres in schema public revoke all on tables from anon, authenticated, public;
+alter default privileges for role postgres in schema public revoke all on sequences from anon, authenticated, public;
+alter default privileges for role postgres in schema public revoke all on functions from anon, authenticated, public;
 
--- 17) Defense-in-depth role default search_path (the app connection startup
---     parameter is the primary mechanism; this covers ad-hoc sessions).
+-- 15) Defense-in-depth role default search_path (connection startup param is the
+--     primary mechanism; this covers ad-hoc sessions).
 alter role mayaallan_app in database postgres set search_path = 'app_private, pg_catalog';
 
 -- =============================================================================
@@ -327,67 +356,154 @@ alter role mayaallan_app in database postgres set search_path = 'app_private, pg
 -- =============================================================================
 do $$
 declare
+  fns text[] := array['increment_download_count','decrement_download_count',
+    'claim_download_email_send','release_download_email_claim',
+    'marketing_event_counts_since','marketing_campaign_summary_since'];
   tbls text[] := array[
     'admin_auth','book_retailer_links','books','contact_submissions',
     'download_tokens','email_subscribers','events','marketing_events',
     'marketing_visitors','media_items','navigation_items','orders',
     'pending_paypal_orders','retailers','site_settings'];
-  tname text; v_pre bigint; v_post bigint; v_bad int;
+  tname text; fn text; v_pre bigint; v_post bigint; v_n int;
 begin
-  -- a) all 15 tables now in app_private, none left in public, row counts intact
+  -- (a) tables moved, none left in public, row counts intact
   if (select count(*) from pg_tables where schemaname='public') <> 0 then
-    raise exception 'public still has % tables', (select count(*) from pg_tables where schemaname='public');
-  end if;
+    raise exception 'public still has % tables', (select count(*) from pg_tables where schemaname='public'); end if;
   if (select count(*) from pg_tables where schemaname='app_private') <> 15 then
-    raise exception 'app_private has % tables, expected 15', (select count(*) from pg_tables where schemaname='app_private');
-  end if;
+    raise exception 'app_private has % tables, expected 15', (select count(*) from pg_tables where schemaname='app_private'); end if;
   foreach tname in array tbls loop
     select pc.n into v_pre from _pre_counts pc where pc.t = tname;
     execute format('select count(*) from app_private.%I', tname) into v_post;
-    if v_pre is distinct from v_post then
-      raise exception 'row-count mismatch on %: before=% after=%', tname, v_pre, v_post;
-    end if;
+    if v_pre is distinct from v_post then raise exception 'row-count mismatch on %: %/%', tname, v_pre, v_post; end if;
   end loop;
 
-  -- b) zero policies; row security + force both false on every moved table
-  if exists (select 1 from pg_policies where schemaname in ('public','app_private')) then
-    raise exception 'policies still present';
-  end if;
+  -- (b) exact table owners = postgres
   if exists (select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
-             where n.nspname='app_private' and c.relkind='r'
-               and (c.relrowsecurity or c.relforcerowsecurity)) then
-    raise exception 'rowsecurity/forcerowsecurity still true on an app_private table';
-  end if;
+             where n.nspname='app_private' and c.relkind='r' and c.relowner <> 'postgres'::regrole) then
+    raise exception 'an app_private table is not owned by postgres'; end if;
 
-  -- c) six functions present in app_private, obsolete public versions gone
+  -- (c) policies gone; rowsecurity + forcerowsecurity false everywhere
+  if exists (select 1 from pg_policies where schemaname in ('public','app_private')) then
+    raise exception 'policies still present'; end if;
+  if exists (select 1 from pg_class c join pg_namespace n on n.oid=c.relnamespace
+             where n.nspname='app_private' and c.relkind='r' and (c.relrowsecurity or c.relforcerowsecurity)) then
+    raise exception 'rowsecurity/forcerowsecurity still true'; end if;
+
+  -- (d) exactly the 6 functions in app_private, correct signature/owner/mode/path
   if (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private') <> 6 then
-    raise exception 'expected 6 functions in app_private, found %',
-      (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private');
-  end if;
+    raise exception 'expected 6 functions in app_private'; end if;
+  foreach fn in array fns loop
+    if not exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+                   where n.nspname='app_private' and p.proname=fn) then
+      raise exception 'function app_private.% missing', fn; end if;
+  end loop;
   if exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
-             where n.nspname='public'
-               and p.proname = any(array['increment_download_count','decrement_download_count',
-                 'claim_download_email_send','release_download_email_claim',
-                 'marketing_event_counts_since','marketing_campaign_summary_since'])) then
-    raise exception 'obsolete public function version still present';
-  end if;
+             where n.nspname='app_private'
+               and (p.prosecdef  -- must be SECURITY INVOKER
+                 or p.proowner <> 'postgres'::regrole
+                 or coalesce(array_to_string(p.proconfig,','),'') <> 'search_path=""')) then
+    raise exception 'a function has wrong security mode / owner / search_path'; end if;
 
-  -- d) no sequences left in public; every app_private sequence owned by a moved table
+  -- (e) obsolete public function versions gone
+  if exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+             where n.nspname='public' and p.proname = any(fns)) then
+    raise exception 'obsolete public function still present'; end if;
+
+  -- (f) sequences: none in public; all 13 in app_private owned by a table column
   if exists (select 1 from pg_sequences where schemaname='public') then
-    raise exception 'sequence still in public';
-  end if;
+    raise exception 'sequence still in public'; end if;
+  if (select count(*) from pg_class s where s.relkind='S' and s.relnamespace='app_private'::regnamespace) <> 13 then
+    raise exception 'expected 13 sequences in app_private, found %',
+      (select count(*) from pg_class s where s.relkind='S' and s.relnamespace='app_private'::regnamespace); end if;
+  if exists (
+    select 1 from pg_class s
+     where s.relkind='S' and s.relnamespace='app_private'::regnamespace
+       and not exists (
+         select 1 from pg_depend d join pg_class t on t.oid=d.refobjid
+          where d.objid=s.oid and d.deptype in ('a','i')
+            and t.relnamespace='app_private'::regnamespace and t.relkind='r')) then
+    raise exception 'an app_private sequence is not owned by an app_private table column'; end if;
 
-  -- e) ZERO privileges for anon/authenticated/PUBLIC on any app_private object
-  select count(*) into v_bad
-    from information_schema.role_table_grants
-   where table_schema='app_private' and grantee in ('anon','authenticated','PUBLIC');
-  if v_bad <> 0 then raise exception 'anon/authenticated/PUBLIC still hold % table grants in app_private', v_bad; end if;
+  -- (g) exact FK + index sets preserved (moved, same names, now in app_private)
+  if (select count(*) from pg_constraint c join pg_class t on t.oid=c.conrelid
+       where t.relnamespace='app_private'::regnamespace and c.contype='f')
+     <> (select count(*) from _pre_fk) then
+    raise exception 'foreign-key count changed across the move'; end if;
+  if exists (select conname from _pre_fk
+             except
+             select c.conname from pg_constraint c join pg_class t on t.oid=c.conrelid
+              where t.relnamespace='app_private'::regnamespace and c.contype='f') then
+    raise exception 'a pre-move foreign key is missing in app_private'; end if;
+  -- no FK on an app_private table may reference a table still in public
+  if exists (select 1 from pg_constraint c
+               join pg_class t on t.oid=c.conrelid
+               join pg_class rt on rt.oid=c.confrelid
+              where t.relnamespace='app_private'::regnamespace and c.contype='f'
+                and rt.relnamespace='public'::regnamespace) then
+    raise exception 'an app_private FK still references a public table'; end if;
+  if (select count(*) from pg_index i join pg_class t on t.oid=i.indrelid
+       where t.relnamespace='app_private'::regnamespace) <> (select count(*) from _pre_idx) then
+    raise exception 'index count changed across the move'; end if;
+  if exists (select indexname from _pre_idx
+             except
+             select ci.relname from pg_index i join pg_class t on t.oid=i.indrelid
+               join pg_class ci on ci.oid=i.indexrelid
+              where t.relnamespace='app_private'::regnamespace) then
+    raise exception 'a pre-move index is missing in app_private'; end if;
 
-  -- f) foreign keys + indexes survived the move (spot totals)
-  if (select count(*) from pg_constraint c join pg_namespace n on n.oid=c.connamespace
-       where n.nspname='app_private' and c.contype='f') = 0 then
-    raise exception 'no foreign keys found in app_private (expected the FK set to have moved)';
-  end if;
+  -- (h) schema privileges: runtime role has USAGE on app_private; NONE on
+  --     app_private or public for anon/authenticated/PUBLIC.
+  if not has_schema_privilege('mayaallan_app','app_private','USAGE') then
+    raise exception 'runtime role lacks USAGE on app_private'; end if;
+  if has_schema_privilege('mayaallan_app','app_private','CREATE') then
+    raise exception 'runtime role should NOT have CREATE on app_private'; end if;
+  if has_schema_privilege('anon','app_private','USAGE') or has_schema_privilege('authenticated','app_private','USAGE')
+     or has_schema_privilege('anon','app_private','CREATE') or has_schema_privilege('authenticated','app_private','CREATE') then
+    raise exception 'anon/authenticated retain a privilege on app_private'; end if;
+  if has_schema_privilege('anon','public','USAGE') or has_schema_privilege('authenticated','public','USAGE')
+     or has_schema_privilege('anon','public','CREATE') or has_schema_privilege('authenticated','public','CREATE') then
+    raise exception 'anon/authenticated retain USAGE/CREATE on public'; end if;
+  if exists (select 1 from pg_namespace n, aclexplode(n.nspacl) a
+             where n.nspname in ('public','app_private') and a.grantee=0) then
+    raise exception 'schema still granted to PUBLIC'; end if;
+
+  -- (i) table/sequence/function privileges for the runtime role; zero for API roles
+  foreach tname in array tbls loop
+    if not (has_table_privilege('mayaallan_app','app_private.'||tname,'SELECT')
+        and has_table_privilege('mayaallan_app','app_private.'||tname,'INSERT')
+        and has_table_privilege('mayaallan_app','app_private.'||tname,'UPDATE')
+        and has_table_privilege('mayaallan_app','app_private.'||tname,'DELETE')) then
+      raise exception 'runtime role missing CRUD on %', tname; end if;
+  end loop;
+  if exists (select 1 from information_schema.role_table_grants
+             where table_schema='app_private' and grantee in ('anon','authenticated','PUBLIC')) then
+    raise exception 'anon/authenticated/PUBLIC hold table grants in app_private'; end if;
+  if exists (select 1 from information_schema.role_usage_grants  -- sequence USAGE
+             where object_schema='app_private' and grantee in ('anon','authenticated','PUBLIC')) then
+    raise exception 'anon/authenticated/PUBLIC hold sequence usage in app_private'; end if;
+  foreach fn in array fns loop
+    if not has_function_privilege('mayaallan_app',
+         (select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private' and p.proname=fn),'EXECUTE') then
+      raise exception 'runtime role missing EXECUTE on %', fn; end if;
+    if has_function_privilege('anon',
+         (select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private' and p.proname=fn),'EXECUTE')
+       or has_function_privilege('authenticated',
+         (select p.oid from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private' and p.proname=fn),'EXECUTE') then
+      raise exception 'anon/authenticated retain EXECUTE on %', fn; end if;
+  end loop;
+
+  -- (j) default privileges: runtime role granted, API roles not, in app_private
+  if not exists (select 1 from pg_default_acl d join pg_namespace n on n.oid=d.defaclnamespace, aclexplode(d.defaclacl) a
+                 where n.nspname='app_private' and d.defaclobjtype='r'
+                   and a.grantee=(select oid from pg_roles where rolname='mayaallan_app')) then
+    raise exception 'default privileges for app_private tables not set for the runtime role'; end if;
+  if exists (select 1 from pg_default_acl d join pg_namespace n on n.oid=d.defaclnamespace, aclexplode(d.defaclacl) a
+             where n.nspname='app_private'
+               and a.grantee in ((select oid from pg_roles where rolname='anon'),
+                                 (select oid from pg_roles where rolname='authenticated'), 0)) then
+    raise exception 'default privileges in app_private still grant an API role / PUBLIC'; end if;
+
+  raise notice 'CUTOVER FINAL ASSERTIONS: ALL PASSED';
 end $$;
 
 commit;
