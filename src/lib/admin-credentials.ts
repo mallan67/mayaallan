@@ -1,7 +1,7 @@
 import "server-only"
 import bcrypt from "bcryptjs"
 import { randomBytes, createHash } from "crypto"
-import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 
 /**
  * Admin credential store — bridges the single `admin_auth` row to the auth
@@ -28,17 +28,20 @@ type AdminAuthRow = {
 }
 
 async function readRow(): Promise<AdminAuthRow | null> {
-  const { data, error } = await supabaseAdmin
-    .from("admin_auth")
-    .select("password_hash, reset_token_hash, reset_token_expires_at")
-    .eq("id", ADMIN_AUTH_ROW_ID)
-    .maybeSingle()
-  if (error) {
+  let rows
+  try {
+    rows = await sql`
+      select password_hash, reset_token_hash, reset_token_expires_at
+      from admin_auth
+      where id = ${ADMIN_AUTH_ROW_ID}
+      limit 1
+    `
+  } catch (err) {
     // Surface as a thrown error so callers fail closed rather than silently
     // treating "DB unreachable" as "no DB credential".
-    throw new Error(`admin_auth read failed: ${error.message}`)
+    throw new Error(`admin_auth read failed: ${err instanceof Error ? err.message : String(err)}`)
   }
-  return (data as AdminAuthRow) ?? null
+  return (rows[0] as AdminAuthRow | undefined) ?? null
 }
 
 /**
@@ -88,15 +91,17 @@ export async function createResetToken(): Promise<string> {
   const rawToken = randomBytes(32).toString("hex")
   const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS).toISOString()
 
-  const { error } = await supabaseAdmin
-    .from("admin_auth")
-    .update({
-      reset_token_hash: sha256Hex(rawToken),
-      reset_token_expires_at: expiresAt,
-      reset_requested_at: new Date().toISOString(),
-    })
-    .eq("id", ADMIN_AUTH_ROW_ID)
-  if (error) throw new Error(`admin_auth reset-token write failed: ${error.message}`)
+  try {
+    await sql`
+      update admin_auth
+      set reset_token_hash = ${sha256Hex(rawToken)},
+          reset_token_expires_at = ${expiresAt},
+          reset_requested_at = ${new Date().toISOString()}
+      where id = ${ADMIN_AUTH_ROW_ID}
+    `
+  } catch (err) {
+    throw new Error(`admin_auth reset-token write failed: ${err instanceof Error ? err.message : String(err)}`)
+  }
 
   return rawToken
 }
@@ -122,23 +127,27 @@ export async function resetPasswordWithToken(
   // present (not yet consumed) AND unexpired. The first request flips
   // reset_token_hash to NULL, so a concurrent second request with the same
   // token matches zero rows and is rejected — the single-use guarantee holds
-  // under concurrency without a separate read. `.select("id")` returns the
-  // affected rows so we can tell whether the conditional matched.
-  const { data, error } = await supabaseAdmin
-    .from("admin_auth")
-    .update({
-      password_hash,
-      reset_token_hash: null,
-      reset_token_expires_at: null,
-      updated_at: nowIso,
-    })
-    .eq("id", ADMIN_AUTH_ROW_ID)
-    .eq("reset_token_hash", sha256Hex(rawToken))
-    .gt("reset_token_expires_at", nowIso)
-    .select("id")
-  if (error) throw new Error(`admin_auth password write failed: ${error.message}`)
+  // under concurrency without a separate read. `returning id` reports the
+  // affected rows so we can tell whether the conditional matched. This is the
+  // identical atomic compare-and-swap the PostgREST filter chain compiled to.
+  let rows
+  try {
+    rows = await sql`
+      update admin_auth
+      set password_hash = ${password_hash},
+          reset_token_hash = null,
+          reset_token_expires_at = null,
+          updated_at = ${nowIso}
+      where id = ${ADMIN_AUTH_ROW_ID}
+        and reset_token_hash = ${sha256Hex(rawToken)}
+        and reset_token_expires_at > ${nowIso}
+      returning id
+    `
+  } catch (err) {
+    throw new Error(`admin_auth password write failed: ${err instanceof Error ? err.message : String(err)}`)
+  }
 
-  if (!data || data.length === 0) {
+  if (rows.length === 0) {
     // No row matched → token was wrong, already used, or expired.
     return { ok: false, reason: "invalid_token" }
   }

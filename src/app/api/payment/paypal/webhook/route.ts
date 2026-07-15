@@ -2,7 +2,7 @@
 // Turbopack file-hash change forces this route's chunk to recompile.
 import { NextResponse } from "next/server"
 import { headers } from "next/headers"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { Resend } from "resend"
 import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, extractWebhookHeaders, getAccessToken, safePaypalEnvLabel, verifyPaypalWebhook } from "@/lib/paypal"
@@ -138,6 +138,23 @@ function parseBookId(raw: unknown): number | null {
   if (!/^[0-9]+$/.test(trimmed)) return null
   const n = parseInt(trimmed, 10)
   return Number.isInteger(n) && n > 0 ? n : null
+}
+
+/**
+ * Parse a PayPal decimal amount string (e.g. "19.99") to an EXACT integer
+ * number of cents — no floating point. PayPal sends canonical decimal strings
+ * for USD. Anything unparseable returns 0. This replaces the previous
+ * `Math.round(parseFloat(value) * 100)`, which routed money through a binary
+ * float before rounding.
+ */
+function paypalAmountToCents(value: string | null | undefined): number {
+  if (typeof value !== "string") return 0
+  const m = value.trim().match(/^(-?)(\d+)(?:\.(\d{1,2}))?$/)
+  if (!m) return 0
+  const sign = m[1] === "-" ? -1 : 1
+  const dollars = parseInt(m[2], 10)
+  const cents = parseInt((m[3] ?? "").padEnd(2, "0"), 10)
+  return sign * (dollars * 100 + cents)
 }
 
 export async function POST(request: Request) {
@@ -304,6 +321,9 @@ export async function POST(request: Request) {
       let customerName: string | null = null
       let paypalOrderId: string | null = null
       let amount: number = 0
+      // Raw PayPal decimal string (e.g. "9.99"), stored verbatim in the exact
+      // `numeric` amount column and parsed to integer cents — never floated.
+      let amountRaw: string = "0"
       let currency: string = "usd"
 
       if (body.event_type === "PAYMENT.CAPTURE.COMPLETED") {
@@ -335,7 +355,8 @@ export async function POST(request: Request) {
           })
           return NextResponse.json({ received: true, ignored: "missing-order-id" })
         }
-        amount = parseFloat(resource.amount?.value || "0")
+        amountRaw = resource.amount?.value || "0"
+        amount = parseFloat(amountRaw)
         currency = resource.amount?.currency_code?.toLowerCase() || "usd"
         // Note: payer info may be in supplementary_data for captures
         customerEmail = resource.payer?.email_address || resource.supplementary_data?.payer?.email_address
@@ -347,7 +368,8 @@ export async function POST(request: Request) {
         const purchaseUnit = resource.purchase_units?.[0]
         bookId = parseBookId(purchaseUnit?.custom_id) // M8: strict positive-int parse
         paypalOrderId = resource.id
-        amount = parseFloat(purchaseUnit?.amount?.value || "0")
+        amountRaw = purchaseUnit?.amount?.value || "0"
+        amount = parseFloat(amountRaw)
         currency = purchaseUnit?.amount?.currency_code?.toLowerCase() || "usd"
         customerEmail = resource.payer?.email_address
         customerName = resource.payer?.name?.given_name
@@ -357,7 +379,8 @@ export async function POST(request: Request) {
         // Legacy PAYMENT.SALE.COMPLETED
         bookId = parseBookId(resource.custom) // M8: strict positive-int parse
         paypalOrderId = resource.id
-        amount = parseFloat(resource.amount?.total || "0")
+        amountRaw = resource.amount?.total || "0"
+        amount = parseFloat(amountRaw)
         currency = resource.amount?.currency?.toLowerCase() || "usd"
         customerEmail = resource.payer?.email_address
         customerName = resource.payer?.name?.given_name && resource.payer?.name?.surname
@@ -415,13 +438,17 @@ export async function POST(request: Request) {
       }
 
       // Get book from database
-      const { data: book, error: bookError } = await supabaseAdmin
-        .from(Tables.books)
-        .select("*")
-        .eq("id", bookId)
-        .single()
+      let book
+      let bookLookupErrorCode: string | undefined
+      try {
+        const rows = await sql`select * from books where id = ${bookId} limit 1`
+        book = rows[0]
+      } catch (bookError) {
+        console.error("[paypal webhook] book lookup failed:", bookError)
+        bookLookupErrorCode = (bookError as { code?: string })?.code
+      }
 
-      if (bookError || !book) {
+      if (!book) {
         // Same reasoning: 200 + alert instead of 404, so PayPal stops retrying.
         await alertAdmin({
           severity: "critical",
@@ -430,7 +457,7 @@ export async function POST(request: Request) {
             "A payment event arrived referencing a book ID that doesn't exist in the database. " +
             "Either the book was deleted between order creation and fulfillment, or custom_id " +
             "was tampered with. Manual reconciliation required.",
-          details: { bookId, paypalOrderId, errorCode: bookError?.code },
+          details: { bookId, paypalOrderId, errorCode: bookLookupErrorCode },
           dedupKey: `paypal:book-not-found:${bookId}`,
         })
         return NextResponse.json({ received: true, ignored: "book-not-found" })
@@ -506,23 +533,34 @@ export async function POST(request: Request) {
       let order: any
       let resumingExistingOrder = false
 
-      const { data: existingOrder } = await supabaseAdmin
-        .from(Tables.orders)
-        .select("*")
-        .eq("paypal_order_id", paypalOrderId)
-        .maybeSingle()
+      // Original ignored a lookup error here (data-only destructure): on a DB
+      // error we simply fall through to the INSERT path, where a genuine
+      // duplicate is still caught by the unique index (23505). Preserved.
+      let existingOrder
+      try {
+        const rows = await sql`select * from orders where paypal_order_id = ${paypalOrderId} limit 1`
+        existingOrder = rows[0]
+      } catch (e) {
+        console.error("[paypal webhook] existing-order pre-check failed:", e)
+      }
 
       // The token we'll email the customer. If a previous attempt already
       // created a token row but failed before email send, we reuse it
       // (don't mint a second token).
-      let reusableToken: { id: number; token: string; expires_at: string; max_downloads: number | null; email_sent_at: string | null } | null = null
+      type TokenRow = { id: number; token: string; expires_at: string; max_downloads: number | null; email_sent_at: string | null }
+      let reusableToken: TokenRow | null = null
 
       if (existingOrder) {
-        const { data: existingToken } = await supabaseAdmin
-          .from(Tables.downloadTokens)
-          .select("id, token, expires_at, max_downloads, email_sent_at")
-          .eq("order_id", existingOrder.id)
-          .maybeSingle()
+        let existingToken
+        try {
+          const rows = await sql`
+            select id, token, expires_at, max_downloads, email_sent_at
+            from download_tokens where order_id = ${existingOrder.id} limit 1
+          `
+          existingToken = rows[0]
+        } catch (e) {
+          console.error("[paypal webhook] existing-token lookup failed:", e)
+        }
 
         if (existingToken && existingToken.email_sent_at) {
           // Identical retry of a fully fulfilled order — token exists AND
@@ -541,7 +579,7 @@ export async function POST(request: Request) {
           // Reuse the existing token and resume email delivery instead of
           // returning deduplicated:true (which would silently strand the
           // customer with no email).
-          reusableToken = existingToken
+          reusableToken = existingToken as unknown as TokenRow
         }
 
         // Order row exists — resume from where the previous attempt failed.
@@ -549,29 +587,36 @@ export async function POST(request: Request) {
         resumingExistingOrder = true
         order = existingOrder
       } else {
-        const { data: insertedOrder, error: orderError } = await supabaseAdmin
-          .from(Tables.orders)
-          .insert({
-            // Legacy NOT NULL columns (from the original schema). The
-            // newer columns below (`email`, `amount`) are what we read elsewhere,
-            // but the legacy ones still carry NOT NULL constraints and must be
-            // populated or the INSERT fails. Keep both in sync.
-            customer_email: customerEmail,
-            amount_cents: Math.round(amount * 100),
-            // Newer canonical columns the rest of the app reads from.
-            email: customerEmail,
-            customer_name: customerName || null,
-            paypal_order_id: paypalOrderId,
-            book_id: book.id,
-            format_type: "ebook", // Direct sales are ebook-only — see /api/checkout/paypal
-            amount: amount,
-            currency: currency,
-            payment_provider: "paypal",
-            status: "completed",
-            completed_at: new Date().toISOString(),
-          })
-          .select()
-          .single()
+        // amount stored two money-safe ways: `amount` = PayPal's exact decimal
+        // string into the numeric column; `amount_cents` = exact integer parse.
+        // Neither passes through a JS float.
+        const orderData = {
+          // Legacy NOT NULL columns (from the original schema). The newer
+          // columns below (`email`, `amount`) are what we read elsewhere, but
+          // the legacy ones still carry NOT NULL constraints and must be
+          // populated or the INSERT fails. Keep both in sync.
+          customer_email: customerEmail,
+          amount_cents: paypalAmountToCents(amountRaw),
+          // Newer canonical columns the rest of the app reads from.
+          email: customerEmail,
+          customer_name: customerName || null,
+          paypal_order_id: paypalOrderId,
+          book_id: book.id,
+          format_type: "ebook", // Direct sales are ebook-only — see /api/checkout/paypal
+          amount: amountRaw,
+          currency: currency,
+          payment_provider: "paypal",
+          status: "completed",
+          completed_at: new Date().toISOString(),
+        }
+        let insertedOrder
+        let orderError: { code?: string } | null = null
+        try {
+          const rows = await sql`insert into orders ${sql(orderData)} returning *`
+          insertedOrder = rows[0]
+        } catch (err) {
+          orderError = { code: (err as { code?: string })?.code }
+        }
 
         if (orderError || !insertedOrder) {
           // 23505 = postgres unique_violation. A concurrent webhook attempt
@@ -580,17 +625,24 @@ export async function POST(request: Request) {
           // the email out. If not, resume email delivery using the winner's
           // token row instead of blindly returning deduplicated.
           if (orderError?.code === "23505") {
-            const { data: racedOrder } = await supabaseAdmin
-              .from(Tables.orders)
-              .select("*")
-              .eq("paypal_order_id", paypalOrderId)
-              .maybeSingle()
+            let racedOrder
+            try {
+              const rows = await sql`select * from orders where paypal_order_id = ${paypalOrderId} limit 1`
+              racedOrder = rows[0]
+            } catch (e) {
+              console.error("[paypal webhook] raced-order re-select failed:", e)
+            }
             if (racedOrder) {
-              const { data: racedToken } = await supabaseAdmin
-                .from(Tables.downloadTokens)
-                .select("id, token, expires_at, max_downloads, email_sent_at")
-                .eq("order_id", racedOrder.id)
-                .maybeSingle()
+              let racedToken
+              try {
+                const rows = await sql`
+                  select id, token, expires_at, max_downloads, email_sent_at
+                  from download_tokens where order_id = ${racedOrder.id} limit 1
+                `
+                racedToken = rows[0]
+              } catch (e) {
+                console.error("[paypal webhook] raced-token lookup failed:", e)
+              }
 
               if (racedToken && racedToken.email_sent_at) {
                 // Winner did it all — safe to dedupe.
@@ -604,7 +656,7 @@ export async function POST(request: Request) {
 
               if (racedToken) {
                 // Winner created the token but never sent the email — resume.
-                reusableToken = racedToken
+                reusableToken = racedToken as unknown as TokenRow
               }
               // Either way, continue with the raced order row + (maybe) the
               // raced token; don't return early.
@@ -682,30 +734,37 @@ export async function POST(request: Request) {
           const newExpiresAt = new Date()
           newExpiresAt.setDate(newExpiresAt.getDate() + 30)
 
-          const { data: downloadToken, error: tokenError } = await supabaseAdmin
-            .from(Tables.downloadTokens)
-            .insert({
-              token: newToken,
-              order_id: order.id,
-              book_id: book.id,
-              // Per-deployment override via DOWNLOAD_TOKEN_MAX_DOWNLOADS;
-              // defaults to 5. Audiobooks or larger packages may want a
-              // lower or higher cap once that flow is built.
-              max_downloads: Number(process.env.DOWNLOAD_TOKEN_MAX_DOWNLOADS) || 5,
-              expires_at: newExpiresAt.toISOString(),
-            })
-            .select("id, token, expires_at, max_downloads, email_sent_at")
-            .single()
+          let downloadToken
+          let tokenError: { code?: string } | null = null
+          try {
+            const rows = await sql`
+              insert into download_tokens (token, order_id, book_id, max_downloads, expires_at)
+              values (
+                ${newToken}, ${order.id}, ${book.id},
+                ${Number(process.env.DOWNLOAD_TOKEN_MAX_DOWNLOADS) || 5},
+                ${newExpiresAt.toISOString()}
+              )
+              returning id, token, expires_at, max_downloads, email_sent_at
+            `
+            downloadToken = rows[0]
+          } catch (err) {
+            tokenError = { code: (err as { code?: string })?.code }
+          }
 
           if (tokenError && tokenError.code === "23505") {
             // A concurrent webhook just won the token-insert race. Re-select
             // and continue with the winner's token. If the winner already
             // sent the email, dedupe; otherwise resume email delivery.
-            const { data: racedToken } = await supabaseAdmin
-              .from(Tables.downloadTokens)
-              .select("id, token, expires_at, max_downloads, email_sent_at")
-              .eq("order_id", order.id)
-              .maybeSingle()
+            let racedToken
+            try {
+              const rows = await sql`
+                select id, token, expires_at, max_downloads, email_sent_at
+                from download_tokens where order_id = ${order.id} limit 1
+              `
+              racedToken = rows[0]
+            } catch (e) {
+              console.error("[paypal webhook] token-race re-select failed:", e)
+            }
 
             if (!racedToken) {
               // Shouldn't happen — the unique index fired but the row is gone.
@@ -785,12 +844,20 @@ export async function POST(request: Request) {
         // ----------------------------------------------------------------
         const workerId = `vercel:${process.env.VERCEL_DEPLOYMENT_ID ?? "local"}:${crypto.randomBytes(8).toString("hex")}`
 
-        const { data: claimRows, error: claimError } = await supabaseAdmin.rpc(
-          "claim_download_email_send",
-          { p_token: tokenValue, p_worker_id: workerId, p_stale_timeout_seconds: 600 },
-        )
-
-        if (claimError) {
+        // Named (=>) arg notation preserves the exact call the supabase .rpc
+        // used; claim_download_email_send takes a FOR UPDATE row lock and
+        // atomically grants exactly one worker the send ('ok'), else
+        // 'claimed_by_other' / 'already_sent' / 'not_found'.
+        let claimRows
+        try {
+          claimRows = await sql`
+            select * from claim_download_email_send(
+              p_token => ${tokenValue},
+              p_worker_id => ${workerId},
+              p_stale_timeout_seconds => ${600}
+            )
+          `
+        } catch (claimError) {
           await alertAdmin({
             severity: "critical",
             subject: "PayPal webhook: email-send claim RPC failed",
@@ -798,7 +865,11 @@ export async function POST(request: Request) {
               "claim_download_email_send errored. Cannot safely send the delivery email without " +
               "the claim — risk of duplicate emails under concurrent retries. Returning 500 so " +
               "PayPal retries.",
-            details: { orderId: order.id, errorCode: claimError.code, errorMessage: claimError.message },
+            details: {
+              orderId: order.id,
+              errorCode: (claimError as { code?: string })?.code,
+              errorMessage: claimError instanceof Error ? claimError.message : String(claimError),
+            },
             dedupKey: "paypal:claim-rpc-failed",
           })
           return NextResponse.json({
@@ -807,7 +878,7 @@ export async function POST(request: Request) {
           }, { status: 500 })
         }
 
-        const claimResult = Array.isArray(claimRows) ? claimRows[0] : claimRows
+        const claimResult = claimRows[0]
 
         if (!claimResult || claimResult.status === "not_found") {
           // Token row vanished between the SELECT we did earlier and the claim.
@@ -866,11 +937,18 @@ export async function POST(request: Request) {
 
         if (!emailResult.ok) {
           // Release the claim so a future retry can re-acquire it. If the
-          // release itself fails the claim will stale-timeout in 10 min.
-          await supabaseAdmin.rpc("release_download_email_claim", {
-            p_token: tokenValue,
-            p_worker_id: workerId,
-          })
+          // release itself fails the claim will stale-timeout in 10 min — so
+          // a release error here must stay non-fatal (do not throw).
+          try {
+            await sql`
+              select * from release_download_email_claim(
+                p_token => ${tokenValue},
+                p_worker_id => ${workerId}
+              )
+            `
+          } catch (releaseErr) {
+            console.error("[paypal webhook] release claim failed (non-fatal):", releaseErr)
+          }
 
           console.error("Purchase email failed for order", order.id, ":", emailResult.error)
           await alertAdmin({
@@ -899,14 +977,18 @@ export async function POST(request: Request) {
 
         // Email confirmed delivered by Resend — record it AND clear the claim
         // columns (they served their purpose; clearing keeps the row clean).
-        const { error: sentUpdateError } = await supabaseAdmin
-          .from(Tables.downloadTokens)
-          .update({
-            email_sent_at: new Date().toISOString(),
-            email_send_claimed_at: null,
-            email_send_claimed_by: null,
-          })
-          .eq("id", tokenRowId)
+        let sentUpdateError: { code?: string } | null = null
+        try {
+          await sql`
+            update download_tokens
+            set email_sent_at = ${new Date().toISOString()},
+                email_send_claimed_at = null,
+                email_send_claimed_by = null
+            where id = ${tokenRowId}
+          `
+        } catch (err) {
+          sentUpdateError = { code: (err as { code?: string })?.code }
+        }
 
         if (sentUpdateError) {
           // Non-fatal — the customer already has their email. But a future
@@ -943,12 +1025,13 @@ export async function POST(request: Request) {
         // Best-effort: the email already went out — a failure here must never
         // fail the webhook (which would trigger a PayPal retry of a fulfilled
         // order). supabase-js returns the error in-band, so just log it.
-        const { error: holdFlipError } = await supabaseAdmin
-          .from("pending_paypal_orders")
-          .update({ status: "consumed", consumed_at: new Date().toISOString() })
-          .eq("paypal_order_id", paypalOrderId)
-          .eq("status", "held")
-        if (holdFlipError) {
+        try {
+          await sql`
+            update pending_paypal_orders
+            set status = 'consumed', consumed_at = ${new Date().toISOString()}
+            where paypal_order_id = ${paypalOrderId} and status = 'held'
+          `
+        } catch (holdFlipError) {
           console.error("Best-effort held→consumed flip failed (non-fatal):", holdFlipError)
         }
 
@@ -977,13 +1060,17 @@ export async function POST(request: Request) {
           }
           let attribution: CheckoutAttribution | null = null
 
-          const { data: pendingRow } = await supabaseAdmin
-            .from("pending_paypal_orders")
-            .select(
-              "visitor_id, session_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, landing_page, referrer",
-            )
-            .eq("paypal_order_id", paypalOrderId)
-            .maybeSingle()
+          let pendingRow
+          try {
+            const rows = await sql`
+              select visitor_id, session_id, utm_source, utm_medium, utm_campaign,
+                     utm_content, utm_term, landing_page, referrer
+              from pending_paypal_orders where paypal_order_id = ${paypalOrderId} limit 1
+            `
+            pendingRow = rows[0]
+          } catch (e) {
+            console.error("[webhook] pending attribution lookup failed:", e)
+          }
 
           if (pendingRow) attribution = pendingRow as unknown as CheckoutAttribution
 
@@ -991,34 +1078,31 @@ export async function POST(request: Request) {
           // We hand-write the insert instead of using trackMarketingEvent
           // because that helper only reads from request cookies (which
           // don't exist on a server-to-server webhook).
-          const { error: eventInsertError } = await supabaseAdmin
-            .from("marketing_events")
-            .insert({
-              visitor_id: attribution?.visitor_id ?? null,
-              session_id: attribution?.session_id ?? null,
-              event_name: "purchase_completed",
-              path: "/api/payment/paypal/webhook",
-              referrer: attribution?.referrer ?? null,
-              utm_source: attribution?.utm_source ?? null,
-              utm_medium: attribution?.utm_medium ?? null,
-              utm_campaign: attribution?.utm_campaign ?? null,
-              utm_content: attribution?.utm_content ?? null,
-              utm_term: attribution?.utm_term ?? null,
-              properties: {
-                order_id: order.id,
-                paypal_order_id: paypalOrderId,
-                amount: typeof amount === "number" ? amount : null,
-                currency: typeof currency === "string" ? currency : null,
-                book_id: typeof book?.id === "number" ? book.id : null,
-                title: typeof book?.title === "string" ? book.title.slice(0, 128) : null,
-                fulfillment_status: "completed",
-              },
-            })
-          if (eventInsertError) {
+          try {
+            await sql`
+              insert into marketing_events
+                (visitor_id, session_id, event_name, path, referrer,
+                 utm_source, utm_medium, utm_campaign, utm_content, utm_term, properties)
+              values
+                (${attribution?.visitor_id ?? null}, ${attribution?.session_id ?? null},
+                 'purchase_completed', '/api/payment/paypal/webhook', ${attribution?.referrer ?? null},
+                 ${attribution?.utm_source ?? null}, ${attribution?.utm_medium ?? null},
+                 ${attribution?.utm_campaign ?? null}, ${attribution?.utm_content ?? null},
+                 ${attribution?.utm_term ?? null},
+                 ${sql.json({
+                   order_id: order.id,
+                   paypal_order_id: paypalOrderId,
+                   amount: typeof amount === "number" ? amount : null,
+                   currency: typeof currency === "string" ? currency : null,
+                   book_id: typeof book?.id === "number" ? book.id : null,
+                   title: typeof book?.title === "string" ? book.title.slice(0, 128) : null,
+                   fulfillment_status: "completed",
+                 } as Parameters<typeof sql.json>[0])})
+            `
+          } catch (eventInsertError) {
             console.error(
               "[webhook] purchase_completed event insert failed:",
-              eventInsertError.message,
-              eventInsertError.code,
+              eventInsertError instanceof Error ? eventInsertError.message : String(eventInsertError),
             )
           }
 
@@ -1026,23 +1110,22 @@ export async function POST(request: Request) {
           // admin dashboard / CSV exports / future joins don't need to
           // touch marketing_events for basic revenue-by-campaign.
           if (attribution) {
-            const { error: orderUpdateError } = await supabaseAdmin
-              .from(Tables.orders)
-              .update({
-                visitor_id: attribution.visitor_id,
-                session_id: attribution.session_id,
-                utm_source: attribution.utm_source,
-                utm_medium: attribution.utm_medium,
-                utm_campaign: attribution.utm_campaign,
-                landing_page: attribution.landing_page,
-                referrer: attribution.referrer,
-              })
-              .eq("id", order.id)
-            if (orderUpdateError) {
+            try {
+              await sql`
+                update orders
+                set visitor_id = ${attribution.visitor_id},
+                    session_id = ${attribution.session_id},
+                    utm_source = ${attribution.utm_source},
+                    utm_medium = ${attribution.utm_medium},
+                    utm_campaign = ${attribution.utm_campaign},
+                    landing_page = ${attribution.landing_page},
+                    referrer = ${attribution.referrer}
+                where id = ${order.id}
+              `
+            } catch (orderUpdateError) {
               console.error(
                 "[webhook] orders attribution update failed:",
-                orderUpdateError.message,
-                orderUpdateError.code,
+                orderUpdateError instanceof Error ? orderUpdateError.message : String(orderUpdateError),
               )
             }
           }

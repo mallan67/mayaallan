@@ -31,7 +31,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, getAccessToken, safePaypalEnvLabel } from "@/lib/paypal"
-import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { siteUrl } from "@/lib/site-url"
 import { createHash } from "node:crypto"
@@ -129,21 +129,24 @@ export async function GET(request: NextRequest) {
   // it must still be 'pending'. This is the primary defense against
   // third-party capture replay.
   // ----------------------------------------------------------------------
-  const { data: pending, error: pendingFetchError } = await supabaseAdmin
-    .from("pending_paypal_orders")
-    .select("id, paypal_order_id, book_id, book_slug, status, created_at, ip_hash, user_agent_hash")
-    .eq("paypal_order_id", orderId)
-    .maybeSingle()
-
-  if (pendingFetchError) {
+  let pending
+  try {
+    const rows = await sql`
+      select id, paypal_order_id, book_id, book_slug, status, created_at, ip_hash, user_agent_hash
+      from pending_paypal_orders
+      where paypal_order_id = ${orderId}
+      limit 1
+    `
+    pending = rows[0]
+  } catch (pendingFetchError) {
     console.error("pending_paypal_orders lookup failed:", pendingFetchError)
     await alertAdmin({
       severity: "error",
       subject: "PayPal return: pending order lookup failed",
       body:
-        "Looking up pending_paypal_orders for an incoming return failed with a non-PGRST116 error. " +
+        "Looking up pending_paypal_orders for an incoming return failed with a database error. " +
         "Capture cannot proceed safely until this is resolved.",
-      details: { paypalOrderId: orderId, errorCode: pendingFetchError.code },
+      details: { paypalOrderId: orderId, errorCode: (pendingFetchError as { code?: string })?.code },
       dedupKey: "paypal:return-pending-lookup-failed",
     })
     return redirectToBook(bookSlug, "error")
@@ -208,11 +211,12 @@ export async function GET(request: NextRequest) {
   const createdAtMs = pending.created_at ? new Date(pending.created_at).getTime() : 0
   if (Number.isFinite(createdAtMs) && Date.now() - createdAtMs > PENDING_ORDER_TTL_MS) {
     // Mark it expired so subsequent probes hit the 'expired' branch above
-    // (which is dedup'd separately from unknown-order alerts).
-    await supabaseAdmin
-      .from("pending_paypal_orders")
-      .update({ status: "expired" })
-      .eq("id", pending.id)
+    // (which is dedup'd separately from unknown-order alerts). Best-effort.
+    try {
+      await sql`update pending_paypal_orders set status = 'expired' where id = ${pending.id}`
+    } catch (e) {
+      console.error("pending expire update failed:", e)
+    }
 
     return redirectToBook(pending.book_slug, "error")
   }
@@ -329,11 +333,13 @@ export async function GET(request: NextRequest) {
       // Mark consumed (idempotent). Alert if the update itself fails so
       // we don't silently leave the row in 'pending' — a stale row could
       // make a future legitimate retry look like a probe.
-      const { error: consumedUpdateError } = await supabaseAdmin
-        .from("pending_paypal_orders")
-        .update({ status: "consumed", consumed_at: new Date().toISOString() })
-        .eq("id", pending.id)
-      if (consumedUpdateError) {
+      try {
+        await sql`
+          update pending_paypal_orders
+          set status = 'consumed', consumed_at = ${new Date().toISOString()}
+          where id = ${pending.id}
+        `
+      } catch (consumedUpdateError) {
         await alertAdmin({
           severity: "warning",
           subject: "PayPal return: consumed-state update failed (already-captured path)",
@@ -341,7 +347,7 @@ export async function GET(request: NextRequest) {
             "PayPal reported ORDER_ALREADY_CAPTURED so capture is fine, but updating " +
             "pending_paypal_orders.status to 'consumed' failed. A reload of this URL " +
             "may produce inconsistent alert state. Customer still gets payment=success.",
-          details: { paypalOrderId: orderId, errorCode: consumedUpdateError.code },
+          details: { paypalOrderId: orderId, errorCode: (consumedUpdateError as { code?: string })?.code },
           dedupKey: "paypal:consumed-update-failed-422",
         })
       }
@@ -401,11 +407,13 @@ export async function GET(request: NextRequest) {
   //   anything else (PENDING / held) → "held" (reload → pending page; the
   //   webhook delivers fulfillment only on its COMPLETED event).
   const terminalStatus = captureStatus === "COMPLETED" ? "consumed" : "held"
-  const { error: consumedUpdateError } = await supabaseAdmin
-    .from("pending_paypal_orders")
-    .update({ status: terminalStatus, consumed_at: new Date().toISOString() })
-    .eq("id", pending.id)
-  if (consumedUpdateError) {
+  try {
+    await sql`
+      update pending_paypal_orders
+      set status = ${terminalStatus}, consumed_at = ${new Date().toISOString()}
+      where id = ${pending.id}
+    `
+  } catch (consumedUpdateError) {
     // Customer still got their capture; don't fail their session over it.
     // Alert so we don't silently leave lifecycle state inconsistent.
     await alertAdmin({
@@ -416,7 +424,7 @@ export async function GET(request: NextRequest) {
         "failed. The customer was redirected to ?payment=success. A reload of the " +
         "return URL may produce noisy alerts (the row will look 'pending' until the " +
         "expired TTL kicks in).",
-      details: { paypalOrderId: orderId, errorCode: consumedUpdateError.code },
+      details: { paypalOrderId: orderId, errorCode: (consumedUpdateError as { code?: string })?.code },
       dedupKey: "paypal:consumed-update-failed-success",
     })
   }

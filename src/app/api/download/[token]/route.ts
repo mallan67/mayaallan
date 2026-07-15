@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { alertAdmin } from "@/lib/alert-admin"
 
 /**
@@ -67,12 +67,14 @@ function buildDownloadFilename(bookTitle: string | null, fileUrl: string): strin
  * burnt and Maya needs to manually decrement or extend).
  */
 async function compensateDecrement(token: string, context: { reason: string; orderId?: number | null; bookId?: number | null }) {
-  const { data, error } = await supabaseAdmin.rpc("decrement_download_count", {
-    p_token: token,
-  })
-
-  // Compensation failed at the RPC layer — DB unreachable or function not deployed.
-  if (error) {
+  let data
+  try {
+    // decrement_download_count is a DB function (unchanged): it takes the row
+    // lock and clamps at zero atomically. Called by-name; resolves via the
+    // connection role's search_path.
+    data = await sql`select * from decrement_download_count(${token})`
+  } catch (error) {
+    // Compensation failed at the DB layer — unreachable or function missing.
     console.error("decrement_download_count failed:", error)
     await alertAdmin({
       severity: "critical",
@@ -86,15 +88,15 @@ async function compensateDecrement(token: string, context: { reason: string; ord
         "WHERE token = '<see details>' AND download_count > 0;",
       details: {
         ...context,
-        compensationErrorCode: error.code,
-        compensationErrorMessage: error.message,
+        compensationErrorCode: (error as { code?: string })?.code,
+        compensationErrorMessage: error instanceof Error ? error.message : String(error),
       },
       dedupKey: "download:compensation-failed",
     })
     return
   }
 
-  const result = Array.isArray(data) ? data[0] : data
+  const result = data[0]
   // 'at_zero' or 'no_token' means there was nothing to compensate (counter
   // already 0, or the row was deleted between increment and decrement).
   // 'ok' is the happy path. Anything else is unexpected.
@@ -127,12 +129,12 @@ export async function GET(
     // ------------------------------------------------------------------
     // 1) Atomic conditional increment via RPC
     // ------------------------------------------------------------------
-    const { data: rpcRows, error: rpcError } = await supabaseAdmin.rpc(
-      "increment_download_count",
-      { p_token: tokenParam }
-    )
-
-    if (rpcError) {
+    let rpcRows
+    try {
+      // increment_download_count is a DB function (unchanged): FOR UPDATE row
+      // lock + expiry check + cap check + increment, atomically in one call.
+      rpcRows = await sql`select * from increment_download_count(${tokenParam})`
+    } catch (rpcError) {
       console.error("increment_download_count RPC failed:", rpcError)
       await alertAdmin({
         severity: "error",
@@ -141,7 +143,10 @@ export async function GET(
           "The increment_download_count RPC errored. Paid customers cannot " +
           "download their book until this is resolved. Confirm the function " +
           "is deployed and the service role has EXECUTE permission.",
-        details: { errorCode: rpcError.code, errorMessage: rpcError.message },
+        details: {
+          errorCode: (rpcError as { code?: string })?.code,
+          errorMessage: rpcError instanceof Error ? rpcError.message : String(rpcError),
+        },
         dedupKey: "download:rpc-failed",
       })
       return NextResponse.json(
@@ -150,7 +155,7 @@ export async function GET(
       )
     }
 
-    const result = Array.isArray(rpcRows) ? rpcRows[0] : rpcRows
+    const result = rpcRows[0]
 
     if (!result) {
       console.error("increment_download_count returned no rows")
@@ -197,21 +202,25 @@ export async function GET(
     // ------------------------------------------------------------------
     // From here every failure must compensate.
     // ------------------------------------------------------------------
-    const { data: order, error: orderError } = await supabaseAdmin
-      .from(Tables.orders)
-      .select("id, status")
-      .eq("id", orderId)
-      .single()
-
-    if (orderError && orderError.code !== "PGRST116") {
+    let order
+    try {
+      const rows = await sql`select id, status from orders where id = ${orderId} limit 1`
+      order = rows[0]
+    } catch (orderError) {
+      // A thrown DB error is transient infra (was: error && code !== PGRST116);
+      // a genuine "no rows" is handled by the !order check below.
       console.error("Order lookup failed:", orderError)
       await alertAdmin({
         severity: "error",
         subject: "Download route: order lookup failed",
         body:
-          "Looking up the order row for a paid customer failed with a non-PGRST116 error. " +
+          "Looking up the order row for a paid customer failed with a database error. " +
           "Customer cannot download their book until this is resolved.",
-        details: { orderId, errorCode: orderError.code, errorMessage: orderError.message },
+        details: {
+          orderId,
+          errorCode: (orderError as { code?: string })?.code,
+          errorMessage: orderError instanceof Error ? orderError.message : String(orderError),
+        },
         dedupKey: "download:order-lookup-failed",
       })
       await compensateDecrement(tokenParam, { reason: "order-lookup-failed", orderId, bookId })
@@ -230,19 +239,21 @@ export async function GET(
       return NextResponse.json({ error: "Payment not completed" }, { status: 402 })
     }
 
-    const { data: book, error: bookError } = await supabaseAdmin
-      .from(Tables.books)
-      .select("id, title, ebook_file_url")
-      .eq("id", bookId)
-      .single()
-
-    if (bookError && bookError.code !== "PGRST116") {
+    let book
+    try {
+      const rows = await sql`select id, title, ebook_file_url from books where id = ${bookId} limit 1`
+      book = rows[0]
+    } catch (bookError) {
       console.error("Book lookup failed:", bookError)
       await alertAdmin({
         severity: "error",
         subject: "Download route: book lookup failed",
         body: "Looking up the book row for a paid download failed.",
-        details: { bookId, errorCode: bookError.code, errorMessage: bookError.message },
+        details: {
+          bookId,
+          errorCode: (bookError as { code?: string })?.code,
+          errorMessage: bookError instanceof Error ? bookError.message : String(bookError),
+        },
         dedupKey: "download:book-lookup-failed",
       })
       await compensateDecrement(tokenParam, { reason: "book-lookup-failed", orderId, bookId })

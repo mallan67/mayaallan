@@ -24,7 +24,7 @@
 import { NextResponse } from "next/server"
 import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, getAccessToken, safePaypalEnvLabel } from "@/lib/paypal"
-import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { assertPublicSameOrigin } from "@/lib/marketing-origin"
 import { z } from "zod"
@@ -79,13 +79,16 @@ export async function POST(request: Request) {
   // Same defense as /api/checkout/paypal/return — refuses third-party
   // capture replays.
   // ----------------------------------------------------------------------
-  const { data: pending, error: pendingFetchError } = await supabaseAdmin
-    .from("pending_paypal_orders")
-    .select("id, paypal_order_id, book_slug, status, created_at")
-    .eq("paypal_order_id", orderId)
-    .maybeSingle()
-
-  if (pendingFetchError) {
+  let pending
+  try {
+    const rows = await sql`
+      select id, paypal_order_id, book_slug, status, created_at
+      from pending_paypal_orders
+      where paypal_order_id = ${orderId}
+      limit 1
+    `
+    pending = rows[0]
+  } catch (pendingFetchError) {
     console.error("pending_paypal_orders lookup failed:", pendingFetchError)
     await alertAdmin({
       severity: "error",
@@ -93,7 +96,7 @@ export async function POST(request: Request) {
       body:
         "DB lookup against pending_paypal_orders failed during a popup-flow capture. " +
         "Capture cannot proceed safely until this is resolved.",
-      details: { paypalOrderId: orderId, errorCode: pendingFetchError.code },
+      details: { paypalOrderId: orderId, errorCode: (pendingFetchError as { code?: string })?.code },
       dedupKey: "paypal:capture-order-pending-lookup-failed",
     })
     return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 })
@@ -137,10 +140,12 @@ export async function POST(request: Request) {
   // Soft TTL check.
   const createdAtMs = pending.created_at ? new Date(pending.created_at).getTime() : 0
   if (Number.isFinite(createdAtMs) && Date.now() - createdAtMs > PENDING_ORDER_TTL_MS) {
-    await supabaseAdmin
-      .from("pending_paypal_orders")
-      .update({ status: "expired" })
-      .eq("id", pending.id)
+    // Best-effort expire mark; return 410 regardless of whether it lands.
+    try {
+      await sql`update pending_paypal_orders set status = 'expired' where id = ${pending.id}`
+    } catch (e) {
+      console.error("pending expire update failed:", e)
+    }
     return NextResponse.json({ error: "This checkout has expired. Please start over." }, { status: 410 })
   }
 
@@ -210,10 +215,13 @@ export async function POST(request: Request) {
     const details = body && Array.isArray((body as any).details) ? (body as any).details : []
     const alreadyCaptured = details.some((d: any) => d?.issue === "ORDER_ALREADY_CAPTURED")
     if (alreadyCaptured) {
-      await supabaseAdmin
-        .from("pending_paypal_orders")
-        .update({ status: "consumed", consumed_at: new Date().toISOString() })
-        .eq("id", pending.id)
+      // Idempotent path (buyer double-tapped). Mark consumed; return success
+      // regardless of whether the mark lands.
+      try {
+        await sql`update pending_paypal_orders set status = 'consumed', consumed_at = ${new Date().toISOString()} where id = ${pending.id}`
+      } catch (e) {
+        console.error("consumed update (already-captured path) failed:", e)
+      }
       return NextResponse.json({ success: true, alreadyConsumed: true, bookSlug: pending.book_slug })
     }
     await alertAdmin({
@@ -264,11 +272,13 @@ export async function POST(request: Request) {
   //   anything else (PENDING / held) → "held" (a reload returns pending, never
   //   success — fulfillment waits for the webhook's COMPLETED event).
   const terminalStatus = captureStatus === "COMPLETED" ? "consumed" : "held"
-  const { error: consumedUpdateError } = await supabaseAdmin
-    .from("pending_paypal_orders")
-    .update({ status: terminalStatus, consumed_at: new Date().toISOString() })
-    .eq("id", pending.id)
-  if (consumedUpdateError) {
+  try {
+    await sql`
+      update pending_paypal_orders
+      set status = ${terminalStatus}, consumed_at = ${new Date().toISOString()}
+      where id = ${pending.id}
+    `
+  } catch (consumedUpdateError) {
     await alertAdmin({
       severity: "warning",
       subject: "PayPal capture-order: consumed-state update failed after successful capture",
@@ -276,7 +286,7 @@ export async function POST(request: Request) {
         "Capture succeeded but updating pending_paypal_orders.status to 'consumed' failed. " +
         "The buyer was told their payment succeeded; a subsequent capture-order POST " +
         "would 404 if attempted (since the lookup still shows 'pending' until expiry).",
-      details: { paypalOrderId: orderId, errorCode: consumedUpdateError.code },
+      details: { paypalOrderId: orderId, errorCode: (consumedUpdateError as { code?: string })?.code },
       dedupKey: "paypal:capture-order-consumed-update-failed",
     })
   }

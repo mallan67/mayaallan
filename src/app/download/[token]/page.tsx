@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import type { Metadata } from "next"
 
 /**
@@ -61,26 +61,29 @@ export default async function DownloadPage({ params }: DownloadPageProps) {
     order: { status: string | null } | null
   }
 
-  const { data: rawDownloadToken, error } = await supabaseAdmin
-    .from(Tables.downloadTokens)
-    .select(`
-      token,
-      expires_at,
-      max_downloads,
-      download_count,
-      book:books ( title ),
-      order:orders ( status )
-    `)
-    .eq("token", token)
-    .single()
-
-  const downloadToken = rawDownloadToken as unknown as DownloadTokenRow | null
-
-  // Distinguish a genuine "no such token" (PGRST116 = 0 rows → 404) from a
-  // transient/infra DB error. A buyer holding a VALID token must not be shown
-  // "Not Found" during a Supabase blip — throw to the retryable error boundary.
-  if (error && error.code !== "PGRST116") {
-    throw new Error(`Download token lookup failed: ${error.message}`)
+  // book:books(title) / order:orders(status) were to-one PostgREST embeds;
+  // rebuilt as FK subqueries (each returns the object, or null if the FK is
+  // null / unmatched). "order" is a reserved word, so the alias is quoted.
+  let downloadToken: DownloadTokenRow | null
+  try {
+    const rows = await sql`
+      select
+        dt.token,
+        dt.expires_at,
+        dt.max_downloads,
+        dt.download_count,
+        (select json_build_object('title', b.title) from books b where b.id = dt.book_id) as book,
+        (select json_build_object('status', o.status) from orders o where o.id = dt.order_id) as "order"
+      from download_tokens dt
+      where dt.token = ${token}
+      limit 1
+    `
+    downloadToken = (rows[0] as unknown as DownloadTokenRow | undefined) ?? null
+  } catch (err) {
+    // A thrown DB error is transient/infra — a buyer holding a VALID token must
+    // not see "Not Found" during a database blip, so throw to the retryable
+    // error boundary. A genuine "no such token" is the no-rows case below (404).
+    throw new Error(`Download token lookup failed: ${err instanceof Error ? err.message : String(err)}`)
   }
   if (!downloadToken) {
     notFound()

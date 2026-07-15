@@ -23,7 +23,7 @@
  *     from force-capturing another customer's APPROVED order.
  */
 import { NextResponse } from "next/server"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { alertAdmin } from "@/lib/alert-admin"
 import { apiBase, getAccessToken, safePaypalEnvLabel } from "@/lib/paypal"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
@@ -66,14 +66,19 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { bookId } = checkoutSchema.parse(body)
 
-    // Get book from database
-    const { data: book, error } = await supabaseAdmin
-      .from(Tables.books)
-      .select("*")
-      .eq("id", bookId)
-      .single()
+    // Get book from database. Preserve original behavior: any error OR no row
+    // -> 404 "Book not found" (a pre-PayPal read; a spurious 404 on a DB blip
+    // just makes the shopper retry — no order or charge exists yet).
+    let book
+    try {
+      const rows = await sql`select * from books where id = ${bookId} limit 1`
+      book = rows[0]
+    } catch (bookErr) {
+      console.error("Checkout book lookup failed:", bookErr)
+      return NextResponse.json({ error: "Book not found" }, { status: 404 })
+    }
 
-    if (error || !book) {
+    if (!book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 
@@ -221,32 +226,24 @@ export async function POST(request: Request) {
     //
     // Attribution snapshot is written to the same row so the webhook can
     // look it up by paypal_order_id.
-    const { error: pendingInsertError } = await supabaseAdmin
-      .from("pending_paypal_orders")
-      .insert({
-        paypal_order_id: paypalOrderId,
-        book_id: bookId,
-        book_slug: book.slug,
-        ip_hash: hashForBinding(ip),
-        user_agent_hash: hashForBinding(request.headers.get("user-agent")),
-        status: "pending",
-        visitor_id: attribution.visitorId,
-        session_id: attribution.sessionId,
-        utm_source: attribution.utmSource,
-        utm_medium: attribution.utmMedium,
-        utm_campaign: attribution.utmCampaign,
-        utm_content: attribution.utmContent,
-        utm_term: attribution.utmTerm,
-        landing_page: attribution.landingPage,
-        referrer: attribution.referrer,
-      })
-
-    if (pendingInsertError) {
+    try {
+      await sql`
+        insert into pending_paypal_orders
+          (paypal_order_id, book_id, book_slug, ip_hash, user_agent_hash, status,
+           visitor_id, session_id, utm_source, utm_medium, utm_campaign,
+           utm_content, utm_term, landing_page, referrer)
+        values
+          (${paypalOrderId}, ${bookId}, ${book.slug}, ${hashForBinding(ip)},
+           ${hashForBinding(request.headers.get("user-agent"))}, 'pending',
+           ${attribution.visitorId}, ${attribution.sessionId}, ${attribution.utmSource},
+           ${attribution.utmMedium}, ${attribution.utmCampaign}, ${attribution.utmContent},
+           ${attribution.utmTerm}, ${attribution.landingPage}, ${attribution.referrer})
+      `
+    } catch (pendingInsertError) {
       // The order is created on PayPal's side regardless. We log + alert and
-      // still send the customer to PayPal — if they pay, the return route
-      // will refuse to capture for an unknown order. Better to fail closed
-      // than to silently let the capture happen without our pending-order
-      // protection.
+      // still fail closed — if the customer pays, the return/capture route
+      // refuses to capture an unknown order rather than fulfilling without our
+      // pending-order protection.
       console.error("pending_paypal_orders insert failed:", pendingInsertError)
       await alertAdmin({
         severity: "critical",
@@ -255,8 +252,8 @@ export async function POST(request: Request) {
           "Failed to record the pending order before redirecting the customer to PayPal. " +
           "If the customer completes payment, the return route will refuse to capture " +
           "(treating the unrecorded ID as unknown) and Maya will need to manually capture " +
-          "from the PayPal dashboard. Investigate the supabase error below.",
-        details: { paypalOrderId, bookId, errorCode: pendingInsertError.code },
+          "from the PayPal dashboard. Investigate the database error below.",
+        details: { paypalOrderId, bookId, errorCode: (pendingInsertError as { code?: string })?.code },
         dedupKey: `paypal:pending-insert-failed:${paypalOrderId}`,
       })
       return NextResponse.json({ error: "Checkout temporarily unavailable. Please try again." }, { status: 503 })

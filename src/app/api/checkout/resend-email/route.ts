@@ -26,7 +26,7 @@
  */
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { siteUrl } from "@/lib/site-url"
@@ -79,12 +79,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid orderId" }, { status: 400 })
   }
 
-  // Find the order by paypal_order_id.
-  const { data: order } = await supabaseAdmin
-    .from(Tables.orders)
-    .select("id, email, customer_name, book_id")
-    .eq("paypal_order_id", orderId)
-    .maybeSingle()
+  // Find the order by paypal_order_id. The original ignored DB errors here
+  // (destructured `data` only) so a lookup failure is treated exactly like
+  // "no such order" — a constant 200 that leaks nothing. Preserved.
+  let order
+  try {
+    const rows = await sql`
+      select id, email, customer_name, book_id
+      from orders
+      where paypal_order_id = ${orderId}
+      limit 1
+    `
+    order = rows[0]
+  } catch (err) {
+    console.error("[checkout-resend-email] order lookup failed:", err)
+  }
 
   // Constant-response: regardless of whether the order exists or has
   // a token, we tell the user "we tried." Real result is in the log.
@@ -96,18 +105,19 @@ export async function POST(req: Request) {
   // Pull the download token + book (need title + ebook_file_url for the
   // email body). If either is missing, we still 200 — the underlying
   // state will eventually heal through the webhook flow.
-  const [{ data: token }, { data: book }] = await Promise.all([
-    supabaseAdmin
-      .from(Tables.downloadTokens)
-      .select("token, expires_at, max_downloads")
-      .eq("order_id", order.id)
-      .maybeSingle(),
-    supabaseAdmin
-      .from(Tables.books)
-      .select("title, ebook_file_url")
-      .eq("id", order.book_id)
-      .maybeSingle(),
-  ])
+  let token: { token: string; expires_at: string; max_downloads: number | null } | undefined
+  let book: { title: string; ebook_file_url: string | null } | undefined
+  try {
+    const [tokenRows, bookRows] = await Promise.all([
+      sql`select token, expires_at, max_downloads from download_tokens where order_id = ${order.id} limit 1`,
+      sql`select title, ebook_file_url from books where id = ${order.book_id} limit 1`,
+    ])
+    token = tokenRows[0] as typeof token
+    book = bookRows[0] as typeof book
+  } catch (err) {
+    // As above: ignore DB errors -> undefined -> constant 200 below.
+    console.error("[checkout-resend-email] token/book lookup failed:", err)
+  }
 
   if (!token || !book || !book.ebook_file_url) {
     console.log("[checkout-resend-email] no-token-or-book", {
