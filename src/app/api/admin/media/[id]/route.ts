@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 /**
@@ -26,13 +26,9 @@ export async function GET(
   }
 
   try {
-    const { data: media, error } = await supabaseAdmin
-      .from(Tables.mediaItems)
-      .select("*")
-      .eq("id", id)
-      .single()
+    const [media] = await sql`select * from media_items where id = ${id} limit 1`
 
-    if (error || !media) {
+    if (!media) {
       return NextResponse.json({ error: "Media not found" }, { status: 404 })
     }
 
@@ -85,14 +81,9 @@ export async function PUT(
     const body = await request.json()
 
     // Verify media exists
-    const { data: existingMedia, error: fetchError } = await supabaseAdmin
-      .from(Tables.mediaItems)
-      .select("id")
-      .eq("id", id)
-      .single()
+    const [existingMedia] = await sql`select id from media_items where id = ${id} limit 1`
 
-    if (fetchError || !existingMedia) {
-      console.error("Media not found:", fetchError)
+    if (!existingMedia) {
       return NextResponse.json({ error: "Media not found" }, { status: 404 })
     }
 
@@ -113,22 +104,28 @@ export async function PUT(
     if (body.seoDescription !== undefined) updateData.seo_description = body.seoDescription || null
     if (body.publishedAt !== undefined) updateData.published_at = body.publishedAt || null
 
-    const { data: media, error: updateError } = await supabaseAdmin
-      .from(Tables.mediaItems)
-      .update(updateData)
-      .eq("id", id)
-      .select()
-      .single()
-
-    if (updateError) {
-      console.error("Error updating media:", updateError)
-      if (updateError.code === "23505") {
+    let media
+    try {
+      const [row] = await sql`
+        update media_items set ${sql(updateData)}
+        where id = ${id}
+        returning *
+      `
+      media = row
+    } catch (updateErr) {
+      const code = (updateErr as { code?: string })?.code
+      console.error("Error updating media:", updateErr)
+      if (code === "23505") {
         return NextResponse.json(
           { error: "A media item with this slug already exists" },
           { status: 409 }
         )
       }
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      // Preserve original behavior: surface the DB error message on 500.
+      return NextResponse.json(
+        { error: updateErr instanceof Error ? updateErr.message : "Database update failed" },
+        { status: 500 },
+      )
     }
 
     // Map response back to camelCase
@@ -175,13 +172,10 @@ export async function DELETE(
   }
 
   try {
-    const { error } = await supabaseAdmin
-      .from(Tables.mediaItems)
-      .delete()
-      .eq("id", id)
-
-    if (error) {
-      console.error("Error deleting media:", error)
+    try {
+      await sql`delete from media_items where id = ${id}`
+    } catch (delErr) {
+      console.error("Error deleting media:", delErr)
       return NextResponse.json({ error: "Database delete failed" }, { status: 500 })
     }
 

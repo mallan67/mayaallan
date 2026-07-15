@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { isAuthenticated } from "@/lib/session"
 
 /**
@@ -19,21 +19,32 @@ export async function GET(
   const decodedSlug = decodeURIComponent(slug)
 
   try {
-    // Use .eq() (parameterised) instead of .or() interpolation — slug is user input from
-    // the URL path and cannot be safely concatenated into a PostgREST filter expression.
-    const { data: book, error } = await supabaseAdmin
-      .from(Tables.books)
-      .select(`
-        *,
-        book_retailer_links (
-          *,
-          retailer:retailers (*)
-        )
-      `)
-      .eq("slug", decodedSlug)
-      .single()
+    // slug is bound as a parameter (${decodedSlug}) — never concatenated.
+    const [book] = await sql`
+      select
+        b.*,
+        coalesce(
+          (
+            select json_agg(json_build_object(
+              'id', l.id, 'book_id', l.book_id, 'retailer_id', l.retailer_id,
+              'url', l.url, 'format_type', l.format_type, 'is_active', l.is_active,
+              'retailer', case when r.id is null then null else json_build_object(
+                'id', r.id, 'name', r.name, 'slug', r.slug,
+                'icon_url', r.icon_url, 'is_active', r.is_active
+              ) end
+            ))
+            from book_retailer_links l
+            left join retailers r on r.id = l.retailer_id
+            where l.book_id = b.id
+          ),
+          '[]'::json
+        ) as book_retailer_links
+      from books b
+      where b.slug = ${decodedSlug}
+      limit 1
+    `
 
-    if (error || !book) {
+    if (!book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 

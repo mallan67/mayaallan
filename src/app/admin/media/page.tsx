@@ -1,22 +1,17 @@
 import Link from "next/link"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
 async function getMediaItems() {
   try {
-    const { data, error } = await supabaseAdmin
-      .from(Tables.mediaItems)
-      .select("*")
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching media:", error)
-      return []
-    }
+    const data = await sql`
+      select * from media_items
+      order by created_at desc
+    `
 
     // Map snake_case to camelCase
-    return (data || []).map((item: any) => ({
+    return data.map((item: any) => ({
       id: item.id,
       slug: item.slug,
       title: item.title,

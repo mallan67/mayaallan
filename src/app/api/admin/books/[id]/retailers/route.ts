@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 /**
@@ -29,25 +29,21 @@ export async function GET(
   }
 
   try {
-    const { data: links, error } = await supabaseAdmin
-      .from(Tables.bookRetailerLinks)
-      .select(`
-        *,
-        retailer:retailers (
-          id,
-          name,
-          slug,
-          icon_url,
-          is_active
-        )
-      `)
-      .eq("book_id", bookId)
-      .order("format_type", { ascending: true })
-
-    if (error) throw error
+    const links = await sql`
+      select
+        l.*,
+        case when r.id is null then null else json_build_object(
+          'id', r.id, 'name', r.name, 'slug', r.slug,
+          'icon_url', r.icon_url, 'is_active', r.is_active
+        ) end as retailer
+      from book_retailer_links l
+      left join retailers r on r.id = l.retailer_id
+      where l.book_id = ${bookId}
+      order by l.format_type asc
+    `
 
     // Map to camelCase
-    const mapped = (links || []).map((link) => ({
+    const mapped = links.map((link) => ({
       id: link.id,
       bookId: link.book_id,
       retailerId: link.retailer_id,
@@ -105,60 +101,52 @@ export async function POST(
     }
 
     // Verify book exists
-    const { data: book, error: bookError } = await supabaseAdmin
-      .from(Tables.books)
-      .select("id")
-      .eq("id", bookId)
-      .single()
+    const [book] = await sql`select id from books where id = ${bookId} limit 1`
 
-    if (bookError || !book) {
+    if (!book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 
     // Verify retailer exists
-    const { data: retailer, error: retailerError } = await supabaseAdmin
-      .from(Tables.retailers)
-      .select("id")
-      .eq("id", parseInt(retailerId))
-      .single()
+    const [retailer] = await sql`select id from retailers where id = ${parseInt(retailerId)} limit 1`
 
-    if (retailerError || !retailer) {
+    if (!retailer) {
       return NextResponse.json(
         { error: "Retailer not found" },
         { status: 404 }
       )
     }
 
-    // Create the link
-    const { data: link, error } = await supabaseAdmin
-      .from(Tables.bookRetailerLinks)
-      .insert({
-        book_id: bookId,
-        retailer_id: parseInt(retailerId),
-        url: url || "",
-        format_type: formatType || "ebook",
-        is_active: isActive !== undefined ? Boolean(isActive) : true,
-      })
-      .select(`
-        *,
-        retailer:retailers (
-          id,
-          name,
-          slug,
-          icon_url,
-          is_active
+    // Create the link, returning it with its retailer embed in one round-trip.
+    let link
+    try {
+      const [row] = await sql`
+        with ins as (
+          insert into book_retailer_links (book_id, retailer_id, url, format_type, is_active)
+          values (
+            ${bookId}, ${parseInt(retailerId)}, ${url || ""},
+            ${formatType || "ebook"}, ${isActive !== undefined ? Boolean(isActive) : true}
+          )
+          returning *
         )
-      `)
-      .single()
-
-    if (error) {
-      if (error.code === "23505") {
+        select
+          i.*,
+          case when r.id is null then null else json_build_object(
+            'id', r.id, 'name', r.name, 'slug', r.slug,
+            'icon_url', r.icon_url, 'is_active', r.is_active
+          ) end as retailer
+        from ins i
+        left join retailers r on r.id = i.retailer_id
+      `
+      link = row
+    } catch (insertErr) {
+      if ((insertErr as { code?: string })?.code === "23505") {
         return NextResponse.json(
           { error: "A link for this retailer and format already exists" },
           { status: 409 }
         )
       }
-      throw error
+      throw insertErr
     }
 
     // Map to camelCase
@@ -221,15 +209,19 @@ export async function PUT(
     }
 
     // Find the existing link(s) for this retailer
-    const { data: existingLinks, error: findError } = await supabaseAdmin
-      .from(Tables.bookRetailerLinks)
-      .select(`*, retailer:retailers (*)`)
-      .eq("book_id", bookId)
-      .eq("retailer_id", parseInt(retailerId))
+    const existingLinks = await sql`
+      select
+        l.*,
+        case when r.id is null then null else json_build_object(
+          'id', r.id, 'name', r.name, 'slug', r.slug,
+          'icon_url', r.icon_url, 'is_active', r.is_active
+        ) end as retailer
+      from book_retailer_links l
+      left join retailers r on r.id = l.retailer_id
+      where l.book_id = ${bookId} and l.retailer_id = ${parseInt(retailerId)}
+    `
 
-    if (findError) throw findError
-
-    if (!existingLinks || existingLinks.length === 0) {
+    if (existingLinks.length === 0) {
       return NextResponse.json(
         { error: "Retailer link not found" },
         { status: 404 }
@@ -253,15 +245,12 @@ export async function PUT(
     if (url !== undefined) updateData.url = url
     if (formatType !== undefined && formatType !== linkToUpdate.format_type) {
       // Check if changing formatType would violate unique constraint
-      const { data: conflictCheck } = await supabaseAdmin
-        .from(Tables.bookRetailerLinks)
-        .select("id")
-        .eq("book_id", bookId)
-        .eq("retailer_id", parseInt(retailerId))
-        .eq("format_type", formatType)
-        .neq("id", linkToUpdate.id)
-        .limit(1)
-        .single()
+      const [conflictCheck] = await sql`
+        select id from book_retailer_links
+        where book_id = ${bookId} and retailer_id = ${parseInt(retailerId)}
+          and format_type = ${formatType} and id <> ${linkToUpdate.id}
+        limit 1
+      `
 
       if (conflictCheck) {
         return NextResponse.json(
@@ -274,30 +263,32 @@ export async function PUT(
     if (isActive !== undefined) updateData.is_active = Boolean(isActive)
 
     // Update the link
-    const { data: updatedLink, error: updateError } = await supabaseAdmin
-      .from(Tables.bookRetailerLinks)
-      .update(updateData)
-      .eq("id", linkToUpdate.id)
-      .select(`
-        *,
-        retailer:retailers (
-          id,
-          name,
-          slug,
-          icon_url,
-          is_active
+    let updatedLink
+    try {
+      const [row] = await sql`
+        with upd as (
+          update book_retailer_links set ${sql(updateData)}
+          where id = ${linkToUpdate.id}
+          returning *
         )
-      `)
-      .single()
-
-    if (updateError) {
-      if (updateError.code === "23505") {
+        select
+          u.*,
+          case when r.id is null then null else json_build_object(
+            'id', r.id, 'name', r.name, 'slug', r.slug,
+            'icon_url', r.icon_url, 'is_active', r.is_active
+          ) end as retailer
+        from upd u
+        left join retailers r on r.id = u.retailer_id
+      `
+      updatedLink = row
+    } catch (updateErr) {
+      if ((updateErr as { code?: string })?.code === "23505") {
         return NextResponse.json(
           { error: "A link for this retailer and format already exists" },
           { status: 409 }
         )
       }
-      throw updateError
+      throw updateErr
     }
 
     // Map to camelCase
@@ -359,32 +350,22 @@ export async function DELETE(
       )
     }
 
-    // Find the link to delete
-    let query = supabaseAdmin
-      .from(Tables.bookRetailerLinks)
-      .select("id")
-      .eq("book_id", bookId)
-      .eq("retailer_id", parseInt(retailerId))
+    // Find the link to delete (optional format_type filter as a fragment).
+    const [link] = await sql`
+      select id from book_retailer_links
+      where book_id = ${bookId} and retailer_id = ${parseInt(retailerId)}
+      ${formatType ? sql`and format_type = ${formatType}` : sql``}
+      limit 1
+    `
 
-    if (formatType) {
-      query = query.eq("format_type", formatType)
-    }
-
-    const { data: link, error: findError } = await query.limit(1).single()
-
-    if (findError || !link) {
+    if (!link) {
       return NextResponse.json(
         { error: "Retailer link not found" },
         { status: 404 }
       )
     }
 
-    const { error: deleteError } = await supabaseAdmin
-      .from(Tables.bookRetailerLinks)
-      .delete()
-      .eq("id", link.id)
-
-    if (deleteError) throw deleteError
+    await sql`delete from book_retailer_links where id = ${link.id}`
 
     return NextResponse.json({ success: true })
   } catch (error) {

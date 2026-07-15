@@ -11,7 +11,7 @@
  */
 import Link from "next/link"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
@@ -36,38 +36,39 @@ async function countEventsByName(sinceIso: string): Promise<EventCounts> {
   // Aggregated in Postgres via marketing_event_counts_since RPC. This
   // returns at most one row per distinct event_name (currently 11), so
   // we never hit the supabase REST default row cap of 1000.
-  const { data, error } = await supabaseAdmin.rpc("marketing_event_counts_since", { p_since: sinceIso })
-
-  if (error || !data) {
-    if (error) console.error("[admin/analytics] event-counts RPC failed:", error.message, error.code)
+  try {
+    const data = await sql`select * from marketing_event_counts_since(${sinceIso})`
+    const out: EventCounts = {}
+    for (const row of data as unknown as Array<{ event_name: string; n: number }>) {
+      out[row.event_name] = Number(row.n) || 0
+    }
+    return out
+  } catch (error) {
+    console.error("[admin/analytics] event-counts query failed:", error instanceof Error ? error.message : String(error))
     return {}
   }
-  const out: EventCounts = {}
-  for (const row of data as Array<{ event_name: string; n: number }>) {
-    out[row.event_name] = Number(row.n) || 0
-  }
-  return out
 }
 
 async function revenueAndOrderCount(sinceIso: string): Promise<{ orders: number; revenue: number }> {
   // Orders are bounded in volume; a direct query with explicit limit is
   // sufficient and avoids needing a fifth RPC. If volume grows we can
   // add an RPC later.
-  const { data, error } = await supabaseAdmin
-    .from("orders")
-    .select("id, amount, status")
-    .eq("status", "completed")
-    .gte("created_at", sinceIso)
-    .limit(10_000)
-
-  if (error || !data) return { orders: 0, revenue: 0 }
-  let revenue = 0
-  for (const row of data as Array<{ amount: number | null }>) {
-    if (typeof row.amount === "number" && Number.isFinite(row.amount)) {
-      revenue += row.amount
+  // Sum in Postgres using exact `numeric` (was a JS float accumulation of
+  // `revenue += row.amount`, which drifts). Only the single aggregate value is
+  // converted to a JS number, for display — never accumulated in JS.
+  try {
+    const [row] = await sql`
+      select coalesce(sum(amount), 0)::text as revenue, count(*)::int as orders
+      from orders
+      where status = 'completed' and created_at >= ${sinceIso}
+    `
+    return {
+      orders: Number((row as { orders?: number })?.orders ?? 0),
+      revenue: Number((row as { revenue?: string })?.revenue ?? 0),
     }
+  } catch {
+    return { orders: 0, revenue: 0 }
   }
-  return { orders: data.length, revenue }
 }
 
 async function topCampaigns(sinceIso: string, limit = 10): Promise<Array<{
@@ -80,28 +81,25 @@ async function topCampaigns(sinceIso: string, limit = 10): Promise<Array<{
   // Aggregated in Postgres via marketing_campaign_summary_since RPC.
   // Revenue is summed inside the function from purchase_completed
   // properties so the dashboard isn't dependent on streaming event rows.
-  const { data, error } = await supabaseAdmin.rpc("marketing_campaign_summary_since", {
-    p_since: sinceIso,
-    p_limit: limit,
-  })
-
-  if (error || !data) {
-    if (error) console.error("[admin/analytics] campaign-summary RPC failed:", error.message, error.code)
+  try {
+    const data = await sql`select * from marketing_campaign_summary_since(${sinceIso}, ${limit})`
+    return (data as unknown as Array<{
+      campaign: string
+      events: number
+      checkouts: number
+      purchases: number
+      revenue: string | number | null
+    }>).map((row) => ({
+      campaign: row.campaign,
+      events: Number(row.events) || 0,
+      checkouts: Number(row.checkouts) || 0,
+      purchases: Number(row.purchases) || 0,
+      revenue: Number(row.revenue) || 0,
+    }))
+  } catch (error) {
+    console.error("[admin/analytics] campaign-summary query failed:", error instanceof Error ? error.message : String(error))
     return []
   }
-  return (data as Array<{
-    campaign: string
-    events: number
-    checkouts: number
-    purchases: number
-    revenue: string | number | null
-  }>).map((row) => ({
-    campaign: row.campaign,
-    events: Number(row.events) || 0,
-    checkouts: Number(row.checkouts) || 0,
-    purchases: Number(row.purchases) || 0,
-    revenue: Number(row.revenue) || 0,
-  }))
 }
 
 function fmtNum(n: number): string {

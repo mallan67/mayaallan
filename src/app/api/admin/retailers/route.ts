@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 
 /**
  * RETAILERS API (Admin)
@@ -15,15 +15,14 @@ export async function GET() {
   }
 
   try {
-    const { data: retailers, error } = await supabaseAdmin
-      .from(Tables.retailers)
-      .select("id, name, slug, icon_url, is_active")
-      .order("name", { ascending: true })
-
-    if (error) throw error
+    const retailers = await sql`
+      select id, name, slug, icon_url, is_active
+      from retailers
+      order by name asc
+    `
 
     // Map to camelCase for frontend
-    const mappedRetailers = (retailers || []).map((r) => ({
+    const mappedRetailers = retailers.map((r) => ({
       id: r.id,
       name: r.name,
       slug: r.slug,

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 /**
@@ -89,20 +89,16 @@ export async function GET() {
   }
 
   try {
-    // Always order by id to ensure consistent results
-    const { data: settings, error } = await supabaseAdmin
-      .from(Tables.siteSettings)
-      .select("*")
-      .order("id", { ascending: true })
-      .limit(1)
-      .single()
-
-    if (error && error.code !== "PGRST116") {
-      console.error("Supabase error fetching settings:", error.message, error.code)
-      throw error
-    }
+    // Always order by id to ensure consistent results.
+    const [settings] = await sql`
+      select * from site_settings
+      order by id asc
+      limit 1
+    `
 
     // DB is snake_case (post-migration). The admin UI expects camelCase.
+    // No row -> {} (the tolerated "no rows" path); a real DB error throws to
+    // the catch below.
     return NextResponse.json(settings ? settingsRowToObject(settings) : {})
   } catch (error) {
     console.error("Error fetching settings:", error)
@@ -167,12 +163,11 @@ export async function PATCH(request: Request) {
     const data = parsed.data
 
     // Check if settings exist - order by id for consistency
-    const { data: existing, error: fetchError } = await supabaseAdmin
-      .from(Tables.siteSettings)
-      .select("id")
-      .order("id", { ascending: true })
-      .limit(1)
-      .single()
+    const [existing] = await sql`
+      select id from site_settings
+      order by id asc
+      limit 1
+    `
 
     // site_settings table uses snake_case columns (post-migration).
     // Map the validated camelCase input → snake_case columns.
@@ -195,30 +190,18 @@ export async function PATCH(request: Request) {
     }
 
     let settings
-    if (existing && !fetchError) {
-      const { data: updated, error } = await supabaseAdmin
-        .from(Tables.siteSettings)
-        .update(settingsData)
-        .eq("id", existing.id)
-        .select()
-        .single()
-
-      if (error) {
-        console.error("Error updating settings:", error.message, error.code)
-        throw error
-      }
+    if (existing) {
+      const [updated] = await sql`
+        update site_settings set ${sql(settingsData)}
+        where id = ${existing.id}
+        returning *
+      `
       settings = updated
     } else {
-      const { data: created, error } = await supabaseAdmin
-        .from(Tables.siteSettings)
-        .insert(settingsData)
-        .select()
-        .single()
-
-      if (error) {
-        console.error("Error creating settings:", error.message, error.code)
-        throw error
-      }
+      const [created] = await sql`
+        insert into site_settings ${sql(settingsData)}
+        returning *
+      `
       settings = created
     }
 

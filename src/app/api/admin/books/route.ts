@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { bookCreateSchema, formatZodError } from "@/lib/admin-schemas"
 
@@ -11,21 +11,31 @@ export async function GET() {
   if (!authed) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   try {
-    const { data: books, error } = await supabaseAdmin
-      .from(Tables.books)
-      .select(`
-        *,
-        book_retailer_links (
-          *,
-          retailer:retailers (*)
-        )
-      `)
-      .order("created_at", { ascending: false })
-
-    if (error) throw error
+    const books = await sql`
+      select
+        b.*,
+        coalesce(
+          (
+            select json_agg(json_build_object(
+              'id', l.id, 'book_id', l.book_id, 'retailer_id', l.retailer_id,
+              'url', l.url, 'format_type', l.format_type, 'is_active', l.is_active,
+              'retailer', case when r.id is null then null else json_build_object(
+                'id', r.id, 'name', r.name, 'slug', r.slug,
+                'icon_url', r.icon_url, 'is_active', r.is_active
+              ) end
+            ))
+            from book_retailer_links l
+            left join retailers r on r.id = l.retailer_id
+            where l.book_id = b.id
+          ),
+          '[]'::json
+        ) as book_retailer_links
+      from books b
+      order by b.created_at desc
+    `
 
     // Map to camelCase for frontend compatibility
-    const mappedBooks = (books || []).map((book) => ({
+    const mappedBooks = books.map((book) => ({
       id: book.id,
       slug: book.slug,
       title: book.title,
@@ -161,18 +171,19 @@ export async function POST(request: Request) {
       published_at: input.publishedAt,
     }
 
-    const { data: book, error } = await supabaseAdmin
-      .from(Tables.books)
-      .insert(data)
-      .select()
-      .single()
-
-    if (error) {
-      // Full details stay in server-side logs only — surfacing
-      // Supabase column / constraint names to the client leaks schema
-      // structure and helps any future attacker reconnaissance.
-      console.error("Supabase insert error:", { code: error.code, message: error.message, details: error.details, hint: error.hint })
-      if (error.code === "23505") {
+    let book
+    try {
+      const [inserted] = await sql`insert into books ${sql(data)} returning *`
+      book = inserted
+    } catch (dbError) {
+      // Full details stay in server-side logs only — surfacing DB column /
+      // constraint names to the client leaks schema structure.
+      const code = (dbError as { code?: string })?.code
+      console.error("Book insert error:", {
+        code,
+        message: dbError instanceof Error ? dbError.message : String(dbError),
+      })
+      if (code === "23505") {
         return NextResponse.json({ error: "Slug already exists" }, { status: 409 })
       }
       return NextResponse.json({ error: "Database insert failed" }, { status: 500 })

@@ -1,22 +1,17 @@
 import Link from "next/link"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { eventRowToObject } from "@/lib/events-visibility"
 
 export const dynamic = "force-dynamic"
 
 async function getEvents() {
   try {
-    const { data, error } = await supabaseAdmin
-      .from(Tables.events)
-      .select("*")
-      .order("starts_at", { ascending: false })
+    const data = await sql`
+      select * from events
+      order by starts_at desc
+    `
 
-    if (error) {
-      console.error("Error fetching events:", error)
-      return []
-    }
-
-    return (data ?? []).map(eventRowToObject)
+    return data.map((row) => eventRowToObject(row as Record<string, unknown>))
   } catch (error) {
     console.error("Failed to fetch events:", error)
     return []

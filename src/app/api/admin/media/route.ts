@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 /**
@@ -16,18 +16,13 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { data: media, error } = await supabaseAdmin
-      .from(Tables.mediaItems)
-      .select("*")
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching media:", error)
-      throw error
-    }
+    const media = await sql`
+      select * from media_items
+      order by created_at desc
+    `
 
     // Map snake_case to camelCase for frontend
-    const mappedMedia = (media || []).map((item: any) => ({
+    const mappedMedia = media.map((item: any) => ({
       id: item.id,
       slug: item.slug,
       title: item.title,
@@ -85,15 +80,14 @@ export async function POST(request: Request) {
       published_at: body.publishedAt || null,
     }
 
-    const { data: media, error } = await supabaseAdmin
-      .from(Tables.mediaItems)
-      .insert(insertData)
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error creating media:", error)
-      if (error.code === "23505") {
+    let media
+    try {
+      const [inserted] = await sql`insert into media_items ${sql(insertData)} returning *`
+      media = inserted
+    } catch (dbError) {
+      const code = (dbError as { code?: string })?.code
+      console.error("Error creating media:", code, dbError instanceof Error ? dbError.message : String(dbError))
+      if (code === "23505") {
         return NextResponse.json(
           { error: "A media item with this slug already exists" },
           { status: 409 }

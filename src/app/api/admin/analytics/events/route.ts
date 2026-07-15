@@ -15,7 +15,7 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
-import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { buildCsv } from "@/lib/csv"
 
 export const runtime = "nodejs"
@@ -70,25 +70,18 @@ export async function GET(request: Request) {
   const eventFilter = url.searchParams.get("event")?.trim() || null
 
   try {
-    let query = supabaseAdmin
-      .from("marketing_events")
-      .select("created_at, event_name, path, visitor_id, session_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, properties")
-      .gte("created_at", fromIso)
-      .lte("created_at", toIso)
-      .order("created_at", { ascending: false })
-      .limit(100_000)
+    // Optional event_name filter added as a conditional SQL fragment.
+    const data = await sql`
+      select created_at, event_name, path, visitor_id, session_id,
+             utm_source, utm_medium, utm_campaign, utm_content, utm_term, properties
+      from marketing_events
+      where created_at >= ${fromIso} and created_at <= ${toIso}
+      ${eventFilter ? sql`and event_name = ${eventFilter}` : sql``}
+      order by created_at desc
+      limit 100000
+    `
 
-    if (eventFilter) {
-      query = query.eq("event_name", eventFilter)
-    }
-
-    const { data, error } = await query
-    if (error) {
-      console.error("[analytics/events] supabase error:", error.message, error.code)
-      return NextResponse.json({ error: "Export failed" }, { status: 500 })
-    }
-
-    const rows = (data ?? []).map((r: any) => [
+    const rows = data.map((r: any) => [
       r.created_at,
       r.event_name,
       r.path,

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 /**
@@ -49,21 +49,14 @@ export async function PUT(
     const links: RetailerLinkInput[] = body.links || []
 
     // Verify book exists
-    const { data: book, error: bookError } = await supabaseAdmin
-      .from(Tables.books)
-      .select("id")
-      .eq("id", bookId)
-      .single()
+    const [book] = await sql`select id from books where id = ${bookId} limit 1`
 
-    if (bookError || !book) {
+    if (!book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 
     // Delete existing links
-    await supabaseAdmin
-      .from(Tables.bookRetailerLinks)
-      .delete()
-      .eq("book_id", bookId)
+    await sql`delete from book_retailer_links where book_id = ${bookId}`
 
     // Process each new link
     const createdLinks: any[] = []
@@ -108,69 +101,53 @@ export async function PUT(
         // .or() string interpolation.
         let retailer: any = null
 
-        const { data: bySlug } = await supabaseAdmin
-          .from(Tables.retailers)
-          .select("*")
-          .eq("slug", retailerSlug)
-          .limit(1)
-          .maybeSingle()
+        const [bySlug] = await sql`
+          select * from retailers where slug = ${retailerSlug} limit 1
+        `
 
         if (bySlug) {
           retailer = bySlug
         } else {
-          const { data: byName } = await supabaseAdmin
-            .from(Tables.retailers)
-            .select("*")
-            .ilike("name", retailerName) // .ilike() with a value param is parameterized — safe even for arbitrary chars
-            .limit(1)
-            .maybeSingle()
+          // ilike binds the value as a parameter — safe even for arbitrary chars.
+          const [byName] = await sql`
+            select * from retailers where name ilike ${retailerName} limit 1
+          `
           if (byName) retailer = byName
         }
 
         if (!retailer) {
           // Create new retailer
-          const { data: newRetailer, error: createError } = await supabaseAdmin
-            .from(Tables.retailers)
-            .insert({
-              name: retailerName,
-              slug: retailerSlug,
-              is_active: true,
-            })
-            .select()
-            .single()
-
-          if (createError) throw createError
+          const [newRetailer] = await sql`
+            insert into retailers (name, slug, is_active)
+            values (${retailerName}, ${retailerSlug}, true)
+            returning *
+          `
           retailer = newRetailer
         } else if (!retailer.name || retailer.name.trim() === "") {
           // Fix retailer with empty name
-          const { data: updated, error: updateError } = await supabaseAdmin
-            .from(Tables.retailers)
-            .update({ name: retailerName, slug: retailerSlug })
-            .eq("id", retailer.id)
-            .select()
-            .single()
-
-          if (updateError) throw updateError
+          const [updated] = await sql`
+            update retailers set name = ${retailerName}, slug = ${retailerSlug}
+            where id = ${retailer.id}
+            returning *
+          `
           retailer = updated
         }
 
-        // Create the book-retailer link
-        const { data: newLink, error: linkError } = await supabaseAdmin
-          .from(Tables.bookRetailerLinks)
-          .insert({
-            book_id: bookId,
-            retailer_id: retailer.id,
-            url: linkUrl,
-            format_type: formatType,
-            is_active: true,
-          })
-          .select(`
-            *,
-            retailer:retailers (*)
-          `)
-          .single()
-
-        if (linkError) throw linkError
+        // Create the book-retailer link, returning it with its retailer embed.
+        const [newLink] = await sql`
+          with ins as (
+            insert into book_retailer_links (book_id, retailer_id, url, format_type, is_active)
+            values (${bookId}, ${retailer.id}, ${linkUrl}, ${formatType}, true)
+            returning *
+          )
+          select
+            i.*,
+            (select json_build_object(
+              'id', r.id, 'name', r.name, 'slug', r.slug,
+              'icon_url', r.icon_url, 'is_active', r.is_active
+            ) from retailers r where r.id = i.retailer_id) as retailer
+          from ins i
+        `
 
         createdLinks.push({
           id: newLink.id,
@@ -225,19 +202,20 @@ export async function GET(
   }
 
   try {
-    const { data: links, error } = await supabaseAdmin
-      .from(Tables.bookRetailerLinks)
-      .select(`
-        *,
-        retailer:retailers (*)
-      `)
-      .eq("book_id", bookId)
-      .order("format_type", { ascending: true })
-
-    if (error) throw error
+    const links = await sql`
+      select
+        l.*,
+        (select json_build_object(
+          'id', r.id, 'name', r.name, 'slug', r.slug,
+          'icon_url', r.icon_url, 'is_active', r.is_active
+        ) from retailers r where r.id = l.retailer_id) as retailer
+      from book_retailer_links l
+      where l.book_id = ${bookId}
+      order by l.format_type asc
+    `
 
     // Format for frontend
-    const formatted = (links || []).map((link) => ({
+    const formatted = links.map((link) => ({
       id: link.id,
       formatType: link.format_type,
       retailerName: link.retailer?.name || "",

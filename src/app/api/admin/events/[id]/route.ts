@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { eventUpdateSchema, formatZodError } from "@/lib/admin-schemas"
 import { eventRowToObject, eventObjectToRow } from "@/lib/events-visibility"
@@ -30,17 +30,13 @@ export async function GET(
   }
 
   try {
-    const { data: event, error } = await supabaseAdmin
-      .from(Tables.events)
-      .select("*")
-      .eq("id", id)
-      .single()
+    const [event] = await sql`select * from events where id = ${id} limit 1`
 
-    if (error || !event) {
+    if (!event) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
-    return NextResponse.json(eventRowToObject(event))
+    return NextResponse.json(eventRowToObject(event as Record<string, unknown>))
   } catch (error) {
     console.error("Error fetching event:", error)
     return NextResponse.json({ error: "Failed to fetch event" }, { status: 500 })
@@ -75,14 +71,9 @@ export async function PUT(
     const input = parsed.data
 
     // Verify event exists
-    const { data: existingEvent, error: fetchError } = await supabaseAdmin
-      .from(Tables.events)
-      .select("id")
-      .eq("id", id)
-      .single()
+    const [existingEvent] = await sql`select id from events where id = ${id} limit 1`
 
-    if (fetchError || !existingEvent) {
-      console.error("Event not found:", fetchError)
+    if (!existingEvent) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 })
     }
 
@@ -94,25 +85,31 @@ export async function PUT(
       updated_at: new Date().toISOString(),
     }
 
-    const { data: event, error: updateError } = await supabaseAdmin
-      .from(Tables.events)
-      .update(updateData)
-      .eq("id", id)
-      .select()
-      .single()
-
-    if (updateError) {
-      console.error("Error updating event:", updateError)
-      if (updateError.code === "23505") {
+    let event
+    try {
+      const [row] = await sql`
+        update events set ${sql(updateData)}
+        where id = ${id}
+        returning *
+      `
+      event = row
+    } catch (updateErr) {
+      const code = (updateErr as { code?: string })?.code
+      console.error("Error updating event:", updateErr)
+      if (code === "23505") {
         return NextResponse.json(
           { error: "An event with this slug already exists" },
           { status: 409 }
         )
       }
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      // Preserve original behavior: surface the DB error message on 500.
+      return NextResponse.json(
+        { error: updateErr instanceof Error ? updateErr.message : "Database update failed" },
+        { status: 500 },
+      )
     }
 
-    return NextResponse.json(eventRowToObject(event))
+    return NextResponse.json(eventRowToObject(event as Record<string, unknown>))
   } catch (error: any) {
     console.error("Error updating event:", error)
     return NextResponse.json({ error: "Failed to update event" }, { status: 500 })
@@ -139,13 +136,10 @@ export async function DELETE(
   }
 
   try {
-    const { error } = await supabaseAdmin
-      .from(Tables.events)
-      .delete()
-      .eq("id", id)
-
-    if (error) {
-      console.error("Error deleting event:", error)
+    try {
+      await sql`delete from events where id = ${id}`
+    } catch (delErr) {
+      console.error("Error deleting event:", delErr)
       return NextResponse.json({ error: "Database delete failed" }, { status: 500 })
     }
 

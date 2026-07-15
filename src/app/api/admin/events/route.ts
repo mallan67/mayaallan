@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { eventCreateSchema, formatZodError } from "@/lib/admin-schemas"
 import { eventRowToObject } from "@/lib/events-visibility"
@@ -22,17 +22,14 @@ export async function GET() {
   }
 
   try {
-    const { data: events, error } = await supabaseAdmin
-      .from(Tables.events)
-      .select("*")
-      .order("starts_at", { ascending: false })
+    const events = await sql`
+      select * from events
+      order by starts_at desc
+    `
 
-    if (error) {
-      console.error("Error fetching events:", error)
-      throw error
-    }
-
-    return NextResponse.json((events ?? []).map(eventRowToObject))
+    return NextResponse.json(
+      events.map((row) => eventRowToObject(row as Record<string, unknown>)),
+    )
   } catch (error) {
     console.error("Error fetching events:", error)
     return NextResponse.json({ error: "Failed to fetch events" }, { status: 500 })
@@ -77,15 +74,14 @@ export async function POST(request: Request) {
       updated_at: now,
     }
 
-    const { data: event, error } = await supabaseAdmin
-      .from(Tables.events)
-      .insert(insertData)
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error creating event:", error)
-      if (error.code === "23505") {
+    let event
+    try {
+      const [inserted] = await sql`insert into events ${sql(insertData)} returning *`
+      event = inserted
+    } catch (dbError) {
+      const code = (dbError as { code?: string })?.code
+      console.error("Error creating event:", code, dbError instanceof Error ? dbError.message : String(dbError))
+      if (code === "23505") {
         return NextResponse.json(
           { error: "An event with this slug already exists" },
           { status: 409 }
@@ -94,7 +90,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Database insert failed" }, { status: 500 })
     }
 
-    return NextResponse.json(eventRowToObject(event), { status: 201 })
+    return NextResponse.json(eventRowToObject(event as Record<string, unknown>), { status: 201 })
   } catch (error: any) {
     console.error("Error creating event:", error)
     return NextResponse.json({ error: "Failed to create event" }, { status: 500 })

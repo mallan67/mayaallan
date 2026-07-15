@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { getSession } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { validateNavItemPayload } from "@/lib/nav-href-validation"
 
@@ -30,17 +30,16 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { data: items, error } = await supabaseAdmin
-    .from(Tables.navigationItems)
-    .select("*")
-    .order("sort_order", { ascending: true })
-
-  if (error) {
+  try {
+    const items = await sql`
+      select * from navigation_items
+      order by sort_order asc
+    `
+    return NextResponse.json(items.map(mapToUI))
+  } catch (error) {
     console.error("Failed to fetch navigation items:", error)
     return NextResponse.json({ error: "Failed to fetch navigation items" }, { status: 500 })
   }
-
-  return NextResponse.json((items || []).map(mapToUI))
 }
 
 export async function POST(request: Request) {
@@ -60,18 +59,11 @@ export async function POST(request: Request) {
     }
     const { label, href, order, isVisible } = validated.value
 
-    const { data: newItem, error } = await supabaseAdmin
-      .from(Tables.navigationItems)
-      .insert({
-        label,
-        href,
-        sort_order: order,
-        is_visible: isVisible,
-      })
-      .select()
-      .single()
-
-    if (error) throw error
+    const [newItem] = await sql`
+      insert into navigation_items (label, href, sort_order, is_visible)
+      values (${label}, ${href}, ${order}, ${isVisible})
+      returning *
+    `
 
     revalidatePath("/", "layout")
     return NextResponse.json(mapToUI(newItem))
@@ -115,20 +107,14 @@ export async function PATCH(request: Request) {
     // Update all items
     const updated = await Promise.all(
       validatedItems.map(async (item) => {
-        const { data, error } = await supabaseAdmin
-          .from(Tables.navigationItems)
-          .update({
-            label: item.label,
-            href: item.href,
-            sort_order: item.order,
-            is_visible: item.isVisible,
-          })
-          .eq("id", item.id)
-          .select()
-          .single()
-
-        if (error) throw error
-        return data
+        const [row] = await sql`
+          update navigation_items
+          set label = ${item.label}, href = ${item.href},
+              sort_order = ${item.order}, is_visible = ${item.isVisible}
+          where id = ${item.id}
+          returning *
+        `
+        return row
       }),
     )
 

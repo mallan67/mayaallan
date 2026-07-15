@@ -26,7 +26,7 @@
 
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -52,29 +52,18 @@ type TableProbe = {
 
 async function probeTable(name: string): Promise<TableProbe> {
   try {
-    const { count, data, error } = await supabaseAdmin
-      .from(name)
-      .select("*", { count: "exact" })
-      .limit(1)
+    // Direct Postgres probe. A missing relation throws (SQLSTATE 42P01),
+    // caught below — this is how the report detects a dropped/absent table now
+    // that queries no longer go through PostgREST (was PGRST205/PGRST-family).
+    const rows = await sql`select * from ${sql(name)} limit 1`
+    const [countRow] = await sql`select count(*)::int as count from ${sql(name)}`
 
-    if (error) {
-      return {
-        tableName: name,
-        exists: false,
-        rowCount: null,
-        sampleColumns: null,
-        errorCode: error.code ?? null,
-        errorMessage: error.message?.slice(0, 200) ?? "Unknown error",
-      }
-    }
-
-    const sampleColumns =
-      Array.isArray(data) && data.length > 0 ? Object.keys(data[0]).sort() : null
+    const sampleColumns = rows.length > 0 ? Object.keys(rows[0]).sort() : null
 
     return {
       tableName: name,
       exists: true,
-      rowCount: count ?? 0,
+      rowCount: countRow?.count ?? 0,
       sampleColumns,
       errorCode: null,
       errorMessage: null,
@@ -85,7 +74,7 @@ async function probeTable(name: string): Promise<TableProbe> {
       exists: false,
       rowCount: null,
       sampleColumns: null,
-      errorCode: null,
+      errorCode: (err as { code?: string })?.code ?? null,
       errorMessage: err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200),
     }
   }
@@ -198,24 +187,21 @@ export async function GET() {
   }> | null = null
   let visibleEventsError: string | null = null
   try {
-    const { data, error } = await supabaseAdmin
-      .from("events")
-      .select("slug, starts_at, ends_at, keep_visible_after_end, is_visible")
-      .eq("is_visible", true)
-      .order("starts_at", { ascending: true })
-    if (error) {
-      visibleEventsError = error.message?.slice(0, 200) ?? "Unknown error"
-    } else {
-      const nowMs = Date.now()
-      visibleEvents = (data ?? []).map((row: any) => ({
-        slug: row.slug,
-        startsAt: row.starts_at ?? null,
-        endsAt: row.ends_at ?? null,
-        keepVisibleAfterEnd: row.keep_visible_after_end ?? null,
-        isVisible: row.is_visible ?? null,
-        isPast: row.starts_at ? new Date(row.starts_at).getTime() < nowMs : null,
-      }))
-    }
+    const data = await sql`
+      select slug, starts_at, ends_at, keep_visible_after_end, is_visible
+      from events
+      where is_visible = true
+      order by starts_at asc
+    `
+    const nowMs = Date.now()
+    visibleEvents = data.map((row: any) => ({
+      slug: row.slug,
+      startsAt: row.starts_at ?? null,
+      endsAt: row.ends_at ?? null,
+      keepVisibleAfterEnd: row.keep_visible_after_end ?? null,
+      isVisible: row.is_visible ?? null,
+      isPast: row.starts_at ? new Date(row.starts_at).getTime() < nowMs : null,
+    }))
   } catch (err) {
     visibleEventsError = err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200)
   }

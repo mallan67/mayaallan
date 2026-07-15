@@ -12,7 +12,7 @@
 import Link from "next/link"
 import { headers } from "next/headers"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
@@ -59,26 +59,16 @@ type Report = {
  */
 async function probeTable(name: string): Promise<TableProbe> {
   try {
-    const { count, data, error } = await supabaseAdmin
-      .from(name)
-      .select("*", { count: "exact" })
-      .limit(1)
-    if (error) {
-      return {
-        tableName: name,
-        exists: false,
-        rowCount: null,
-        sampleColumns: null,
-        errorCode: error.code ?? null,
-        errorMessage: error.message?.slice(0, 200) ?? "Unknown error",
-      }
-    }
+    // Direct Postgres probe. A missing relation throws (SQLSTATE 42P01),
+    // caught below — how the report now detects a dropped/absent table.
+    const rows = await sql`select * from ${sql(name)} limit 1`
+    const [countRow] = await sql`select count(*)::int as count from ${sql(name)}`
     return {
       tableName: name,
       exists: true,
-      rowCount: count ?? 0,
+      rowCount: countRow?.count ?? 0,
       sampleColumns:
-        Array.isArray(data) && data.length > 0 ? Object.keys(data[0]).sort() : null,
+        rows.length > 0 ? Object.keys(rows[0]).sort() : null,
       errorCode: null,
       errorMessage: null,
     }
@@ -88,7 +78,7 @@ async function probeTable(name: string): Promise<TableProbe> {
       exists: false,
       rowCount: null,
       sampleColumns: null,
-      errorCode: null,
+      errorCode: (err as { code?: string })?.code ?? null,
       errorMessage:
         err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200),
     }
@@ -137,16 +127,14 @@ async function getVisibleEventsCheck(): Promise<{
   // so the report reflects what the live site actually shows. Output
   // stays camelCase for the existing UI consumer below.
   try {
-    const { data, error } = await supabaseAdmin
-      .from("events")
-      .select("slug, starts_at, ends_at, keep_visible_after_end, is_visible")
-      .eq("is_visible", true)
-      .order("starts_at", { ascending: true })
-    if (error) {
-      return { rows: null, error: error.message?.slice(0, 200) ?? "Unknown error" }
-    }
+    const data = await sql`
+      select slug, starts_at, ends_at, keep_visible_after_end, is_visible
+      from events
+      where is_visible = true
+      order by starts_at asc
+    `
     const nowMs = Date.now()
-    const rows: VisibleEventRow[] = (data ?? []).map((row: any) => ({
+    const rows: VisibleEventRow[] = data.map((row: any) => ({
       slug: row.slug,
       startsAt: row.starts_at ?? null,
       endsAt: row.ends_at ?? null,

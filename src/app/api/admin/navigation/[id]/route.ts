@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { getSession } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -17,12 +17,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id } = await params
     const navId = Number.parseInt(id)
 
-    const { error } = await supabaseAdmin
-      .from(Tables.navigationItems)
-      .delete()
-      .eq("id", navId)
-
-    if (error) throw error
+    await sql`delete from navigation_items where id = ${navId}`
 
     revalidatePath("/", "layout")
     return NextResponse.json({ success: true })

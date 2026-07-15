@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 
 export async function GET(request: Request) {
   if (!(await isAuthenticated())) {
@@ -17,25 +17,26 @@ export async function GET(request: Request) {
   const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 20
   const offset = (page - 1) * limit
 
-  const [contactsResult, countResult] = await Promise.all([
-    supabaseAdmin
-      .from(Tables.contactSubmissions)
-      .select("*")
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1),
-    supabaseAdmin
-      .from(Tables.contactSubmissions)
-      .select("*", { count: "exact", head: true }),
+  // range(offset, offset+limit-1) is inclusive → offset N, limit `limit`.
+  // allSettled preserves original semantics: a contacts-query failure is a
+  // 500, but a count-query failure is ignored (total falls back to 0).
+  const [contactsResult, countResult] = await Promise.allSettled([
+    sql`
+      select * from contact_submissions
+      order by created_at desc
+      offset ${offset} limit ${limit}
+    `,
+    sql`select count(*)::int as count from contact_submissions`,
   ])
 
-  if (contactsResult.error) {
-    console.error("Error fetching contacts:", contactsResult.error)
+  if (contactsResult.status === "rejected") {
+    console.error("Error fetching contacts:", contactsResult.reason)
     return NextResponse.json({ error: "Failed to fetch contacts" }, { status: 500 })
   }
 
   return NextResponse.json({
-    data: contactsResult.data || [],
-    total: countResult.count || 0,
+    data: contactsResult.value,
+    total: countResult.status === "fulfilled" ? (countResult.value[0]?.count ?? 0) : 0,
     page,
     limit,
   })
@@ -66,12 +67,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Missing id parameter" }, { status: 400 })
     }
 
-    const { error } = await supabaseAdmin
-      .from(Tables.contactSubmissions)
-      .delete()
-      .eq("id", parseInt(id))
-
-    if (error) throw error
+    await sql`delete from contact_submissions where id = ${parseInt(id)}`
 
     return NextResponse.json({ success: true })
   } catch (error) {

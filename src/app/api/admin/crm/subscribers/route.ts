@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { isAuthenticated } from "@/lib/session"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { buildCsv } from "@/lib/csv"
 
 export async function GET(request: Request) {
@@ -14,17 +14,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { data: subscribers, error } = await supabaseAdmin
-    .from(Tables.emailSubscribers)
-    .select("*")
-    .order("created_at", { ascending: false })
-
-  if (error) {
+  let subscribers
+  try {
+    subscribers = await sql`
+      select * from email_subscribers
+      order by created_at desc
+    `
+  } catch (error) {
     console.error("Error fetching subscribers:", error)
     return NextResponse.json({ error: "Failed to fetch subscribers" }, { status: 500 })
   }
 
-  const rows = (subscribers || []).map((s: any) => [
+  const rows = subscribers.map((s: any) => [
     s.email,
     s.source || "",
     s.created_at ? new Date(s.created_at).toISOString() : "",

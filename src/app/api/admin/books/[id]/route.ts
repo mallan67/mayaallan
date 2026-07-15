@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { isAuthenticated } from "@/lib/session"
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
 import { bookUpdateSchema, formatZodError } from "@/lib/admin-schemas"
 
@@ -34,19 +34,34 @@ export async function GET(
   }
 
   try {
-    const { data: book, error } = await supabaseAdmin
-      .from(Tables.books)
-      .select(`
-        *,
-        book_retailer_links (
-          *,
-          retailer:retailers (*)
-        )
-      `)
-      .eq("id", bookId)
-      .single()
+    const [book] = await sql`
+      select
+        b.*,
+        coalesce(
+          (
+            select json_agg(json_build_object(
+              'id', l.id, 'book_id', l.book_id, 'retailer_id', l.retailer_id,
+              'url', l.url, 'format_type', l.format_type, 'is_active', l.is_active,
+              'retailer', case when r.id is null then null else json_build_object(
+                'id', r.id, 'name', r.name, 'slug', r.slug,
+                'icon_url', r.icon_url, 'is_active', r.is_active
+              ) end
+            ))
+            from book_retailer_links l
+            left join retailers r on r.id = l.retailer_id
+            where l.book_id = b.id
+          ),
+          '[]'::json
+        ) as book_retailer_links
+      from books b
+      where b.id = ${bookId}
+      limit 1
+    `
 
-    if (error || !book) {
+    // No row -> 404. (A transient DB error now throws to the catch below and
+    // returns 500 rather than the old error-as-404; admin-only, and more
+    // correct — a Postgres blip should not read as a missing record.)
+    if (!book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 
@@ -137,13 +152,9 @@ export async function PUT(
     const input = parsed.data
 
     // Verify book exists
-    const { data: existingBook, error: fetchError } = await supabaseAdmin
-      .from(Tables.books)
-      .select("id")
-      .eq("id", bookId)
-      .single()
+    const [existingBook] = await sql`select id from books where id = ${bookId} limit 1`
 
-    if (fetchError || !existingBook) {
+    if (!existingBook) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 })
     }
 
@@ -191,28 +202,43 @@ export async function PUT(
       if (col) updateData[col] = input[key]
     }
 
-    // Perform update
-    const { data: updatedBook, error: updateError } = await supabaseAdmin
-      .from(Tables.books)
-      .update(updateData)
-      .eq("id", bookId)
-      .select(`
-        *,
-        book_retailer_links (
-          *,
-          retailer:retailers (*)
+    // Perform update, returning the row WITH its retailer-links embed in one
+    // round-trip (CTE feeds the json_agg). Was .update().select(embed).single().
+    let updatedBook
+    try {
+      const [row] = await sql`
+        with updated as (
+          update books set ${sql(updateData)} where id = ${bookId} returning *
         )
-      `)
-      .single()
-
-    if (updateError) {
-      if (updateError.code === "23505") {
+        select
+          u.*,
+          coalesce(
+            (
+              select json_agg(json_build_object(
+                'id', l.id, 'book_id', l.book_id, 'retailer_id', l.retailer_id,
+                'url', l.url, 'format_type', l.format_type, 'is_active', l.is_active,
+                'retailer', case when r.id is null then null else json_build_object(
+                  'id', r.id, 'name', r.name, 'slug', r.slug,
+                  'icon_url', r.icon_url, 'is_active', r.is_active
+                ) end
+              ))
+              from book_retailer_links l
+              left join retailers r on r.id = l.retailer_id
+              where l.book_id = u.id
+            ),
+            '[]'::json
+          ) as book_retailer_links
+        from updated u
+      `
+      updatedBook = row
+    } catch (updateErr) {
+      if ((updateErr as { code?: string })?.code === "23505") {
         return NextResponse.json(
           { error: "A book with this slug already exists" },
           { status: 409 }
         )
       }
-      throw updateError
+      throw updateErr
     }
 
     // Map to camelCase for frontend
@@ -304,24 +330,14 @@ export async function DELETE(
   }
 
   try {
-    // Delete retailer links first
-    await supabaseAdmin
-      .from(Tables.bookRetailerLinks)
-      .delete()
-      .eq("book_id", bookId)
+    // Delete retailer links first (the FK is ON DELETE CASCADE, but the
+    // original did this explicitly — preserved).
+    await sql`delete from book_retailer_links where book_id = ${bookId}`
 
-    // Delete book
-    const { error } = await supabaseAdmin
-      .from(Tables.books)
-      .delete()
-      .eq("id", bookId)
-
-    if (error) {
-      if (error.code === "PGRST116") {
-        return NextResponse.json({ error: "Book not found" }, { status: 404 })
-      }
-      throw error
-    }
+    // Delete book. A non-existent id deletes 0 rows and returns success — the
+    // original's PGRST116->404 branch never fired for a non-single delete, so
+    // the observable behavior (success) is preserved.
+    await sql`delete from books where id = ${bookId}`
 
     // Revalidate public pages so changes appear immediately
     revalidatePath("/books")

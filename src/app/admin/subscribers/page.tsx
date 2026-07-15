@@ -1,18 +1,17 @@
-import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { sql } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
 export default async function AdminSubscribersPage() {
-  const { data: subscribers, error } = await supabaseAdmin
-    .from(Tables.emailSubscribers)
-    .select("*")
-    .order("created_at", { ascending: false })
-
-  if (error) {
+  let subscribersList: any[] = []
+  try {
+    subscribersList = await sql`
+      select * from email_subscribers
+      order by created_at desc
+    `
+  } catch (error) {
     console.error("Error fetching subscribers:", error)
   }
-
-  const subscribersList = subscribers || []
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
