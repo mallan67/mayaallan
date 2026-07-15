@@ -85,6 +85,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Ebook file not configured. Please contact support." }, { status: 400 })
     }
 
+    // issue #32: normalize the sale price ONCE and reject anything that isn't a
+    // positive, finite amount. `priceValue` (a two-decimal string) is the single
+    // value sent in every PayPal payload field below, and `expectedAmount` (its
+    // numeric form) is recorded on the pending order so the webhook can verify
+    // the captured amount against the price the buyer was quoted at checkout.
+    const rawEbookPrice = Number(book.ebook_price)
+    if (!Number.isFinite(rawEbookPrice) || rawEbookPrice <= 0) {
+      return NextResponse.json({ error: "Book not available for direct sale" }, { status: 400 })
+    }
+    const expectedCurrency = "USD"
+    const priceValue = rawEbookPrice.toFixed(2) // exact amount charged via PayPal
+    const expectedAmount = Number(priceValue) // exact numeric recorded on the pending order
+
     // Get a cached PayPal access token via the shared helper.
     let access_token: string
     try {
@@ -128,18 +141,18 @@ export async function POST(request: Request) {
                   quantity: "1",
                   category: "DIGITAL_GOODS",
                   unit_amount: {
-                    currency_code: "USD",
-                    value: Number(book.ebook_price).toFixed(2),
+                    currency_code: expectedCurrency,
+                    value: priceValue,
                   },
                 },
               ],
               amount: {
-                currency_code: "USD",
-                value: Number(book.ebook_price).toFixed(2),
+                currency_code: expectedCurrency,
+                value: priceValue,
                 breakdown: {
                   item_total: {
-                    currency_code: "USD",
-                    value: Number(book.ebook_price).toFixed(2),
+                    currency_code: expectedCurrency,
+                    value: priceValue,
                   },
                 },
               },
@@ -230,6 +243,10 @@ export async function POST(request: Request) {
         ip_hash: hashForBinding(ip),
         user_agent_hash: hashForBinding(request.headers.get("user-agent")),
         status: "pending",
+        // issue #32: record the exact price + currency quoted at checkout so
+        // the webhook can verify the captured amount before fulfilling.
+        expected_amount: expectedAmount,
+        expected_currency: expectedCurrency,
         visitor_id: attribution.visitorId,
         session_id: attribution.sessionId,
         utm_source: attribution.utmSource,

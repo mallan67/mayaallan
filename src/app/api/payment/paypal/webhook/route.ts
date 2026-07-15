@@ -491,6 +491,169 @@ export async function POST(request: Request) {
       }
 
       // ----------------------------------------------------------------
+      // EXPECTED-AMOUNT / CURRENCY GUARD (issue #32 — hard block, fail-closed).
+      //
+      // Compare the captured amount + currency against the values recorded at
+      // checkout time (pending_paypal_orders.expected_amount / expected_currency)
+      // BEFORE creating any order, token, or email. This is the defense-in-depth
+      // the currency-only guard above referenced as a follow-up: it catches a
+      // capture whose amount doesn't match the price the buyer was quoted.
+      //
+      // Fail closed — no order, no token, no email; alert + 200 so PayPal stops
+      // retrying — on ANY of: pending row missing, lookup error, expected value
+      // missing/invalid, currency mismatch, amount mismatch (±0.01 tolerance).
+      //
+      // The same row carries the attribution snapshot, so it is read ONCE here
+      // and reused for the analytics writes later (see `pendingOrder`). Alert
+      // details carry only order/book ids + amounts — never buyer PII.
+      // ----------------------------------------------------------------
+      type PendingOrderRow = {
+        expected_amount: number | string | null
+        expected_currency: string | null
+        visitor_id: string | null
+        session_id: string | null
+        utm_source: string | null
+        utm_medium: string | null
+        utm_campaign: string | null
+        utm_content: string | null
+        utm_term: string | null
+        landing_page: string | null
+        referrer: string | null
+      }
+
+      let pendingOrder: PendingOrderRow | null = null
+      {
+        const { data: pendingData, error: pendingLookupError } = await supabaseAdmin
+          .from("pending_paypal_orders")
+          .select(
+            "expected_amount, expected_currency, visitor_id, session_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, landing_page, referrer",
+          )
+          .eq("paypal_order_id", paypalOrderId)
+          .maybeSingle()
+
+        if (pendingLookupError) {
+          await alertAdmin({
+            severity: "critical",
+            subject: "PayPal: expected-amount guard — pending lookup FAILED, not fulfilling",
+            body:
+              "The expected-amount guard could not read pending_paypal_orders. Refusing to " +
+              "fulfill (no order, token, or email). Returning 200 so PayPal stops retrying; " +
+              "reconcile manually once the database is reachable.",
+            details: {
+              paypalOrderId,
+              bookId: book.id,
+              expectedAmount: null,
+              expectedCurrency: null,
+              actualAmount: amount,
+              actualCurrency: currency,
+            },
+            dedupKey: `paypal:expected-lookup-failed:${paypalOrderId}`,
+          })
+          return NextResponse.json({ received: true, ignored: "expected-amount-lookup-failed" })
+        }
+
+        pendingOrder = (pendingData as PendingOrderRow | null) ?? null
+      }
+
+      if (!pendingOrder) {
+        await alertAdmin({
+          severity: "critical",
+          subject: "PayPal: no pending order for capture — NOT fulfilling",
+          body:
+            "A signature-verified capture arrived with no matching pending_paypal_orders row, so " +
+            "the checkout-time amount can't be verified. Refusing to fulfill. Returning 200 so " +
+            "PayPal stops retrying; reconcile manually — this can indicate a forged/manual order.",
+          details: {
+            paypalOrderId,
+            bookId: book.id,
+            expectedAmount: null,
+            expectedCurrency: null,
+            actualAmount: amount,
+            actualCurrency: currency,
+          },
+          dedupKey: `paypal:no-pending-order:${paypalOrderId}`,
+        })
+        return NextResponse.json({ received: true, ignored: "no-pending-order" })
+      }
+
+      const expectedCurrency =
+        typeof pendingOrder.expected_currency === "string" && pendingOrder.expected_currency.trim() !== ""
+          ? pendingOrder.expected_currency
+          : null
+      const expectedAmount =
+        pendingOrder.expected_amount === null || pendingOrder.expected_amount === undefined
+          ? NaN
+          : Number(pendingOrder.expected_amount)
+
+      if (!expectedCurrency || !Number.isFinite(expectedAmount) || expectedAmount <= 0) {
+        await alertAdmin({
+          severity: "critical",
+          subject: "PayPal: pending order missing expected amount/currency — NOT fulfilling",
+          body:
+            "The pending order exists but its expected_amount/expected_currency is missing or " +
+            "invalid, so the capture can't be verified against the checkout-time price. Refusing " +
+            "to fulfill. Returning 200 so PayPal stops retrying; reconcile manually. (A pending " +
+            "row created before this guard shipped can also land here.)",
+          details: {
+            paypalOrderId,
+            bookId: book.id,
+            expectedAmount: Number.isFinite(expectedAmount) ? expectedAmount : null,
+            expectedCurrency,
+            actualAmount: amount,
+            actualCurrency: currency,
+          },
+          dedupKey: `paypal:expected-missing:${paypalOrderId}`,
+        })
+        return NextResponse.json({ received: true, ignored: "expected-amount-missing" })
+      }
+
+      // Currency: case-insensitive compare against the recorded expectation.
+      if (currency.toUpperCase() !== expectedCurrency.toUpperCase()) {
+        await alertAdmin({
+          severity: "critical",
+          subject: "PayPal: captured currency != checkout currency — NOT fulfilling",
+          body:
+            "The captured currency does not match the currency recorded at checkout. Refusing to " +
+            "fulfill (no token, no email). Returning 200 so PayPal stops retrying; reconcile manually.",
+          details: {
+            paypalOrderId,
+            bookId: book.id,
+            expectedAmount,
+            expectedCurrency,
+            actualAmount: amount,
+            actualCurrency: currency,
+          },
+          dedupKey: `paypal:expected-currency-mismatch:${paypalOrderId}`,
+        })
+        return NextResponse.json({ received: true, ignored: "expected-currency-mismatch" })
+      }
+
+      // Amount: ±0.01 tolerance, compared in integer cents so binary
+      // floating-point can't trip an exactly-one-cent boundary.
+      const actualCents = Math.round(amount * 100)
+      const expectedCents = Math.round(expectedAmount * 100)
+      if (Math.abs(actualCents - expectedCents) > 1) {
+        await alertAdmin({
+          severity: "critical",
+          subject: "PayPal: captured amount != checkout amount — NOT fulfilling",
+          body:
+            "The captured amount does not match the amount recorded at checkout (outside the " +
+            "±0.01 tolerance). Refusing to fulfill (no token, no email). Returning 200 so PayPal " +
+            "stops retrying; reconcile manually — this can indicate a forged/manual order.",
+          details: {
+            paypalOrderId,
+            bookId: book.id,
+            expectedAmount,
+            expectedCurrency,
+            actualAmount: amount,
+            actualCurrency: currency,
+          },
+          dedupKey: `paypal:expected-amount-mismatch:${paypalOrderId}`,
+        })
+        return NextResponse.json({ received: true, ignored: "expected-amount-mismatch" })
+      }
+
+      // ----------------------------------------------------------------
       // IDEMPOTENCY — pre-check for an existing order with this paypal_order_id.
       // PayPal retries webhooks up to 25× over 3 days on any 5xx or slow ACK,
       // so the SAME webhook payload arriving twice is a normal-operations event,
@@ -977,15 +1140,22 @@ export async function POST(request: Request) {
           }
           let attribution: CheckoutAttribution | null = null
 
-          const { data: pendingRow } = await supabaseAdmin
-            .from("pending_paypal_orders")
-            .select(
-              "visitor_id, session_id, utm_source, utm_medium, utm_campaign, utm_content, utm_term, landing_page, referrer",
-            )
-            .eq("paypal_order_id", paypalOrderId)
-            .maybeSingle()
-
-          if (pendingRow) attribution = pendingRow as unknown as CheckoutAttribution
+          // Reuse the pending row already fetched by the expected-amount guard
+          // above (issue #32) — it carries the same attribution columns, so we
+          // don't query pending_paypal_orders a second time here.
+          if (pendingOrder) {
+            attribution = {
+              visitor_id: pendingOrder.visitor_id,
+              session_id: pendingOrder.session_id,
+              utm_source: pendingOrder.utm_source,
+              utm_medium: pendingOrder.utm_medium,
+              utm_campaign: pendingOrder.utm_campaign,
+              utm_content: pendingOrder.utm_content,
+              utm_term: pendingOrder.utm_term,
+              landing_page: pendingOrder.landing_page,
+              referrer: pendingOrder.referrer,
+            }
+          }
 
           // INSERT marketing_events with the attribution columns populated.
           // We hand-write the insert instead of using trackMarketingEvent
