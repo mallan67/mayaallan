@@ -14,7 +14,7 @@ import {
   generateBreadcrumbSchema,
   BOOK_FAQS,
 } from "@/lib/structured-data"
-import { SITE_URL } from "@/lib/identity"
+import { SITE_URL, bookMachineSummary } from "@/lib/identity"
 
 interface BookPageProps {
   params: Promise<{ slug: string }>
@@ -62,7 +62,9 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
 
     const title = book.seo_title || book.title
     const subtitles = [book.subtitle1, book.subtitle2, book.subtitle3].filter(Boolean).join(" | ")
-    const description = book.seo_description || book.blurb || subtitles || `${book.title} by Maya Allan`
+    // Prefer an intentional seo_description; otherwise the curated machine
+    // summary — never the mutable sales blurb.
+    const description = book.seo_description || bookMachineSummary(decodedSlug, book.title)
     const bookUrl = `${SITE_URL}/books/${slug}`
 
     // ALWAYS use the dynamic OG image route for consistent 1200x630 social images
@@ -250,7 +252,6 @@ export default async function BookPage({ params }: BookPageProps) {
   const bookSchema = generateBookSchema({
     title: book.title,
     subtitle1: book.subtitle1,
-    blurb: book.blurb,
     coverUrl: book.coverUrl,
     slug: book.slug,
     tagsCsv: book.tagsCsv,
@@ -261,7 +262,8 @@ export default async function BookPage({ params }: BookPageProps) {
   } as any)
 
   // AEO: FAQ Schema for AI answer engines
-  const faqSchema = generateFAQSchema(BOOK_FAQS(book.title, book.blurb), bookUrl)
+  // Machine-facing summary, not the mutable sales blurb, drives the book FAQ.
+  const faqSchema = generateFAQSchema(BOOK_FAQS(book.title, bookMachineSummary(book.slug, book.title)), bookUrl)
 
   // AEO: Breadcrumb Schema for navigation context
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -581,7 +583,7 @@ export default async function BookPage({ params }: BookPageProps) {
             <ShareButtons
               url={bookUrl}
               title={book.title}
-              description={book.blurb ?? book.subtitle1 ?? undefined}
+              description={book.subtitle1 ?? bookMachineSummary(book.slug, book.title)}
               hashtags={book.tagsCsv?.split(",").map((t: string) => t.trim())}
               imageUrl={`${SITE_URL}/books/${book.slug}/opengraph-image`}
             />

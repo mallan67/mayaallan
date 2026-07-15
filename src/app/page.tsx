@@ -6,7 +6,7 @@ import { MessageCircle, Dna, Brain, ListChecks, HeartPulse, PenLine, Star, Calen
 import { NewsletterSection } from "@/components/NewsletterSection"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateAuthorSchema } from "@/lib/structured-data"
-import { SITE_URL } from "@/lib/identity"
+import { SITE_URL, SITE_SEO_DESCRIPTION } from "@/lib/identity"
 import { upcomingEventsOrClause } from "@/lib/events-visibility"
 
 export const revalidate = 300 // 5 minutes
@@ -15,7 +15,7 @@ async function getFeaturedBookForMetadata() {
   try {
     const { data, error } = await supabaseAdmin
       .from(Tables.books)
-      .select("title, blurb, cover_url, og_image_url")
+      .select("title, cover_url, og_image_url")
       .eq("is_featured", true)
       .eq("is_published", true)
       .eq("is_visible", true)
@@ -36,17 +36,9 @@ export async function generateMetadata(): Promise<Metadata> {
   // Use absolute title (no template suffix) to control exact SERP wording
   const title = { absolute: "Maya Allan — Author of the Psilocybin Integration Guide" }
 
-  // Truncate at the last whole word boundary so descriptions don't cut mid-word.
-  const truncateAtWord = (str: string, max = 155) => {
-    if (str.length <= max) return str
-    const slice = str.slice(0, max)
-    const lastSpace = slice.lastIndexOf(" ")
-    return slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…"
-  }
-
-  const description = featuredBook?.blurb
-    ? truncateAtWord(featuredBook.blurb, 155)
-    : "Maya Allan — author and integration guide. Practical, research-informed writing on belief work, nervous-system regulation, and psilocybin integration."
+  // Canonical SEO description — never the mutable book sales blurb, so the
+  // homepage meta/OG/Twitter positioning stays non-clinical and consistent.
+  const description = SITE_SEO_DESCRIPTION
 
   // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
   // The dynamic image generator creates properly sized images that work on Facebook, LinkedIn, etc.
@@ -310,7 +302,7 @@ export default async function HomePage() {
           <div className="max-w-[560px]">
             <p className="hidden md:inline-flex items-center gap-2 text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-7">
               <span className="w-7 h-0.5 bg-gold" />
-              Author &middot; Speaker &middot; Wellness Advocate
+              Author &middot; Speaker &middot; Educator
             </p>
 
             <h1 className="font-serif text-[clamp(2.4rem,5.5vw,3.8rem)] font-semibold leading-[1.15] tracking-[-0.03em] mb-6 text-white">
@@ -320,7 +312,7 @@ export default async function HomePage() {
             </h1>
 
             <p className="text-[1.05rem] text-white/80 leading-[1.8] mb-10">
-              I write about what most people are afraid to question — inherited beliefs, old patterns, the stories that quietly run our lives. My work is for anyone ready to stop outsourcing their healing and start authoring their own transformation.
+              I write about what most people are afraid to question — inherited beliefs, old patterns, the stories that quietly run our lives. My work is for anyone ready to take ownership of their own reflection and start authoring their own path.
             </p>
 
             <div className="flex flex-wrap gap-3.5 mb-12">
@@ -339,7 +331,7 @@ export default async function HomePage() {
             </div>
 
             <p className="font-serif italic font-normal text-base text-white/75 leading-[1.7] pl-5 border-l-[3px] border-gold text-left">
-              &ldquo;No one can heal us but ourselves. The return to your ever-evolving self is a path only you can take.&rdquo;
+              &ldquo;No one can do this inner work for us. The return to your ever-evolving self is a path only you can take.&rdquo;
             </p>
           </div>
         </div>
@@ -386,7 +378,7 @@ export default async function HomePage() {
               </div>
               <h3 className="font-serif text-xl font-medium mb-3.5">Ancestry &amp; Memory</h3>
               <p className="text-[0.9rem] text-charcoal-mid leading-[1.8]">
-                The past lives in our biology, our choices, our reactions. I explore how inherited patterns shape us — and how we can consciously choose which ones to carry forward.
+                The past shows up in our choices, our reactions, the patterns we repeat. I explore how inherited patterns shape us — and how we can consciously choose which ones to carry forward.
               </p>
             </article>
 
@@ -397,7 +389,7 @@ export default async function HomePage() {
               </div>
               <h3 className="font-serif text-xl font-medium mb-3.5">Mental Reshaping</h3>
               <p className="text-[0.9rem] text-charcoal-mid leading-[1.8]">
-                The mind forms in ways we rarely examine. I focus on practical, evidence-based tools for reshaping it — not abstract theories, but things you can actually use.
+                The mind forms in ways we rarely examine. I focus on practical tools for examining it — not abstract theories, but things you can actually use.
               </p>
             </article>
           </div>
@@ -579,10 +571,10 @@ export default async function HomePage() {
                     I believe deep inner clarity is a fundamental human birthright.
                   </p>
                   <p className="text-[0.95rem] text-white/85 leading-[1.85] mb-4">
-                    It&apos;s a capacity we all have — but it gets buried under inherited narratives, the pressure of who we&apos;re &ldquo;supposed&rdquo; to be, and a world that profits from our confusion. My work starts with a simple conviction: no one can heal us but ourselves.
+                    It&apos;s a capacity we all have — but it gets buried under inherited narratives, the pressure of who we&apos;re &ldquo;supposed&rdquo; to be, and a world that profits from our confusion. My work starts with a simple conviction: no one can do this inner work for us.
                   </p>
                   <p className="text-[0.95rem] text-white/85 leading-[1.85] mb-7">
-                    I&apos;m not a guru, and I&apos;m not interested in being one. I&apos;m a writer who cares about practical tools over abstract theories. True healing is grounded work — self-knowledge, radical acceptance, and finally feeling at home in your own skin.
+                    I&apos;m not a guru, and I&apos;m not interested in being one. I&apos;m a writer who cares about practical tools over abstract theories. This is grounded work — self-knowledge, radical acceptance, and finally feeling at home in your own skin.
                   </p>
                 </>
               )}
@@ -602,7 +594,7 @@ export default async function HomePage() {
                     Ancestry &amp; Memory
                   </h3>
                   <p className="text-[0.82rem] text-white/75 leading-relaxed">
-                    How the past shapes our present choices and biology.
+                    How the past shapes our present choices and patterns.
                   </p>
                 </div>
                 <div className="p-5 bg-white/5 rounded-xl border border-white/[0.08]">

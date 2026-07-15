@@ -9,7 +9,7 @@ import ConsentBanner from "@/components/ConsentBanner"
 import { GatedAnalytics, GatedMarketing } from "@/components/AnalyticsGated"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structured-data"
-import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL } from "@/lib/identity"
+import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL, SITE_SEO_DESCRIPTION } from "@/lib/identity"
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -56,7 +56,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings()
 
   const siteName = settings?.siteName || "Maya Allan"
-  const description = settings?.tagline || "Official website of Maya Allan - Author, Speaker, and Wellness Advocate"
+  // Canonical SEO description — intentionally NOT settings.tagline, so an
+  // admin-edited tagline can never silently override site-wide positioning
+  // in <meta description>, OpenGraph, or Twitter cards.
+  const description = SITE_SEO_DESCRIPTION
 
   // Build icons array - use custom icon if available, otherwise use defaults
   const icons: Metadata["icons"] = {
@@ -74,7 +77,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(SITE_URL),
     title: {
-      default: `${siteName} | Author`,
+      default: `${siteName} | Psilocybin Integration Author & Educator`,
       template: `%s | ${siteName}`,
     },
     description,
@@ -84,25 +87,16 @@ export async function generateMetadata(): Promise<Metadata> {
     publisher: "Maya Allan",
     keywords: [
       "Maya Allan",
-      "author",
-      "books",
+      "Maya Allan author",
+      "Psilocybin Integration Guide",
       "psilocybin integration",
-      "mushroom guide",
       "psychedelic integration",
-      "integration guide",
-      "practitioners",
-      "healers",
-      "facilitators",
-      "psychedelic guides",
-      "solo journey",
-      "mushroom experiences",
-      "psilocybin therapy",
-      "psychedelic healing",
-      "inner transformation",
+      "post-journey reflection",
+      "integration journaling",
+      "self-inquiry",
+      "consciousness author",
       "self-agency",
-      "wellness",
-      "consciousness",
-      "plant medicine",
+      "books",
     ],
     robots: {
       index: true,

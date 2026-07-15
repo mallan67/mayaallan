@@ -5,6 +5,7 @@ import {
   logOgDataFailure,
   ogFonts,
 } from "@/lib/og-image-helpers"
+import { bookMachineSummary } from "@/lib/identity"
 
 export const runtime = "edge"
 
@@ -34,7 +35,7 @@ async function getBookData(slug: string) {
 
   try {
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/books?or=(slug.eq.${encodeURIComponent(slug)})&select=title,subtitle1,blurb,cover_url,tags_csv&limit=1`,
+      `${supabaseUrl}/rest/v1/books?or=(slug.eq.${encodeURIComponent(slug)})&select=title,subtitle1,cover_url,tags_csv&limit=1`,
       {
         headers: {
           apikey: supabaseKey,
@@ -98,8 +99,8 @@ export default async function Image({ params }: Props) {
     )
   }
 
-  // Truncate description for display
-  const description = book.blurb || book.subtitle1 || ""
+  // Card text — subtitle, then curated machine summary; never the sales blurb.
+  const description = book.subtitle1 || bookMachineSummary(decodedSlug, book.title)
   const truncatedDesc = description.length > 150 ? description.substring(0, 147) + "..." : description
 
   // Get genre/tags for display
