@@ -45,6 +45,20 @@ function getClient(): ReturnType<typeof postgres> {
     max: 1, // serverless: one socket per warm function instance
     idle_timeout: 20,
     connect_timeout: 15,
+    // Send search_path as a startup parameter on EVERY connection. This does
+    // NOT depend on the role's default (ALTER ROLE ... SET search_path only
+    // affects NEW sessions, so warm pooled connections would keep the old
+    // default across a cutover and break). Before app_private exists Postgres
+    // silently skips it and resolves unqualified names via public; after the
+    // objects move, the same path resolves app_private first — no
+    // warm-connection outage.
+    //
+    // MUST be committed + deployed BEFORE the cutover. After cutover + smoke
+    // test, tighten to "app_private,pg_catalog" (drop public).
+    connection: {
+      application_name: "mayaallan",
+      search_path: "app_private,public,pg_catalog",
+    },
     // Value-shape coercers (see src/lib/db-types.ts for the full rationale):
     //   int8 (bigint)          -> JS number when safe-integer, else exact string
     //   numeric / decimal      -> left as string (money-safe; never float)
