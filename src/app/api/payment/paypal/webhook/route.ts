@@ -304,7 +304,9 @@ export async function POST(request: Request) {
       let customerName: string | null = null
       let paypalOrderId: string | null = null
       let amount: number = 0
-      let currency: string = "usd"
+      // Init to "" (not "usd"): a missing captured currency must NOT read as USD.
+      // The captured-payment-data guard below rejects an empty currency.
+      let currency: string = ""
 
       if (body.event_type === "PAYMENT.CAPTURE.COMPLETED") {
         // Modern checkout flow - capture completed
@@ -336,7 +338,7 @@ export async function POST(request: Request) {
           return NextResponse.json({ received: true, ignored: "missing-order-id" })
         }
         amount = parseFloat(resource.amount?.value || "0")
-        currency = resource.amount?.currency_code?.toLowerCase() || "usd"
+        currency = resource.amount?.currency_code?.toLowerCase() || ""
         // Note: payer info may be in supplementary_data for captures
         customerEmail = resource.payer?.email_address || resource.supplementary_data?.payer?.email_address
         customerName = resource.payer?.name?.given_name
@@ -348,7 +350,7 @@ export async function POST(request: Request) {
         bookId = parseBookId(purchaseUnit?.custom_id) // M8: strict positive-int parse
         paypalOrderId = resource.id
         amount = parseFloat(purchaseUnit?.amount?.value || "0")
-        currency = purchaseUnit?.amount?.currency_code?.toLowerCase() || "usd"
+        currency = purchaseUnit?.amount?.currency_code?.toLowerCase() || ""
         customerEmail = resource.payer?.email_address
         customerName = resource.payer?.name?.given_name
           ? `${resource.payer.name.given_name} ${resource.payer.name.surname || ""}`.trim()
@@ -358,7 +360,7 @@ export async function POST(request: Request) {
         bookId = parseBookId(resource.custom) // M8: strict positive-int parse
         paypalOrderId = resource.id
         amount = parseFloat(resource.amount?.total || "0")
-        currency = resource.amount?.currency?.toLowerCase() || "usd"
+        currency = resource.amount?.currency?.toLowerCase() || ""
         customerEmail = resource.payer?.email_address
         customerName = resource.payer?.name?.given_name && resource.payer?.name?.surname
           ? `${resource.payer.name.given_name} ${resource.payer.name.surname}`
@@ -451,6 +453,37 @@ export async function POST(request: Request) {
           dedupKey: `paypal:no-email:${paypalOrderId}`,
         })
         return NextResponse.json({ received: true, ignored: "no-customer-email" })
+      }
+
+      // ----------------------------------------------------------------
+      // CAPTURED-PAYMENT-DATA GUARD (issue #32 review — fail-closed).
+      //
+      // `amount` / `currency` come straight from the (signature-verified) PayPal
+      // event. Validate them BEFORE the USD guard and before creating any order,
+      // token, or email:
+      //   - a malformed amount can parse to NaN, which would slip past the
+      //     numeric comparison in the expected-amount guard (NaN > 1 === false);
+      //   - a missing currency must NOT be silently treated as USD.
+      // Reject both here. Alert details carry only ids + actual amount/currency —
+      // never buyer PII.
+      // ----------------------------------------------------------------
+      if (!Number.isFinite(amount) || amount <= 0 || currency.trim() === "") {
+        await alertAdmin({
+          severity: "critical",
+          subject: "PayPal: captured amount/currency invalid — NOT fulfilling",
+          body:
+            "A signature-verified capture arrived with a missing or malformed amount and/or " +
+            "currency. Refusing to fulfill (no order, token, or email). Returning 200 so PayPal " +
+            "stops retrying; reconcile manually.",
+          details: {
+            paypalOrderId,
+            bookId: book.id,
+            actualAmount: Number.isFinite(amount) ? amount : null,
+            actualCurrency: currency.trim() === "" ? null : currency,
+          },
+          dedupKey: `paypal:captured-data-invalid:${paypalOrderId}`,
+        })
+        return NextResponse.json({ received: true, ignored: "captured-payment-data-invalid" })
       }
 
       // ----------------------------------------------------------------
