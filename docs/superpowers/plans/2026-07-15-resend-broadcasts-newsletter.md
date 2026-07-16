@@ -822,7 +822,7 @@ curl -sS -X POST "$SITE/api/subscribe" -H "Content-Type: application/json" \
 # 4. Cleanup: delete the test Contact in the Resend dashboard if desired.
 ```
 
-Also note the exact duplicate/conflict error `statusCode` observed if a race is triggered, and confirm it matches `isDuplicate` (adjust the code only if it differs).
+Optionally note the exact create error `statusCode` observed if a duplicate/race is triggered, for the record only — the deterministic recovery does not depend on any specific conflict code (any create error triggers the single read-after-write re-fetch).
 
 **Dry-run import** (write-free):
 
