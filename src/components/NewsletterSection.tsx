@@ -89,11 +89,7 @@ export function NewsletterSection() {
           </button>
         </form>
         <p className="mt-4 text-[0.8rem] text-charcoal-mid">
-          To stop receiving emails, contact us through the{" "}
-          <Link href="/contact" className="underline hover:text-charcoal">
-            contact page
-          </Link>
-          . See our{" "}
+          You can unsubscribe at any time using the link included in every newsletter. See our{" "}
           <Link href="/privacy" className="underline hover:text-charcoal">
             Privacy Policy
           </Link>
