@@ -43,3 +43,7 @@ test("subscriber-facing welcome email is removed", () => {
 test("operator new-subscriber notification remains", () => {
   assert.match(src, /New Newsletter Subscriber/)
 })
+
+test("no unsafe `as any` cast on the sync result (uses a proper type guard)", () => {
+  assert.doesNotMatch(src, /sync as any/)
+})

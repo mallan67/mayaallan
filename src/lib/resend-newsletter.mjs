@@ -16,16 +16,45 @@ export function isNotFound(error) {
   return !!error && error.statusCode === 404
 }
 
+/**
+ * Does the Contact belong to `segmentId`? `contacts.segments.list` is paginated
+ * in resend@6.8.0 (`{ limit?, after? }` -> `{ object:'list', data: Segment[],
+ * has_more: boolean }`, Segment = `{ created_at, id, name }`). Page through it:
+ * stop early on a match, stop when `has_more` is false, advance via the last
+ * item's `id` as the `after` cursor (`limit: 100` to minimize round-trips).
+ * Fails CLOSED on any page error, a malformed page (non-array `data` or
+ * non-boolean `has_more`), or an unusable cursor — never assumes the target is
+ * on the first page. Read-only: never writes. Shared by both syncContact
+ * (write path) and classifyContact (dry-run) so membership logic can't desync.
+ * Returns `{ found: boolean }` or `{ error: string }`.
+ */
+async function contactInSegment({ resend, segmentId, email }) {
+  let after
+  for (;;) {
+    const list = await resend.contacts.segments.list(
+      after ? { email, limit: 100, after } : { email, limit: 100 },
+    )
+    if (list.error) return { error: `segments-list:${list.error.statusCode ?? "unknown"}` }
+    const body = list.data
+    if (!Array.isArray(body?.data) || typeof body?.has_more !== "boolean") {
+      return { error: "segments-list:no-data" }
+    }
+    const page = body.data
+    if (page.some((s) => s?.id === segmentId)) return { found: true }
+    if (!body.has_more) return { found: false }
+    const cursor = page[page.length - 1]?.id
+    if (typeof cursor !== "string") return { error: "segments-list:no-cursor" }
+    after = cursor
+  }
+}
+
 async function ensureExisting({ resend, segmentId, email, contact }) {
   // Fail closed on malformed Contact data: only a real boolean drives the branch.
   if (contact?.unsubscribed === true) return { status: "skipped-unsubscribed" }
   if (contact?.unsubscribed !== false) return { status: "error", detail: "malformed:unsubscribed-not-boolean" }
-  const list = await resend.contacts.segments.list({ email })
-  if (list.error) return { status: "error", detail: `segments-list:${list.error.statusCode ?? "unknown"}` }
-  // Fail closed: a successful-but-malformed list (no array) must NOT be treated as
-  // "empty" and then followed by an add — that would defeat list-before-add.
-  if (!Array.isArray(list.data?.data)) return { status: "error", detail: "segments-list:no-data" }
-  if (list.data.data.some((s) => s.id === segmentId)) return { status: "already-member" }
+  const membership = await contactInSegment({ resend, segmentId, email })
+  if (membership.error) return { status: "error", detail: membership.error }
+  if (membership.found) return { status: "already-member" }
   const added = await resend.contacts.segments.add({ email, segmentId })
   if (added.error) return { status: "error", detail: `segment-add:${added.error.statusCode ?? "unknown"}` }
   return { status: "added-to-segment" }
@@ -92,11 +121,9 @@ export async function classifyContact({ resend, segmentId, email }) {
     if (!got.data) return { status: "error", detail: "get:no-data" } // fail closed
     if (got.data.unsubscribed === true) return { status: "would-skip-unsubscribed" }
     if (got.data.unsubscribed !== false) return { status: "error", detail: "malformed:unsubscribed-not-boolean" }
-    const list = await resend.contacts.segments.list({ email })
-    if (list.error) return { status: "error", detail: `segments-list:${list.error.statusCode ?? "unknown"}` }
-    if (!Array.isArray(list.data?.data)) return { status: "error", detail: "segments-list:no-data" }
-    const isMember = list.data.data.some((s) => s.id === segmentId)
-    return { status: isMember ? "already-member" : "would-add" }
+    const membership = await contactInSegment({ resend, segmentId, email })
+    if (membership.error) return { status: "error", detail: membership.error }
+    return { status: membership.found ? "already-member" : "would-add" }
   } catch (e) {
     return { status: "error", detail: `threw:${e?.message ?? e}` }
   }

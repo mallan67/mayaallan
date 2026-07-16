@@ -172,7 +172,7 @@ export async function POST(request: Request) {
             "A newsletter signup was saved to Supabase but syncing the contact to the " +
             "Resend newsletter Segment failed. The subscriber is in the ledger; re-run " +
             "the import script to reconcile.",
-          details: { subscriberDomain: emailDomain(email), status: sync.status, detail: (sync as any).detail ?? null },
+          details: { subscriberDomain: emailDomain(email), status: sync.status, detail: "detail" in sync && typeof sync.detail === "string" ? sync.detail : null },
           dedupKey: "resend:newsletter-sync-failed",
         })
       } else if (sync.status === "noop-no-segment-id") {

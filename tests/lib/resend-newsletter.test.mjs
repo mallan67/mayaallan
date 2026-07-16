@@ -60,7 +60,7 @@ test("existing unsubscribed -> skipped, no writes", async () => {
 test("existing active not-member -> added-to-segment", async () => {
   const r = fakeResend({
     get: () => ok({ unsubscribed: false }),
-    list: () => ok({ object: "list", data: [] }),
+    list: () => ok({ object: "list", data: [], has_more: false }),
     add: () => ok({ id: SEG }),
   })
   const res = await syncContact({ resend: r, segmentId: SEG, email: "b@x.com" })
@@ -71,7 +71,7 @@ test("existing active not-member -> added-to-segment", async () => {
 test("existing active already-member -> already-member, no add", async () => {
   const r = fakeResend({
     get: () => ok({ unsubscribed: false }),
-    list: () => ok({ object: "list", data: [{ id: SEG }] }),
+    list: () => ok({ object: "list", data: [{ id: SEG }], has_more: false }),
   })
   const res = await syncContact({ resend: r, segmentId: SEG, email: "c@x.com" })
   assert.equal(res.status, "already-member")
@@ -92,6 +92,102 @@ test("malformed segment-list (data.data not array) -> error, no add", async () =
   assert.equal(res.status, "error")
   assert.match(res.detail, /segments-list:no-data/)
   assert.equal(r.calls.add.length, 0)
+})
+
+// Sequential paginated segments.list fake: returns each response in order.
+// contactInSegment computes `after` from the last item's id; the fake ignores it
+// (calls are recorded in r.calls.list, so tests can assert the cursor was passed).
+function pagedList(responses) {
+  let i = 0
+  return () => responses[i++] ?? ok({ object: "list", data: [], has_more: false })
+}
+
+test("segment membership: target found on the SECOND page -> already-member, no add", async () => {
+  const r = fakeResend({
+    get: () => ok({ unsubscribed: false }),
+    list: pagedList([
+      ok({ object: "list", data: [{ id: "seg_a" }, { id: "seg_b" }], has_more: true }),
+      ok({ object: "list", data: [{ id: SEG }], has_more: false }),
+    ]),
+    add: () => ok({ id: SEG }),
+  })
+  const res = await syncContact({ resend: r, segmentId: SEG, email: "p2@x.com" })
+  assert.equal(res.status, "already-member")
+  assert.equal(r.calls.list.length, 2)
+  assert.equal(r.calls.list[1].after, "seg_b") // advanced via last id of page 1
+  assert.equal(r.calls.add.length, 0)
+})
+
+test("segment membership: target absent across pages -> ONE add (sync mode)", async () => {
+  const r = fakeResend({
+    get: () => ok({ unsubscribed: false }),
+    list: pagedList([
+      ok({ object: "list", data: [{ id: "seg_a" }], has_more: true }),
+      ok({ object: "list", data: [{ id: "seg_b" }], has_more: false }),
+    ]),
+    add: () => ok({ id: SEG }),
+  })
+  const res = await syncContact({ resend: r, segmentId: SEG, email: "ab@x.com" })
+  assert.equal(res.status, "added-to-segment")
+  assert.equal(r.calls.list.length, 2)
+  assert.equal(r.calls.add.length, 1)
+})
+
+test("segment membership: target absent across pages -> would-add (dry-run, no writes)", async () => {
+  const r = fakeResend({
+    get: () => ok({ unsubscribed: false }),
+    list: pagedList([
+      ok({ object: "list", data: [{ id: "seg_a" }], has_more: true }),
+      ok({ object: "list", data: [{ id: "seg_b" }], has_more: false }),
+    ]),
+  })
+  const res = await classifyContact({ resend: r, segmentId: SEG, email: "ab2@x.com" })
+  assert.equal(res.status, "would-add")
+  assert.equal(r.calls.list.length, 2)
+  assert.equal(r.calls.add.length, 0)
+  assert.equal(r.calls.create.length, 0)
+})
+
+test("segment membership: an errored later page -> error, no add", async () => {
+  const r = fakeResend({
+    get: () => ok({ unsubscribed: false }),
+    list: pagedList([
+      ok({ object: "list", data: [{ id: "seg_a" }], has_more: true }),
+      err(500),
+    ]),
+    add: () => ok({ id: SEG }),
+  })
+  const res = await syncContact({ resend: r, segmentId: SEG, email: "er@x.com" })
+  assert.equal(res.status, "error")
+  assert.match(res.detail, /segments-list:500/)
+  assert.equal(r.calls.add.length, 0)
+})
+
+test("segment membership: a malformed later page (missing has_more) -> error, no add", async () => {
+  const r = fakeResend({
+    get: () => ok({ unsubscribed: false }),
+    list: pagedList([
+      ok({ object: "list", data: [{ id: "seg_a" }], has_more: true }),
+      ok({ object: "list", data: [{ id: "seg_b" }] }), // missing has_more -> malformed
+    ]),
+    add: () => ok({ id: SEG }),
+  })
+  const res = await syncContact({ resend: r, segmentId: SEG, email: "mp@x.com" })
+  assert.equal(res.status, "error")
+  assert.match(res.detail, /segments-list:no-data/)
+  assert.equal(r.calls.add.length, 0)
+})
+
+test("segment membership: stops paginating when has_more is false (single page)", async () => {
+  const r = fakeResend({
+    get: () => ok({ unsubscribed: false }),
+    list: pagedList([ok({ object: "list", data: [{ id: "seg_a" }], has_more: false })]),
+    add: () => ok({ id: SEG }),
+  })
+  const res = await syncContact({ resend: r, segmentId: SEG, email: "sp@x.com" })
+  assert.equal(res.status, "added-to-segment")
+  assert.equal(r.calls.list.length, 1) // did not request a 2nd page
+  assert.equal(r.calls.add.length, 1)
 })
 
 test("non-404 get error -> error, no create", async () => {
@@ -121,7 +217,7 @@ test("create error + refetch finds contact -> one refetch -> apply rules", async
   const r = fakeResend({
     get: () => (gets++ === 0 ? err(404) : ok({ unsubscribed: false })),
     create: () => err(500), // ANY create error triggers the single read-after-write refetch
-    list: () => ok({ object: "list", data: [] }),
+    list: () => ok({ object: "list", data: [], has_more: false }),
     add: () => ok({ id: SEG }),
   })
   const res = await syncContact({ resend: r, segmentId: SEG, email: "race@x.com" })
@@ -155,7 +251,7 @@ test("partial create self-heals: next sync finds active contact and adds members
   const r = fakeResend({
     get: () => (created ? ok({ unsubscribed: false }) : err(404)),
     create: () => { created = true; return ok({ id: "c1" }) },
-    list: () => ok({ object: "list", data: [] }),
+    list: () => ok({ object: "list", data: [], has_more: false }),
     add: () => (++addCalls === 1 ? err(500) : ok({ id: SEG })),
   })
   const first = await syncContact({ resend: r, segmentId: SEG, email: "h@x.com" })
@@ -191,7 +287,7 @@ test("segment-add THROWS after create -> partial-contact-created:segment-add-thr
 test("classifyContact is write-free", async () => {
   const r = fakeResend({
     get: () => ok({ unsubscribed: false }),
-    list: () => ok({ object: "list", data: [] }),
+    list: () => ok({ object: "list", data: [], has_more: false }),
   })
   const res = await classifyContact({ resend: r, segmentId: SEG, email: "d@x.com" })
   assert.equal(res.status, "would-add")
@@ -292,7 +388,7 @@ test("withRateLimit: missing headers -> exponential backoff", async () => {
 test("withRateLimit paces calls by minIntervalMs, shared across methods (per-request, not per-row)", async () => {
   const slept = []
   let t = 0
-  const base = fakeResend({ get: () => ok({ unsubscribed: false }), list: () => ok({ object: "list", data: [] }) })
+  const base = fakeResend({ get: () => ok({ unsubscribed: false }), list: () => ok({ object: "list", data: [], has_more: false }) })
   const wrapped = withRateLimit(base, {
     minIntervalMs: 100, now: () => t, sleep: async (ms) => { slept.push(ms); t += ms }, log: { warn() {} },
   })

@@ -19,7 +19,7 @@ function fakeResend({ get, create, list, add }) {
 test("dry-run is completely write-free and reports would-* counts", async () => {
   const r = fakeResend({
     get: (a) => (a.email === "new@x.com" ? err(404) : ok({ unsubscribed: false })),
-    list: () => ok({ object: "list", data: [] }),
+    list: () => ok({ object: "list", data: [], has_more: false }),
   })
   const counts = await runImport({
     rows: [{ email: "new@x.com" }, { email: "active@x.com" }],
