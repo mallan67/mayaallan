@@ -64,7 +64,8 @@
   - `classifyContact({ resend, segmentId, email }): Promise<{status: "would-create"|"would-add"|"would-skip-unsubscribed"|"already-member"|"error", detail?: string}>` (get + list only; never writes)
   - `resolveConfig(env?): { apiKey: string|null, segmentId: string|null }`
   - `syncSubscriberToResend(email, { env?, makeClient? }?): Promise<{status: ...|"noop-no-api-key"|"noop-no-segment-id"}>`
-  - `withRateLimit(resend, { maxRetries?, log?, sleep? }?): resend-like` (retries on `statusCode===429`)
+  - `withRateLimit(resend, { maxRetries?, minIntervalMs?, log?, sleep?, now? }?): resend-like` (import-only: shared per-call pacing + 429 retry honoring top-level `res.headers` Retry-After)
+  - `retryAfterMs(headers, now?): number|null`
   - `isNotFound(error): boolean`
 
 - [ ] **Step 1: Write the failing test file**
@@ -80,12 +81,13 @@ import {
   resolveConfig,
   syncSubscriberToResend,
   withRateLimit,
+  retryAfterMs,
   isNotFound,
 } from "../../src/lib/resend-newsletter.mjs"
 
 const SEG = "seg_123"
-const ok = (data) => ({ data, error: null })
-const err = (statusCode, extra = {}) => ({ data: null, error: { statusCode, message: "x", ...extra } })
+const ok = (data, headers = null) => ({ data, error: null, headers })
+const err = (statusCode, headers = null) => ({ data: null, error: { statusCode, message: "x", name: "application_error" }, headers })
 
 // Build a fake resend client from per-method queues/handlers.
 function fakeResend({ get, create, list, add }) {
@@ -158,6 +160,21 @@ test("non-404 get error -> error, no create", async () => {
   assert.equal(r.calls.create.length, 0)
 })
 
+test("get returns no data and no error -> error (fail closed)", async () => {
+  const r = fakeResend({ get: () => ({ data: null, error: null, headers: null }) })
+  const res = await syncContact({ resend: r, segmentId: SEG, email: "nd@x.com" })
+  assert.equal(res.status, "error")
+  assert.equal(r.calls.create.length, 0)
+  assert.equal(r.calls.add.length, 0)
+})
+
+test("existing contact missing unsubscribed boolean -> error (fail closed), not added", async () => {
+  const r = fakeResend({ get: () => ok({ id: "c1" }) }) // no `unsubscribed` field
+  const res = await syncContact({ resend: r, segmentId: SEG, email: "m@x.com" })
+  assert.equal(res.status, "error")
+  assert.equal(r.calls.add.length, 0)
+})
+
 test("create error + refetch finds contact -> one refetch -> apply rules", async () => {
   let gets = 0
   const r = fakeResend({
@@ -180,7 +197,7 @@ test("create error + refetch still missing -> original create error, no retry", 
   assert.equal(r.calls.create.length, 1)
 })
 
-test("created but segment-add fails -> error (partial, self-heals on rerun)", async () => {
+test("created but segment-add fails -> error with explicit partial detail", async () => {
   const r = fakeResend({
     get: () => err(404),
     create: () => ok({ id: "c1" }),
@@ -188,6 +205,23 @@ test("created but segment-add fails -> error (partial, self-heals on rerun)", as
   })
   const res = await syncContact({ resend: r, segmentId: SEG, email: "p@x.com" })
   assert.equal(res.status, "error")
+  assert.match(res.detail, /partial-contact-created:segment-add:500/)
+})
+
+test("partial create self-heals: next sync finds active contact and adds membership", async () => {
+  let created = false
+  let addCalls = 0
+  const r = fakeResend({
+    get: () => (created ? ok({ unsubscribed: false }) : err(404)),
+    create: () => { created = true; return ok({ id: "c1" }) },
+    list: () => ok({ object: "list", data: [] }),
+    add: () => (++addCalls === 1 ? err(500) : ok({ id: SEG })),
+  })
+  const first = await syncContact({ resend: r, segmentId: SEG, email: "h@x.com" })
+  assert.equal(first.status, "error")
+  assert.match(first.detail, /partial-contact-created/)
+  const second = await syncContact({ resend: r, segmentId: SEG, email: "h@x.com" })
+  assert.equal(second.status, "added-to-segment")
 })
 
 test("classifyContact is write-free", async () => {
@@ -206,6 +240,13 @@ test("classifyContact: 404 -> would-create; unsubscribed -> would-skip-unsubscri
   assert.equal((await classifyContact({ resend: r1, segmentId: SEG, email: "n@x.com" })).status, "would-create")
   const r2 = fakeResend({ get: () => ok({ unsubscribed: true }) })
   assert.equal((await classifyContact({ resend: r2, segmentId: SEG, email: "s@x.com" })).status, "would-skip-unsubscribed")
+})
+
+test("classifyContact fail-closed: no data -> error; missing unsubscribed -> error", async () => {
+  const r1 = fakeResend({ get: () => ({ data: null, error: null, headers: null }) })
+  assert.equal((await classifyContact({ resend: r1, segmentId: SEG, email: "a" })).status, "error")
+  const r2 = fakeResend({ get: () => ok({ id: "c1" }) })
+  assert.equal((await classifyContact({ resend: r2, segmentId: SEG, email: "b" })).status, "error")
 })
 
 test("resolveConfig reads env", () => {
@@ -233,14 +274,62 @@ test("syncSubscriberToResend: uses injected client via makeClient", async () => 
   assert.equal(res.status, "created")
 })
 
-test("withRateLimit retries on 429 then succeeds", async () => {
+test("retryAfterMs: numeric seconds header", () => {
+  assert.equal(retryAfterMs({ "retry-after": "2" }), 2000)
+})
+
+test("retryAfterMs: HTTP-date header", () => {
+  const ms = retryAfterMs({ "retry-after": new Date(5000).toUTCString() }, () => 0)
+  assert.ok(ms >= 4000 && ms <= 5000)
+})
+
+test("retryAfterMs: missing header -> null", () => {
+  assert.equal(retryAfterMs(null), null)
+  assert.equal(retryAfterMs({}), null)
+})
+
+test("withRateLimit: numeric Retry-After from top-level res.headers drives the wait", async () => {
+  let n = 0
+  const slept = []
+  const base = fakeResend({ get: () => (n++ === 0 ? err(429, { "retry-after": "2" }) : ok({ unsubscribed: false })) })
+  const wrapped = withRateLimit(base, { minIntervalMs: 0, sleep: async (ms) => slept.push(ms), log: { warn() {} } })
+  const res = await wrapped.contacts.get({ email: "r@x.com" })
+  assert.equal(res.error, null)
+  assert.ok(slept.includes(2000))
+})
+
+test("withRateLimit: HTTP-date Retry-After header drives the wait", async () => {
+  let n = 0
+  const slept = []
+  const base = fakeResend({
+    get: () => (n++ === 0 ? err(429, { "retry-after": new Date(Date.now() + 3000).toUTCString() }) : ok({ unsubscribed: false })),
+  })
+  const wrapped = withRateLimit(base, { minIntervalMs: 0, sleep: async (ms) => slept.push(ms), log: { warn() {} } })
+  const res = await wrapped.contacts.get({ email: "r@x.com" })
+  assert.equal(res.error, null)
+  assert.ok(slept.some((ms) => ms >= 1000 && ms <= 3500))
+})
+
+test("withRateLimit: missing headers -> exponential backoff", async () => {
   let n = 0
   const slept = []
   const base = fakeResend({ get: () => (n++ === 0 ? err(429) : ok({ unsubscribed: false })) })
-  const wrapped = withRateLimit(base, { sleep: async (ms) => slept.push(ms), log: { warn() {} } })
+  const wrapped = withRateLimit(base, { minIntervalMs: 0, sleep: async (ms) => slept.push(ms), log: { warn() {} } })
   const res = await wrapped.contacts.get({ email: "r@x.com" })
   assert.equal(res.error, null)
-  assert.equal(slept.length, 1)
+  assert.ok(slept.some((ms) => ms >= 500))
+})
+
+test("withRateLimit paces calls by minIntervalMs, shared across methods (per-request, not per-row)", async () => {
+  const slept = []
+  let t = 0
+  const base = fakeResend({ get: () => ok({ unsubscribed: false }), list: () => ok({ object: "list", data: [] }) })
+  const wrapped = withRateLimit(base, {
+    minIntervalMs: 100, now: () => t, sleep: async (ms) => { slept.push(ms); t += ms }, log: { warn() {} },
+  })
+  await wrapped.contacts.get({ email: "a" })
+  await wrapped.contacts.segments.list({ email: "a" })
+  assert.ok(slept.some((ms) => ms >= 100))
 })
 ```
 
@@ -256,9 +345,13 @@ import { Resend } from "resend"
 
 /**
  * Resend newsletter sync (issue #8). Global Contacts + explicit "Maya Allan
- * Newsletter" Segment membership, against resend@6.8.0. This module NEVER
- * imports alertAdmin (single-layer alerting lives in the callers) and NEVER
- * changes an existing Contact's global unsubscribe status.
+ * Newsletter" Segment membership, against resend@6.8.0. NEVER imports alertAdmin
+ * (single-layer alerting lives in the callers) and NEVER changes an existing
+ * Contact's global unsubscribe status.
+ *
+ * resend@6.8.0 response shape: every call returns { data, error, headers }.
+ * `headers` is a TOP-LEVEL Record<string,string>|null (NOT inside error);
+ * ErrorResponse is only { message, statusCode, name }.
  */
 
 /** Genuine "contact not found" from the SDK { data, error } result. */
@@ -266,19 +359,17 @@ export function isNotFound(error) {
   return !!error && error.statusCode === 404
 }
 
-async function addAndReport({ resend, segmentId, email }) {
-  const added = await resend.contacts.segments.add({ email, segmentId })
-  if (added.error) return { status: "error", detail: `segment-add:${added.error.statusCode ?? "unknown"}` }
-  return { status: "added-to-segment" }
-}
-
 async function ensureExisting({ resend, segmentId, email, contact }) {
+  // Fail closed on malformed Contact data: only a real boolean drives the branch.
   if (contact?.unsubscribed === true) return { status: "skipped-unsubscribed" }
+  if (contact?.unsubscribed !== false) return { status: "error", detail: "malformed:unsubscribed-not-boolean" }
   const list = await resend.contacts.segments.list({ email })
   if (list.error) return { status: "error", detail: `segments-list:${list.error.statusCode ?? "unknown"}` }
   const segments = list.data?.data ?? []
   if (segments.some((s) => s.id === segmentId)) return { status: "already-member" }
-  return await addAndReport({ resend, segmentId, email })
+  const added = await resend.contacts.segments.add({ email, segmentId })
+  if (added.error) return { status: "error", detail: `segment-add:${added.error.statusCode ?? "unknown"}` }
+  return { status: "added-to-segment" }
 }
 
 async function createAndAdd({ resend, segmentId, email }) {
@@ -295,8 +386,13 @@ async function createAndAdd({ resend, segmentId, email }) {
     if (refetch.error || !refetch.data) return { status: "error", detail: origin }
     return await ensureExisting({ resend, segmentId, email, contact: refetch.data })
   }
+  // Contact created. If the Segment add fails, the Contact now exists WITHOUT
+  // Segment membership — say so explicitly so it is unmistakable and self-heals
+  // on a rerun (the next sync finds the active Contact and adds membership).
   const added = await resend.contacts.segments.add({ email, segmentId })
-  if (added.error) return { status: "error", detail: `segment-add-after-create:${added.error.statusCode ?? "unknown"}` }
+  if (added.error) {
+    return { status: "error", detail: `partial-contact-created:segment-add:${added.error.statusCode ?? "unknown"}` }
+  }
   return { status: "created" }
 }
 
@@ -308,6 +404,7 @@ export async function syncContact({ resend, segmentId, email }) {
       if (isNotFound(got.error)) return await createAndAdd({ resend, segmentId, email })
       return { status: "error", detail: `get:${got.error.statusCode ?? "unknown"}` }
     }
+    if (!got.data) return { status: "error", detail: "get:no-data" } // fail closed
     return await ensureExisting({ resend, segmentId, email, contact: got.data })
   } catch (e) {
     return { status: "error", detail: `threw:${e?.message ?? e}` }
@@ -322,7 +419,9 @@ export async function classifyContact({ resend, segmentId, email }) {
       if (isNotFound(got.error)) return { status: "would-create" }
       return { status: "error", detail: `get:${got.error.statusCode ?? "unknown"}` }
     }
-    if (got.data?.unsubscribed === true) return { status: "would-skip-unsubscribed" }
+    if (!got.data) return { status: "error", detail: "get:no-data" } // fail closed
+    if (got.data.unsubscribed === true) return { status: "would-skip-unsubscribed" }
+    if (got.data.unsubscribed !== false) return { status: "error", detail: "malformed:unsubscribed-not-boolean" }
     const list = await resend.contacts.segments.list({ email })
     if (list.error) return { status: "error", detail: `segments-list:${list.error.statusCode ?? "unknown"}` }
     const isMember = (list.data?.data ?? []).some((s) => s.id === segmentId)
@@ -339,7 +438,11 @@ export function resolveConfig(env = process.env) {
   }
 }
 
-/** Env-resolving convenience for the route. Config alerting is the caller's job. */
+/**
+ * Env-resolving convenience for the LIVE route. Builds a plain client — ONE
+ * attempt per SDK op, no rate-limit retries — so a signup is never delayed by
+ * backoff. Config alerting is the caller's job.
+ */
 export async function syncSubscriberToResend(email, { env = process.env, makeClient } = {}) {
   const { apiKey, segmentId } = resolveConfig(env)
   if (!apiKey) {
@@ -353,20 +456,39 @@ export async function syncSubscriberToResend(email, { env = process.env, makeCli
 
 const defaultSleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-function retryAfterMs(error) {
-  const h = error?.headers?.["retry-after"] ?? error?.headers?.["Retry-After"]
-  if (!h) return null
-  const secs = Number(h)
-  return Number.isFinite(secs) ? Math.max(0, secs * 1000) : null
+/** Read Retry-After from the TOP-LEVEL response headers (numeric seconds or HTTP-date). */
+export function retryAfterMs(headers, now = () => Date.now()) {
+  const raw = headers?.["retry-after"] ?? headers?.["Retry-After"]
+  if (raw == null) return null
+  const secs = Number(raw)
+  if (Number.isFinite(secs)) return Math.max(0, secs * 1000)
+  const when = Date.parse(raw)
+  return Number.isFinite(when) ? Math.max(0, when - now()) : null
 }
 
-/** Wrap a resend client so 429s retry with Retry-After (when surfaced) or backoff. */
-export function withRateLimit(resend, { maxRetries = 5, log = console, sleep = defaultSleep } = {}) {
-  const retry = (fn) => async (arg) => {
+/**
+ * Wrap a resend client for the IMPORT path only. Adds (a) shared conservative
+ * pacing across every wrapped SDK call — get/create/list/add draw from ONE
+ * min-interval gate, so pacing is per-REQUEST not per-row — and (b) 429 retries
+ * honoring the TOP-LEVEL `res.headers` Retry-After, else exponential backoff.
+ * NOT used by the live signup route.
+ */
+export function withRateLimit(
+  resend,
+  { maxRetries = 5, minIntervalMs = 120, log = console, sleep = defaultSleep, now = () => Date.now() } = {},
+) {
+  let nextAt = 0
+  const gate = async () => {
+    const wait = nextAt - now()
+    if (wait > 0) await sleep(wait)
+    nextAt = now() + minIntervalMs
+  }
+  const call = (fn) => async (arg) => {
     for (let attempt = 0; ; attempt++) {
+      await gate()
       const res = await fn(arg)
       if (res?.error?.statusCode === 429 && attempt < maxRetries) {
-        const wait = retryAfterMs(res.error) ?? Math.min(30_000, 500 * 2 ** attempt) + Math.floor(Math.random() * 250)
+        const wait = retryAfterMs(res.headers, now) ?? Math.min(30_000, 500 * 2 ** attempt) + Math.floor(Math.random() * 250)
         log.warn?.(`[resend] 429 rate-limited; waiting ${wait}ms (attempt ${attempt + 1}/${maxRetries})`)
         await sleep(wait)
         continue
@@ -377,11 +499,11 @@ export function withRateLimit(resend, { maxRetries = 5, log = console, sleep = d
   const c = resend.contacts
   return {
     contacts: {
-      get: retry(c.get.bind(c)),
-      create: retry(c.create.bind(c)),
+      get: call(c.get.bind(c)),
+      create: call(c.create.bind(c)),
       segments: {
-        list: retry(c.segments.list.bind(c.segments)),
-        add: retry(c.segments.add.bind(c.segments)),
+        list: call(c.segments.list.bind(c.segments)),
+        add: call(c.segments.add.bind(c.segments)),
       },
     },
   }
@@ -427,11 +549,18 @@ Insert this block immediately **before** the final `return NextResponse.json({ s
 
 ```ts
     // issue #8: sync the subscriber to the Resend "Maya Allan Newsletter" Segment
-    // (marketing source of truth). Awaited normally — NOT Promise.race, which would
-    // not cancel the request and would leave async work after the response. The
-    // route/platform timeout is the backstop. Nonfatal: the Supabase signup already
-    // succeeded, so we always return success. This route is the single alerting layer
-    // for signup-time sync failures.
+    // (marketing source of truth). Awaited normally — NOT Promise.race (which would
+    // not cancel the underlying request) and NOT raw HTTP. Nonfatal semantics:
+    //   - the Supabase row is already saved before this runs;
+    //   - a returned Resend error OR a thrown exception is handled here and we still
+    //     return success;
+    //   - the installed SDK's get options expose no AbortSignal and it directly
+    //     awaits fetch, so a hung Resend request cannot be cancelled — a
+    //     platform-level function timeout could still prevent the HTTP success
+    //     response (the signup is already persisted regardless);
+    //   - the live route makes ONE attempt per SDK op (no withRateLimit / retry
+    //     loop), which bounds added latency.
+    // This route is the single alerting layer for signup-time sync failures.
     try {
       const sync = await syncSubscriberToResend(email)
       if (sync.status === "error") {
@@ -459,8 +588,19 @@ Insert this block immediately **before** the final `return NextResponse.json({ s
       // noop-no-api-key is already logged inside the helper; alertAdmin needs that
       // same key, so there is nothing to email.
     } catch (syncErr) {
-      // The helper is written not to throw; this is pure defense — never fail signup.
+      // The helper is written not to throw, but if it ever does, route it through the
+      // SAME deduplicated sync-failure alert (not just console.error). Missing API key
+      // never reaches here — the helper returns noop-no-api-key instead of throwing.
       console.error("[subscribe] resend newsletter sync threw:", syncErr)
+      await alertAdmin({
+        severity: "error",
+        subject: "Resend newsletter sync failed for a signup",
+        body:
+          "A newsletter signup was saved to Supabase but the Resend sync threw. The " +
+          "subscriber is in the ledger; re-run the import script to reconcile.",
+        details: { subscriberDomain: emailDomain(email), status: "threw", detail: String(syncErr?.message ?? syncErr) },
+        dedupKey: "resend:newsletter-sync-failed",
+      })
     }
 ```
 
@@ -505,12 +645,26 @@ const src = readFileSync(
 )
 
 test("route awaits the Resend newsletter sync", () => {
-  assert.match(src, /await\s+syncSubscriberToResend\(\s*email\s*\)/)
+  assert.match(src, /const\s+sync\s*=\s*await\s+syncSubscriberToResend\(\s*email\s*\)/)
 })
 
-test("Resend sync is wrapped in try/catch and signup still returns success (nonfatal)", () => {
-  assert.match(src, /try\s*{[\s\S]*await\s+syncSubscriberToResend\([\s\S]*}\s*catch/)
-  assert.match(src, /return\s+NextResponse\.json\(\s*{\s*success:\s*true/)
+test("sync sits in its OWN try/catch and the success response follows that catch (nonfatal)", () => {
+  const call = src.indexOf("const sync = await syncSubscriberToResend(email)")
+  assert.ok(call > -1, "sync call present")
+  const tryIdx = src.lastIndexOf("try {", call)
+  const catchIdx = src.indexOf("catch (syncErr)", call)
+  const successIdx = src.indexOf("success: true", catchIdx)
+  assert.ok(tryIdx > -1 && tryIdx < call, "dedicated try begins before the sync call")
+  assert.ok(catchIdx > call, "dedicated catch (syncErr) follows the sync call")
+  assert.ok(successIdx > catchIdx, "success response follows the sync catch")
+})
+
+test("the sync-throw catch routes to the deduplicated sync-failure alert (not only console.error)", () => {
+  const catchIdx = src.indexOf("catch (syncErr)")
+  const successIdx = src.indexOf("success: true", catchIdx)
+  const region = src.slice(catchIdx, successIdx)
+  assert.match(region, /alertAdmin\(/)
+  assert.match(region, /resend:newsletter-sync-failed/)
 })
 
 test("Supabase upsert keeps onConflict email + ignoreDuplicates (preserves unsubscribed_at)", () => {
@@ -559,7 +713,7 @@ git commit -m "feat(newsletter): await resend sync in /api/subscribe; disable su
 
 **Interfaces:**
 - Consumes: `syncContact`, `classifyContact`, `withRateLimit` from Task 1; `@supabase/supabase-js`, `resend`.
-- Produces: `runImport({ rows, resend, segmentId, apply, sleep?, log? }): Promise<Record<string, number>>`.
+- Produces: `runImport({ rows, resend, segmentId, apply, log? }): Promise<Record<string, number>>`; `importHadErrors(counts): boolean`.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -568,11 +722,11 @@ Create `tests/scripts/import-subscribers.test.mjs`:
 ```js
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { runImport } from "../../scripts/import-subscribers-to-resend.mjs"
+import { runImport, importHadErrors } from "../../scripts/import-subscribers-to-resend.mjs"
 
 const SEG = "seg_123"
-const ok = (data) => ({ data, error: null })
-const err = (statusCode) => ({ data: null, error: { statusCode, message: "x" } })
+const ok = (data, headers = null) => ({ data, error: null, headers })
+const err = (statusCode, headers = null) => ({ data: null, error: { statusCode, message: "x", name: "application_error" }, headers })
 
 function fakeResend({ get, create, list, add }) {
   const calls = { get: [], create: [], list: [], add: [] }
@@ -591,7 +745,7 @@ test("dry-run is completely write-free and reports would-* counts", async () => 
   })
   const counts = await runImport({
     rows: [{ email: "new@x.com" }, { email: "active@x.com" }],
-    resend: r, segmentId: SEG, apply: false, sleep: async () => {}, log: { info() {}, warn() {} },
+    resend: r, segmentId: SEG, apply: false, log: { info() {}, warn() {} },
   })
   assert.equal(r.calls.create.length, 0)
   assert.equal(r.calls.add.length, 0)
@@ -600,12 +754,9 @@ test("dry-run is completely write-free and reports would-* counts", async () => 
 })
 
 test("apply mode creates + adds", async () => {
-  const r = fakeResend({
-    get: () => err(404), create: () => ok({ id: "c1" }), add: () => ok({ id: SEG }),
-  })
+  const r = fakeResend({ get: () => err(404), create: () => ok({ id: "c1" }), add: () => ok({ id: SEG }) })
   const counts = await runImport({
-    rows: [{ email: "new@x.com" }], resend: r, segmentId: SEG, apply: true,
-    sleep: async () => {}, log: { info() {}, warn() {} },
+    rows: [{ email: "new@x.com" }], resend: r, segmentId: SEG, apply: true, log: { info() {}, warn() {} },
   })
   assert.equal(counts["created"], 1)
   assert.equal(r.calls.create.length, 1)
@@ -614,11 +765,20 @@ test("apply mode creates + adds", async () => {
 test("apply mode skips unsubscribed without writing", async () => {
   const r = fakeResend({ get: () => ok({ unsubscribed: true }) })
   const counts = await runImport({
-    rows: [{ email: "u@x.com" }], resend: r, segmentId: SEG, apply: true,
-    sleep: async () => {}, log: { info() {}, warn() {} },
+    rows: [{ email: "u@x.com" }], resend: r, segmentId: SEG, apply: true, log: { info() {}, warn() {} },
   })
   assert.equal(counts["skipped-unsubscribed"], 1)
   assert.equal(r.calls.add.length, 0)
+})
+
+test("row errors are counted and importHadErrors reports failure", async () => {
+  const r = fakeResend({ get: () => err(500) }) // non-404 -> error
+  const counts = await runImport({
+    rows: [{ email: "boom@x.com" }], resend: r, segmentId: SEG, apply: true, log: { info() {}, warn() {} },
+  })
+  assert.equal(counts["error"], 1)
+  assert.equal(importHadErrors(counts), true)
+  assert.equal(importHadErrors({ created: 3 }), false)
 })
 ```
 
@@ -637,7 +797,8 @@ import { syncContact, classifyContact, withRateLimit } from "../src/lib/resend-n
 /**
  * One-time backfill of active Supabase subscribers into the Resend newsletter
  * Segment. Reuses the SAME rules as live signup. --dry-run is the DEFAULT and is
- * completely write-free; pass --apply to perform writes.
+ * completely write-free; pass --apply to perform writes. Request pacing + 429
+ * backoff live inside withRateLimit at the per-SDK-CALL level (NOT per row).
  *
  * Run:
  *   node --env-file=.env.local scripts/import-subscribers-to-resend.mjs            # dry-run
@@ -647,11 +808,14 @@ import { syncContact, classifyContact, withRateLimit } from "../src/lib/resend-n
  *               RESEND_API_KEY, RESEND_NEWSLETTER_SEGMENT_ID
  */
 
-const PACING_MS = 150 // ~6-7 req/s ceiling, comfortably under Resend's ~10 req/s default
+const PAGE_SIZE = 1000
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+/** True when any row failed — used to set a nonzero exit code. */
+export function importHadErrors(counts) {
+  return (counts.error ?? 0) > 0
+}
 
-export async function runImport({ rows, resend, segmentId, apply, sleep: sleepFn = sleep, log = console }) {
+export async function runImport({ rows, resend, segmentId, apply, log = console }) {
   const counts = {}
   const bump = (s) => { counts[s] = (counts[s] ?? 0) + 1 }
   for (const row of rows) {
@@ -659,10 +823,26 @@ export async function runImport({ rows, resend, segmentId, apply, sleep: sleepFn
       ? await syncContact({ resend, segmentId, email: row.email })
       : await classifyContact({ resend, segmentId, email: row.email })
     bump(res.status)
-    if (res.status === "error") log.warn?.(`[import] error for one contact: ${res.detail ?? "unknown"}`)
-    await sleepFn(PACING_MS)
+    if (res.status === "error") log.warn?.(`[import] row error: ${res.detail ?? "unknown"}`)
   }
   return counts
+}
+
+/** Read active subscribers in stable, ordered pages until a short page ends it. */
+async function readActiveSubscribers(supabase) {
+  const rows = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("email_subscribers")
+      .select("email")
+      .is("unsubscribed_at", null)
+      .order("id", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1)
+    if (error) throw new Error(`supabase read failed: ${error.message}`)
+    rows.push(...(data ?? []))
+    if (!data || data.length < PAGE_SIZE) break
+  }
+  return rows
 }
 
 async function main() {
@@ -683,19 +863,24 @@ async function main() {
   }
 
   const supabase = createClient(url, key, { auth: { persistSession: false } })
-  const { data: rows, error } = await supabase
-    .from("email_subscribers")
-    .select("email")
-    .is("unsubscribed_at", null)
-  if (error) {
-    console.error("[import] supabase read failed:", error.message)
+  let rows
+  try {
+    rows = await readActiveSubscribers(supabase)
+  } catch (e) {
+    console.error(`[import] ${e.message}`)
     process.exit(1)
   }
 
   const resend = withRateLimit(new Resend(apiKey), { log: console })
   console.log(`[import] mode=${apply ? "APPLY" : "DRY-RUN"} rows=${rows.length} segment=${segmentId}`)
   const counts = await runImport({ rows, resend, segmentId, apply, log: console })
-  console.log("[import] done:", JSON.stringify(counts))
+  console.log("[import] counts:", JSON.stringify(counts))
+
+  if (importHadErrors(counts)) {
+    console.error(`[import] FAILED: ${counts.error} row(s) errored — NOT a clean import. Fix and re-run (idempotent).`)
+    process.exit(1)
+  }
+  console.log("[import] completed with no row errors.")
 }
 
 // Run only when executed directly (not when imported by tests).
@@ -819,7 +1004,14 @@ curl -sS -X POST "$SITE/api/subscribe" -H "Content-Type: application/json" \
   -d '{"email":"maya+nltest@mayaallan.com"}'
 # Verify in Resend dashboard: Contact is STILL unsubscribed (not reactivated, not re-added).
 
-# 4. Cleanup: delete the test Contact in the Resend dashboard if desired.
+# 4. DO NOT delete the test Contact yet. The controlled signup also created an
+#    active Supabase row (unsubscribed_at = NULL). If you delete the globally
+#    unsubscribed Resend Contact while that row is still active, the real import
+#    would see "no contact" and recreate it as SUBSCRIBED. Instead:
+#      - leave it globally unsubscribed in Resend through the dry-run AND real import;
+#      - confirm the import reports this address as skipped-unsubscribed;
+#      - only afterward, under separate explicit authorization, remove the test record
+#        from BOTH systems together (Resend Contact + the Supabase email_subscribers row).
 ```
 
 Optionally note the exact create error `statusCode` observed if a duplicate/race is triggered, for the record only — the deterministic recovery does not depend on any specific conflict code (any create error triggers the single read-after-write re-fetch).
@@ -847,7 +1039,7 @@ node --env-file=.env.local scripts/import-subscribers-to-resend.mjs --apply
 | Create Segment | — | Delete the empty Segment (no data impact). |
 | Set env var | — | Unset `RESEND_NEWSLETTER_SEGMENT_ID`; helper returns `noop-no-segment-id`, signups still succeed. |
 | Deploy code | tsc/build already green pre-merge; runtime errors on `/api/subscribe` | Revert the merge / redeploy previous build. Signups keep working even before revert (sync is nonfatal; Supabase write is unchanged). Reverting also restores the welcome email. |
-| Controlled test | Contact not created / wrong state / unsubscribe resurrected | Do NOT proceed to import. Delete the test Contact; fix the module; re-test. |
+| Controlled test | Contact not created / wrong state / unsubscribe resurrected | Do NOT proceed to import; fix the module and re-test. Do NOT delete the still-unsubscribed test Contact from Resend while its Supabase row is active (the import would recreate it subscribed) — verify the import reports it skipped, then remove it from BOTH systems together under separate authorization. |
 | Dry-run | Unexpected counts (e.g., would-create for known-existing) | No writes occurred; investigate before `--apply`. |
 | Real import | Errors in counts, or a wrong Contact added | Import only ADDS active contacts to the Segment and never changes unsubscribe status, so blast radius is "extra Segment members." Remove specific Contacts from the Segment in the dashboard if a mistake is found; safe to re-run the import (idempotent) after fixing. |
 
