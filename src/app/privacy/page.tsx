@@ -189,8 +189,8 @@ export default function PrivacyPage() {
       <section className="space-y-3">
         <h2 className="font-serif text-lg font-semibold text-slate-900">6. Your rights</h2>
         <p>
-          You can ask us to access, correct, or delete the personal information we hold about you. You may stop
-          receiving marketing emails by contacting us through the contact page. We will
+          You can ask us to access, correct, or delete the personal information we hold about you. You can
+          unsubscribe at any time using the link included in every newsletter. We will
           respond to requests within a reasonable time and in line with applicable law.
         </p>
         <p>
