@@ -23,6 +23,21 @@
 
 ---
 
+## Branch strategy
+
+- **Do not implement on `docs/resend-broadcasts-newsletter-spec`** (the planning branch).
+- After plan approval, create the implementation branch from the **tip of the planning
+  branch** (the approved, amended plan commit — which supersedes the pre-amendment
+  `83171f2`):
+  ```bash
+  git checkout -b feat/resend-broadcasts-newsletter docs/resend-broadcasts-newsletter-spec
+  ```
+- Keep the **four implementation commits separate** (Tasks 1–4, in order).
+- **Do not push or open a PR** until implementation has passed local review and all gates
+  (`node --test` suites, `npx tsc --noEmit`, `npm run build`) locally.
+
+---
+
 ## File structure
 
 - `src/lib/resend-newsletter.mjs` — **new.** Shared sync algorithm + config resolver + rate-limit wrapper. Pure/injectable; no `alertAdmin` import (single-layer alerting lives in callers).
@@ -50,7 +65,7 @@
   - `resolveConfig(env?): { apiKey: string|null, segmentId: string|null }`
   - `syncSubscriberToResend(email, { env?, makeClient? }?): Promise<{status: ...|"noop-no-api-key"|"noop-no-segment-id"}>`
   - `withRateLimit(resend, { maxRetries?, log?, sleep? }?): resend-like` (retries on `statusCode===429`)
-  - `isNotFound(error): boolean`, `isDuplicate(error): boolean`
+  - `isNotFound(error): boolean`
 
 - [ ] **Step 1: Write the failing test file**
 
@@ -66,7 +81,6 @@ import {
   syncSubscriberToResend,
   withRateLimit,
   isNotFound,
-  isDuplicate,
 } from "../../src/lib/resend-newsletter.mjs"
 
 const SEG = "seg_123"
@@ -90,13 +104,10 @@ function fakeResend({ get, create, list, add }) {
   }
 }
 
-test("isNotFound / isDuplicate", () => {
+test("isNotFound", () => {
   assert.equal(isNotFound({ statusCode: 404 }), true)
   assert.equal(isNotFound({ statusCode: 500 }), false)
   assert.equal(isNotFound(null), false)
-  assert.equal(isDuplicate({ statusCode: 409 }), true)
-  assert.equal(isDuplicate({ statusCode: 500, message: "Contact already exists" }), true)
-  assert.equal(isDuplicate({ statusCode: 500, message: "boom" }), false)
 })
 
 test("404 -> create + add -> created", async () => {
@@ -147,17 +158,26 @@ test("non-404 get error -> error, no create", async () => {
   assert.equal(r.calls.create.length, 0)
 })
 
-test("create duplicate race -> refetch once -> apply rules", async () => {
+test("create error + refetch finds contact -> one refetch -> apply rules", async () => {
   let gets = 0
   const r = fakeResend({
     get: () => (gets++ === 0 ? err(404) : ok({ unsubscribed: false })),
-    create: () => err(409),
+    create: () => err(500), // ANY create error triggers the single read-after-write refetch
     list: () => ok({ object: "list", data: [] }),
     add: () => ok({ id: SEG }),
   })
   const res = await syncContact({ resend: r, segmentId: SEG, email: "race@x.com" })
   assert.equal(res.status, "added-to-segment")
   assert.equal(r.calls.get.length, 2)
+  assert.equal(r.calls.create.length, 1) // never retries creation
+})
+
+test("create error + refetch still missing -> original create error, no retry", async () => {
+  const r = fakeResend({ get: () => err(404), create: () => err(503) })
+  const res = await syncContact({ resend: r, segmentId: SEG, email: "fail@x.com" })
+  assert.equal(res.status, "error")
+  assert.match(res.detail, /create:503/)
+  assert.equal(r.calls.create.length, 1)
 })
 
 test("created but segment-add fails -> error (partial, self-heals on rerun)", async () => {
@@ -246,15 +266,6 @@ export function isNotFound(error) {
   return !!error && error.statusCode === 404
 }
 
-/** Create duplicate/conflict (concurrent-signup race). Confirm the exact code in
- *  the controlled test; treat 409 and an "already exists" message as the race. */
-export function isDuplicate(error) {
-  if (!error) return false
-  if (error.statusCode === 409) return true
-  const msg = (error.message || "").toLowerCase()
-  return msg.includes("already exists")
-}
-
 async function addAndReport({ resend, segmentId, email }) {
   const added = await resend.contacts.segments.add({ email, segmentId })
   if (added.error) return { status: "error", detail: `segment-add:${added.error.statusCode ?? "unknown"}` }
@@ -273,12 +284,16 @@ async function ensureExisting({ resend, segmentId, email, contact }) {
 async function createAndAdd({ resend, segmentId, email }) {
   const created = await resend.contacts.create({ email, unsubscribed: false })
   if (created.error) {
-    if (isDuplicate(created.error)) {
-      const refetch = await resend.contacts.get({ email })
-      if (refetch.error) return { status: "error", detail: `race-refetch:${refetch.error.statusCode ?? "unknown"}` }
-      return await ensureExisting({ resend, segmentId, email, contact: refetch.data })
-    }
-    return { status: "error", detail: `create:${created.error.statusCode ?? "unknown"}` }
+    // Deterministic read-after-write recovery: on ANY create error, re-fetch
+    // exactly once. If the Contact now exists (a duplicate race, or an ambiguous
+    // server error that still created it), apply the normal existing-contact
+    // rules. If the re-fetch is missing or itself fails, the create genuinely
+    // failed -> return the ORIGINAL creation error. Never retry creation; never
+    // alter unsubscribe status. This avoids guessing an undocumented conflict code.
+    const origin = `create:${created.error.statusCode ?? "unknown"}`
+    const refetch = await resend.contacts.get({ email })
+    if (refetch.error || !refetch.data) return { status: "error", detail: origin }
+    return await ensureExisting({ resend, segmentId, email, contact: refetch.data })
   }
   const added = await resend.contacts.segments.add({ email, segmentId })
   if (added.error) return { status: "error", detail: `segment-add-after-create:${added.error.statusCode ?? "unknown"}` }
@@ -392,6 +407,7 @@ git commit -m "feat(newsletter): resend sync module (create-then-add, 404-only, 
 **Files:**
 - Modify: `src/app/api/subscribe/route.ts`
 - Modify: `.env.example`
+- Test: `tests/app/subscribe-route.contract.test.mjs`
 
 **Interfaces:**
 - Consumes: `syncSubscriberToResend` from Task 1.
@@ -471,7 +487,52 @@ In `.env.example`, under the Resend section (near `RESEND_API_KEY=`), add:
 RESEND_NEWSLETTER_SEGMENT_ID=
 ```
 
-- [ ] **Step 5: Typecheck and build**
+- [ ] **Step 5: Write the source-contract regression test**
+
+Full-route import would require mocking Supabase, Resend, nodemailer, rate-limit, and
+marketing-events — brittle and low-value. Instead assert the route SOURCE preserves the
+issue-#8 invariants. Create `tests/app/subscribe-route.contract.test.mjs`:
+
+```js
+import { test } from "node:test"
+import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { fileURLToPath } from "node:url"
+
+const src = readFileSync(
+  fileURLToPath(new URL("../../src/app/api/subscribe/route.ts", import.meta.url)),
+  "utf8",
+)
+
+test("route awaits the Resend newsletter sync", () => {
+  assert.match(src, /await\s+syncSubscriberToResend\(\s*email\s*\)/)
+})
+
+test("Resend sync is wrapped in try/catch and signup still returns success (nonfatal)", () => {
+  assert.match(src, /try\s*{[\s\S]*await\s+syncSubscriberToResend\([\s\S]*}\s*catch/)
+  assert.match(src, /return\s+NextResponse\.json\(\s*{\s*success:\s*true/)
+})
+
+test("Supabase upsert keeps onConflict email + ignoreDuplicates (preserves unsubscribed_at)", () => {
+  assert.match(src, /onConflict:\s*"email"/)
+  assert.match(src, /ignoreDuplicates:\s*true/)
+})
+
+test("subscriber-facing welcome email is removed", () => {
+  assert.doesNotMatch(src, /Welcome to the Newsletter!/)
+})
+
+test("operator new-subscriber notification remains", () => {
+  assert.match(src, /New Newsletter Subscriber/)
+})
+```
+
+- [ ] **Step 6: Run the contract test**
+
+Run: `node --test tests/app/subscribe-route.contract.test.mjs`
+Expected: PASS (after Steps 1–3 have been applied to the route).
+
+- [ ] **Step 7: Typecheck and build**
 
 Run: `npx tsc --noEmit`
 Expected: exit 0.
@@ -479,12 +540,12 @@ Expected: exit 0.
 Run: `npm run build`
 Expected: exit 0.
 
-(Rationale: the route has heavy external deps — Supabase, Resend, nodemailer — so its automated gate is tsc + build; behavior is verified by the controlled-email test in Rollout. The sync algorithm itself is unit-tested in Task 1.)
+(The sync algorithm itself is unit-tested in Task 1; the controlled-email test in Rollout exercises the live path end-to-end.)
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 8: Commit**
 
 ```bash
-git add src/app/api/subscribe/route.ts .env.example
+git add src/app/api/subscribe/route.ts .env.example tests/app/subscribe-route.contract.test.mjs
 git commit -m "feat(newsletter): await resend sync in /api/subscribe; disable subscriber welcome email"
 ```
 
@@ -720,7 +781,7 @@ git commit -m "copy(newsletter): unsubscribe via in-email link, not the contact 
 
 ## Regression / full-suite gate (after all tasks)
 
-- [ ] Run the full unit suite: `node --test tests/lib/resend-newsletter.test.mjs tests/scripts/import-subscribers.test.mjs` → all PASS.
+- [ ] Run the full unit suite: `node --test tests/lib/resend-newsletter.test.mjs tests/scripts/import-subscribers.test.mjs tests/app/subscribe-route.contract.test.mjs` → all PASS.
 - [ ] Re-run the neighboring money-safety suite to ensure nothing drifted: `node --test tests/lib/db-coerce.test.mjs` (if present) → PASS.
 - [ ] `npx tsc --noEmit` → exit 0.
 - [ ] `npm run build` → exit 0.
@@ -801,7 +862,7 @@ node --env-file=.env.local scripts/import-subscribers-to-resend.mjs --apply
 
 ## Self-review
 
-**Spec coverage:** create-then-add (Task 1) ✓; 404-only creation + one-refetch race (Task 1 tests) ✓; partial-state → error + self-heal (Task 1) ✓; list-before-add for existing active (Task 1) ✓; never update unsubscribe status (no `contacts.update` anywhere) ✓; route awaits normally, nonfatal (Task 2) ✓; remove only subscriber welcome, keep operator notify (Task 2) ✓; write-free `--dry-run` + `--apply` (Task 3) ✓; 429/Retry-After (Task 1 `withRateLimit`, used in Task 3) ✓; single-layer alerting (helper config-log/route-alert/import-aggregate) ✓; missing API key → server log not email (Task 1) ✓; module strategy `.mjs` + node/TS import ✓; copy change (Task 4) ✓; account-setup order, controlled test, dry-run, real import, verification, rollback, pre-send checklist ✓.
+**Spec coverage:** create-then-add (Task 1) ✓; 404-only creation + deterministic one-refetch-on-any-create-error recovery (Task 1 tests) ✓; partial-state → error + self-heal (Task 1) ✓; list-before-add for existing active (Task 1) ✓; never update unsubscribe status (no `contacts.update` anywhere) ✓; route awaits normally, nonfatal (Task 2) ✓; `/api/subscribe` source-contract regression test (Task 2) ✓; remove only subscriber welcome, keep operator notify (Task 2) ✓; write-free `--dry-run` + `--apply` (Task 3) ✓; 429/Retry-After (Task 1 `withRateLimit`, used in Task 3) ✓; single-layer alerting (helper config-log/route-alert/import-aggregate) ✓; missing API key → server log not email (Task 1) ✓; module strategy `.mjs` + node/TS import ✓; copy change (Task 4) ✓; account-setup order, controlled test, dry-run, real import, verification, rollback, pre-send checklist ✓.
 
 **Placeholder scan:** no TBD/TODO; every code/step is concrete; exact strings for copy edits.
 
