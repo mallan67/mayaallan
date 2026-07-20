@@ -1,0 +1,48 @@
+Chapter 1 - Affected-Sentence Audio Comparison (independent review)
+
+AFFECTED MANUSCRIPT SENTENCE (identical text in all three sources):
+  "These traditions emphasized strict ceremonial protocols - fasting, prayer, and guidance
+   by an elder or curandero - to ensure safe passage through spiritual realms."
+
+WHAT TO LISTEN FOR:
+  CURRENT (the shipped render) BREAKS DOWN on the words "to ensure": at ~02:45 you hear
+  "Sorry, sorry, (inaudible) sore, sore..." instead. V1 and V2 are earlier renders of the
+  SAME sentence in the SAME Maya Allan voice clone (different generation params). The
+  review question: does V1 and/or V2 speak "to ensure" cleanly, so it could be spliced in?
+
+ALIGNMENT METHOD (honest):
+  - CURRENT boundaries are exact (word-level transcript-to-manuscript alignment).
+  - V1/V2 have NO transcript (ElevenLabs was not used). The sentence start ("These...") was
+    located by MFCC cross-correlation of CURRENT's clean lead-in against each file; the two
+    files agree (~169.5-170.2s), which corroborates the anchor. Confidence is moderate
+    (cross-render corr ~0.65-0.70). Each clip pads 10s before the sentence and runs ~33s
+    forward (well past the ~13s clean sentence + 15s+), so the sentence is captured even
+    with a few seconds of alignment error.
+
+CLIPS (all WAV, pcm_s16le, 44100 Hz mono):
+  CH1-CURRENT-comparison.wav
+    source        : audiobook/final/02-chapter-1-understanding-psilocybin.mp3
+    source sha256 : 98a551f2b5b88479bc3f54d0ec4c82920a0bbb388bda5adc86ba8b2cb758205b
+    sentence start: 156.80s (exact)
+    clip window   : 146.80s -> 190.24s  (duration 43.4s)
+    alignment     : exact (word-level transcript alignment)
+    clip sha256   : 7ce53abdff71e46141ec116bac5f89b3e4d616093e3b1bb1afdc7851e18f48b0
+
+  CH1-V2-comparison.wav
+    source        : audiobook/02-chapter-1-understanding-psilocybin.mp3
+    source sha256 : dca5e49b3cd8981b9b342adbe0b95ac941d89050162d65962f968b2f0be4fa10
+    sentence start: 170.18s (MFCC-aligned)
+    clip window   : 160.18s -> 203.18s  (duration 43.0s)
+    alignment     : MFCC lead-in corr=0.65
+    clip sha256   : 977b3f9f349cc4223c884f842fb5c8b9d30ab6b02b32a45da32856e405e87ce3
+
+  CH1-V1-comparison.wav
+    source        : audiobook/02-chapter-1-understanding-psilocybin.v1.mp3
+    source sha256 : 54d40bb46c1e35283e1692960d5aabbcfc83114ec0c813b5d659fe9d95116baa
+    sentence start: 169.50s (MFCC-aligned)
+    clip window   : 159.50s -> 202.50s  (duration 43.0s)
+    alignment     : MFCC lead-in corr=0.70
+    clip sha256   : e67106d7c934e2c40cc11e05fc281d7dc8e0321a050f0226833a40d4fbb3b980
+
+NOTE: CURRENT's clip runs a bit longer through the sentence because it contains the
+~7.8s breakdown where "to ensure" belongs; V1/V2 have the clean ~1s in that spot.
