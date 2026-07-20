@@ -1,0 +1,35 @@
+name: Export Chapter 1 Audio Review
+
+on:
+  push:
+    branches:
+      - audiobook-approved-manifest
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-audio-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out review branch
+        uses: actions/checkout@v4
+
+      - name: Verify review files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f scratchpad/ch1-audio-review/CH1-CURRENT-comparison.wav
+          test -f scratchpad/ch1-audio-review/CH1-V2-comparison.wav
+          test -f scratchpad/ch1-audio-review/CH1-V1-comparison.wav
+          test -f scratchpad/ch1-audio-review/CH1-comparison-details.txt
+          sha256sum scratchpad/ch1-audio-review/*
+
+      - name: Upload audio review artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ch1-audio-review
+          path: scratchpad/ch1-audio-review/
+          if-no-files-found: error
+          retention-days: 1
