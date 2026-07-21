@@ -19,30 +19,30 @@ ALIGNMENT METHOD (honest):
     forward (well past the ~13s clean sentence + 15s+), so the sentence is captured even
     with a few seconds of alignment error.
 
-CLIPS (all WAV, pcm_s16le, 44100 Hz mono):
-  CH1-CURRENT-comparison.wav
+CLIPS (all MP3, libmp3lame 128 kbps, 44100 Hz mono):
+  CH1-CURRENT-comparison.mp3
     source        : audiobook/final/02-chapter-1-understanding-psilocybin.mp3
     source sha256 : 98a551f2b5b88479bc3f54d0ec4c82920a0bbb388bda5adc86ba8b2cb758205b
     sentence start: 156.80s (exact)
     clip window   : 146.80s -> 190.24s  (duration 43.4s)
     alignment     : exact (word-level transcript alignment)
-    clip sha256   : 7ce53abdff71e46141ec116bac5f89b3e4d616093e3b1bb1afdc7851e18f48b0
+    clip sha256   : 3c62d9643572109084021a291134eb08b79ccd0b2c58492a185dad64c82d0bb6
 
-  CH1-V2-comparison.wav
+  CH1-V2-comparison.mp3
     source        : audiobook/02-chapter-1-understanding-psilocybin.mp3
     source sha256 : dca5e49b3cd8981b9b342adbe0b95ac941d89050162d65962f968b2f0be4fa10
     sentence start: 170.18s (MFCC-aligned)
     clip window   : 160.18s -> 203.18s  (duration 43.0s)
     alignment     : MFCC lead-in corr=0.65
-    clip sha256   : 977b3f9f349cc4223c884f842fb5c8b9d30ab6b02b32a45da32856e405e87ce3
+    clip sha256   : 26c6ca61b5b50c45457555e779a3f1619250cf3a3fc2a40aaa6fce94c083a74b
 
-  CH1-V1-comparison.wav
+  CH1-V1-comparison.mp3
     source        : audiobook/02-chapter-1-understanding-psilocybin.v1.mp3
     source sha256 : 54d40bb46c1e35283e1692960d5aabbcfc83114ec0c813b5d659fe9d95116baa
     sentence start: 169.50s (MFCC-aligned)
     clip window   : 159.50s -> 202.50s  (duration 43.0s)
     alignment     : MFCC lead-in corr=0.70
-    clip sha256   : e67106d7c934e2c40cc11e05fc281d7dc8e0321a050f0226833a40d4fbb3b980
+    clip sha256   : 36a3cd4925fd534740303f5ef412d7fd263ff65c7734c7040f84cc7b2efe6c74
 
 NOTE: CURRENT's clip runs a bit longer through the sentence because it contains the
 ~7.8s breakdown where "to ensure" belongs; V1/V2 have the clean ~1s in that spot.
