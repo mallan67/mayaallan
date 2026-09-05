@@ -26,11 +26,11 @@ import {
 //   2. .speakable shortAnswer block — the 1-2 sentence direct answer.
 //      AI engines copy this verbatim. Voice assistants read this aloud.
 //   3. Long-form body content (the "why" + "what it feels like").
-//   4. Numbered navigation steps (becomes HowTo schema for rich results).
+//   4. Numbered navigation steps (visible list only; no HowTo schema).
 //   5. FAQ accordion (becomes FAQPage schema — eligible for "People also ask").
 //   6. Book CTA.
 //
-// Five JSON-LD schemas are emitted: Article, FAQPage, HowTo, BreadcrumbList,
+// Four JSON-LD schemas are emitted: Article, FAQPage, BreadcrumbList,
 // WebPage (with SpeakableSpecification). Each one targets a different AI
 // engine consumption pattern.
 // =============================================================================
@@ -46,31 +46,15 @@ export async function generateStaticParams() {
   return scenarios.map((s) => ({ slug: s.slug }))
 }
 
-/**
- * Append the current year to scenario titles. AEO research (Averi GEO
- * playbook, ConvertMate Benchmark 2026) found ~30% AI-citation lift when
- * pages include the year in their title. We auto-append based on
- * dateModified (or datePublished as fallback) so titles stay accurate as
- * content is refreshed — bumping dateModified yearly is how the lift
- * compounds.
- */
-function titleWithYear(scenarioTitle: string, dateModified?: string, datePublished?: string): string {
-  const refDate = dateModified ?? datePublished
-  if (!refDate) return scenarioTitle
-  const year = new Date(refDate).getFullYear()
-  if (!Number.isFinite(year)) return scenarioTitle
-  // Don't double-append if the title already includes the year.
-  if (scenarioTitle.includes(String(year))) return scenarioTitle
-  return `${scenarioTitle} (${year} guide)`
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   const scenario = await getScenario(slug)
   if (!scenario) return { title: "Scenario not found" }
 
   const url = `${SITE_URL}/scenarios/${slug}`
-  const titleForSearch = titleWithYear(scenario.title, scenario.dateModified, scenario.datePublished)
+  // Title is the scenario's own question, unmodified. (A previous version
+  // auto-appended "(YYYY guide)" on an unsupported "AI-citation lift" claim.)
+  const titleForSearch = scenario.title
 
   return {
     title: titleForSearch,
@@ -240,7 +224,7 @@ export default async function ScenarioPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Navigation steps — becomes HowTo schema. Renders as numbered list. */}
+      {/* Navigation steps — visible numbered list (no HowTo schema). */}
       {scenario.navigation && scenario.navigation.length > 0 && (
         <section className="mt-12 pt-10 border-t border-slate-200">
           <h2 className="font-serif text-2xl font-semibold text-slate-900">
@@ -288,7 +272,7 @@ export default async function ScenarioPage({ params }: PageProps) {
           This is one of 40 scenarios
         </h2>
         <p className="text-slate-700 text-sm sm:text-base leading-relaxed mb-5">
-          <em>Psilocybin Integration Guide</em> walks through 40 real journey scenarios in depth — each with description, cause, navigation, lesson, and example. For practitioners, healers, facilitators, and solo journeyers.
+          <em>Psilocybin Integration Guide</em> walks through 40 real journey scenarios in depth — each with description, cause, navigation, lesson, and example. Written for anyone making sense of their own experience.
         </p>
         <Link
           href="/books/psilocybin-integration-guide"

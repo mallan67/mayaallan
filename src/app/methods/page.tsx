@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 export const metadata: Metadata = {
-  title: "Methods & Attributions | Maya Allan",
+  title: "Methods & Attributions",
   description:
     "The research and practitioners whose work informs the reflection tools on this site. Attribution to the originators of Internal Family Systems, Clean Language, Coherence Therapy, and Motivational Interviewing.",
   alternates: {

@@ -6,7 +6,7 @@ import { MessageCircle, Dna, Brain, ListChecks, HeartPulse, PenLine, Star, Calen
 import { NewsletterSection } from "@/components/NewsletterSection"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateAuthorSchema } from "@/lib/structured-data"
-import { SITE_URL, SITE_SEO_DESCRIPTION } from "@/lib/identity"
+import { SITE_URL, SITE_SEO_DESCRIPTION, AUTHOR_JOB_TITLE } from "@/lib/identity"
 import { upcomingEventsOrClause } from "@/lib/events-visibility"
 
 export const revalidate = 300 // 5 minutes
@@ -302,14 +302,20 @@ export default async function HomePage() {
           <div className="max-w-[560px]">
             <p className="hidden md:inline-flex items-center gap-2 text-[0.72rem] font-bold tracking-[0.14em] uppercase text-gold mb-7">
               <span className="w-7 h-0.5 bg-gold" />
-              Author &middot; Speaker &middot; Educator
+              {AUTHOR_JOB_TITLE}
             </p>
 
-            <h1 className="font-serif text-[clamp(2.4rem,5.5vw,3.8rem)] font-semibold leading-[1.15] tracking-[-0.03em] mb-6 text-white">
-              Practical Tools for{" "}
-              <em className="font-normal italic text-gold">Coming Home</em>{" "}
-              to Your Ever-Evolving Self.
+            {/* The H1 names the entity — author + book — so the page's primary
+                subject is unambiguous to readers and search engines. The brand
+                line stays directly beneath as the supporting statement. */}
+            <h1 className="font-serif text-[clamp(2.1rem,4.8vw,3.4rem)] font-semibold leading-[1.15] tracking-[-0.03em] mb-4 text-white">
+              Maya Allan, author of the{" "}
+              <em className="font-normal italic text-gold">Psilocybin Integration Guide</em>
             </h1>
+
+            <p className="font-serif text-[clamp(1.2rem,2.4vw,1.6rem)] font-medium leading-[1.35] tracking-[-0.01em] mb-6 text-white/90">
+              Practical tools for coming home to your ever-evolving self.
+            </p>
 
             <p className="text-[1.05rem] text-white/80 leading-[1.8] mb-10">
               I write about what most people are afraid to question — inherited beliefs, old patterns, the stories that quietly run our lives. My work is for anyone ready to take ownership of their own reflection and start authoring their own path.
@@ -552,7 +558,7 @@ export default async function HomePage() {
                 Maya Allan
               </p>
               <p className="text-[0.78rem] text-gold font-semibold mt-1 tracking-[0.06em] uppercase">
-                Author &middot; Speaker
+                {AUTHOR_JOB_TITLE}
               </p>
             </div>
 

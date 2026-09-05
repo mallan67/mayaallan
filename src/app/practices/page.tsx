@@ -3,7 +3,7 @@ import Link from "next/link"
 import { ListChecks, Wind, Sparkles, BookOpen } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Practices — Belief Inquiry, Nervous System Reset, Integration Reflection, Integration Journal | Maya Allan",
+  title: "Practices — Belief Inquiry, Nervous System Reset, Integration Reflection, Integration Journal",
   description:
     "Four free practices: Nervous System Reset for regulation, Belief Inquiry for examining inherited beliefs, Integration Reflection for letting new insight land, and the Integration Journal PDF.",
   alternates: {

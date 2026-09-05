@@ -178,6 +178,15 @@ const nextConfig = {
         destination: "https://www.mayaallan.com/:path*",
         permanent: true,
       },
+      // The public *.vercel.app production aliases served the whole site at 200,
+      // i.e. a full duplicate of www.mayaallan.com on a second indexable host.
+      // Canonical tags already pointed at www; the redirect makes it explicit.
+      ...["mayaallan.vercel.app", "mayaallan-mallan.vercel.app"].map((host) => ({
+        source: "/:path*",
+        has: [{ type: "host", value: host }],
+        destination: "https://www.mayaallan.com/:path*",
+        permanent: true,
+      })),
       {
         source: "/beliefaudit",
         destination: "/belief-inquiry",

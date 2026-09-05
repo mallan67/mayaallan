@@ -8,19 +8,17 @@ import { generateBreadcrumbSchema } from "@/lib/structured-data"
 import { SITE_URL } from "@/lib/identity"
 
 export const metadata: Metadata = {
-  title: "Books | Maya Allan",
-  description: "Integration guides for psilocybin and psychedelic experiences by Maya Allan. Essential reading for practitioners, healers, facilitators, guides, and solo journeyers seeking clarity and transformation.",
+  title: "Books",
+  description:
+    "Books by Maya Allan, author and educator. The Psilocybin Integration Guide offers non-clinical, educational frameworks for reflection, integration, and self-inquiry after meaningful or difficult experiences.",
   keywords: [
-    "psilocybin books",
-    "psychedelic integration books",
-    "mushroom guide books",
     "Maya Allan books",
-    "integration guides",
-    "practitioner resources",
-    "healer resources",
-    "facilitator guide",
-    "psychedelic therapy books",
-    "plant medicine books",
+    "Psilocybin Integration Guide",
+    "psilocybin integration book",
+    "psychedelic integration books",
+    "integration guide",
+    "post-journey reflection",
+    "self-inquiry",
   ],
   alternates: {
     canonical: "https://www.mayaallan.com/books",

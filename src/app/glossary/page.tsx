@@ -37,7 +37,7 @@ export const revalidate = 600 // 10 min — glossary changes are rare
 export async function generateMetadata(): Promise<Metadata> {
   const data = await loadGlossary()
   return {
-    title: `${data.title} — Maya Allan`,
+    title: data.title,
     description: data.description,
     alternates: { canonical: `${SITE_URL}/glossary` },
     openGraph: {

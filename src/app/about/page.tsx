@@ -10,7 +10,7 @@ import {
   generateBreadcrumbSchema,
   AUTHOR_FAQS,
 } from "@/lib/structured-data"
-import { SITE_URL } from "@/lib/identity"
+import { SITE_URL, AUTHOR_JOB_TITLE } from "@/lib/identity"
 
 // Cache author bio for 5 min (admin edits in Settings will revalidate
 // the page automatically when they save).
@@ -61,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const description = author?.authorBio
     ? truncateAtWord(author.authorBio, 155)
-    : "Learn more about Maya Allan — author, speaker, and wellness advocate dedicated to helping readers navigate transformation."
+    : "Learn more about Maya Allan — author and educator writing non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
   // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
   // Author photos may not be the correct aspect ratio for social sharing
   const imageUrl = `${SITE_URL}/opengraph-image`
@@ -176,7 +176,7 @@ export default async function AboutPage() {
                 {author?.authorName || "Maya Allan"}
               </h1>
               <p className="text-[0.85rem] text-gold font-semibold tracking-[0.06em] uppercase mb-5">
-                Author &middot; Speaker &middot; Wellness Advocate
+                {AUTHOR_JOB_TITLE}
               </p>
               <p className="text-[1.05rem] text-charcoal-mid leading-[1.8] max-w-[540px]">
                 I believe deep inner clarity is a fundamental human birthright. My work starts with a simple conviction: no one can heal us but ourselves.

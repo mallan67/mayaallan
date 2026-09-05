@@ -3,7 +3,7 @@ import Link from "next/link"
 import { CheckCircle2 } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Payment Received — Your PDF Is On Its Way | Maya Allan",
+  title: "Payment Received — Your PDF Is On Its Way",
   robots: { index: false, follow: false },
 }
 

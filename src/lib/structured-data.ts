@@ -323,14 +323,9 @@ export function generateWebSiteSchema(siteName = "Maya Allan", siteUrl = SITE_UR
       name: "Maya Allan",
       url: siteUrl,
     },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${siteUrl}/books?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
+    // No SearchAction: the site has no search endpoint, and Google retired the
+    // sitelinks search box. Advertising a /books?q= target that does nothing
+    // is misleading markup.
   }
 }
 

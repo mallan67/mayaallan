@@ -4,7 +4,7 @@ import { IntegrationChat } from "@/components/IntegrationChat"
 import { Sparkles } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Integration Tool — Help a New Insight or Experience Land | Maya Allan",
+  title: "Integration Tool — Help a New Insight or Experience Land",
   description:
     "An AI-guided reflection tool that helps you hold a new experience or insight alongside an old belief. Based on Coherence Therapy and memory reconsolidation research. Not therapy.",
   alternates: {
