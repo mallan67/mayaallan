@@ -32,5 +32,14 @@ export default defineConfig([
       "prefer-const": "warn",
     },
   },
+  {
+    // Metadata image routes render <img> inside next/og ImageResponse, where
+    // next/image cannot be used. eslint-plugin-next already exempts these
+    // files, but its path match fails on Windows paths, which made the lint
+    // count differ between a Windows checkout and Linux CI. Turning the rule
+    // off here by glob makes the gate deterministic on both.
+    files: ["src/app/**/opengraph-image.tsx", "src/app/**/twitter-image.tsx"],
+    rules: { "@next/next/no-img-element": "off" },
+  },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", ".worktrees/**"]),
 ])
