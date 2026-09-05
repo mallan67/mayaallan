@@ -20,7 +20,7 @@ This is the integration problem. Most writing about psychedelic integration desc
 
 ## How to read this article
 
-I'm an author and educator, not a clinician or a researcher. I write about psilocybin integration because I spent years doing this reflective work on my own experiences, badly and then less badly, and the frameworks that helped me are the ones I now write down. Throughout this article I label claims three ways:
+I'm an author and educator, not a clinician or a researcher. My book, *Psilocybin Integration Guide*, is about reflection after an experience, and this article sets out the reasoning behind the reflective practice it proposes, including where the evidence for that reasoning stops. Throughout, I label claims three ways:
 
 - **Research.** A published study or review. Numbered and listed at the end so you can check it.
 - **Clinical theory.** A model that therapists use and have written about, supported by case reports and argument rather than controlled trials.
@@ -46,7 +46,7 @@ That finding has been replicated and extended in animal work many times. The que
 
 The best-known human test is a 2010 study by Schiller and colleagues, in which extinction training delivered inside a window after a reminder appeared to prevent the return of a conditioned fear response [2]. That result was widely cited, including in an earlier version of this article. In 2020, a verification report that re-analysed the original data and attempted to confirm the findings did not confirm them [4]. A 2018 critical review of the whole human literature concluded that findings are inconsistent, that alternative explanations have not been ruled out, and that reconsolidation in humans remains, in the authors' words, a viable but hotly contested explanation for some changes in memory expression [5].
 
-So the honest summary is this. In animals, reconsolidation is an established phenomenon. In people, there is real evidence and real dispute. No study has observed an emotional belief being rewritten at the neural level in a person doing integration work after psilocybin. When I previously wrote that the neuroscience had confirmed this, I was extrapolating. I've removed that claim.
+So the honest summary is this. In animals, reconsolidation is an established phenomenon. In people, there is real evidence and real dispute. The evidence reviewed here does not establish that an emotional belief is literally rewritten at the neural level during post-psilocybin integration. When I previously wrote that the neuroscience had confirmed this, I was extrapolating. I've removed that claim.
 
 ## The clinical theory
 
@@ -76,9 +76,9 @@ Four lines of work are relevant, and none of them tested an integration practice
 
 **Brain network changes after treatment.** Daws and colleagues found that psilocybin therapy for depression was followed by increases in brain network integration that correlated with the antidepressant response [11]. Again, this is about the treatment, not about any practice done afterward.
 
-**And integration itself?** A 2022 concept analysis found many definitions of psychedelic integration, a wide range of practices, and very few outcome studies [12]. Integration is under-researched relative to how much is written about it. That includes what I write.
+**And integration itself?** A 2022 concept analysis found many definitions of psychedelic integration, a wide range of practices, and very few outcome studies [12]. Two 2024 reviews reach the same place from the clinical side. A systematic review of psilocybin-assisted psychotherapy trials for depression found substantial heterogeneity in the psychotherapy protocols and concluded that no validated, universally agreed protocol exists [13]. A systematised review of the therapeutic frameworks used in integration sessions found no controlled comparison between integration approaches and insufficient evidence that any particular framework improves outcomes [14]. Integration is under-researched relative to how much is written about it. That includes what I write.
 
-Put together, the research describes a window: a period in which beliefs may be more flexible and the brain more plastic. What to do inside that window is, for now, judgement.
+*My interpretation.* Taken together, these findings are consistent with the possibility of a period of increased flexibility after psilocybin, but they do not establish a specific post-psilocybin integration window, and they do not tell us which practices, if any, improve outcomes. What to do in the weeks after an experience is, for now, judgement, and this article is one person's.
 
 ## Why this matters for psychedelic integration
 
@@ -86,13 +86,13 @@ Put together, the research describes a window: a period in which beliefs may be 
 
 A psilocybin journey often provides the raw material for the second of Ecker's three conditions: the contradictory lived experience. People don't just *think* "I am loved"; they *feel* it, in a way they have never felt before. If the juxtaposition model is right, that felt sense is exactly the kind of experience the model says the old belief needs to meet.
 
-But most integration practice, in my experience of reading and doing it, skips the first and third conditions.
+But most integration practice, in my reading of it, skips the first and third conditions.
 
 **Skipping the first.** Everyone wants to stay in the afterglow and avoid the old belief. The old belief is painful. Activating it feels like going backwards. So people write about the insight and leave the part of themselves that still believes the old story untouched. If the model is right, nothing has been brought into contact with anything.
 
 **Skipping the third.** The replacement model says "the old belief was false, the new one is true." That is sequential. It banishes the old belief rather than holding it beside the new experience. If the model is right, that is the wrong shape.
 
-I want to be clear about the "if." I find the model persuasive, I built a practice on it, and I have watched it help. I cannot tell you it is proven.
+I want to be clear about the "if." I find the model persuasive and built a reflective practice on it. I cannot tell you it is proven.
 
 ## What integration can look like
 
@@ -104,7 +104,7 @@ Then, gently, you bring in the old belief. The one that used to run things. You 
 
 You stay there. Maybe for ninety seconds. Maybe for five minutes.
 
-Something often happens in the holding of both. It's usually not dramatic. The old belief doesn't vanish. It gets quieter, softer around the edges. Sometimes you notice you can't quite remember why it felt so true before. I read that as the two experiences being held together long enough to be compared. Whether it is reconsolidation in the technical sense, I can't say, and as of this writing neither can anyone.
+If something shifts in the holding of both, the model predicts it will not be dramatic. The old belief doesn't vanish. It may get quieter, softer around the edges; you may notice you can't quite remember why it felt so true before. I read that as the two experiences being held together long enough to be compared. Whether it is reconsolidation in the technical sense, I can't say, and as of this writing neither can anyone.
 
 I don't have evidence that this is more durable than journaling, affirmation, or another journey. An earlier version of this article said it was. I offer it instead because it follows from a coherent clinical model, it costs nothing, and it makes a prediction you can check yourself: if the old belief goes quiet without you arguing it down, something has shifted.
 
@@ -118,7 +118,7 @@ I don't have evidence that this is more durable than journaling, affirmation, or
 
 - **Short sessions, spaced out.** I suggest ten or fifteen minutes, a few times over the weeks after a journey, rather than long sittings. I have no data that this beats an hour of journaling, and journaling can be the vehicle for it, if the writing brings you back into the felt experience rather than around it.
 
-- **Curiosity, not prosecution.** The old belief was protecting something once. Treating it like an enemy tends to put the nervous system on guard, and a guarded state is not one in which I've seen anything soften.
+- **Curiosity, not prosecution.** The old belief was protecting something once. Treating it like an enemy tends to put the nervous system on guard, and if the model is right, a guarded state is not one in which an old belief opens.
 
 ## Practices I think work against it
 
@@ -128,7 +128,7 @@ I don't have evidence that this is more durable than journaling, affirmation, or
 
 - **Spiritual bypass.** "That old story wasn't even real, it was just ego." This declines to activate the old schema at all and replaces it with a philosophical flourish. It feels good. In my view it changes little.
 
-- **Another journey before this one has settled.** Psychedelics can keep opening new experiences. Without reflective time between them, in my experience the experiences pile up and the patterns stay. There is also a plain safety point here: repeated dosing without settled time between is not something the research supports, and it is not something I recommend.
+- **Another journey before this one has settled.** Psychedelics can keep opening new experiences. Without reflective time between them, my concern is that the experiences pile up and the patterns stay. There is also a plain safety point here: repeated dosing without settled time between is not something the research supports, and it is not something I recommend.
 
 ## A tool for this, if it's useful
 
@@ -144,7 +144,7 @@ The insight is not the whole work. Something has to be done with it afterward, a
 
 ## References
 
-Numbered in order of first citation. Items 1, 2, 4 and 5 concern memory reconsolidation in general; 3 and 6 are clinical theory; 7 to 12 concern psilocybin and integration.
+Numbered in order of first citation. Items 1, 2, 4 and 5 concern memory reconsolidation in general; 3 and 6 are clinical theory; 7 to 14 concern psilocybin and integration.
 
 1. Nader, K., Schafe, G. E., & LeDoux, J. E. (2000). Fear memories require protein synthesis in the amygdala for reconsolidation after retrieval. *Nature*, 406, 722–726. [doi:10.1038/35021052](https://doi.org/10.1038/35021052)
 2. Schiller, D., Monfils, M.-H., Raio, C. M., Johnson, D. C., LeDoux, J. E., & Phelps, E. A. (2010). Preventing the return of fear in humans using reconsolidation update mechanisms. *Nature*, 463, 49–53. [doi:10.1038/nature08637](https://doi.org/10.1038/nature08637) (An addendum was published in 2018.)
@@ -158,6 +158,8 @@ Numbered in order of first citation. Items 1, 2, 4 and 5 concern memory reconsol
 10. Watts, R., Day, C., Krzanowski, J., Nutt, D., & Carhart-Harris, R. (2017). Patients' accounts of increased "connectedness" and "acceptance" after psilocybin for treatment-resistant depression. *Journal of Humanistic Psychology*, 57(5), 520–564. [doi:10.1177/0022167817709585](https://doi.org/10.1177/0022167817709585) (Qualitative, 20 patients.)
 11. Daws, R. E., et al. (2022). Increased global integration in the brain after psilocybin therapy for depression. *Nature Medicine*, 28, 844–851. [doi:10.1038/s41591-022-01744-z](https://doi.org/10.1038/s41591-022-01744-z)
 12. Bathje, G. J., Majeski, E., & Kudowor, M. (2022). Psychedelic integration: An analysis of the concept and its practice. *Frontiers in Psychology*, 13, 824077. [doi:10.3389/fpsyg.2022.824077](https://doi.org/10.3389/fpsyg.2022.824077)
+13. Chisamore, N., et al. (2024). Protocols and practices in psilocybin assisted psychotherapy for depression: A systematic review. *Journal of Psychiatric Research*. [PubMed 38850581](https://pubmed.ncbi.nlm.nih.gov/38850581/)
+14. Thal, S. B., et al. (2024). Therapeutic frameworks in integration sessions in substance-assisted psychotherapy: A systematised review. *Clinical Psychology & Psychotherapy*. [doi:10.1002/cpp.2945](https://doi.org/10.1002/cpp.2945)
 
 ---
 
