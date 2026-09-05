@@ -16,7 +16,9 @@ You came back. You told a friend. Maybe you wrote it down.
 
 A week later, the old pattern was back. The same reactivity. The same story. The insight was still there, sort of, like a photograph of a meal you once ate.
 
-This is the integration problem. Most writing about psychedelic integration describes practices. Very little of it says which parts rest on research, which on clinical theory, and which on the writer's own view. I want to do that here, because the honest version is more useful than the confident one. An earlier version of this article was the confident one. This is the corrected one.
+This is the integration problem. Most writing about psychedelic integration describes practices. Very little of it says which parts rest on research, which on clinical theory, and which on the writer's own view. I want to do that here, because the honest version is more useful than the confident one.
+
+*Substantially revised September 2026 to distinguish published research, clinical theory, and my interpretation.*
 
 ## How to read this article
 
@@ -44,9 +46,9 @@ In 2000, Nader, Schafe and LeDoux reported that in rats, a consolidated fear mem
 
 That finding has been replicated and extended in animal work many times. The question that matters for integration is whether the same thing happens in people, and whether it can be used.
 
-The best-known human test is a 2010 study by Schiller and colleagues, in which extinction training delivered inside a window after a reminder appeared to prevent the return of a conditioned fear response [2]. That result was widely cited, including in an earlier version of this article. In 2020, a verification report that re-analysed the original data and attempted to confirm the findings did not confirm them [4]. A 2018 critical review of the whole human literature concluded that findings are inconsistent, that alternative explanations have not been ruled out, and that reconsolidation in humans remains, in the authors' words, a viable but hotly contested explanation for some changes in memory expression [5].
+The best-known human test is a 2010 study by Schiller and colleagues, in which extinction training delivered inside a window after a reminder appeared to prevent the return of a conditioned fear response [2]. That result was widely cited. In 2020, a verification report that re-analysed the original data and attempted to confirm the findings did not confirm them [4]. A 2018 critical review of the whole human literature concluded that findings are inconsistent, that alternative explanations have not been ruled out, and that reconsolidation in humans remains, in the authors' words, a viable but hotly contested explanation for some changes in memory expression [5].
 
-So the honest summary is this. In animals, reconsolidation is an established phenomenon. In people, there is real evidence and real dispute. The evidence reviewed here does not establish that an emotional belief is literally rewritten at the neural level during post-psilocybin integration. When I previously wrote that the neuroscience had confirmed this, I was extrapolating. I've removed that claim.
+So the honest summary is this. In animals, reconsolidation is an established phenomenon. In people, there is real evidence and real dispute. The evidence reviewed here does not establish that an emotional belief is literally rewritten at the neural level during post-psilocybin integration.
 
 ## The clinical theory
 
@@ -104,9 +106,9 @@ Then, gently, you bring in the old belief. The one that used to run things. You 
 
 You stay there. Maybe for ninety seconds. Maybe for five minutes.
 
-If something shifts in the holding of both, the model predicts it will not be dramatic. The old belief doesn't vanish. It may get quieter, softer around the edges; you may notice you can't quite remember why it felt so true before. I read that as the two experiences being held together long enough to be compared. Whether it is reconsolidation in the technical sense, I can't say, and as of this writing neither can anyone.
+If something shifts in the holding of both, it may be subtle rather than dramatic. The old belief doesn't vanish. It may get quieter, softer around the edges; you may notice you can't quite remember why it felt so true before. I read that as the two experiences being held together long enough to be compared. Whether it is reconsolidation in the technical sense, I can't say, and as of this writing neither can anyone.
 
-I don't have evidence that this is more durable than journaling, affirmation, or another journey. An earlier version of this article said it was. I offer it instead because it follows from a coherent clinical model, it costs nothing, and it makes a prediction you can check yourself: if the old belief goes quiet without you arguing it down, something has shifted.
+I don't have evidence that this is more durable than journaling, affirmation, or another journey. I offer it because it follows from a coherent clinical model, it costs nothing, and it makes a prediction you can check yourself: if the old belief goes quiet without you arguing it down, something has shifted.
 
 ## Practices I suggest
 

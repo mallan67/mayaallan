@@ -449,9 +449,9 @@ export default async function BookPage({ params }: BookPageProps) {
           )}
 
           {book.slug === "psilocybin-integration-guide" && (
-            <section className="py-2" aria-labelledby="read-from-the-book">
-              <h2 id="read-from-the-book" className="font-serif text-xl font-semibold mb-3 text-slate-900">
-                Read from the book
+            <section className="py-2" aria-labelledby="related-reading">
+              <h2 id="related-reading" className="font-serif text-xl font-semibold mb-3 text-slate-900">
+                Related reading
               </h2>
               <p className="text-base leading-relaxed text-slate-700 mb-4">
                 Two pieces on this site come directly from the book&apos;s approach and are free to read.
