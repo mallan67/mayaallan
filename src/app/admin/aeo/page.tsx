@@ -1,16 +1,18 @@
 /**
- * Admin AEO dashboard — "what actually works" tracker.
+ * Admin AEO dashboard.
  *
  * Reads weekly run JSON blobs from Vercel Blob (aeo/runs/*) populated by
  * the cron at /api/cron/aeo-track. Storage is intentionally separate from
  * the main Supabase database so AEO measurement can't affect site data.
  *
- * Shows:
- *   - Citation rate by engine (last ~6 months)
- *   - Recent runs (with hit count + error count)
- *   - Prompts ranked by citation rate
- *   - Most-cited URLs (which scenarios catch on)
- *   - Recent excerpts (what AI engines actually said)
+ * Three measures are kept apart and never summed (issue #44):
+ *   brand mention    — author or book named in the text
+ *   domain reference — the domain as plain text
+ *   source citation  — a URL under the site, in the text or the engine's
+ *                      citation list. Only this one is a "citation".
+ *
+ * Rows recorded before the classifier split are shown as legacy and excluded
+ * from every rate: their single "hit" flag counted any mention.
  *
  * Auth: admin session required.
  */
@@ -18,6 +20,7 @@ import Link from "next/link"
 import { isAuthenticated } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { loadRecentRuns, allRows, type CitationRow, type AeoRun } from "@/lib/aeo/storage"
+import { aggregateByEngine, aggregateBySearchCapability, aggregateByPrompt, isClassifiedRow, type DimensionCounts } from "@/lib/aeo/aggregate"
 import { RunNowButton } from "./RunNowButton"
 import { CopyButton } from "./CopyButton"
 import { ClearAllButton } from "./ClearAllButton"
@@ -26,6 +29,8 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 type Row = CitationRow & { run_id: string; run_at: string }
+
+const pct = (n: number, d: number) => (d ? ((n / d) * 100).toFixed(1) : "0.0")
 
 export default async function AeoDashboardPage() {
   const authed = await isAuthenticated()
@@ -40,13 +45,14 @@ export default async function AeoDashboardPage() {
   }
 
   const rows: Row[] = allRows(runs)
-
   const byEngine = aggregateByEngine(rows)
+  const bySearch = aggregateBySearchCapability(rows)
   const byPrompt = aggregateByPrompt(rows)
   const byUrl = aggregateByUrl(rows)
-  const recentHits = rows.filter((r) => r.was_cited).slice(0, 25)
-  // Surface recent errors so they're diagnosable from the dashboard.
-  // Group by (engine, error message) so we don't repeat the same error 25 times.
+  const legacyRows = rows.filter((r) => !r.error && !isClassifiedRow(r)).length
+  const recentDetections = rows
+    .filter((r) => isClassifiedRow(r) && (r.source_citation || r.brand_mention || r.domain_reference))
+    .slice(0, 25)
   const recentErrors = aggregateErrors(rows)
 
   return (
@@ -54,11 +60,18 @@ export default async function AeoDashboardPage() {
       <header className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">AEO Tracker</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Weekly probes of major AI engines (ChatGPT, Claude, Perplexity, Gemini) to measure
-          which queries surface this site as a cited source. Storage:{" "}
-          <strong>Vercel Blob</strong>{" "}
-          <code className="bg-slate-100 px-1 rounded text-xs">aeo/runs/*.json</code> — separate
-          from your Supabase data.
+          Weekly probes of four AI engines with the prompts in{" "}
+          <code className="bg-slate-100 px-1 rounded text-xs">content/aeo-prompts.json</code>. Each
+          response is classified three ways, kept separate: a <strong>brand mention</strong> (author or
+          book named in the text), a <strong>domain reference</strong> (the domain as plain text), or a{" "}
+          <strong>source citation</strong> (a URL under this site in the text or in the engine&apos;s
+          citation list). Only the last one is a citation. Storage: <strong>Vercel Blob</strong>{" "}
+          <code className="bg-slate-100 px-1 rounded text-xs">aeo/runs/*.json</code>.
+        </p>
+        <p className="mt-2 text-xs text-slate-500">
+          Only Perplexity searches the web. The Claude, ChatGPT and Gemini probes are plain model calls
+          that answer from training data; a brand mention from them says nothing about what a consumer
+          search product would show.
         </p>
         {fetchError && (
           <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-sm">
@@ -94,33 +107,74 @@ export default async function AeoDashboardPage() {
             </ul>
           </div>
         )}
+        {legacyRows > 0 && (
+          <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 text-sm">
+            <strong>{legacyRows} legacy probe{legacyRows === 1 ? "" : "s"}</strong> from before the
+            classifier split (September 2026) are excluded from every rate below. Their single
+            &ldquo;hit&rdquo; flag counted any mention as a citation and cannot be re-classified because
+            the full responses were not stored.
+          </div>
+        )}
 
-        {/* Trigger a probe from the dashboard — no terminal needed. */}
         <RunNowButton />
-
-        {/* Manual cleanup. Auto-prune already keeps a rolling window of
-            ~6 months (AEO_KEEP_RUNS env var, default 26 runs); this button is
-            the "start fresh" hammer for when the history is cluttered. */}
         <ClearAllButton runCount={runs.length} />
       </header>
 
-      {/* CITATION RATE BY ENGINE */}
+      {/* SEARCH-CAPABLE VS NOT */}
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Citation rate by engine</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {byEngine.length === 0 ? (
-            <p className="text-sm text-slate-500 col-span-full italic">No data yet.</p>
-          ) : (
-            byEngine.map((e) => (
-              <div key={e.engine} className="p-4 border border-slate-200 rounded-xl">
-                <div className="text-xs uppercase tracking-wider text-slate-500">{e.engine}</div>
-                <div className="text-2xl font-bold text-slate-900 mt-1">{e.rate.toFixed(1)}%</div>
-                <div className="text-xs text-slate-500 mt-1">
-                  {e.hits} / {e.total} probes cited
-                </div>
-              </div>
-            ))
-          )}
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">By search capability</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <DimensionCard title="Search-capable engines (Perplexity)" counts={bySearch.search_capable} />
+          <DimensionCard title="Non-search engines (Claude, ChatGPT, Gemini)" counts={bySearch.non_search} />
+        </div>
+      </section>
+
+      {/* BY ENGINE */}
+      <section className="mb-10">
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">By engine</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600 text-xs uppercase">
+              <tr>
+                <th className="text-left px-3 py-2">Engine</th>
+                <th className="text-left px-3 py-2">Searches web</th>
+                <th className="text-right px-3 py-2">Probes</th>
+                <th className="text-right px-3 py-2">Brand mentions</th>
+                <th className="text-right px-3 py-2">Domain refs</th>
+                <th className="text-right px-3 py-2">Source citations</th>
+                <th className="text-right px-3 py-2">Legacy</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {byEngine.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-3 py-6 text-center text-slate-500 italic">
+                    No data yet.
+                  </td>
+                </tr>
+              ) : (
+                byEngine.map((e) => (
+                  <tr key={e.engine}>
+                    <td className="px-3 py-2 uppercase text-xs font-medium">{e.engine}</td>
+                    <td className="px-3 py-2 text-xs text-slate-500">
+                      {e.search_capable === null ? "—" : e.search_capable ? "yes" : "no"}
+                    </td>
+                    <td className="px-3 py-2 text-right">{e.total}</td>
+                    <td className="px-3 py-2 text-right">
+                      {e.brand_mentions} <span className="text-slate-400">({pct(e.brand_mentions, e.total)}%)</span>
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      {e.domain_references} <span className="text-slate-400">({pct(e.domain_references, e.total)}%)</span>
+                    </td>
+                    <td className="px-3 py-2 text-right font-semibold">
+                      {e.source_citations} <span className="text-slate-400 font-normal">({pct(e.source_citations, e.total)}%)</span>
+                    </td>
+                    <td className="px-3 py-2 text-right text-slate-400">{e.legacy_probes || "—"}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -133,28 +187,39 @@ export default async function AeoDashboardPage() {
               <tr>
                 <th className="text-left px-3 py-2">Run</th>
                 <th className="text-left px-3 py-2">Engines</th>
-                <th className="text-left px-3 py-2">Probes</th>
-                <th className="text-left px-3 py-2">Hits</th>
-                <th className="text-left px-3 py-2">Rate</th>
-                <th className="text-left px-3 py-2">Errors</th>
+                <th className="text-right px-3 py-2">Probes</th>
+                <th className="text-right px-3 py-2">Brand</th>
+                <th className="text-right px-3 py-2">Domain</th>
+                <th className="text-right px-3 py-2">Source citations</th>
+                <th className="text-right px-3 py-2">Errors</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {runs.map((r) => (
-                <tr key={r.runId}>
-                  <td className="px-3 py-2">{new Date(r.runAt).toLocaleString()}</td>
-                  <td className="px-3 py-2 text-xs text-slate-500">{r.enginesRun.join(", ")}</td>
-                  <td className="px-3 py-2">{r.totalProbes}</td>
-                  <td className="px-3 py-2 font-semibold">{r.citationHits}</td>
-                  <td className="px-3 py-2">
-                    {r.totalProbes ? ((r.citationHits / r.totalProbes) * 100).toFixed(1) : "0.0"}%
-                  </td>
-                  <td className="px-3 py-2 text-amber-700">{r.errors > 0 ? r.errors : "—"}</td>
-                </tr>
-              ))}
+              {runs.map((r) => {
+                const legacy = r.sourceCitations === undefined
+                return (
+                  <tr key={r.runId}>
+                    <td className="px-3 py-2">{new Date(r.runAt).toLocaleString()}</td>
+                    <td className="px-3 py-2 text-xs text-slate-500">{r.enginesRun.join(", ")}</td>
+                    <td className="px-3 py-2 text-right">{r.totalProbes}</td>
+                    {legacy ? (
+                      <td colSpan={3} className="px-3 py-2 text-xs text-slate-400 italic text-right">
+                        legacy run: {r.citationHits} &ldquo;hits&rdquo; of any kind, not separated
+                      </td>
+                    ) : (
+                      <>
+                        <td className="px-3 py-2 text-right">{r.brandMentions}</td>
+                        <td className="px-3 py-2 text-right">{r.domainReferences}</td>
+                        <td className="px-3 py-2 text-right font-semibold">{r.sourceCitations}</td>
+                      </>
+                    )}
+                    <td className="px-3 py-2 text-right text-amber-700">{r.errors > 0 ? r.errors : "—"}</td>
+                  </tr>
+                )
+              })}
               {runs.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-slate-500 italic">
+                  <td colSpan={7} className="px-3 py-6 text-center text-slate-500 italic">
                     No runs yet.
                   </td>
                 </tr>
@@ -164,12 +229,12 @@ export default async function AeoDashboardPage() {
         </div>
       </section>
 
-      {/* CITATION RATE BY PROMPT */}
+      {/* BY PROMPT */}
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Prompts ranked by citation rate</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">Prompts ranked by source-citation rate</h2>
         <p className="text-xs text-slate-500 mb-3">
-          High-rate prompts = the queries you&apos;re winning. Zero-rate prompts = either your
-          weakest content area or your highest-leverage growth target.
+          A prompt with source citations is one where an engine pointed at this site. Brand mentions
+          are shown beside it so the two are never confused.
         </p>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
@@ -177,26 +242,30 @@ export default async function AeoDashboardPage() {
               <tr>
                 <th className="text-left px-3 py-2">Prompt</th>
                 <th className="text-left px-3 py-2">Category</th>
-                <th className="text-left px-3 py-2">Hits</th>
-                <th className="text-left px-3 py-2">Rate</th>
+                <th className="text-right px-3 py-2">Probes</th>
+                <th className="text-right px-3 py-2">Brand</th>
+                <th className="text-right px-3 py-2">Domain</th>
+                <th className="text-right px-3 py-2">Source citations</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {byPrompt.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-3 py-6 text-center text-slate-500 italic">
+                  <td colSpan={6} className="px-3 py-6 text-center text-slate-500 italic">
                     No data yet.
                   </td>
                 </tr>
               ) : (
                 byPrompt.map((p) => (
-                  <tr key={p.promptId}>
+                  <tr key={p.prompt_id}>
                     <td className="px-3 py-2 max-w-[400px] truncate">{p.prompt}</td>
                     <td className="px-3 py-2 text-xs text-slate-500">{p.category}</td>
-                    <td className="px-3 py-2">
-                      {p.hits} / {p.total}
+                    <td className="px-3 py-2 text-right">{p.total}</td>
+                    <td className="px-3 py-2 text-right">{p.brand_mentions}</td>
+                    <td className="px-3 py-2 text-right">{p.domain_references}</td>
+                    <td className="px-3 py-2 text-right font-semibold">
+                      {p.source_citations} <span className="text-slate-400 font-normal">({p.rate.toFixed(1)}%)</span>
                     </td>
-                    <td className="px-3 py-2 font-semibold">{p.rate.toFixed(1)}%</td>
                   </tr>
                 ))
               )}
@@ -209,10 +278,10 @@ export default async function AeoDashboardPage() {
       <section className="mb-10">
         <h2 className="text-lg font-semibold text-slate-900 mb-3">Most-cited URLs</h2>
         <p className="text-xs text-slate-500 mb-3">
-          Pages that AI engines linked to in responses. These are working — write more like them.
+          Pages an engine linked to, in the text or in its citation list. Source citations only.
         </p>
         {byUrl.length === 0 ? (
-          <p className="text-sm text-slate-500 italic">No URL citations yet.</p>
+          <p className="text-sm text-slate-500 italic">No source citations yet.</p>
         ) : (
           <ul className="space-y-2">
             {byUrl.map((u) => (
@@ -221,7 +290,7 @@ export default async function AeoDashboardPage() {
                   {u.url}
                 </a>
                 <span className="font-semibold text-slate-700 shrink-0">
-                  {u.count} cite{u.count === 1 ? "" : "s"}
+                  {u.count} citation{u.count === 1 ? "" : "s"}
                 </span>
               </li>
             ))}
@@ -229,7 +298,7 @@ export default async function AeoDashboardPage() {
         )}
       </section>
 
-      {/* RECENT ERRORS — collapsed by default; click to expand full text */}
+      {/* RECENT ERRORS */}
       {recentErrors.length > 0 && (
         <section className="mb-10">
           <h2 className="text-lg font-semibold text-slate-900 mb-3">Recent errors</h2>
@@ -239,9 +308,6 @@ export default async function AeoDashboardPage() {
           </p>
           <div className="space-y-2">
             {recentErrors.map((e, i) => {
-              // First line / first 120 chars = the summary preview shown
-              // when the row is collapsed. Keeps the panel scannable even
-              // when individual errors are giant JSON blobs.
               const preview = (e.message.split("\n")[0] ?? "").slice(0, 140)
               return (
                 <details
@@ -275,39 +341,42 @@ export default async function AeoDashboardPage() {
         </section>
       )}
 
-      {/* RECENT HITS */}
+      {/* RECENT RESPONSES */}
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Recent excerpts</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">Recent responses</h2>
         <p className="text-xs text-slate-500 mb-3">
-          What AI engines actually said when they cited us. Read these — they tell you how the
-          site is being framed.
+          What engines actually said, labelled by what was detected. Read the label before the quote.
         </p>
         <div className="space-y-4">
-          {recentHits.length === 0 ? (
-            <p className="text-sm text-slate-500 italic">No citation hits yet.</p>
+          {recentDetections.length === 0 ? (
+            <p className="text-sm text-slate-500 italic">Nothing detected yet.</p>
           ) : (
-            recentHits.map((r, i) => (
+            recentDetections.map((r, i) => (
               <article key={`${r.run_id}-${i}`} className="p-4 border border-slate-200 rounded-xl">
-                <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                  <span className="px-2 py-0.5 bg-slate-100 rounded font-medium uppercase">
-                    {r.engine}
+                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mb-2">
+                  <span className="px-2 py-0.5 bg-slate-100 rounded font-medium uppercase">{r.engine}</span>
+                  <span className="px-2 py-0.5 bg-slate-100 rounded">
+                    {r.search_capable ? "searches web" : "no search"}
                   </span>
+                  {r.source_citation && (
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded font-medium">source citation</span>
+                  )}
+                  {r.brand_mention && (
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-900 rounded font-medium">brand mention</span>
+                  )}
+                  {r.domain_reference && (
+                    <span className="px-2 py-0.5 bg-sky-100 text-sky-900 rounded font-medium">domain reference</span>
+                  )}
                   <span className="font-medium text-slate-700 truncate">{r.prompt}</span>
-                  <span className="ml-auto whitespace-nowrap">
-                    {new Date(r.run_at).toLocaleDateString()}
-                  </span>
+                  <span className="ml-auto whitespace-nowrap">{new Date(r.run_at).toLocaleDateString()}</span>
                 </div>
-                <p className="text-sm text-slate-700 leading-relaxed italic">&ldquo;{r.excerpt}&rdquo;</p>
+                {r.excerpt && (
+                  <p className="text-sm text-slate-700 leading-relaxed italic">&ldquo;{r.excerpt}&rdquo;</p>
+                )}
                 {r.cited_urls && r.cited_urls.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {r.cited_urls.map((u) => (
-                      <a
-                        key={u}
-                        href={u}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-blue-700 hover:underline"
-                      >
+                      <a key={u} href={u} target="_blank" rel="noreferrer" className="text-xs text-blue-700 hover:underline">
                         {u}
                       </a>
                     ))}
@@ -328,46 +397,39 @@ export default async function AeoDashboardPage() {
   )
 }
 
-// -----------------------------------------------------------------------------
-// Aggregations (run client-side on the flattened rows — fine for our scale)
-// -----------------------------------------------------------------------------
-
-function aggregateByEngine(rows: Row[]) {
-  const map = new Map<string, { hits: number; total: number }>()
-  for (const r of rows) {
-    if (r.error) continue
-    const m = map.get(r.engine) ?? { hits: 0, total: 0 }
-    m.total++
-    if (r.was_cited) m.hits++
-    map.set(r.engine, m)
-  }
-  return Array.from(map.entries())
-    .map(([engine, { hits, total }]) => ({
-      engine,
-      hits,
-      total,
-      rate: total ? (hits / total) * 100 : 0,
-    }))
-    .sort((a, b) => b.rate - a.rate)
+function DimensionCard({ title, counts }: { title: string; counts: DimensionCounts }) {
+  return (
+    <div className="p-4 border border-slate-200 rounded-xl">
+      <div className="text-xs uppercase tracking-wider text-slate-500">{title}</div>
+      <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+        <div>
+          <div className="text-xl font-bold text-slate-900">{pct(counts.source_citations, counts.total)}%</div>
+          <div className="text-[11px] text-slate-500">source citations</div>
+        </div>
+        <div>
+          <div className="text-xl font-semibold text-slate-700">{pct(counts.brand_mentions, counts.total)}%</div>
+          <div className="text-[11px] text-slate-500">brand mentions</div>
+        </div>
+        <div>
+          <div className="text-xl font-semibold text-slate-700">{pct(counts.domain_references, counts.total)}%</div>
+          <div className="text-[11px] text-slate-500">domain refs</div>
+        </div>
+      </div>
+      <div className="text-xs text-slate-500 mt-2">{counts.total} classified probe{counts.total === 1 ? "" : "s"}</div>
+    </div>
+  )
 }
 
-function aggregateByPrompt(rows: Row[]) {
-  const map = new Map<string, { prompt: string; category: string; hits: number; total: number }>()
+// Source citations only: legacy rows have cited_urls too, but those came from
+// the same URL detection, so they are genuine and are kept.
+function aggregateByUrl(rows: Row[]) {
+  const map = new Map<string, number>()
   for (const r of rows) {
-    if (r.error) continue
-    const m = map.get(r.prompt_id) ?? {
-      prompt: r.prompt,
-      category: r.prompt_category ?? "",
-      hits: 0,
-      total: 0,
-    }
-    m.total++
-    if (r.was_cited) m.hits++
-    map.set(r.prompt_id, m)
+    for (const u of r.cited_urls ?? []) map.set(u, (map.get(u) ?? 0) + 1)
   }
   return Array.from(map.entries())
-    .map(([promptId, m]) => ({ promptId, ...m, rate: m.total ? (m.hits / m.total) * 100 : 0 }))
-    .sort((a, b) => b.rate - a.rate)
+    .map(([url, count]) => ({ url, count }))
+    .sort((a, b) => b.count - a.count)
 }
 
 function aggregateErrors(rows: Row[]): Array<{ engine: string; message: string; count: number }> {
@@ -382,16 +444,4 @@ function aggregateErrors(rows: Row[]): Array<{ engine: string; message: string; 
   return Array.from(map.values())
     .sort((a, b) => b.count - a.count)
     .slice(0, 10)
-}
-
-function aggregateByUrl(rows: Row[]) {
-  const map = new Map<string, number>()
-  for (const r of rows) {
-    for (const u of r.cited_urls ?? []) {
-      map.set(u, (map.get(u) ?? 0) + 1)
-    }
-  }
-  return Array.from(map.entries())
-    .map(([url, count]) => ({ url, count }))
-    .sort((a, b) => b.count - a.count)
 }

@@ -24,18 +24,41 @@ import { put, list, del } from "@vercel/blob"
 
 const RUN_PREFIX = "aeo/runs/"
 
-/** One row of probe data (engine × prompt × hit/miss). */
+/**
+ * One row of probe data (engine × prompt).
+ *
+ * Rows written before issue #44 carry no `classifier_version`; their
+ * `was_cited` flag was true for ANY mention (author name, book title, bare
+ * domain, or URL) and must not be read as a citation. Rows with
+ * `classifier_version: 2` keep the three dimensions apart, and `was_cited`
+ * equals `source_citation`.
+ */
 export interface CitationRow {
   engine: "claude" | "chatgpt" | "perplexity" | "gemini"
   prompt: string
   prompt_id: string
   prompt_category: string
+  /** v2: same as source_citation. Legacy rows: any mention at all. */
   was_cited: boolean
   mention_types: string[]
   cited_urls: string[]
   excerpt: string | null
   response_chars: number
   error: string | null
+  /** 2 = split classifier. Absent on legacy rows. */
+  classifier_version?: number
+  /** Whether the engine call could search the web (see engines.ts). */
+  search_capable?: boolean
+  /** Author name or book title appears in the text. */
+  brand_mention?: boolean
+  /** The bare domain appears as text, not as a link. */
+  domain_reference?: boolean
+  /** A URL under the site appears in the text or in structured citations. */
+  source_citation?: boolean
+  /** URLs the engine returned as citations separately from the text. */
+  structured_citations?: string[]
+  /** Full response text, kept so a row can be re-classified later without re-spending credits. */
+  response_text?: string
 }
 
 /** One weekly run = many rows + a top-level summary. */
@@ -46,7 +69,11 @@ export interface AeoRun {
   promptsCount: number
   enginesRun: string[]
   totalProbes: number
+  /** v2 runs: number of probes with a source citation. Legacy runs: any mention. */
   citationHits: number
+  brandMentions?: number
+  domainReferences?: number
+  sourceCitations?: number
   errors: number
   rows: CitationRow[]
 }

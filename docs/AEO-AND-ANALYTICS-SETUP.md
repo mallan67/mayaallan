@@ -57,11 +57,13 @@ Response is JSON with run summary. Typical first run takes 1-3 minutes.
 
 Log in at `/admin/login`, then visit **`/admin/aeo`**. You'll see:
 
-- Citation rate by engine (Claude / ChatGPT / Perplexity / Gemini)
-- Recent runs (with hit count + error count)
-- Prompts ranked by citation rate — the ones with 0% are your highest-leverage growth targets
-- Most-cited URLs — what's working, do more of those
-- Recent excerpts — exactly what AI engines say when they cite you
+- Three separate measures per engine, never summed: **brand mentions** (author or book named in the text), **domain references** (the domain as plain text), and **source citations** (a URL under the site in the text or in the engine's citation list). Only the last one is a citation.
+- The same three measures split by whether the engine could search the web. Only Perplexity Sonar searches; the Claude, OpenAI and Gemini calls answer from training data and do not represent what a consumer search product shows.
+- Recent runs (with per-dimension counts + error count)
+- Prompts ranked by source-citation rate, with brand mentions shown alongside
+- Most-cited URLs — source citations only
+- Recent responses — what engines actually said, labelled by what was detected
+- Probes recorded before the classifier split (September 2026) are shown as "legacy" and excluded from every rate, because their single "hit" flag counted any mention as a citation.
 
 ## 6. Add or change tracked prompts
 
@@ -100,13 +102,13 @@ Per the May 2026 SparkToro data: AI-engine click-through rates are **15.9% (Chat
 
 | What | Where | Frequency |
 |---|---|---|
-| AI citation probes (4 engines × 25 prompts) | `/admin/aeo` | Weekly auto, manual on-demand |
+| AI mention/citation probes (4 engines × 25 prompts; 1 search-capable) | `/admin/aeo` | Weekly auto, manual on-demand |
 | AI engine click-through traffic | GA4 → AI Search channel | Real-time |
 | Google + Bing organic | GSC + Bing Webmaster | Real-time |
 | Site speed (Core Web Vitals) | Vercel Speed Insights | Real-time |
 | Bot crawl activity (GPTBot, ClaudeBot, etc.) | Vercel logs → filter `User-Agent` | On-demand |
 
-That's the full feedback loop. Every Monday you get a citation report; every page view via AI engines lands in the AI Search channel; you can correlate the two.
+That's the full feedback loop. Every Monday you get a mention/citation report; every page view via AI engines lands in the AI Search channel; you can correlate the two. Do not make content decisions from brand mentions alone — a model can name the author from training data without ever pointing at the site.
 
 ---
 

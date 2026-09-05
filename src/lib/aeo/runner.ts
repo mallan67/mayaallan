@@ -1,7 +1,7 @@
 import "server-only"
 import { randomUUID } from "node:crypto"
 import { loadPrompts } from "@/lib/aeo/prompts"
-import { detectCitation } from "@/lib/aeo/detect"
+import { classifyEngineResponse } from "@/lib/aeo/detect"
 import {
   queryClaude,
   queryChatGPT,
@@ -61,7 +61,11 @@ export interface RunSummary {
   promptsCount: number
   enginesRun: string[]
   totalProbes: number
+  /** Probes whose response cited a URL under the site (text or structured). */
   citationHits: number
+  brandMentions: number
+  domainReferences: number
+  sourceCitations: number
   errors: number
   blobPath?: string
   /** Number of old runs auto-deleted by retention policy after this run. */
@@ -97,7 +101,9 @@ export async function executeRun(): Promise<
   const enginesRun: string[] = []
   const rows: CitationRow[] = []
   let totalProbes = 0
-  let citationHits = 0
+  let brandMentions = 0
+  let domainReferences = 0
+  let sourceCitations = 0
   let errors = 0
 
   // Concurrent prompt batches × parallel engines per prompt.
@@ -148,24 +154,36 @@ export async function executeRun(): Promise<
             excerpt: null,
             response_chars: 0,
             error: result.error,
+            classifier_version: 2,
+            search_capable: result.searchCapable,
           })
           continue
         }
 
-        const detection = detectCitation(result.content)
-        if (detection.wasCited) citationHits++
+        const c = classifyEngineResponse({ content: result.content, structuredCitations: result.citations })
+        if (c.brand_mention) brandMentions++
+        if (c.domain_reference) domainReferences++
+        if (c.source_citation) sourceCitations++
 
         rows.push({
           engine: name,
           prompt: prompt.text,
           prompt_id: prompt.id,
           prompt_category: prompt.category,
-          was_cited: detection.wasCited,
-          mention_types: detection.mentionTypes,
-          cited_urls: detection.citedUrls,
-          excerpt: detection.excerpt,
+          // "cited" is reserved for a real source citation (issue #44).
+          was_cited: c.source_citation,
+          mention_types: c.mention_types,
+          cited_urls: c.cited_urls,
+          excerpt: c.excerpt,
           response_chars: result.content.length,
           error: null,
+          classifier_version: 2,
+          search_capable: result.searchCapable,
+          brand_mention: c.brand_mention,
+          domain_reference: c.domain_reference,
+          source_citation: c.source_citation,
+          structured_citations: result.citations ?? [],
+          response_text: result.content,
         })
       }
     }
@@ -187,7 +205,10 @@ export async function executeRun(): Promise<
     promptsCount: prompts.length,
     enginesRun,
     totalProbes,
-    citationHits,
+    citationHits: sourceCitations,
+    brandMentions,
+    domainReferences,
+    sourceCitations,
     errors,
     rows,
   }
@@ -236,7 +257,10 @@ export async function executeRun(): Promise<
       promptsCount: prompts.length,
       enginesRun,
       totalProbes,
-      citationHits,
+      citationHits: sourceCitations,
+      brandMentions,
+      domainReferences,
+      sourceCitations,
       errors,
       ...(blobPath && { blobPath }),
       ...(typeof pruned === "number" && pruned > 0 && { prunedOldRuns: pruned }),
