@@ -150,6 +150,12 @@ export default async function ScenarioPage({ params }: PageProps) {
         By <Link href="/about" className="underline hover:text-slate-700">{AUTHOR_NAME}</Link>
         {" · "}
         Published <time dateTime={scenario.datePublished}>{scenario.datePublished}</time>
+        {scenario.dateModified && scenario.dateModified !== scenario.datePublished && (
+          <>
+            {" · "}
+            Updated <time dateTime={scenario.dateModified}>{scenario.dateModified}</time>
+          </>
+        )}
         {scenario.bookExcerpt && (
           <>
             {" · "}

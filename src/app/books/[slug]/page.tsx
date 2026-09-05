@@ -448,6 +448,33 @@ export default async function BookPage({ params }: BookPageProps) {
             </section>
           )}
 
+          {book.slug === "psilocybin-integration-guide" && (
+            <section className="py-2" aria-labelledby="related-reading">
+              <h2 id="related-reading" className="font-serif text-xl font-semibold mb-3 text-slate-900">
+                Related reading
+              </h2>
+              <p className="text-base leading-relaxed text-slate-700 mb-4">
+                Two pieces on this site come directly from the book&apos;s approach and are free to read.
+              </p>
+              <ul className="space-y-3 text-base leading-relaxed text-slate-700">
+                <li>
+                  <Link href="/scenarios/ego-dissolution" className="text-liquid-blue underline hover:text-liquid-blue-bright">
+                    What does ego dissolution feel like during a psilocybin journey?
+                  </Link>
+                  {" "}
+                  Scenario 12, adapted in full: what it feels like, what research does and doesn&apos;t explain, how to navigate it, and when to seek help.
+                </li>
+                <li>
+                  <Link href="/blog/psilocybin-integration-research" className="text-liquid-blue underline hover:text-liquid-blue-bright">
+                    Integration after psilocybin: what the memory research supports, and what it doesn&apos;t
+                  </Link>
+                  {" "}
+                  The reasoning behind the book&apos;s integration practice, with the evidence and its limits laid out.
+                </li>
+              </ul>
+            </section>
+          )}
+
           {/* Soft divider */}
           <div className="section-divider">
             <div className="diamond" />

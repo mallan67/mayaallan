@@ -18,14 +18,14 @@
       "id": "ego-dissolution-feel",
       "category": "journey",
       "question": "What does ego dissolution feel like during a psilocybin journey?",
-      "answer": "Ego dissolution feels like the boundary between \"you\" and everything else softening — the inner narrator goes quiet, identity becomes optional, and you may feel merged with the room, the music, or all of existence. It is temporary, not damaging, and reversible within hours. The fear that you won't come back is part of the experience, not a prediction.",
+      "answer": "Ego dissolution feels like the boundary between \"you\" and everything else softening — the inner narrator goes quiet, identity becomes optional, and you may feel merged with the room, the music, or all of existence. For most people it is temporary and the sense of self returns as the effects fade; by itself it is not known to cause physical harm. The fear that you won't come back is part of the experience, not a prediction. If detachment persists in the days afterward, seek qualified help.",
       "relatedUrl": "/scenarios/ego-dissolution"
     },
     {
       "id": "ego-dissolution-duration",
       "category": "journey",
       "question": "How long does ego dissolution typically last during a mushroom experience?",
-      "answer": "Peak ego dissolution typically lasts 30 minutes to 2 hours during a 4–6 hour psilocybin experience. The come-up takes 30–60 minutes; peak effects last 2–3 hours; gradual return takes another 2–3 hours. Dissolution often comes in waves during the peak rather than holding steady. This is descriptive educational information, not guidance on using psilocybin.",
+      "answer": "No study has timed ego dissolution as a separate phase, so there is no reliable figure for it. In controlled studies of oral psilocybin at roughly 15 to 30 mg, effects begin within the first hour, peak around one and a half to two and a half hours in, and have largely faded by about six hours, longer at higher doses. Ego dissolution is usually reported around the peak and is often described as coming in waves. This is descriptive educational information, not guidance on using psilocybin.",
       "relatedUrl": "/scenarios/ego-dissolution"
     },
     {
@@ -92,7 +92,7 @@
       "id": "default-mode-network",
       "category": "research",
       "question": "What does psilocybin do to the default mode network?",
-      "answer": "The default mode network (DMN) is a set of brain regions associated with self-referential thought and the felt sense of being a separate \"I.\" Research — including work associated with Carhart-Harris at Imperial College London — suggests psilocybin can temporarily reduce DMN activity, which researchers have linked to experiences like ego dissolution and seeing familiar patterns from the outside. This is an active, evolving area of science, described here for education rather than as settled fact or a medical claim."
+      "answer": "The default mode network (DMN) is a set of brain regions associated with self-referential thought and the felt sense of being a separate \"I.\" Research — including work associated with Carhart-Harris at Imperial College London — suggests psilocybin can temporarily reduce DMN activity and connectivity, which researchers have linked to experiences like ego dissolution. Later studies show changes across several networks, and a 2024 precision-imaging study found psilocybin desynchronises activity brain-wide, most strongly in the DMN. How central the DMN is remains an open question. This is an active, evolving area of science, described here for education rather than as settled fact or a medical claim."
     },
     {
       "id": "mystical-experience",

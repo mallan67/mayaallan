@@ -36,6 +36,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       siteName: "Maya Allan",
       type: "article",
       publishedTime: post.date,
+      ...(post.updated && { modifiedTime: post.updated }),
       authors: [post.author],
       tags: post.tags,
     },
@@ -52,10 +53,13 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 function formatDate(iso: string) {
   try {
+    // Calendar dates are timezone-less; format in UTC so "2026-04-19" never
+    // renders as April 18 on a server west of Greenwich.
     return new Date(iso).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "UTC",
     })
   } catch {
     return iso
@@ -74,6 +78,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
     description: post.subtitle,
     author: { "@type": "Person", name: post.author, url: SITE_URL },
     datePublished: post.date,
+    ...(post.updated && { dateModified: post.updated }),
     publisher: {
       "@type": "Person",
       name: "Maya Allan",
@@ -97,9 +102,15 @@ export default async function BlogPostPage({ params }: { params: Params }) {
         </nav>
 
         <header className="mb-8 sm:mb-10">
-          <time className="text-charcoal-soft/70 text-xs uppercase tracking-wider">
+          <time className="text-charcoal-soft/70 text-xs uppercase tracking-wider" dateTime={post.date}>
             {formatDate(post.date)}
           </time>
+          {post.updated && (
+            <span className="text-charcoal-soft/70 text-xs uppercase tracking-wider">
+              {" · Updated "}
+              <time dateTime={post.updated}>{formatDate(post.updated)}</time>
+            </span>
+          )}
           <h1 className="font-serif text-[clamp(1.6rem,4vw,2.5rem)] font-semibold text-charcoal tracking-[-0.02em] mt-2 mb-3 leading-tight">
             {post.title}
           </h1>

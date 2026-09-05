@@ -55,6 +55,8 @@ export default function IntegrationPage() {
             <span aria-hidden="true">·</span>
             <Link href="/methods#integration-reflection" className="font-medium text-liquid-blue hover:underline">Learn the method →</Link>
             <span aria-hidden="true">·</span>
+            <Link href="/blog/psilocybin-integration-research" className="font-medium text-liquid-blue hover:underline">The research behind it →</Link>
+            <span aria-hidden="true">·</span>
             <Link href="/privacy" className="hover:text-charcoal-mid underline-offset-2 hover:underline">Privacy</Link>
             <span aria-hidden="true">·</span>
             <Link href="/terms" className="hover:text-charcoal-mid underline-offset-2 hover:underline">Terms</Link>
