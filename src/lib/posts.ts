@@ -7,6 +7,8 @@ export type PostFrontmatter = {
   subtitle: string
   author: string
   date: string // ISO
+  /** Optional ISO date of the last substantive revision. Shown as "Updated" and used as Article dateModified. */
+  updated?: string
   tool_link?: string
   tool_name?: string
   tags?: string[]
@@ -21,6 +23,16 @@ export type PostFull = PostSummary & {
 }
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts")
+
+// YAML parses an unquoted `date: 2026-04-19` as a JS Date (UTC midnight).
+// Stringifying that directly produced "Sat Apr 18 2026 20:00:00 GMT-0400"
+// in the Article JSON-LD and shifted the displayed day. Normalize every
+// date-like frontmatter value to a plain ISO calendar date.
+function isoDate(value: unknown, fallback?: string): string | undefined {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0, 10)
+  if (typeof value === "string" && value.trim()) return value.trim().slice(0, 10)
+  return fallback
+}
 
 function slugFromFilename(filename: string): string {
   // "01-audit-is-the-wrong-word.md" → "audit-is-the-wrong-word"
@@ -46,7 +58,8 @@ export async function listPosts(): Promise<PostSummary[]> {
       title: String(data.title ?? "Untitled"),
       subtitle: String(data.subtitle ?? ""),
       author: String(data.author ?? "Maya Allan"),
-      date: String(data.date ?? new Date().toISOString()),
+      date: isoDate(data.date, new Date().toISOString().slice(0, 10)) as string,
+      updated: isoDate(data.updated),
       tool_link: data.tool_link ? String(data.tool_link) : undefined,
       tool_name: data.tool_name ? String(data.tool_name) : undefined,
       tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
@@ -75,7 +88,8 @@ export async function getPost(slug: string): Promise<PostFull | null> {
     title: String(data.title ?? "Untitled"),
     subtitle: String(data.subtitle ?? ""),
     author: String(data.author ?? "Maya Allan"),
-    date: String(data.date ?? new Date().toISOString()),
+    date: isoDate(data.date, new Date().toISOString().slice(0, 10)) as string,
+    updated: isoDate(data.updated),
     tool_link: data.tool_link ? String(data.tool_link) : undefined,
     tool_name: data.tool_name ? String(data.tool_name) : undefined,
     tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
