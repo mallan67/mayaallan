@@ -20,7 +20,7 @@ import Link from "next/link"
 import { isAuthenticated } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { loadRecentRuns, allRows, type CitationRow, type AeoRun } from "@/lib/aeo/storage"
-import { aggregateByEngine, aggregateBySearchCapability, aggregateByPrompt, isClassifiedRow, type DimensionCounts } from "@/lib/aeo/aggregate"
+import { aggregateByEngine, aggregateBySearchCapability, aggregateByPrompt, aggregateByUrl, isClassifiedRow, type DimensionCounts } from "@/lib/aeo/aggregate"
 import { RunNowButton } from "./RunNowButton"
 import { CopyButton } from "./CopyButton"
 import { ClearAllButton } from "./ClearAllButton"
@@ -229,43 +229,59 @@ export default async function AeoDashboardPage() {
         </div>
       </section>
 
-      {/* BY PROMPT */}
+      {/* BY PROMPT — search-capable and non-search reported side by side, never pooled */}
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Prompts ranked by source-citation rate</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">Prompts, by search capability</h2>
         <p className="text-xs text-slate-500 mb-3">
-          A prompt with source citations is one where an engine pointed at this site. Brand mentions
-          are shown beside it so the two are never confused.
+          The <strong>search-capable</strong> columns (Perplexity) are the search-visibility measure: an
+          engine that looked at the web and pointed at this site. The <strong>non-search</strong> columns
+          (Claude, ChatGPT, Gemini) show what models say from memory. The two are never combined.
+          Ranked by search-capable citation rate.
         </p>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-50 text-slate-600 text-xs uppercase">
               <tr>
-                <th className="text-left px-3 py-2">Prompt</th>
-                <th className="text-left px-3 py-2">Category</th>
-                <th className="text-right px-3 py-2">Probes</th>
-                <th className="text-right px-3 py-2">Brand</th>
-                <th className="text-right px-3 py-2">Domain</th>
-                <th className="text-right px-3 py-2">Source citations</th>
+                <th className="text-left px-3 py-2" rowSpan={2}>Prompt</th>
+                <th className="text-left px-3 py-2" rowSpan={2}>Category</th>
+                <th className="text-center px-3 py-1 border-l border-slate-200" colSpan={3}>Search-capable</th>
+                <th className="text-center px-3 py-1 border-l border-slate-200" colSpan={3}>Non-search</th>
+                <th className="text-right px-3 py-2 border-l border-slate-200" rowSpan={2}>Legacy</th>
+              </tr>
+              <tr>
+                <th className="text-right px-3 py-1 border-l border-slate-200">Probes</th>
+                <th className="text-right px-3 py-1">Brand</th>
+                <th className="text-right px-3 py-1">Citations</th>
+                <th className="text-right px-3 py-1 border-l border-slate-200">Probes</th>
+                <th className="text-right px-3 py-1">Brand</th>
+                <th className="text-right px-3 py-1">Citations</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {byPrompt.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-slate-500 italic">
+                  <td colSpan={9} className="px-3 py-6 text-center text-slate-500 italic">
                     No data yet.
                   </td>
                 </tr>
               ) : (
                 byPrompt.map((p) => (
                   <tr key={p.prompt_id}>
-                    <td className="px-3 py-2 max-w-[400px] truncate">{p.prompt}</td>
+                    <td className="px-3 py-2 max-w-[360px] truncate">{p.prompt}</td>
                     <td className="px-3 py-2 text-xs text-slate-500">{p.category}</td>
-                    <td className="px-3 py-2 text-right">{p.total}</td>
-                    <td className="px-3 py-2 text-right">{p.brand_mentions}</td>
-                    <td className="px-3 py-2 text-right">{p.domain_references}</td>
+                    <td className="px-3 py-2 text-right border-l border-slate-200">{p.search.total}</td>
+                    <td className="px-3 py-2 text-right">{p.search.brand_mentions}</td>
                     <td className="px-3 py-2 text-right font-semibold">
-                      {p.source_citations} <span className="text-slate-400 font-normal">({p.rate.toFixed(1)}%)</span>
+                      {p.search.source_citations}{" "}
+                      <span className="text-slate-400 font-normal">({p.search.rate.toFixed(0)}%)</span>
                     </td>
+                    <td className="px-3 py-2 text-right border-l border-slate-200">{p.non_search.total}</td>
+                    <td className="px-3 py-2 text-right">{p.non_search.brand_mentions}</td>
+                    <td className="px-3 py-2 text-right">
+                      {p.non_search.source_citations}{" "}
+                      <span className="text-slate-400">({p.non_search.rate.toFixed(0)}%)</span>
+                    </td>
+                    <td className="px-3 py-2 text-right text-slate-400 border-l border-slate-200">{p.legacy_probes || "—"}</td>
                   </tr>
                 ))
               )}
@@ -274,27 +290,43 @@ export default async function AeoDashboardPage() {
         </div>
       </section>
 
-      {/* MOST-CITED URLs */}
+      {/* MOST-CITED URLs — counts labelled by capability, never pooled */}
       <section className="mb-10">
-        <h2 className="text-lg font-semibold text-slate-900 mb-3">Most-cited URLs</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">Cited URLs, by capability</h2>
         <p className="text-xs text-slate-500 mb-3">
-          Pages an engine linked to, in the text or in its citation list. Source citations only.
+          Pages an engine linked to, in the text or in its citation list. Search-capable counts are the
+          search-visibility measure; non-search counts are links a model produced from memory; legacy
+          counts come from rows recorded before the classifier split. Ranked by search-capable count.
         </p>
         {byUrl.length === 0 ? (
           <p className="text-sm text-slate-500 italic">No source citations yet.</p>
         ) : (
-          <ul className="space-y-2">
-            {byUrl.map((u) => (
-              <li key={u.url} className="flex justify-between gap-4 text-sm border-b border-slate-100 pb-2">
-                <a href={u.url} className="text-blue-700 hover:underline truncate" target="_blank" rel="noreferrer">
-                  {u.url}
-                </a>
-                <span className="font-semibold text-slate-700 shrink-0">
-                  {u.count} citation{u.count === 1 ? "" : "s"}
-                </span>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-slate-600 text-xs uppercase">
+                <tr>
+                  <th className="text-left px-3 py-2">URL</th>
+                  <th className="text-right px-3 py-2">Search-capable</th>
+                  <th className="text-right px-3 py-2">Non-search</th>
+                  <th className="text-right px-3 py-2">Legacy</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {byUrl.map((u) => (
+                  <tr key={u.url}>
+                    <td className="px-3 py-2 max-w-[480px] truncate">
+                      <a href={u.url} className="text-blue-700 hover:underline" target="_blank" rel="noreferrer">
+                        {u.url}
+                      </a>
+                    </td>
+                    <td className="px-3 py-2 text-right font-semibold">{u.search}</td>
+                    <td className="px-3 py-2 text-right">{u.non_search}</td>
+                    <td className="px-3 py-2 text-right text-slate-400">{u.legacy || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 
@@ -418,18 +450,6 @@ function DimensionCard({ title, counts }: { title: string; counts: DimensionCoun
       <div className="text-xs text-slate-500 mt-2">{counts.total} classified probe{counts.total === 1 ? "" : "s"}</div>
     </div>
   )
-}
-
-// Source citations only: legacy rows have cited_urls too, but those came from
-// the same URL detection, so they are genuine and are kept.
-function aggregateByUrl(rows: Row[]) {
-  const map = new Map<string, number>()
-  for (const r of rows) {
-    for (const u of r.cited_urls ?? []) map.set(u, (map.get(u) ?? 0) + 1)
-  }
-  return Array.from(map.entries())
-    .map(([url, count]) => ({ url, count }))
-    .sort((a, b) => b.count - a.count)
 }
 
 function aggregateErrors(rows: Row[]): Array<{ engine: string; message: string; count: number }> {

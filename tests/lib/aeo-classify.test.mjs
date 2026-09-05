@@ -18,8 +18,9 @@ import { classifyResponse } from "../../src/lib/aeo/classify.ts"
 
 const cfg = {
   authorName: "Maya Allan",
-  bookTitles: ["Psilocybin Integration Guide", "Psilocybin Integration"],
+  bookTitles: ["Psilocybin Integration Guide"],
   siteHost: "mayaallan.com",
+  canonicalOrigin: "https://www.mayaallan.com",
 }
 
 test("author name alone is a brand mention, not a domain reference or citation", () => {
@@ -61,7 +62,7 @@ test("a structured citation under the site counts even when the text never menti
   )
   assert.equal(r.source_citation, true)
   assert.equal(r.brand_mention, false)
-  assert.deepEqual(r.cited_urls, ["https://mayaallan.com/glossary"])
+  assert.deepEqual(r.cited_urls, ["https://www.mayaallan.com/glossary"])
   assert.ok(r.mention_types.includes("structured_citation"))
 })
 
@@ -99,4 +100,40 @@ test("excerpt surrounds the first thing found, whichever kind it is", () => {
   const r = classifyResponse({ content: "x".repeat(300) + " Maya Allan " + "y".repeat(400), structuredCitations: [] }, cfg)
   assert.ok(r.excerpt && r.excerpt.includes("Maya Allan"))
   assert.ok(r.excerpt.length < 600)
+})
+
+test("the generic phrase 'psilocybin integration' is not a brand mention", () => {
+  assert.equal(classifyResponse({ content: "Psilocybin integration is a growing field.", structuredCitations: [] }, cfg).brand_mention, false)
+  assert.equal(classifyResponse({ content: "Good psychedelic integration takes time.", structuredCitations: [] }, cfg).brand_mention, false)
+})
+
+test("the distinctive book title is a brand mention", () => {
+  assert.equal(classifyResponse({ content: "Maya Allan wrote Psilocybin Integration Guide.", structuredCitations: [] }, cfg).brand_mention, true)
+  assert.equal(classifyResponse({ content: "Psilocybin Integration Guide by Maya Allan", structuredCitations: [] }, cfg).brand_mention, true)
+  const titleOnly = classifyResponse({ content: "Read the Psilocybin Integration Guide.", structuredCitations: [] }, cfg)
+  assert.equal(titleOnly.brand_mention, true)
+  assert.ok(titleOnly.mention_types.includes("book_title"))
+})
+
+test("equivalent forms of a same-site URL collapse to one canonical cited URL", () => {
+  const r = classifyResponse(
+    {
+      content: "See https://www.mayaallan.com/faq and https://mayaallan.com/faq/ and http://mayaallan.com/faq#duration",
+      structuredCitations: ["https://MAYAALLAN.com/faq/"],
+    },
+    cfg
+  )
+  assert.deepEqual(r.cited_urls, ["https://www.mayaallan.com/faq"])
+})
+
+test("canonicalization keeps meaningful paths and the root distinct", () => {
+  const r = classifyResponse(
+    { content: "https://mayaallan.com/ and https://mayaallan.com/scenarios/ego-dissolution/ and https://mayaallan.com/blog/psilocybin-integration-research", structuredCitations: [] },
+    cfg
+  )
+  assert.deepEqual(r.cited_urls, [
+    "https://www.mayaallan.com/",
+    "https://www.mayaallan.com/scenarios/ego-dissolution",
+    "https://www.mayaallan.com/blog/psilocybin-integration-research",
+  ])
 })

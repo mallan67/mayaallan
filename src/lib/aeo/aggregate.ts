@@ -39,13 +39,34 @@ export interface EngineStats extends DimensionCounts {
   legacy_probes: number
 }
 
-export interface PromptStats extends DimensionCounts {
+export interface RateCounts extends DimensionCounts {
+  /** Source-citation rate in percent, within this capability group only. */
+  rate: number
+}
+
+/**
+ * Per-prompt results, split by engine search capability. There is no
+ * combined total or rate on purpose: pooling a search engine's citations
+ * with non-search completions would manufacture a number that describes
+ * neither (issue #44).
+ */
+export interface PromptStats {
   prompt_id: string
   prompt: string
   category: string
+  search: RateCounts
+  non_search: RateCounts
   legacy_probes: number
-  /** Source-citation rate in percent. */
-  rate: number
+}
+
+export interface UrlCounts {
+  url: string
+  /** Citations from search-capable probes: the search-visibility measure. */
+  search: number
+  /** Citations from non-search probes: the model linked from memory. */
+  non_search: number
+  /** Citations from rows recorded before the classifier split. */
+  legacy: number
 }
 
 export function isClassifiedRow(r: AggRow): boolean {
@@ -99,24 +120,52 @@ export function aggregateBySearchCapability(rows: AggRow[]): {
 }
 
 export function aggregateByPrompt(rows: AggRow[]): PromptStats[] {
-  const map = new Map<string, PromptStats>()
+  const map = new Map<string, { prompt_id: string; prompt: string; category: string; search: DimensionCounts; non_search: DimensionCounts; legacy_probes: number }>()
   for (const r of rows) {
     if (r.error) continue
     const m = map.get(r.prompt_id) ?? {
       prompt_id: r.prompt_id,
       prompt: r.prompt,
       category: r.prompt_category ?? "",
+      search: emptyCounts(),
+      non_search: emptyCounts(),
       legacy_probes: 0,
-      rate: 0,
-      ...emptyCounts(),
     }
     if (!isClassifiedRow(r)) m.legacy_probes++
-    else addRow(m, r)
+    else addRow(r.search_capable ? m.search : m.non_search, r)
     map.set(r.prompt_id, m)
   }
   return Array.from(map.values())
-    .map((m) => ({ ...m, rate: rate(m) }))
-    .sort((a, b) => b.rate - a.rate || b.brand_mentions - a.brand_mentions || a.prompt_id.localeCompare(b.prompt_id))
+    .map((m) => ({
+      ...m,
+      search: { ...m.search, rate: rate(m.search) },
+      non_search: { ...m.non_search, rate: rate(m.non_search) },
+    }))
+    .sort(
+      (a, b) =>
+        b.search.rate - a.search.rate ||
+        b.non_search.rate - a.non_search.rate ||
+        b.non_search.brand_mentions - a.non_search.brand_mentions ||
+        a.prompt_id.localeCompare(b.prompt_id)
+    )
+}
+
+/** Cited URLs with counts labelled by capability; never one pooled number. */
+export function aggregateByUrl(rows: Array<AggRow & { cited_urls?: string[] }>): UrlCounts[] {
+  const map = new Map<string, UrlCounts>()
+  for (const r of rows) {
+    if (r.error) continue
+    for (const url of r.cited_urls ?? []) {
+      const m = map.get(url) ?? { url, search: 0, non_search: 0, legacy: 0 }
+      if (!isClassifiedRow(r)) m.legacy++
+      else if (r.search_capable) m.search++
+      else m.non_search++
+      map.set(url, m)
+    }
+  }
+  return Array.from(map.values()).sort(
+    (a, b) => b.search - a.search || b.non_search - a.non_search || b.legacy - a.legacy || a.url.localeCompare(b.url)
+  )
 }
 
 function rate(c: DimensionCounts): number {

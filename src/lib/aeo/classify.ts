@@ -25,6 +25,13 @@ export interface ClassifyConfig {
   bookTitles: string[]
   /** Bare host without "www." (e.g. "mayaallan.com"). */
   siteHost: string
+  /**
+   * Origin every same-site citation is rewritten to (e.g.
+   * "https://www.mayaallan.com"), so https/http, www/apex, trailing-slash and
+   * fragment variants of one page count as one page. Defaults to
+   * "https://www." + siteHost.
+   */
+  canonicalOrigin?: string
 }
 
 export interface ClassifyInput {
@@ -37,7 +44,7 @@ export interface Classification {
   brand_mention: boolean
   domain_reference: boolean
   source_citation: boolean
-  /** Normalized URLs under the site, from text and structured citations, de-duplicated. */
+  /** Canonical same-site URLs (one origin, no trailing slash, no fragment), de-duplicated. */
   cited_urls: string[]
   /** Fine-grained flags: author_name, book_title, domain, page_url, structured_citation. */
   mention_types: string[]
@@ -51,11 +58,12 @@ export function classifyResponse(input: ClassifyInput, cfg: ClassifyConfig): Cla
   const content = input.content ?? ""
   const lowered = content.toLowerCase()
   const siteHost = cfg.siteHost.toLowerCase().replace(/^www\./, "")
+  const origin = (cfg.canonicalOrigin ?? `https://www.${siteHost}`).replace(/\/+$/, "")
   const types = new Set<string>()
   const urls: string[] = []
   const addUrl = (u: string) => {
-    const clean = u.replace(/[).,;\]]+$/, "")
-    if (!urls.includes(clean)) urls.push(clean)
+    const canonical = canonicalizeSiteUrl(u, origin)
+    if (canonical && !urls.includes(canonical)) urls.push(canonical)
   }
 
   // Source citations from the text.
@@ -122,6 +130,23 @@ export function classifyResponse(input: ClassifyInput, cfg: ClassifyConfig): Cla
     mention_types: Array.from(types),
     excerpt,
   }
+}
+
+/**
+ * Rewrite a same-site URL to one canonical form: the configured origin, the
+ * path without a trailing slash (root stays "/"), the query string kept,
+ * the fragment dropped, trailing punctuation from prose stripped.
+ */
+export function canonicalizeSiteUrl(raw: string, origin: string): string | null {
+  const cleaned = raw.replace(/[).,;\]]+$/, "")
+  let u: URL
+  try {
+    u = new URL(cleaned)
+  } catch {
+    return null
+  }
+  const path = u.pathname.length > 1 ? u.pathname.replace(/\/+$/, "") : "/"
+  return `${origin}${path}${u.search}`
 }
 
 function hostOf(u: string): string | null {

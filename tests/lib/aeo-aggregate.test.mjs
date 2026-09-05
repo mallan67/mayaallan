@@ -11,7 +11,7 @@
  */
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { aggregateByEngine, aggregateBySearchCapability, aggregateByPrompt } from "../../src/lib/aeo/aggregate.ts"
+import { aggregateByEngine, aggregateBySearchCapability, aggregateByPrompt, aggregateByUrl } from "../../src/lib/aeo/aggregate.ts"
 
 const v2 = (over) => ({
   engine: "chatgpt", prompt: "p", prompt_id: "p1", prompt_category: "c", error: null,
@@ -74,18 +74,50 @@ test("aggregateBySearchCapability keeps search-capable and non-search engines ap
   assert.equal(s.legacy_probes, 1)
 })
 
-test("aggregateByPrompt ranks by source citations, not by any mention", () => {
+test("aggregateByPrompt never combines search-capable and non-search rates", () => {
   const rows = [
-    v2({ prompt_id: "a", prompt: "A", brand_mention: true }),
-    v2({ prompt_id: "a", prompt: "A", brand_mention: true }),
-    v2({ prompt_id: "b", prompt: "B", source_citation: true, was_cited: true }),
-    v2({ prompt_id: "b", prompt: "B" }),
+    v2({ prompt_id: "a", prompt: "A", engine: "perplexity", search_capable: true, source_citation: true, was_cited: true }),
+    v2({ prompt_id: "a", prompt: "A", engine: "claude", search_capable: false }),
+    v2({ prompt_id: "a", prompt: "A", engine: "chatgpt", search_capable: false }),
+    v2({ prompt_id: "a", prompt: "A", engine: "gemini", search_capable: false }),
+  ]
+  const [a] = aggregateByPrompt(rows)
+  assert.equal(a.prompt_id, "a")
+  assert.deepEqual(a.search, { total: 1, brand_mentions: 0, domain_references: 0, source_citations: 1, rate: 100 })
+  assert.deepEqual(a.non_search, { total: 3, brand_mentions: 0, domain_references: 0, source_citations: 0, rate: 0 })
+  assert.equal("rate" in a, false, "no combined rate field may exist")
+  assert.equal("total" in a, false, "no combined total field may exist")
+})
+
+test("aggregateByPrompt ranks by the search-capable citation rate, then non-search, and keeps brand mentions separate", () => {
+  const rows = [
+    v2({ prompt_id: "a", prompt: "A", engine: "claude", search_capable: false, brand_mention: true }),
+    v2({ prompt_id: "a", prompt: "A", engine: "chatgpt", search_capable: false, brand_mention: true }),
+    v2({ prompt_id: "b", prompt: "B", engine: "perplexity", search_capable: true, source_citation: true, was_cited: true }),
+    v2({ prompt_id: "b", prompt: "B", engine: "claude", search_capable: false }),
+    legacy({ prompt_id: "b", prompt: "B" }),
   ]
   const ranked = aggregateByPrompt(rows)
   assert.equal(ranked[0].prompt_id, "b")
-  assert.equal(ranked[0].source_citations, 1)
-  assert.equal(ranked[0].brand_mentions, 0)
+  assert.equal(ranked[0].search.rate, 100)
+  assert.equal(ranked[0].non_search.source_citations, 0)
+  assert.equal(ranked[0].legacy_probes, 1)
   assert.equal(ranked[1].prompt_id, "a")
-  assert.equal(ranked[1].source_citations, 0)
-  assert.equal(ranked[1].brand_mentions, 2)
+  assert.equal(ranked[1].search.total, 0)
+  assert.equal(ranked[1].non_search.brand_mentions, 2)
+  assert.equal(ranked[1].non_search.source_citations, 0)
+})
+
+test("aggregateByUrl labels counts by capability and keeps legacy separate", () => {
+  const u = "https://www.mayaallan.com/faq"
+  const rows = [
+    v2({ engine: "perplexity", search_capable: true, source_citation: true, was_cited: true, cited_urls: [u] }),
+    v2({ engine: "perplexity", search_capable: true, source_citation: true, was_cited: true, cited_urls: [u] }),
+    v2({ engine: "claude", search_capable: false, source_citation: true, was_cited: true, cited_urls: [u] }),
+    legacy({ cited_urls: [u] }),
+    v2({ engine: "perplexity", search_capable: true, source_citation: true, was_cited: true, cited_urls: ["https://www.mayaallan.com/glossary"] }),
+  ]
+  const byUrl = aggregateByUrl(rows)
+  assert.deepEqual(byUrl[0], { url: u, search: 2, non_search: 1, legacy: 1 })
+  assert.deepEqual(byUrl[1], { url: "https://www.mayaallan.com/glossary", search: 1, non_search: 0, legacy: 0 })
 })

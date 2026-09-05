@@ -18,8 +18,11 @@ const SITE_HOST = new URL(SITE_URL).host.replace(/^www\./, "")
 
 export const CLASSIFY_CONFIG: ClassifyConfig = {
   authorName: AUTHOR_NAME,
-  bookTitles: ["Psilocybin Integration Guide", "Psilocybin Integration"],
+  // Only the distinctive full title. "Psilocybin integration" on its own is
+  // the name of the topic and would count ordinary sentences as brand mentions.
+  bookTitles: ["Psilocybin Integration Guide"],
   siteHost: SITE_HOST,
+  canonicalOrigin: new URL(SITE_URL).origin,
 }
 
 export function classifyEngineResponse(input: ClassifyInput): Classification {
