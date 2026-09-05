@@ -10,6 +10,7 @@ import { GatedAnalytics, GatedMarketing } from "@/components/AnalyticsGated"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structured-data"
 import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL, SITE_SEO_DESCRIPTION } from "@/lib/identity"
+import { iconMimeTypeFromUrl } from "@/lib/icon-mime"
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -61,10 +62,13 @@ export async function generateMetadata(): Promise<Metadata> {
   // in <meta description>, OpenGraph, or Twitter cards.
   const description = SITE_SEO_DESCRIPTION
 
-  // Build icons array - use custom icon if available, otherwise use defaults
+  // Build icons array - use custom icon if available, otherwise use defaults.
+  // The admin-uploaded icon may be JPEG/PNG/SVG/…: derive the MIME type from
+  // the stored URL, or declare none rather than a false one.
+  const siteIconType = settings?.siteIconUrl ? iconMimeTypeFromUrl(settings.siteIconUrl) : undefined
   const icons: Metadata["icons"] = {
     icon: settings?.siteIconUrl
-      ? [{ url: settings.siteIconUrl, type: "image/png" }]
+      ? [{ url: settings.siteIconUrl, ...(siteIconType ? { type: siteIconType } : {}) }]
       : [
           { url: "/icon.svg", type: "image/svg+xml" },
           { url: "/icon-light-32x32.png", sizes: "32x32", type: "image/png" },

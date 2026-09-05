@@ -78,7 +78,9 @@ const SECURITY_HEADERS = [
       "magnetometer=()",
       "microphone=()",
       "midi=()",
-      "payment=(self https://*.paypal.com)",
+      // Allowlist origins must be double-quoted (Structured Field syntax);
+      // an unquoted origin is a parse error and the delegation never applies.
+      'payment=(self "https://*.paypal.com")',
       "picture-in-picture=()",
       "sync-xhr=(self)",
       "usb=()",

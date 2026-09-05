@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server"
+import { NextResponse, after } from "next/server"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { runAfterResponse } from "@/lib/after-response"
 import nodemailer from "nodemailer"
 import { z } from "zod"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
@@ -102,45 +103,53 @@ export async function POST(request: Request) {
       console.error("[subscribe] tracking failed:", trackErr)
     }
 
-    // Send emails asynchronously (don't await - return response immediately)
+    // Operator notification is sent AFTER the response via the platform
+    // completion mechanism (`after()` → Vercel waitUntil): the response still
+    // returns immediately, but the function is kept alive until the send
+    // settles instead of possibly abandoning an un-awaited promise.
     if (transporter) {
       const recipient = resolveOperatorRecipient("newsletter")
 
       // Notification to operator. Failure is alerted (dedup'd) so SMTP
       // credential rot doesn't silently drop signups.
-      transporter.sendMail({
-        from: `"Website Newsletter" <${process.env.SMTP_USER}>`,
-        to: recipient.email,
-        subject: "New Newsletter Subscriber",
-        html: `
+      runAfterResponse(
+        after,
+        () =>
+          transporter.sendMail({
+            from: `"Website Newsletter" <${process.env.SMTP_USER}>`,
+            to: recipient.email,
+            subject: "New Newsletter Subscriber",
+            html: `
           <h2>New Newsletter Subscriber</h2>
           <p>Someone just subscribed to your newsletter:</p>
           <p><strong>Email:</strong> ${escapeHtml(email)}</p>
         `,
-        replyTo: email,
-      }).catch(async (err) => {
-        safeLogError("subscribe.notify-smtp-failed", {
-          subscriberDomain: emailDomain(email),
-          err: errorMessage(err),
-        })
-        await alertAdmin({
-          severity: "error",
-          subject: "SMTP send failed: newsletter signup notification",
-          body:
-            "A newsletter signup landed in the database but the operator " +
-            "notification email could not be sent. The subscriber row is still " +
-            "saved. Verify Porkbun SMTP credentials and connectivity.",
-          // PII rule (d01200b): no full subscriber email in alert payloads.
-          // Domain-only is enough for triage; admin can look up the row by
-          // signup time if a specific user follow-up is needed.
-          details: {
+            replyTo: email,
+          }),
+        async (err) => {
+          safeLogError("subscribe.notify-smtp-failed", {
             subscriberDomain: emailDomain(email),
-            recipientSource: recipient.source,
-            errorMessage: err?.message ?? String(err),
-          },
-          dedupKey: "smtp:subscribe-notification-failed",
-        })
-      })
+            err: errorMessage(err),
+          })
+          await alertAdmin({
+            severity: "error",
+            subject: "SMTP send failed: newsletter signup notification",
+            body:
+              "A newsletter signup landed in the database but the operator " +
+              "notification email could not be sent. The subscriber row is still " +
+              "saved. Verify Porkbun SMTP credentials and connectivity.",
+            // PII rule (d01200b): no full subscriber email in alert payloads.
+            // Domain-only is enough for triage; admin can look up the row by
+            // signup time if a specific user follow-up is needed.
+            details: {
+              subscriberDomain: emailDomain(email),
+              recipientSource: recipient.source,
+              errorMessage: errorMessage(err),
+            },
+            dedupKey: "smtp:subscribe-notification-failed",
+          })
+        },
+      )
 
       // Subscriber-facing welcome email intentionally disabled (issue #8): a
       // marketing-style welcome must carry a managed unsubscribe. It will be

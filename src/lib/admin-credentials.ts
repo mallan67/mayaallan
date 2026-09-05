@@ -42,6 +42,20 @@ async function readRow(): Promise<AdminAuthRow | null> {
 }
 
 /**
+ * Health-check helper: is a DB-managed admin password hash present?
+ * Returns "present" / "absent", or "unknown" when the admin_auth row could
+ * not be read (migration not run, DB unreachable). Never returns the hash.
+ */
+export async function hasDbManagedAdminCredential(): Promise<"present" | "absent" | "unknown"> {
+  try {
+    return (await readRow())?.password_hash ? "present" : "absent"
+  } catch (err) {
+    console.error("[admin-credentials] admin_auth read failed during health check:", err instanceof Error ? err.message : String(err))
+    return "unknown"
+  }
+}
+
+/**
  * Does `password` match the current admin credential?
  *
  * Checks the DB-stored hash first (if any), then the env-var hash. Returns

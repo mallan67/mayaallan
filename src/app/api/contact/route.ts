@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server"
+import { NextResponse, after } from "next/server"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { runAfterResponse } from "@/lib/after-response"
 import nodemailer from "nodemailer"
 import { z } from "zod"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
@@ -116,45 +117,54 @@ export async function POST(request: Request) {
       console.error("[contact] tracking failed:", trackErr)
     }
 
-    // Send email notification asynchronously (don't await - return response immediately)
+    // Send the operator notification AFTER the response, via the platform
+    // completion mechanism (`after()` → Vercel waitUntil). The response returns
+    // immediately, but the function is kept alive until the send settles — a
+    // bare, un-awaited sendMail() could be abandoned when the response ended.
+    // The DB row above remains the source of truth either way.
     if (transporter) {
       const recipient = resolveOperatorRecipient("contact")
-      transporter.sendMail({
-        from: `"Website Contact" <${process.env.SMTP_USER}>`,
-        to: recipient.email,
-        subject: `New Contact Form Submission from ${escapeHtml(data.name)}`,
-        html: `
+      runAfterResponse(
+        after,
+        () =>
+          transporter.sendMail({
+            from: `"Website Contact" <${process.env.SMTP_USER}>`,
+            to: recipient.email,
+            subject: `New Contact Form Submission from ${escapeHtml(data.name)}`,
+            html: `
           <h2>New Contact Form Submission</h2>
           <p><strong>Name:</strong> ${escapeHtml(data.name)}</p>
           <p><strong>Email:</strong> ${escapeHtml(data.email)}</p>
           <p><strong>Message:</strong></p>
           <p>${escapeHtml(data.message).replace(/\n/g, "<br>")}</p>
         `,
-        replyTo: data.email,
-      }).catch(async (err) => {
-        safeLogError("contact.smtp-send-failed", {
-          submitterDomain: emailDomain(data.email),
-          err: errorMessage(err),
-        })
-        await alertAdmin({
-          severity: "error",
-          subject: "SMTP send failed: contact form notification",
-          body:
-            "A contact form submission landed in the database but the notification " +
-            "email could not be sent. The submission row is still saved. Verify " +
-            "Porkbun SMTP credentials and connectivity, then read the submission " +
-            "in the admin panel.",
-          // PII rule (d01200b): no full submitter email in alert payloads.
-          // The submission row in supabase has the full email if Maya needs
-          // to follow up; the dedup key + timestamp lets her find it.
-          details: {
+            replyTo: data.email,
+          }),
+        async (err) => {
+          safeLogError("contact.smtp-send-failed", {
             submitterDomain: emailDomain(data.email),
-            recipientSource: recipient.source,
-            errorMessage: err?.message ?? String(err),
-          },
-          dedupKey: "smtp:contact-notification-failed",
-        })
-      })
+            err: errorMessage(err),
+          })
+          await alertAdmin({
+            severity: "error",
+            subject: "SMTP send failed: contact form notification",
+            body:
+              "A contact form submission landed in the database but the notification " +
+              "email could not be sent. The submission row is still saved. Verify " +
+              "Porkbun SMTP credentials and connectivity, then read the submission " +
+              "in the admin panel.",
+            // PII rule (d01200b): no full submitter email in alert payloads.
+            // The submission row in supabase has the full email if Maya needs
+            // to follow up; the dedup key + timestamp lets her find it.
+            details: {
+              submitterDomain: emailDomain(data.email),
+              recipientSource: recipient.source,
+              errorMessage: errorMessage(err),
+            },
+            dedupKey: "smtp:contact-notification-failed",
+          })
+        },
+      )
     }
 
     return NextResponse.json({ success: true, message: "Message sent successfully" })

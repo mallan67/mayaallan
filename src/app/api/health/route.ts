@@ -8,8 +8,15 @@
  *     variable; deeper API probes every 15 min would burn rate limits)
  *
  * Deep mode (`?deep=1`) is appropriate for manual debugging or ad-hoc audits:
- *   - Performs real API reachability for Resend (auth probe) and PayPal
- *     (OAuth token exchange). Not used by the cron monitor.
+ *   - Performs real API reachability for Resend (auth probe), PayPal
+ *     (OAuth token exchange), Blob and Upstash. Not used by the cron monitor.
+ *   - NOT public: requires an authenticated admin session (browser) or
+ *     `Authorization: Bearer <HEALTH_CHECK_SECRET>` (scripts). Anything else
+ *     gets a generic 401, so outsiders cannot trigger upstream probes at will.
+ *
+ * Admin check reflects the real login precedence (src/lib/admin-credentials.ts):
+ * a DB-managed password hash is sufficient on its own; ADMIN_PASSWORD_HASH is
+ * only the emergency fallback and its absence alone is not a failure.
  *
  * Response body never includes raw upstream error text — those can leak schema
  * names, constraint hints, internal endpoints. Errors are logged server-side
@@ -20,6 +27,9 @@ import { list } from "@vercel/blob"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { apiBase as paypalApiBase } from "@/lib/paypal"
 import { hasUpstash, probeUpstash } from "@/lib/upstash"
+import { isDeepHealthAuthorized, evaluateAdminHealth } from "@/lib/health-auth"
+import { isAdminAuthenticated } from "@/lib/adminAuth"
+import { hasDbManagedAdminCredential } from "@/lib/admin-credentials"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic" // never cache — must reflect real-time state
@@ -67,14 +77,14 @@ function checkPaypalEnv(): CheckResult {
   return { ok: false, error: `Missing: ${missing.join(", ")}` }
 }
 
-function checkAdminEnv(): CheckResult {
-  if (!process.env.ADMIN_EMAIL) {
-    return { ok: false, error: "ADMIN_EMAIL not configured" }
-  }
-  if (!process.env.ADMIN_PASSWORD_HASH) {
-    return { ok: false, error: "ADMIN_PASSWORD_HASH not configured" }
-  }
-  return { ok: true }
+// One indexed single-row read of admin_auth (cheap enough for the 15-minute
+// monitor). The decision itself is pure — see evaluateAdminHealth.
+async function checkAdmin(): Promise<CheckResult> {
+  return evaluateAdminHealth({
+    adminEmailConfigured: !!process.env.ADMIN_EMAIL,
+    dbCredential: await hasDbManagedAdminCredential(),
+    envHashConfigured: !!process.env.ADMIN_PASSWORD_HASH,
+  })
 }
 
 // Deep blob probe — env-presence is fragile (a revoked / rotated token won't
@@ -147,12 +157,34 @@ async function deepPaypal(): Promise<CheckResult> {
 export async function GET(req: NextRequest) {
   const deep = req.nextUrl.searchParams.get("deep") === "1"
 
+  // Deep probes hit third-party APIs — gate them. Cheap mode is untouched and
+  // stays public for the GitHub health-check workflow.
+  if (deep) {
+    let hasAdminSession = false
+    try {
+      hasAdminSession = await isAdminAuthenticated()
+    } catch {
+      hasAdminSession = false
+    }
+    const authorized = isDeepHealthAuthorized({
+      authorizationHeader: req.headers.get("authorization"),
+      secret: process.env.HEALTH_CHECK_SECRET,
+      hasAdminSession,
+    })
+    if (!authorized) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401, headers: { "Cache-Control": "no-store, no-cache, must-revalidate" } },
+      )
+    }
+  }
+
   const database = await checkDatabase()
   const resend = deep ? await deepResend() : checkEnvPresent("RESEND_API_KEY")
   const blob = deep ? await deepBlob() : checkEnvPresent("BLOB_READ_WRITE_TOKEN")
   const paypal = deep ? await deepPaypal() : checkPaypalEnv()
   const session = checkEnvPresent("SESSION_SECRET")
-  const admin = checkAdminEnv()
+  const admin = await checkAdmin()
   // Upstash: env-presence (cheap mode) or full PING (deep mode). Upstash is
   // REQUIRED in production for session-export staging — a !ok status here
   // means the /api/export flow will refuse to write (refusing the public-blob
