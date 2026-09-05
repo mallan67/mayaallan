@@ -159,59 +159,68 @@ export async function POST(request: Request) {
     }
 
     // issue #8: sync the subscriber to the Resend "Maya Allan Newsletter" Segment
-    // (marketing source of truth). Awaited normally — NOT Promise.race (which would
-    // not cancel the underlying request) and NOT raw HTTP. Nonfatal semantics:
-    //   - the Supabase row is already saved before this runs;
-    //   - a returned Resend error OR a thrown exception is handled here and we still
-    //     return success;
-    //   - the installed SDK's get options expose no AbortSignal and it directly
-    //     awaits fetch, so a hung Resend request cannot be cancelled — a
-    //     platform-level function timeout could still prevent the HTTP success
-    //     response (the signup is already persisted regardless);
+    // (marketing source of truth). Post-response work, registered as its OWN
+    // after() task — separate from the SMTP notification above — so:
+    //   - the visitor is never blocked on Resend once the Supabase row is saved;
+    //   - Next starts after() callbacks through an unbounded-concurrency queue,
+    //     so the notification and the sync begin together and a Resend stall
+    //     (the SDK exposes no AbortSignal; a hung request runs to the platform
+    //     timeout) cannot keep the notification from starting — previously the
+    //     awaited sync sat between the notification's registration and the
+    //     response, so a stall meant the response never closed and after()
+    //     never ran (Codex review on #47);
     //   - the live route makes ONE attempt per SDK op (no withRateLimit / retry
-    //     loop), which bounds added latency.
-    // This route is the single alerting layer for signup-time sync failures.
-    try {
-      const sync = await syncSubscriberToResend(email)
-      if (sync.status === "error") {
+    //     loop).
+    // Outcomes and alerts are unchanged: returned error → dedup'd error alert;
+    // noop-no-segment-id → dedup'd warning; noop-no-api-key → nothing (already
+    // logged inside the helper); a thrown exception → the SAME sync-failure
+    // dedup key via the wrapper's onError. This route remains the single
+    // alerting layer for signup-time sync failures.
+    runAfterResponse(
+      after,
+      async () => {
+        const sync = await syncSubscriberToResend(email)
+        if (sync.status === "error") {
+          await alertAdmin({
+            severity: "error",
+            subject: "Resend newsletter sync failed for a signup",
+            body:
+              "A newsletter signup was saved to Supabase but syncing the contact to the " +
+              "Resend newsletter Segment failed. The subscriber is in the ledger; re-run " +
+              "the import script to reconcile.",
+            details: { subscriberDomain: emailDomain(email), status: sync.status, detail: "detail" in sync && typeof sync.detail === "string" ? sync.detail : null },
+            dedupKey: "resend:newsletter-sync-failed",
+          })
+        } else if (sync.status === "noop-no-segment-id") {
+          await alertAdmin({
+            severity: "warning",
+            subject: "Resend newsletter sync skipped: RESEND_NEWSLETTER_SEGMENT_ID not set",
+            body:
+              "RESEND_NEWSLETTER_SEGMENT_ID is not configured, so new signups are not being " +
+              "added to the Resend newsletter Segment. Set it in Vercel env.",
+            details: { subscriberDomain: emailDomain(email), status: sync.status },
+            dedupKey: "resend:newsletter-no-segment-id",
+          })
+        }
+        // noop-no-api-key is already logged inside the helper; alertAdmin needs that
+        // same key, so there is nothing to email.
+      },
+      async (syncErr) => {
+        // The helper is written not to throw, but if it ever does, route it through the
+        // SAME deduplicated sync-failure alert (not just console.error). Missing API key
+        // never reaches here — the helper returns noop-no-api-key instead of throwing.
+        console.error("[subscribe] resend newsletter sync threw:", syncErr)
         await alertAdmin({
           severity: "error",
           subject: "Resend newsletter sync failed for a signup",
           body:
-            "A newsletter signup was saved to Supabase but syncing the contact to the " +
-            "Resend newsletter Segment failed. The subscriber is in the ledger; re-run " +
-            "the import script to reconcile.",
-          details: { subscriberDomain: emailDomain(email), status: sync.status, detail: "detail" in sync && typeof sync.detail === "string" ? sync.detail : null },
+            "A newsletter signup was saved to Supabase but the Resend sync threw. The " +
+            "subscriber is in the ledger; re-run the import script to reconcile.",
+          details: { subscriberDomain: emailDomain(email), status: "threw", detail: errorMessage(syncErr) },
           dedupKey: "resend:newsletter-sync-failed",
         })
-      } else if (sync.status === "noop-no-segment-id") {
-        await alertAdmin({
-          severity: "warning",
-          subject: "Resend newsletter sync skipped: RESEND_NEWSLETTER_SEGMENT_ID not set",
-          body:
-            "RESEND_NEWSLETTER_SEGMENT_ID is not configured, so new signups are not being " +
-            "added to the Resend newsletter Segment. Set it in Vercel env.",
-          details: { subscriberDomain: emailDomain(email), status: sync.status },
-          dedupKey: "resend:newsletter-no-segment-id",
-        })
-      }
-      // noop-no-api-key is already logged inside the helper; alertAdmin needs that
-      // same key, so there is nothing to email.
-    } catch (syncErr) {
-      // The helper is written not to throw, but if it ever does, route it through the
-      // SAME deduplicated sync-failure alert (not just console.error). Missing API key
-      // never reaches here — the helper returns noop-no-api-key instead of throwing.
-      console.error("[subscribe] resend newsletter sync threw:", syncErr)
-      await alertAdmin({
-        severity: "error",
-        subject: "Resend newsletter sync failed for a signup",
-        body:
-          "A newsletter signup was saved to Supabase but the Resend sync threw. The " +
-          "subscriber is in the ledger; re-run the import script to reconcile.",
-        details: { subscriberDomain: emailDomain(email), status: "threw", detail: errorMessage(syncErr) },
-        dedupKey: "resend:newsletter-sync-failed",
-      })
-    }
+      },
+    )
 
     return NextResponse.json({ success: true, message: "Subscribed successfully" })
   } catch (error) {

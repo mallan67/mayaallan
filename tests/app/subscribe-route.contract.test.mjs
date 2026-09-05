@@ -8,27 +8,55 @@ const src = readFileSync(
   "utf8",
 )
 
-test("route awaits the Resend newsletter sync", () => {
-  assert.match(src, /const\s+sync\s*=\s*await\s+syncSubscriberToResend\(\s*email\s*\)/)
+// Whitespace-insensitive view for structural assertions.
+const flat = src.replace(/\s+/g, " ")
+// The two post-response registrations, in source order.
+const wrapperStarts = [...flat.matchAll(/runAfterResponse\( ?after,/g)].map((m) => m.index)
+const smtpBlock = flat.slice(wrapperStarts[0] ?? 0, wrapperStarts[1] ?? flat.length)
+const syncBlock = flat.slice(wrapperStarts[1] ?? flat.length, flat.indexOf("success: true", wrapperStarts[1] ?? 0))
+
+test("the Resend sync is awaited ONLY inside post-response work, never in the request path", () => {
+  // Every call site is `await`ed (no dangling promise) …
+  const calls = [...src.matchAll(/syncSubscriberToResend\(/g)].filter((m) => !/import/.test(src.slice(Math.max(0, m.index - 60), m.index)))
+  assert.ok(calls.length >= 1, "a sync call exists")
+  for (const m of calls) assert.match(src.slice(m.index - 6, m.index), /await $/, "sync call is awaited")
+  // … and the awaiting arrow is the work handed to runAfterResponse(after, …).
+  assert.match(flat, /runAfterResponse\( ?after, ?async \(\) => \{ const sync = await syncSubscriberToResend\(email\)/)
+  // Nothing between the last registration and the success response awaits it.
+  const lastWrapper = wrapperStarts[wrapperStarts.length - 1]
+  const tail = flat.slice(lastWrapper, flat.indexOf("success: true", lastWrapper))
+  assert.equal((tail.match(/runAfterResponse\(/g) || []).length, 1, "sync wrapper is the last registration")
+  // The single awaited call lives inside the second registration's block —
+  // i.e. after the wrapper starts, never in the handler body before it.
+  const syncCalls = [...flat.matchAll(/const sync = await syncSubscriberToResend\(email\)/g)].map((m) => m.index)
+  assert.equal(syncCalls.length, 1, "exactly one awaited sync call")
+  assert.ok(syncCalls[0] > wrapperStarts[1], "the awaited sync call is inside the post-response registration, not before it")
 })
 
-test("sync sits in its OWN try/catch and the success response follows that catch (nonfatal)", () => {
-  const call = src.indexOf("const sync = await syncSubscriberToResend(email)")
-  assert.ok(call > -1, "sync call present")
-  const tryIdx = src.lastIndexOf("try {", call)
-  const catchIdx = src.indexOf("catch (syncErr)", call)
-  const successIdx = src.indexOf("success: true", catchIdx)
-  assert.ok(tryIdx > -1 && tryIdx < call, "dedicated try begins before the sync call")
-  assert.ok(catchIdx > call, "dedicated catch (syncErr) follows the sync call")
-  assert.ok(successIdx > catchIdx, "success response follows the sync catch")
+test("sync outcomes are preserved inside the work function; the throw path is the wrapper's onError", () => {
+  assert.match(syncBlock, /sync\.status === "error"/)
+  assert.match(syncBlock, /sync\.status === "noop-no-segment-id"/)
+  assert.match(syncBlock, /noop-no-api-key/)
+  assert.match(syncBlock, /resend:newsletter-no-segment-id/)
+  assert.equal((syncBlock.match(/resend:newsletter-sync-failed/g) || []).length, 2, "returned-error alert AND thrown-exception alert keep the same dedup key")
+  assert.match(syncBlock, /status: "threw"/)
+  assert.match(syncBlock, /resend newsletter sync threw/)
 })
 
-test("the sync-throw catch routes to the deduplicated sync-failure alert (not only console.error)", () => {
-  const catchIdx = src.indexOf("catch (syncErr)")
-  const successIdx = src.indexOf("success: true", catchIdx)
-  const region = src.slice(catchIdx, successIdx)
-  assert.match(region, /alertAdmin\(/)
-  assert.match(region, /resend:newsletter-sync-failed/)
+test("Supabase upsert is awaited BEFORE any post-response work is registered, and success follows both", () => {
+  const upsert = flat.indexOf("await supabaseAdmin .from(Tables.emailSubscribers) .upsert(")
+  assert.ok(upsert > -1, "awaited upsert present")
+  assert.equal(wrapperStarts.length, 2, "exactly two post-response registrations (SMTP notification, Resend sync)")
+  assert.ok(upsert < wrapperStarts[0], "upsert precedes the first registration")
+  const success = flat.indexOf("success: true", wrapperStarts[1])
+  assert.ok(success > wrapperStarts[1], "success response follows the last registration")
+})
+
+test("SMTP notification and Resend sync are registered as SEPARATE tasks (neither nested in the other)", () => {
+  assert.match(smtpBlock, /transporter\.sendMail\(/)
+  assert.doesNotMatch(smtpBlock, /syncSubscriberToResend\(/)
+  assert.match(syncBlock, /syncSubscriberToResend\(/)
+  assert.doesNotMatch(syncBlock, /transporter\.sendMail\(/)
 })
 
 test("Supabase upsert keeps onConflict email + ignoreDuplicates (preserves unsubscribed_at)", () => {
@@ -55,18 +83,13 @@ test("imports after() from next/server and the runAfterResponse wrapper", () => 
   assert.match(src, /import\s*\{\s*runAfterResponse\s*\}\s*from\s*"@\/lib\/after-response"/)
 })
 
-// Whitespace-insensitive view for structural assertions.
-const flat = src.replace(/\s+/g, " ")
-
 test("the operator notification send is the work handed to runAfterResponse(after, ...)", () => {
   assert.match(flat, /runAfterResponse\( ?after, ?\(\) => transporter\.sendMail\(/)
 })
 
 test("no fire-and-forget: every sendMail is an arrow body inside the wrapper, never a statement", () => {
   const sends = [...flat.matchAll(/transporter\.sendMail\(/g)]
-  const wrappers = [...flat.matchAll(/runAfterResponse\( ?after,/g)]
-  assert.ok(sends.length >= 1, "a send exists")
-  assert.equal(sends.length, wrappers.length, "one wrapper per send")
+  assert.equal(sends.length, 1, "exactly one send")
   for (const m of sends) {
     const before = flat.slice(Math.max(0, m.index - 12), m.index)
     assert.match(before, /=> $/, `sendMail is an arrow-function body, not a statement: …${before}`)
@@ -79,11 +102,14 @@ test("notification failure logging and the deduplicated admin alert are preserve
   assert.match(src, /dedupKey:\s*"smtp:subscribe-notification-failed"/)
 })
 
-test("Resend sync remains awaited in-request (not moved into after())", () => {
-  const syncIdx = src.indexOf("const sync = await syncSubscriberToResend(email)")
-  const wrapperIdx = src.indexOf("runAfterResponse(")
-  assert.ok(syncIdx > -1 && wrapperIdx > -1)
-  assert.ok(wrapperIdx < syncIdx, "the notification wrapper is registered before the sync begins")
-  const successIdx = src.indexOf("success: true", syncIdx)
-  assert.equal(src.slice(syncIdx, successIdx).includes("runAfterResponse("), false, "the sync itself is not deferred")
+test("no bare fire-and-forget anywhere: every promise-returning call is awaited or is an arrow body handed to the wrapper", () => {
+  const calls = [...flat.matchAll(/(transporter\.sendMail|syncSubscriberToResend|alertAdmin)\(/g)]
+    .filter((m) => !/import /.test(flat.slice(Math.max(0, m.index - 40), m.index)))
+  assert.ok(calls.length >= 5, "the send, the sync and the alert calls are all present")
+  for (const m of calls) {
+    const before = flat.slice(Math.max(0, m.index - 8), m.index)
+    assert.match(before, /(await |=> )$/, `not fire-and-forget: …${before}${m[0]}`)
+  }
+  assert.doesNotMatch(src, /\)\s*\.catch\(/, "failure routing goes through runAfterResponse onError, not a detached .catch()")
+  assert.doesNotMatch(src, /void\s+(transporter|syncSubscriberToResend|alertAdmin)/)
 })
