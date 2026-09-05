@@ -258,11 +258,11 @@ export default async function BookPage({ params }: BookPageProps) {
     allowDirectSale: book.allowDirectSale,
   } as any)
 
-  // AEO: FAQ Schema for AI answer engines
+  // FAQPage JSON-LD — mirrors the visible book questions
   // Machine-facing summary, not the mutable sales blurb, drives the book FAQ.
   const faqSchema = generateFAQSchema(BOOK_FAQS(book.title, bookMachineSummary(book.slug, book.title)), bookUrl)
 
-  // AEO: Breadcrumb Schema for navigation context
+  // BreadcrumbList JSON-LD — page position in the site
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: SITE_URL },
     { name: "Books", url: `${SITE_URL}/books` },
@@ -334,14 +334,14 @@ export default async function BookPage({ params }: BookPageProps) {
           __html: jsonLdScript(bookSchema),
         }}
       />
-      {/* AEO: FAQ Schema for AI answer engines */}
+      {/* FAQPage JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: jsonLdScript(faqSchema),
         }}
       />
-      {/* AEO: Breadcrumb Schema */}
+      {/* BreadcrumbList JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

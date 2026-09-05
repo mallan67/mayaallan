@@ -3,28 +3,17 @@ import { jsonLdScript } from "@/lib/json-ld"
 import type { Metadata } from "next"
 import { loadGlossary, groupTermsByCategory } from "@/lib/glossary"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
-import {
-  generateDefinedTermSetSchema,
-  generateBreadcrumbSchema,
-  generateSpeakableWebPageSchema,
-} from "@/lib/structured-data"
+import { generateDefinedTermSetSchema, generateBreadcrumbSchema } from "@/lib/structured-data"
 
 // =============================================================================
-// /glossary — the canonical "what is X" reference page.
+// /glossary — the site's reference page for recurring terms.
 // =============================================================================
 // Why this page exists:
-//   When someone asks ChatGPT, Claude, Perplexity, or Google "what is ego
-//   dissolution", an AI engine surveys the web for the most authoritative
-//   short definition. DefinedTermSet schema is the explicit signal that says
-//   "this page defines these terms." With ~25 terms covering the high-volume
-//   psilocybin + integration vocabulary, this page becomes the citation
-//   target across the entire vertical.
-//
-// Why not just a long article:
-//   AI engines reward structure. A page that says "here are 25 distinct
-//   defined terms" with a DefinedTermSet schema gets cited at ~3-5x the
-//   rate of an unstructured article on the same topic, per recent studies
-//   of AI-search citation patterns.
+//   Terms like "ego dissolution" or "set and setting" come up across the
+//   scenarios, blog, and book. One page with short, general definitions gives
+//   those pages a stable place to link to and gives readers a plain-language
+//   reference. DefinedTermSet JSON-LD describes the page as a set of defined
+//   terms, each with its own anchor.
 //
 // Content discipline:
 //   Definitions are general — drawn from established scientific and cultural
@@ -77,14 +66,6 @@ export default async function GlossaryPage() {
     { name: "Glossary", url },
   ])
 
-  // Speakable: voice assistants read the term + first sentence of each definition.
-  const speakableSchema = generateSpeakableWebPageSchema(
-    url,
-    data.title,
-    data.description,
-    [".glossary-definition", "h1", "h2", "dt"]
-  )
-
   // Quick lookup: termId → display name (used by relatedTerms cross-links).
   const termIndex = new Map(data.terms.map((t) => [t.id, t.term]))
 
@@ -92,7 +73,6 @@ export default async function GlossaryPage() {
     <div className="max-w-5xl mx-auto px-4 py-10 md:py-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(definedTermSetSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(speakableSchema) }} />
 
       <nav className="text-sm text-slate-500 mb-6" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-slate-700">Home</Link>

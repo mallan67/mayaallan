@@ -7,10 +7,9 @@ import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer"
 // User picks a journey phase + intention; the PDF includes phase-specific
 // daily prompts, blank space for handwriting, and book attribution.
 //
-// Why: free, useful, branded downloadable resources earn links from forums,
-// Reddit threads, Substacks, retreat-center resource pages, integration
-// circles — exactly the off-site mentions the AEO research shows matter
-// 3x more than backlinks for AI citation.
+// Why: a free, useful, branded downloadable resource is something forums,
+// newsletters, retreat-center resource pages, and integration circles can
+// link to and share — off-site mentions the site otherwise has few of.
 // =============================================================================
 
 export type JourneyPhase = "preparation" | "journey" | "integration" | "shadow-work"

@@ -115,7 +115,7 @@ export default async function BlogPostPage({ params }: { params: Params }) {
             rehypePlugins={[rehypeSlug]}
             components={{
               // Demote any markdown <h1> to <h2> — the page header already has the title <h1>.
-              // Two <h1>s on a page is an SEO/AEO violation and breaks heading hierarchy for SR users.
+              // Two <h1>s on a page is an SEO problem and breaks heading hierarchy for screen-reader users.
               h1: (props) => <h2 {...props} />,
             }}
           >

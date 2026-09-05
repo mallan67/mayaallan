@@ -15,9 +15,8 @@ import { generateBreadcrumbSchema, generateFAQSchema } from "@/lib/structured-da
 //   "free integration journal pdf"
 //   "post-mushroom journey reflection prompts"
 //
-// Schema: Article + FAQPage + Breadcrumb + the tool is markup as a
-// SoftwareApplication so it's eligible for the "free tool" rich result
-// in some search engines.
+// Schema: Article + FAQPage + Breadcrumb, plus SoftwareApplication describing
+// the tool itself.
 // =============================================================================
 
 const URL_PATH = `${SITE_URL}/integration-journal`

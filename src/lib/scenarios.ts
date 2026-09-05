@@ -3,7 +3,7 @@ import path from "node:path"
 import matter from "gray-matter"
 
 // =============================================================================
-// Scenarios — the AI-citation-optimized landing pages.
+// Scenarios — one markdown file per journey scenario page.
 // =============================================================================
 // One markdown file per scenario in content/scenarios/. The frontmatter is
 // intentionally rich because every field feeds JSON-LD (FAQ, HowTo, Article)
@@ -33,13 +33,13 @@ import matter from "gray-matter"
 //
 //   bookExcerpt:     Optional book chapter/scenario this is adapted from.
 //
-//   navigation:      Optional array of "what to do" steps. Each step becomes
-//                    a HowTo schema step + renders as a numbered list.
-//                    Steps should be ACTIONABLE.
+//   navigation:      Optional array of "what to do" steps. Renders as a
+//                    numbered list (no HowTo JSON-LD). Steps should be
+//                    ACTIONABLE.
 //
-//   faqs:            Optional array of related Q&A. Becomes FAQPage schema +
-//                    accordion at bottom of page. Aim for 4-8 questions
-//                    that match real searches.
+//   faqs:            Optional array of related Q&A. Renders as an accordion
+//                    at the bottom of the page (no FAQPage JSON-LD). Aim for
+//                    4-8 questions that match real searches.
 //
 //   category:        One of: preparation, journey, integration, safety,
 //                    practitioners. Used for cross-linking related scenarios.

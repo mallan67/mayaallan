@@ -3,25 +3,16 @@ import { jsonLdScript } from "@/lib/json-ld"
 import type { Metadata } from "next"
 import { loadFaq, groupByCategory } from "@/lib/faq"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
-import {
-  generateFAQSchema,
-  generateBreadcrumbSchema,
-  generateSpeakableWebPageSchema,
-} from "@/lib/structured-data"
+import { generateFAQSchema, generateBreadcrumbSchema } from "@/lib/structured-data"
 
 // =============================================================================
-// /faq — short, AI-citation-optimized answers to high-intent reader queries.
+// /faq — short answers to common reader questions about the book and its topics.
 // =============================================================================
-// Built specifically as a citation magnet for AI search engines (ChatGPT,
-// Claude, Perplexity, Gemini, Google AI Overviews). Each Q&A is structured
-// to maximize the chance an engine extracts the answer verbatim:
-//
-//   - Each H2 is the exact user query
-//   - The first 40-75 words of each answer carry the direct response
-//     (research: 44.2% of LLM citations come from the first 30% of text)
-//   - FAQPage schema lists every (question, answer) pair
-//   - .speakable class on every answer for voice assistant extraction
-//   - Anchor links per question so AI engines can deep-link a specific answer
+// Structure:
+//   - Each H2 is the question, phrased the way a reader would ask it
+//   - The opening sentences of each answer carry the direct response
+//   - FAQPage JSON-LD mirrors every visible (question, answer) pair
+//   - Anchor links per question for deep-linking
 //
 // Add/edit questions in content/faq.json — this page picks them up
 // automatically on next build (or on revalidate, every 5 min).
@@ -49,7 +40,9 @@ export default async function FaqPage() {
   const faq = await loadFaq()
   const groups = groupByCategory(faq)
 
-  // FAQPage schema — the most heavily-extracted schema type by AI engines.
+  // FAQPage JSON-LD mirrors the visible Q&A list. Google discontinued FAQ rich
+  // results from May 7, 2026; the markup stays as an accurate description of
+  // the page, nothing more.
   const faqSchema = generateFAQSchema(
     faq.questions.map((q) => ({ question: q.question, answer: q.answer })),
     `${SITE_URL}/faq`
@@ -60,18 +53,10 @@ export default async function FaqPage() {
     { name: "FAQ", url: `${SITE_URL}/faq` },
   ])
 
-  const speakableSchema = generateSpeakableWebPageSchema(
-    `${SITE_URL}/faq`,
-    faq.title,
-    faq.description,
-    [".faq-answer", "h1", "h2"]
-  )
-
   return (
     <div className="max-w-5xl mx-auto px-4 py-10 md:py-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(speakableSchema) }} />
 
       {/* Breadcrumb — uses the shortTitle so the trail reads cleanly */}
       <nav className="text-sm text-slate-500 mb-6" aria-label="Breadcrumb">

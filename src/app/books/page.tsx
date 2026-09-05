@@ -106,7 +106,7 @@ export default async function BooksPage() {
     dbErrorOccurred = true
   }
 
-  // AEO: Breadcrumb Schema for navigation context
+  // BreadcrumbList JSON-LD — page position in the site
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: SITE_URL },
     { name: "Books", url: `${SITE_URL}/books` },
@@ -115,7 +115,7 @@ export default async function BooksPage() {
   if (books.length === 0) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-16 text-center">
-        {/* AEO: Breadcrumb Schema */}
+        {/* BreadcrumbList JSON-LD */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -136,7 +136,7 @@ export default async function BooksPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 md:py-16">
-      {/* AEO: Breadcrumb Schema */}
+      {/* BreadcrumbList JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
