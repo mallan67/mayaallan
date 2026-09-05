@@ -6,33 +6,24 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { getScenario, listScenarios } from "@/lib/scenarios"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
-import {
-  generateArticleSchema,
-  generateFAQSchema,
-  generateBreadcrumbSchema,
-  generateSpeakableWebPageSchema,
-} from "@/lib/structured-data"
-// NOTE: HowTo schema removed May 2026 — Google deprecated HowTo rich results
-// in January 2026 and downstream measurement (Search/Atlas) shows a ~18-point
-// AI-citation penalty when present. The visible numbered "How to navigate"
-// list below is kept (it's useful UI); only the JSON-LD emission is dropped.
+import { generateArticleSchema, generateBreadcrumbSchema } from "@/lib/structured-data"
 
 // =============================================================================
-// /scenarios/[slug] — the AI-citation-optimized scenario page template.
+// /scenarios/[slug] — one page per journey scenario.
 // =============================================================================
-// Page layout is deliberately tuned for how AI search engines parse pages:
-//
-//   1. H1 with the exact user query (the "headline" AI engines quote).
-//   2. .speakable shortAnswer block — the 1-2 sentence direct answer.
-//      AI engines copy this verbatim. Voice assistants read this aloud.
-//   3. Long-form body content (the "why" + "what it feels like").
-//   4. Numbered navigation steps (becomes HowTo schema for rich results).
-//   5. FAQ accordion (becomes FAQPage schema — eligible for "People also ask").
+// Page structure:
+//   1. H1 — the scenario's question, phrased the way a reader would ask it.
+//   2. Short answer — a 1-2 sentence direct answer, visually set apart.
+//   3. Long-form body (markdown): why it happens, what it can feel like.
+//   4. Numbered "How to navigate" steps — visible list only. No HowTo JSON-LD:
+//      Google retired HowTo rich results in September 2023.
+//   5. "Related questions" accordion — visible content only. No FAQPage
+//      JSON-LD: Google discontinued FAQ rich results from May 7, 2026.
 //   6. Book CTA.
 //
-// Five JSON-LD schemas are emitted: Article, FAQPage, HowTo, BreadcrumbList,
-// WebPage (with SpeakableSpecification). Each one targets a different AI
-// engine consumption pattern.
+// JSON-LD emitted: Article (authorship, dates, series membership for the
+// editorial content) and BreadcrumbList (position in the site). The markup
+// describes the page; it is not expected to change rankings on its own.
 // =============================================================================
 
 export const revalidate = 300
@@ -46,31 +37,14 @@ export async function generateStaticParams() {
   return scenarios.map((s) => ({ slug: s.slug }))
 }
 
-/**
- * Append the current year to scenario titles. AEO research (Averi GEO
- * playbook, ConvertMate Benchmark 2026) found ~30% AI-citation lift when
- * pages include the year in their title. We auto-append based on
- * dateModified (or datePublished as fallback) so titles stay accurate as
- * content is refreshed — bumping dateModified yearly is how the lift
- * compounds.
- */
-function titleWithYear(scenarioTitle: string, dateModified?: string, datePublished?: string): string {
-  const refDate = dateModified ?? datePublished
-  if (!refDate) return scenarioTitle
-  const year = new Date(refDate).getFullYear()
-  if (!Number.isFinite(year)) return scenarioTitle
-  // Don't double-append if the title already includes the year.
-  if (scenarioTitle.includes(String(year))) return scenarioTitle
-  return `${scenarioTitle} (${year} guide)`
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   const scenario = await getScenario(slug)
   if (!scenario) return { title: "Scenario not found" }
 
   const url = `${SITE_URL}/scenarios/${slug}`
-  const titleForSearch = titleWithYear(scenario.title, scenario.dateModified, scenario.datePublished)
+  // Title is the scenario's own question, unmodified (no date suffixing).
+  const titleForSearch = scenario.title
 
   return {
     title: titleForSearch,
@@ -112,16 +86,9 @@ export default async function ScenarioPage({ params }: PageProps) {
   const url = `${SITE_URL}/scenarios/${slug}`
   const wordCount = scenario.body.split(/\s+/).filter(Boolean).length
 
-  // -------------------------------------------------------------------------
-  // Schema bundle — four JSON-LD blocks. Each one is consumed differently:
-  //   Article          → Google Discover, AI citation attribution
-  //   FAQPage          → "People also ask" + AI answer engines
-  //   BreadcrumbList   → SERP breadcrumb display
-  //   WebPage+Speakable → voice assistants (Alexa, Google Assistant)
-  //
-  // HowTo schema is intentionally NOT emitted (deprecated Jan 2026 — see
-  // import comment above).
-  // -------------------------------------------------------------------------
+  // JSON-LD: Article describes the editorial content (headline, author,
+  // dates, series membership); BreadcrumbList describes where the page sits
+  // in the site. Nothing else is emitted — see the header comment.
   const articleSchema = generateArticleSchema({
     headline: scenario.title,
     description: scenario.description,
@@ -136,34 +103,17 @@ export default async function ScenarioPage({ params }: PageProps) {
     },
   })
 
-  const faqSchema = scenario.faqs && scenario.faqs.length > 0
-    ? generateFAQSchema(scenario.faqs, url)
-    : null
-
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: SITE_URL },
     { name: "Scenarios", url: `${SITE_URL}/scenarios` },
     { name: scenario.title, url },
   ])
 
-  // Speakable points at .speakable + headers so voice assistants read the
-  // short answer + key headings aloud, not the whole page.
-  const speakableSchema = generateSpeakableWebPageSchema(
-    url,
-    scenario.title,
-    scenario.description,
-    [".speakable", "h1", "h2"]
-  )
-
   return (
     <article className="max-w-3xl mx-auto px-4 py-12 md:py-16">
-      {/* All schema in one block — each as its own <script> per spec */}
+      {/* JSON-LD — one <script> per node */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(articleSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(speakableSchema) }} />
-      {faqSchema && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(faqSchema) }} />
-      )}
 
       {/* Breadcrumb */}
       <nav className="text-sm text-slate-500 mb-6" aria-label="Breadcrumb">
@@ -183,18 +133,14 @@ export default async function ScenarioPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* H1 — the exact user query */}
+      {/* H1 — the scenario's question */}
       <h1 className="font-serif text-3xl md:text-4xl font-bold leading-tight text-slate-900">
         {scenario.title}
       </h1>
 
-      {/*
-        SHORT ANSWER — the single most important block on the page.
-        AI engines copy this verbatim. .speakable class is hooked by the
-        SpeakableSpecification schema for voice assistants.
-      */}
+      {/* Short answer — the direct 1-2 sentence response, set apart from the body. */}
       <div className="mt-6 p-5 border-l-4 border-blue-400 bg-blue-50/40 rounded-r-lg">
-        <p className="speakable text-base md:text-lg leading-relaxed text-slate-800 font-medium">
+        <p className="text-base md:text-lg leading-relaxed text-slate-800 font-medium">
           {scenario.shortAnswer}
         </p>
       </div>
@@ -240,7 +186,7 @@ export default async function ScenarioPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Navigation steps — becomes HowTo schema. Renders as numbered list. */}
+      {/* Navigation steps — visible numbered list (no HowTo schema). */}
       {scenario.navigation && scenario.navigation.length > 0 && (
         <section className="mt-12 pt-10 border-t border-slate-200">
           <h2 className="font-serif text-2xl font-semibold text-slate-900">
@@ -262,7 +208,7 @@ export default async function ScenarioPage({ params }: PageProps) {
         </section>
       )}
 
-      {/* FAQ — becomes FAQPage schema. Eligible for "People also ask". */}
+      {/* Related questions — visible accordion only; no FAQPage JSON-LD (see header). */}
       {scenario.faqs && scenario.faqs.length > 0 && (
         <section className="mt-12 pt-10 border-t border-slate-200">
           <h2 className="font-serif text-2xl font-semibold text-slate-900">
@@ -288,7 +234,7 @@ export default async function ScenarioPage({ params }: PageProps) {
           This is one of 40 scenarios
         </h2>
         <p className="text-slate-700 text-sm sm:text-base leading-relaxed mb-5">
-          <em>Psilocybin Integration Guide</em> walks through 40 real journey scenarios in depth — each with description, cause, navigation, lesson, and example. For practitioners, healers, facilitators, and solo journeyers.
+          <em>Psilocybin Integration Guide</em> walks through 40 real journey scenarios in depth — each with description, cause, navigation, lesson, and example. Written for anyone making sense of their own experience.
         </p>
         <Link
           href="/books/psilocybin-integration-guide"

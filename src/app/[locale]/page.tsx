@@ -30,7 +30,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${AUTHOR_NAME} — ${dict.home.heroTitle}`,
+    // Root layout title.template appends "| Maya Allan" — don't prefix the name too.
+    title: dict.home.heroTitle,
     description: dict.home.heroSubtitle,
     alternates: {
       canonical: url,

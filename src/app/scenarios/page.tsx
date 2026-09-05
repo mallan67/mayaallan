@@ -6,12 +6,11 @@ import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
 import { generateBreadcrumbSchema } from "@/lib/structured-data"
 
 // =============================================================================
-// /scenarios — the hub for the 40 AI-citation-optimized scenario pages.
+// /scenarios — the hub for the scenario pages.
 // =============================================================================
-// Each page targets one specific user query (e.g., "what does ego dissolution
-// feel like") and is structured for maximum citability by AI search engines.
-// This index page is the cluster landing page and is itself a hub-style page
-// Google + AI engines treat as the authoritative entry point for the cluster.
+// Each page answers one specific reader question (e.g., "what does ego
+// dissolution feel like"). This index is the cluster's landing page and the
+// canonical place that links to every published scenario.
 // =============================================================================
 
 export const revalidate = 300

@@ -15,7 +15,7 @@ export function Footer() {
               MAYA<span className="text-gold">ALLAN</span>
             </p>
             <p className="text-[0.88rem] text-white/70 max-w-[340px] leading-[1.7] mx-auto md:mx-0 font-serif italic">
-              Author, speaker, and wellness advocate. Writing about self-agency, inner clarity, and the practical work of coming home to yourself.
+              Author and educator. Writing about self-agency, inner clarity, and the practical work of coming home to yourself.
             </p>
           </div>
 

@@ -8,19 +8,17 @@ import { generateBreadcrumbSchema } from "@/lib/structured-data"
 import { SITE_URL } from "@/lib/identity"
 
 export const metadata: Metadata = {
-  title: "Books | Maya Allan",
-  description: "Integration guides for psilocybin and psychedelic experiences by Maya Allan. Essential reading for practitioners, healers, facilitators, guides, and solo journeyers seeking clarity and transformation.",
+  title: "Books",
+  description:
+    "Books by Maya Allan, author and educator. The Psilocybin Integration Guide offers non-clinical, educational frameworks for reflection, integration, and self-inquiry after meaningful or difficult experiences.",
   keywords: [
-    "psilocybin books",
-    "psychedelic integration books",
-    "mushroom guide books",
     "Maya Allan books",
-    "integration guides",
-    "practitioner resources",
-    "healer resources",
-    "facilitator guide",
-    "psychedelic therapy books",
-    "plant medicine books",
+    "Psilocybin Integration Guide",
+    "psilocybin integration book",
+    "psychedelic integration books",
+    "integration guide",
+    "post-journey reflection",
+    "self-inquiry",
   ],
   alternates: {
     canonical: "https://www.mayaallan.com/books",
@@ -108,7 +106,7 @@ export default async function BooksPage() {
     dbErrorOccurred = true
   }
 
-  // AEO: Breadcrumb Schema for navigation context
+  // BreadcrumbList JSON-LD — page position in the site
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: SITE_URL },
     { name: "Books", url: `${SITE_URL}/books` },
@@ -117,7 +115,7 @@ export default async function BooksPage() {
   if (books.length === 0) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-16 text-center">
-        {/* AEO: Breadcrumb Schema */}
+        {/* BreadcrumbList JSON-LD */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -138,7 +136,7 @@ export default async function BooksPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 md:py-16">
-      {/* AEO: Breadcrumb Schema */}
+      {/* BreadcrumbList JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

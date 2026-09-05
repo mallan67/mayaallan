@@ -15,9 +15,8 @@ import { generateBreadcrumbSchema, generateFAQSchema } from "@/lib/structured-da
 //   "free integration journal pdf"
 //   "post-mushroom journey reflection prompts"
 //
-// Schema: Article + FAQPage + Breadcrumb + the tool is markup as a
-// SoftwareApplication so it's eligible for the "free tool" rich result
-// in some search engines.
+// Schema: Article + FAQPage + Breadcrumb, plus SoftwareApplication describing
+// the tool itself.
 // =============================================================================
 
 const URL_PATH = `${SITE_URL}/integration-journal`
@@ -196,8 +195,8 @@ export default function IntegrationJournalPage() {
       {/* Light CTA */}
       <aside className="p-6 sm:p-8 rounded-2xl bg-amber-50/60 border border-amber-200/50">
         <p className="text-slate-700 leading-relaxed">
-          The journal is a free companion. The full method — 40 scenarios, detailed navigation,
-          frameworks for facilitators and solo journeyers — lives in <em>Psilocybin Integration
+          The journal is a free companion. The full method — 40 scenarios, each with detailed
+          navigation, whether you journeyed alone or with support — lives in <em>Psilocybin Integration
           Guide</em>.
         </p>
         <a

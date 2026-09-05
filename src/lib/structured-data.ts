@@ -17,8 +17,8 @@ export { SITE_URL }
 
 /**
  * Build the schema.org identifier[] array from AUTHOR_IDENTIFIERS.
- * Emits PropertyValue nodes that AI engines + Knowledge Graph use to
- * disambiguate Maya across data sources (ORCID, ISNI, Wikidata, etc).
+ * Emits PropertyValue nodes (ORCID, ISNI, Wikidata, etc.) so the Person
+ * entity can be matched against external identifier systems.
  */
 function authorIdentifierNodes() {
   if (AUTHOR_IDENTIFIERS.length === 0) return undefined
@@ -31,9 +31,10 @@ function authorIdentifierNodes() {
 }
 
 // =============================================================================
-// AEO (Answer Engine Optimization) Schemas
-// These schemas help AI-powered answer engines and voice assistants understand
-// and surface content from this site in search results and voice responses
+// Schema.org helpers
+// Each helper builds one JSON-LD node that describes visible page content.
+// Comments describe what the markup means. None of it promises rankings,
+// rich results, or citations.
 // =============================================================================
 
 export interface FAQItem {
@@ -42,8 +43,9 @@ export interface FAQItem {
 }
 
 /**
- * FAQ Schema for Answer Engine Optimization
- * Helps AI answer engines surface Q&A content directly in search results
+ * FAQPage — the visible question/answer pairs on a page, as schema.org nodes.
+ * Google discontinued FAQ rich results from May 7, 2026. Emit this only where
+ * a visible FAQ exists and the markup is an accurate description of it.
  */
 export function generateFAQSchema(faqs: FAQItem[], pageUrl?: string) {
   return {
@@ -62,12 +64,9 @@ export function generateFAQSchema(faqs: FAQItem[], pageUrl?: string) {
 }
 
 /**
- * DefinedTermSet schema — the canonical structure for glossary-style pages.
- * AI engines (Claude, ChatGPT, Perplexity) and Google use DefinedTerm to
- * recognize a page as the authoritative definition for a given concept.
- *
- * Each term renders as a DefinedTerm node with optional alternateName synonyms;
- * the set is keyed by the page URL so engines can deep-link to a specific term.
+ * DefinedTermSet — the schema.org structure for a glossary: a named set of
+ * DefinedTerm nodes, each with a name, optional alternate names, a definition,
+ * and an anchor URL on the page.
  */
 export interface DefinedTermInput {
   /** Stable id used as the anchor fragment (e.g. "ego-dissolution"). */
@@ -76,7 +75,7 @@ export interface DefinedTermInput {
   term: string
   /** Synonyms / alternative spellings. */
   alternateNames?: string[]
-  /** 50-150 word standalone definition (AI engines quote verbatim). */
+  /** 50-150 word standalone definition. */
   definition: string
 }
 
@@ -105,8 +104,8 @@ export function generateDefinedTermSetSchema(
 }
 
 /**
- * BreadcrumbList Schema for Navigation Context
- * Helps answer engines understand site hierarchy and navigation paths
+ * BreadcrumbList — the page's position in the site hierarchy. Google may show
+ * it as a breadcrumb trail in place of the URL in results.
  */
 export interface BreadcrumbItem {
   name: string
@@ -127,31 +126,9 @@ export function generateBreadcrumbSchema(items: BreadcrumbItem[]) {
 }
 
 /**
- * Speakable Schema for Voice Assistant Optimization
- * Indicates which sections are suitable for text-to-speech by voice assistants
- */
-export function generateSpeakableWebPageSchema(
-  pageUrl: string,
-  pageName: string,
-  description: string,
-  speakableCssSelectors: string[] = ["h1", "h2", ".speakable"]
-) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: pageName,
-    description,
-    url: pageUrl,
-    speakable: {
-      "@type": "SpeakableSpecification",
-      cssSelector: speakableCssSelectors,
-    },
-  }
-}
-
-/**
- * Article Schema for editorial content (scenarios, blog posts, essays)
- * Required for Google Discover + AI engine attribution.
+ * Article — editorial content (scenarios, blog posts, essays): headline,
+ * description, author, publisher, dates, optional series membership and
+ * citations.
  */
 export interface ArticleSchemaInput {
   headline: string
@@ -161,7 +138,7 @@ export interface ArticleSchemaInput {
   dateModified?: string // ISO 8601, defaults to datePublished
   image?: string | string[]
   keywords?: string[] | string
-  /** Word count helps Google estimate read time + content depth. */
+  /** Word count of the article body. */
   wordCount?: number
   /** Set when the page is part of a series/cluster (e.g., the 40-scenarios cluster). */
   isPartOf?: { name: string; url: string }
@@ -209,44 +186,9 @@ export function generateArticleSchema(input: ArticleSchemaInput, siteUrl = SITE_
   }
 }
 
-/**
- * HowTo Schema for Process/Guide Content
- * Useful for integration guides and instructional content
- */
-export interface HowToStep {
-  name: string
-  text: string
-  url?: string
-}
-
-export function generateHowToSchema(
-  name: string,
-  description: string,
-  steps: HowToStep[],
-  options?: {
-    totalTime?: string
-    image?: string
-  }
-) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "HowTo",
-    name,
-    description,
-    ...(options?.totalTime && { totalTime: options.totalTime }),
-    ...(options?.image && { image: options.image }),
-    step: steps.map((step, index) => ({
-      "@type": "HowToStep",
-      position: index + 1,
-      name: step.name,
-      text: step.text,
-      ...(step.url && { url: step.url }),
-    })),
-  }
-}
-
 // =============================================================================
-// Pre-defined FAQ Content for AEO
+// Pre-defined FAQ content (rendered visibly on /about and book pages, and
+// mirrored into their FAQPage JSON-LD)
 // =============================================================================
 
 export const AUTHOR_FAQS: FAQItem[] = [
@@ -323,14 +265,9 @@ export function generateWebSiteSchema(siteName = "Maya Allan", siteUrl = SITE_UR
       name: "Maya Allan",
       url: siteUrl,
     },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${siteUrl}/books?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
+    // No SearchAction: the site has no search endpoint, and Google retired the
+    // sitelinks search box. Advertising a /books?q= target that does nothing
+    // is misleading markup.
   }
 }
 

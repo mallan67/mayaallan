@@ -4,7 +4,7 @@ import { ResetChat } from "@/components/ResetChat"
 import { HeartPulse } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Free Nervous System Reset — Calm Anxiety, Release Tension & Regulate Your Body | Maya Allan",
+  title: "Free Nervous System Reset — Calm Anxiety, Release Tension & Regulate Your Body",
   description:
     "A free AI-guided somatic regulation tool to help you calm anxiety, release tension, and return to a grounded state. No signup required. Your body already knows how to regulate — this tool helps you practice it consciously.",
   alternates: {

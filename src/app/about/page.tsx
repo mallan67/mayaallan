@@ -10,7 +10,7 @@ import {
   generateBreadcrumbSchema,
   AUTHOR_FAQS,
 } from "@/lib/structured-data"
-import { SITE_URL } from "@/lib/identity"
+import { SITE_URL, AUTHOR_JOB_TITLE } from "@/lib/identity"
 
 // Cache author bio for 5 min (admin edits in Settings will revalidate
 // the page automatically when they save).
@@ -61,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const description = author?.authorBio
     ? truncateAtWord(author.authorBio, 155)
-    : "Learn more about Maya Allan — author, speaker, and wellness advocate dedicated to helping readers navigate transformation."
+    : "Learn more about Maya Allan — author and educator writing non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
   // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
   // Author photos may not be the correct aspect ratio for social sharing
   const imageUrl = `${SITE_URL}/opengraph-image`
@@ -103,14 +103,14 @@ export default async function AboutPage() {
   // Generate Author schema for SEO
   const authorSchema = generateAuthorSchema(
     SITE_URL,
-    author?.authorBio || "Maya Allan is an author and researcher exploring consciousness, integration, and self-agency through lived experience and inquiry.",
+    author?.authorBio || "Maya Allan is an author and educator exploring consciousness, integration, and self-agency through lived experience and inquiry.",
     author?.authorPhotoUrl ?? undefined,
   )
 
-  // AEO: FAQ Schema for AI answer engines
+  // FAQPage JSON-LD — mirrors the visible reader questions below
   const faqSchema = generateFAQSchema(AUTHOR_FAQS, `${SITE_URL}/about`)
 
-  // AEO: Breadcrumb Schema for navigation context
+  // BreadcrumbList JSON-LD — page position in the site
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: SITE_URL },
     { name: "About", url: `${SITE_URL}/about` },
@@ -125,14 +125,14 @@ export default async function AboutPage() {
           __html: jsonLdScript(authorSchema),
         }}
       />
-      {/* AEO: FAQ Schema for AI answer engines */}
+      {/* FAQPage JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: jsonLdScript(faqSchema),
         }}
       />
-      {/* AEO: Breadcrumb Schema */}
+      {/* BreadcrumbList JSON-LD */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -176,10 +176,10 @@ export default async function AboutPage() {
                 {author?.authorName || "Maya Allan"}
               </h1>
               <p className="text-[0.85rem] text-gold font-semibold tracking-[0.06em] uppercase mb-5">
-                Author &middot; Speaker &middot; Wellness Advocate
+                {AUTHOR_JOB_TITLE}
               </p>
               <p className="text-[1.05rem] text-charcoal-mid leading-[1.8] max-w-[540px]">
-                I believe deep inner clarity is a fundamental human birthright. My work starts with a simple conviction: no one can heal us but ourselves.
+                I believe deep inner clarity is a fundamental human birthright. My work starts with a simple conviction: no one can do this inner work for us.
               </p>
             </div>
           </div>
@@ -204,10 +204,10 @@ export default async function AboutPage() {
                 I believe deep inner clarity is a fundamental human birthright.
               </p>
               <p className="text-[1.05rem] text-charcoal-mid leading-[1.85] mb-5">
-                It&apos;s a capacity we all have — but it gets buried under inherited narratives, the pressure of who we&apos;re &ldquo;supposed&rdquo; to be, and a world that profits from our confusion. My work starts with a simple conviction: no one can heal us but ourselves.
+                It&apos;s a capacity we all have — but it gets buried under inherited narratives, the pressure of who we&apos;re &ldquo;supposed&rdquo; to be, and a world that profits from our confusion. My work starts with a simple conviction: no one can do this inner work for us.
               </p>
               <p className="text-[1.05rem] text-charcoal-mid leading-[1.85] mb-5">
-                I&apos;m not a guru, and I&apos;m not interested in being one. I&apos;m a writer who cares about practical tools over abstract theories. True healing is grounded work — self-knowledge, radical acceptance, and finally feeling at home in your own skin.
+                I&apos;m not a guru, and I&apos;m not interested in being one. I&apos;m a writer who cares about practical tools over abstract theories. This is grounded work — self-knowledge, radical acceptance, and finally feeling at home in your own skin.
               </p>
               <p className="text-[1.05rem] text-charcoal-mid leading-[1.85]">
                 My writing is for anyone who&apos;s tired of being told what to think. I offer structure and perspective to help you trust your own perception — and step fully into the authorship of your own life.
