@@ -21,6 +21,9 @@ interface RunSummary {
   enginesRun: string[]
   totalProbes: number
   citationHits: number
+  brandMentions?: number
+  domainReferences?: number
+  sourceCitations?: number
   errors: number
   blobPath?: string
   storageError?: string
@@ -103,7 +106,9 @@ export function RunNowButton() {
       {result && !error && (
         <div className="mt-3 p-3 rounded bg-green-50 border border-green-200 text-sm text-green-900">
           <strong>Done.</strong>{" "}
-          {result.citationHits} citation{result.citationHits === 1 ? "" : "s"} across{" "}
+          {result.sourceCitations ?? result.citationHits} source citation{(result.sourceCitations ?? result.citationHits) === 1 ? "" : "s"},{" "}
+          {result.brandMentions ?? 0} brand mention{result.brandMentions === 1 ? "" : "s"}, and{" "}
+          {result.domainReferences ?? 0} domain reference{result.domainReferences === 1 ? "" : "s"} across{" "}
           {result.totalProbes} probe{result.totalProbes === 1 ? "" : "s"}{" "}
           ({result.enginesRun.join(", ")}).
           {result.errors > 0 && (

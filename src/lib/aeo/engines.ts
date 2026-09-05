@@ -27,12 +27,33 @@ import { google } from "@ai-sdk/google"
 // Total ~$2.50/month if all four are enabled.
 // =============================================================================
 
+export type EngineName = "claude" | "chatgpt" | "perplexity" | "gemini"
+
 export interface EngineResponse {
-  engine: "claude" | "chatgpt" | "perplexity" | "gemini"
+  engine: EngineName
   content: string
   model: string
+  /**
+   * Whether this probe could consult the live web. The Claude, OpenAI and
+   * Gemini calls below are plain completions with no browsing or tool use, so
+   * they answer from training data; only Perplexity Sonar searches. A
+   * non-search response that names the site is a brand mention from memory,
+   * not evidence of what a consumer search product would show (issue #44).
+   */
+  searchCapable: boolean
+  /** Source URLs the engine returned separately from the text (Perplexity). */
+  citations?: string[]
   /** Set if the call failed. content will be empty. */
   error?: string
+}
+
+/** Which engines, as called here, can search the web. Gateway vs direct
+ *  transport does not change this; it is a property of the model call. */
+export const ENGINE_SEARCH_CAPABLE: Record<EngineName, boolean> = {
+  claude: false,
+  chatgpt: false,
+  perplexity: true,
+  gemini: false,
 }
 
 // -----------------------------------------------------------------------------
@@ -68,12 +89,13 @@ async function probeViaGateway(
       prompt,
       maxOutputTokens: 1024,
     })
-    return { engine: engineName, content: text ?? "", model: modelLabel }
+    return { engine: engineName, content: text ?? "", model: modelLabel, searchCapable: ENGINE_SEARCH_CAPABLE[engineName] }
   } catch (err) {
     return {
       engine: engineName,
       content: "",
       model: modelLabel,
+      searchCapable: ENGINE_SEARCH_CAPABLE[engineName],
       error: err instanceof Error ? err.message : String(err),
     }
   }
@@ -116,13 +138,13 @@ async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null>
       }),
     })
     if (!res.ok) {
-      return { engine: "claude", content: "", model, error: `HTTP ${res.status}: ${await res.text()}` }
+      return { engine: "claude", content: "", model, searchCapable: false, error: `HTTP ${res.status}: ${await res.text()}` }
     }
     const data = await res.json()
     const content = data?.content?.[0]?.text ?? ""
-    return { engine: "claude", content, model }
+    return { engine: "claude", content, model, searchCapable: false }
   } catch (err) {
-    return { engine: "claude", content: "", model, error: err instanceof Error ? err.message : String(err) }
+    return { engine: "claude", content: "", model, searchCapable: false, error: err instanceof Error ? err.message : String(err) }
   }
 }
 
@@ -155,13 +177,13 @@ async function queryChatGPTDirect(prompt: string): Promise<EngineResponse | null
       }),
     })
     if (!res.ok) {
-      return { engine: "chatgpt", content: "", model, error: `HTTP ${res.status}: ${await res.text()}` }
+      return { engine: "chatgpt", content: "", model, searchCapable: false, error: `HTTP ${res.status}: ${await res.text()}` }
     }
     const data = await res.json()
     const content = data?.choices?.[0]?.message?.content ?? ""
-    return { engine: "chatgpt", content, model }
+    return { engine: "chatgpt", content, model, searchCapable: false }
   } catch (err) {
-    return { engine: "chatgpt", content: "", model, error: err instanceof Error ? err.message : String(err) }
+    return { engine: "chatgpt", content: "", model, searchCapable: false, error: err instanceof Error ? err.message : String(err) }
   }
 }
 
@@ -196,17 +218,19 @@ async function queryPerplexityDirect(prompt: string): Promise<EngineResponse | n
       }),
     })
     if (!res.ok) {
-      return { engine: "perplexity", content: "", model, error: `HTTP ${res.status}: ${await res.text()}` }
+      return { engine: "perplexity", content: "", model, searchCapable: true, error: `HTTP ${res.status}: ${await res.text()}` }
     }
     const data = await res.json()
-    // Sonar returns citations as a separate field — concatenate so the
-    // detector sees them alongside the response body.
-    const content =
-      (data?.choices?.[0]?.message?.content ?? "") +
-      (Array.isArray(data?.citations) ? "\n\nCitations:\n" + data.citations.join("\n") : "")
-    return { engine: "perplexity", content, model }
+    // Sonar returns citations as a separate field. Keep them separate so the
+    // classifier can record a structured citation as its own signal instead
+    // of finding it as text pasted onto the answer.
+    const content = data?.choices?.[0]?.message?.content ?? ""
+    const citations = Array.isArray(data?.citations)
+      ? data.citations.filter((c: unknown): c is string => typeof c === "string")
+      : []
+    return { engine: "perplexity", content, model, searchCapable: true, citations }
   } catch (err) {
-    return { engine: "perplexity", content: "", model, error: err instanceof Error ? err.message : String(err) }
+    return { engine: "perplexity", content: "", model, searchCapable: true, error: err instanceof Error ? err.message : String(err) }
   }
 }
 
@@ -246,12 +270,13 @@ export async function queryGemini(prompt: string): Promise<EngineResponse | null
       // the site, not get a full long-form answer).
       maxOutputTokens: 1024,
     })
-    return { engine: "gemini", content: text ?? "", model: modelLabel }
+    return { engine: "gemini", content: text ?? "", model: modelLabel, searchCapable: false }
   } catch (err) {
     return {
       engine: "gemini",
       content: "",
       model: modelLabel,
+      searchCapable: false,
       error: err instanceof Error ? err.message : String(err),
     }
   }
