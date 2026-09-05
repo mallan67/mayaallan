@@ -8,6 +8,7 @@ import BookViewTracker from "@/components/BookViewTracker"
 import { RetailerIcon } from "@/lib/retailer-icons"
 import type { Metadata } from "next"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
+import { isNoRowsError } from "@/lib/supabase-errors"
 import {
   generateBookSchema,
   generateFAQSchema,
@@ -55,8 +56,13 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
       .limit(1)
       .single()
 
+    // Same rule as the page body below: PGRST116 (no row) is a normal 404 and
+    // must not surface as a Vercel application error. Only genuine database
+    // failures are logged.
+    if (error && !isNoRowsError(error)) {
+      console.error("Book metadata fetch error:", error.code, error.message)
+    }
     if (error || !book) {
-      console.error("Book metadata fetch error:", error?.message)
       return { title: "Book Not Found" }
     }
 
