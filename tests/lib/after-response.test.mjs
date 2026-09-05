@@ -111,6 +111,19 @@ test("a rejecting SMTP task does not prevent the Resend task", async () => {
   assert.deepEqual(seen, ["smtp:smtp down"])
 })
 
+test("three registrations: one stalled and one rejecting still leave the third to run, each failure routed to its own onError", async () => {
+  const { after, registered, runAll } = concurrentAfter()
+  const seen = []
+  let thirdRan = false
+  runAfterResponse(after, () => new Promise(() => {}), () => { seen.push("tracking:onError") }) // stalls (e.g. tracking insert hangs)
+  runAfterResponse(after, async () => { throw new Error("smtp down") }, async (e) => { seen.push("smtp:" + e.message) })
+  runAfterResponse(after, async () => { thirdRan = true }, () => { seen.push("sync:onError") })
+  assert.equal(registered.length, 3, "three independent tasks registered")
+  await Promise.race([runAll(), new Promise((r) => setTimeout(r, 50))])
+  assert.equal(thirdRan, true, "third task ran while the first is still pending and the second failed")
+  assert.deepEqual(seen, ["smtp:smtp down"], "only the rejecting task's onError fired; the stalled one is still pending")
+})
+
 test("does not fall back to fire-and-forget if after() itself throws (outside a request scope)", () => {
   // If the platform refuses the registration, the caller must find out —
   // silently running the work detached would recreate the original defect.

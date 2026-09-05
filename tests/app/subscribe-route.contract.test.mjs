@@ -10,10 +10,16 @@ const src = readFileSync(
 
 // Whitespace-insensitive view for structural assertions.
 const flat = src.replace(/\s+/g, " ")
-// The two post-response registrations, in source order.
+// The post-response registrations, in source order: marketing tracking,
+// SMTP notification, Resend sync. Each block runs from its wrapper start to
+// the next wrapper start (or to the success response for the last one).
 const wrapperStarts = [...flat.matchAll(/runAfterResponse\( ?after,/g)].map((m) => m.index)
-const smtpBlock = flat.slice(wrapperStarts[0] ?? 0, wrapperStarts[1] ?? flat.length)
-const syncBlock = flat.slice(wrapperStarts[1] ?? flat.length, flat.indexOf("success: true", wrapperStarts[1] ?? 0))
+const lastWrapperStart = wrapperStarts[wrapperStarts.length - 1] ?? 0
+const successIdx = flat.indexOf("success: true", lastWrapperStart)
+const blockAt = (i) => flat.slice(wrapperStarts[i] ?? flat.length, wrapperStarts[i + 1] ?? successIdx)
+const trackBlock = blockAt(0)
+const smtpBlock = blockAt(1)
+const syncBlock = blockAt(2)
 
 test("the Resend sync is awaited ONLY inside post-response work, never in the request path", () => {
   // Every call site is `await`ed (no dangling promise) …
@@ -30,7 +36,20 @@ test("the Resend sync is awaited ONLY inside post-response work, never in the re
   // i.e. after the wrapper starts, never in the handler body before it.
   const syncCalls = [...flat.matchAll(/const sync = await syncSubscriberToResend\(email\)/g)].map((m) => m.index)
   assert.equal(syncCalls.length, 1, "exactly one awaited sync call")
-  assert.ok(syncCalls[0] > wrapperStarts[1], "the awaited sync call is inside the post-response registration, not before it")
+  assert.ok(syncCalls[0] > wrapperStarts[2], "the awaited sync call is inside the third (sync) registration, not before it")
+})
+
+test("no top-level await trackMarketingEvent after persistence: tracking is its OWN post-response task", () => {
+  assert.doesNotMatch(src, /await\s+trackMarketingEvent\(/, "tracking is never awaited in the request path")
+  assert.match(flat, /runAfterResponse\( ?after, ?\(\) => trackMarketingEvent\(\{ request, eventName: "newsletter_subscribed", path: "\/api\/subscribe"/)
+  // Event name, path and properties unchanged.
+  assert.match(trackBlock, /eventName: "newsletter_subscribed"/)
+  assert.match(trackBlock, /path: "\/api\/subscribe"/)
+  assert.match(trackBlock, /email_domain: emailDomainOnly\(email\)/)
+  assert.match(trackBlock, /source: typeof \(body as any\)\?\.source === "string" \? String\(\(body as any\)\.source\)\.slice\(0, 64\) : null/)
+  assert.match(trackBlock, /honeypot: false/)
+  // Failure stays nonfatal and logged the same way.
+  assert.match(trackBlock, /\[subscribe\] tracking failed:/)
 })
 
 test("sync outcomes are preserved inside the work function; the throw path is the wrapper's onError", () => {
@@ -43,20 +62,29 @@ test("sync outcomes are preserved inside the work function; the throw path is th
   assert.match(syncBlock, /resend newsletter sync threw/)
 })
 
-test("Supabase upsert is awaited BEFORE any post-response work is registered, and success follows both", () => {
+test("Supabase upsert is awaited BEFORE all post-response registrations; nothing noncritical is awaited after it; success follows the last registration", () => {
   const upsert = flat.indexOf("await supabaseAdmin .from(Tables.emailSubscribers) .upsert(")
   assert.ok(upsert > -1, "awaited upsert present")
-  assert.equal(wrapperStarts.length, 2, "exactly two post-response registrations (SMTP notification, Resend sync)")
+  assert.equal(wrapperStarts.length, 3, "exactly three post-response registrations (tracking, SMTP notification, Resend sync)")
   assert.ok(upsert < wrapperStarts[0], "upsert precedes the first registration")
-  const success = flat.indexOf("success: true", wrapperStarts[1])
-  assert.ok(success > wrapperStarts[1], "success response follows the last registration")
+  // Between the upsert's error check and the first registration there is no
+  // other await (no noncritical work can stall the response).
+  const afterUpsert = flat.slice(flat.indexOf("throw error }", upsert), wrapperStarts[0])
+  assert.doesNotMatch(afterUpsert, /\bawait\b/, "no awaited work between persistence and the first registration")
+  assert.ok(successIdx > lastWrapperStart, "success response follows the last registration")
+  // Nothing is awaited between the last registration's end and the response either.
+  const lastBlock = blockAt(wrapperStarts.length - 1)
+  const closeOfLast = lastBlock.lastIndexOf(")")
+  assert.doesNotMatch(lastBlock.slice(closeOfLast), /\bawait\b/)
 })
 
-test("SMTP notification and Resend sync are registered as SEPARATE tasks (neither nested in the other)", () => {
+test("marketing tracking, SMTP notification and Resend sync are THREE separate tasks (none nested in another)", () => {
+  assert.match(trackBlock, /trackMarketingEvent\(/)
+  assert.doesNotMatch(trackBlock, /transporter\.sendMail\(|syncSubscriberToResend\(/)
   assert.match(smtpBlock, /transporter\.sendMail\(/)
-  assert.doesNotMatch(smtpBlock, /syncSubscriberToResend\(/)
+  assert.doesNotMatch(smtpBlock, /trackMarketingEvent\(|syncSubscriberToResend\(/)
   assert.match(syncBlock, /syncSubscriberToResend\(/)
-  assert.doesNotMatch(syncBlock, /transporter\.sendMail\(/)
+  assert.doesNotMatch(syncBlock, /trackMarketingEvent\(|transporter\.sendMail\(/)
 })
 
 test("Supabase upsert keeps onConflict email + ignoreDuplicates (preserves unsubscribed_at)", () => {
@@ -103,9 +131,9 @@ test("notification failure logging and the deduplicated admin alert are preserve
 })
 
 test("no bare fire-and-forget anywhere: every promise-returning call is awaited or is an arrow body handed to the wrapper", () => {
-  const calls = [...flat.matchAll(/(transporter\.sendMail|syncSubscriberToResend|alertAdmin)\(/g)]
+  const calls = [...flat.matchAll(/(transporter\.sendMail|syncSubscriberToResend|trackMarketingEvent|alertAdmin)\(/g)]
     .filter((m) => !/import /.test(flat.slice(Math.max(0, m.index - 40), m.index)))
-  assert.ok(calls.length >= 5, "the send, the sync and the alert calls are all present")
+  assert.ok(calls.length >= 6, "the send, the sync, the tracking and the alert calls are all present")
   for (const m of calls) {
     const before = flat.slice(Math.max(0, m.index - 8), m.index)
     assert.match(before, /(await |=> )$/, `not fire-and-forget: …${before}${m[0]}`)

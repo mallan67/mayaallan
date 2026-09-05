@@ -86,22 +86,39 @@ export async function POST(request: Request) {
       throw error
     }
 
-    // Track conversion. Wrapped — trackMarketingEvent itself never throws,
-    // but defense-in-depth keeps any future edit from breaking signup.
-    try {
-      await trackMarketingEvent({
-        request,
-        eventName: "newsletter_subscribed",
-        path: "/api/subscribe",
-        properties: {
-          email_domain: emailDomainOnly(email),
-          source: typeof (body as any)?.source === "string" ? String((body as any).source).slice(0, 64) : null,
-          honeypot: false,
-        },
-      })
-    } catch (trackErr) {
-      console.error("[subscribe] tracking failed:", trackErr)
-    }
+    // The subscriber row is now durable. From here on NOTHING noncritical is
+    // awaited in the request path: the three follow-ups below (marketing
+    // tracking, operator SMTP notification, Resend Segment sync) are each
+    // registered as their OWN after() task via runAfterResponse(). Next
+    // drains after() callbacks through an unbounded-concurrency queue once the
+    // response closes, so they start together and a stall or failure in any
+    // one cannot keep the others from starting. Previously the awaited
+    // tracking call (its own Supabase insert, plus alertAdmin on failure) sat
+    // between persistence and the response, so a stall there meant the
+    // response never closed and no after() task ran.
+
+    // Track conversion — post-response. trackMarketingEvent itself never
+    // throws; the wrapper's onError keeps the previous defense-in-depth
+    // nonfatal logging in case a future edit changes that. Event name, path
+    // and properties are unchanged. The Request object is read synchronously
+    // for headers only, which remains valid after the response.
+    runAfterResponse(
+      after,
+      () =>
+        trackMarketingEvent({
+          request,
+          eventName: "newsletter_subscribed",
+          path: "/api/subscribe",
+          properties: {
+            email_domain: emailDomainOnly(email),
+            source: typeof (body as any)?.source === "string" ? String((body as any).source).slice(0, 64) : null,
+            honeypot: false,
+          },
+        }),
+      (trackErr) => {
+        console.error("[subscribe] tracking failed:", trackErr)
+      },
+    )
 
     // Operator notification is sent AFTER the response via the platform
     // completion mechanism (`after()` → Vercel waitUntil): the response still
