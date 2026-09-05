@@ -1,0 +1,50 @@
+name: Quality gates
+
+# Typecheck, lint and the full test suite on every pull request and on every
+# push to main. Vercel still performs the production build; this workflow is
+# the gate that used to be missing (no `test` script, `next lint` removed in
+# Next.js 16, nothing in CI ran the unit tests).
+#
+# Deliberately NOT passing UPSTASH_REDIS_REST_URL / TOKEN: the rate-limit
+# tests exercise the in-memory fallback and refuse to run against a live
+# counter. No other secret is needed — these gates never touch production.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        # Version comes from the packageManager field in package.json.
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test (unit suite + crisis-detection checks)
+        run: pnpm test

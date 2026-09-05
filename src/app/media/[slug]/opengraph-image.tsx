@@ -153,7 +153,6 @@ export default async function Image({ params }: Props) {
           }}
         >
           {coverUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={coverUrl}
               alt={item.title}

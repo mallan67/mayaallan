@@ -119,7 +119,6 @@ export default async function Image({ params }: Props) {
           }}
         >
           {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={imageUrl}
               alt={event.title}
