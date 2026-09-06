@@ -46,7 +46,9 @@ Each edition's copyright page must print its own ISBN (not shared).
 
 ## Approved external positioning
 
-Copy in this section aligns with the site's current non-clinical positioning: post-experience reflection, integration, self-inquiry, personal agency, and educational rather than professional or clinical guidance. Use it for author profiles and retailer descriptions. It is derived from `BOOK_MACHINE_SUMMARIES`, `AUTHOR_BIO` and the site's own book copy.
+Copy in this section aligns with the site's current non-clinical positioning: post-experience reflection, integration, self-inquiry, personal agency, and educational rather than professional or clinical guidance. Use it for author profiles and retailer descriptions. It is derived from `AUTHOR_BIO` and the site's own book copy.
+
+**Accuracy rule for retailer pages.** This copy must describe the purchased book truthfully. The printed book's Part I contains preparation material (set and setting, dosage, fasting, the role of a guide or sitter — see the manuscript-derived section and `docs/book-review/psilocybin-integration-guide-review.md`). Approved copy therefore must **not** claim the book contains no dosing or use material, and must **not** use that material as a selling point either: it stays silent on it and states the non-clinical, no-therapeutic-claims position. (The site's own machine summary in `identity.ts` says the *site* provides no such instructions; that sentence is about mayaallan.com and is not reused here as a description of the book.)
 
 ### Tagline (short fields)
 
@@ -54,13 +56,13 @@ Copy in this section aligns with the site's current non-clinical positioning: po
 
 ### Short description (~60 words)
 
-> Psilocybin Integration Guide is an educational resource for post-experience reflection, integration, and self-inquiry. It offers practical frameworks for making sense of meaningful or difficult experiences and applying insights to everyday life. It does not provide instructions for obtaining, dosing, or using psilocybin and is not a substitute for medical, legal, or professional advice.
+> Psilocybin Integration Guide is an educational resource for post-experience reflection, integration, and self-inquiry. It offers practical frameworks for making sense of meaningful or difficult experiences and applying insights to everyday life. It is an educational book, not a clinical or professional text: it makes no therapeutic claims and is not a substitute for medical, legal, or professional advice.
 
 ### Medium description (~120 words)
 
 > Psilocybin Integration Guide by Maya Allan walks through 40 real journey scenarios — ego dissolution, shadow figures, entity contact, cosmic consciousness, inner child material, difficult emotional release, and the re-entry phase. Each scenario includes a description of what is happening, why it arises, how to reflect on it afterward, the lesson it can carry, and an example.
 >
-> It is a non-clinical, educational book written for readers exploring post-experience reflection and integration. Its focus is the meaning-making after an experience, which the book treats as the reader's own to do. It does not provide instructions for obtaining, dosing, or using psilocybin, and it is not a substitute for medical, legal, or professional advice.
+> It is a non-clinical, educational book written for readers exploring post-experience reflection and integration. Its focus is the meaning-making after an experience, which the book treats as the reader's own to do. It makes no therapeutic claims and is not a substitute for medical, legal, or professional advice; readers are responsible for understanding and complying with local laws.
 
 ### Audience line
 
@@ -198,7 +200,7 @@ Amazon KDP allows a limited set of HTML tags in book descriptions: `<b>`, `<em>`
 
 <p>It is a non-clinical, educational book written for readers exploring post-experience reflection and integration. Its focus is the meaning-making after an experience, which the book treats as the reader's own to do.</p>
 
-<p><em>It does not provide instructions for obtaining, dosing, or using psilocybin, and it is not a substitute for medical, legal, or professional advice.</em></p>
+<p><em>It makes no therapeutic claims and is not a substitute for medical, legal, or professional advice. Readers are responsible for understanding and complying with local laws.</em></p>
 ```
 
 ### Manuscript-derived version — verify before reuse
