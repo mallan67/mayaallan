@@ -2,7 +2,7 @@
 
 **What this file is.** A manually maintained reference and copy-paste sheet for external book platforms (Amazon KDP, Goodreads, Bookshop, Open Library, LibraryThing and similar).
 
-**What this file is not.** It is not a runtime source for mayaallan.com — nothing on the site reads it. For author positioning it is subordinate to the canonical site identity in code (`src/lib/identity.ts`: `AUTHOR_NAME`, `AUTHOR_JOB_TITLE`, `AUTHOR_BIO`, `BOOK_MACHINE_SUMMARIES`); if the two ever disagree, the code is right and this file is stale. Book listing data on the site comes from the `books` database row, not from here.
+**What this file is not.** It is not a runtime source for mayaallan.com — nothing on the site reads it. For **author positioning** it is subordinate to the canonical identity constants in code (`src/lib/identity.ts`: `AUTHOR_NAME`, `AUTHOR_JOB_TITLE`, `AUTHOR_BIO`); if this file and those constants ever disagree, the constants are right and this file is stale. That code-wins rule covers the `AUTHOR_*` constants only. It does **not** extend to `BOOK_MACHINE_SUMMARIES`, which is known-stale runtime copy about the book (see the accuracy rule in "Approved external positioning") and must be corrected in code, not treated as authoritative. Book listing data on the site comes from the `books` database row, not from here.
 
 **Before reusing anything below**, recheck externally maintained facts (ISBNs, dates, page count, categories, platform rules) against the relevant publishing account or platform documentation. Each section states where its content comes from.
 
