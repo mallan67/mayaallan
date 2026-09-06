@@ -1,0 +1,128 @@
+{
+  "base": "7452de69327939c7d5d52c834b5cc1d73859a6c3",
+  "frozenFaq": {
+    "ego-dissolution-feel": {
+      "id": "ego-dissolution-feel",
+      "category": "journey",
+      "question": "What does ego dissolution feel like during a psilocybin journey?",
+      "answer": "Ego dissolution feels like the boundary between \"you\" and everything else softening — the inner narrator goes quiet, identity becomes optional, and you may feel merged with the room, the music, or all of existence. For most people it is temporary and the sense of self returns as the effects fade; by itself it is not known to cause physical harm. The fear that you won't come back is part of the experience, not a prediction. If detachment persists in the days afterward, seek qualified help.",
+      "relatedUrl": "/scenarios/ego-dissolution"
+    },
+    "ego-dissolution-duration": {
+      "id": "ego-dissolution-duration",
+      "category": "journey",
+      "question": "How long does ego dissolution typically last during a mushroom experience?",
+      "answer": "No study has timed ego dissolution as a separate phase, so there is no reliable figure for it. In controlled studies of oral psilocybin at roughly 15 to 30 mg, effects begin within the first hour, peak around one and a half to two and a half hours in, and have largely faded by about six hours, longer at higher doses. Ego dissolution is usually reported around the peak and is often described as coming in waves. This is descriptive educational information, not guidance on using psilocybin.",
+      "relatedUrl": "/scenarios/ego-dissolution"
+    },
+    "default-mode-network": {
+      "id": "default-mode-network",
+      "category": "research",
+      "question": "What does psilocybin do to the default mode network?",
+      "answer": "The default mode network (DMN) is a set of brain regions associated with self-referential thought and the felt sense of being a separate \"I.\" Research — including work associated with Carhart-Harris at Imperial College London — suggests psilocybin can temporarily reduce DMN activity and connectivity, which researchers have linked to experiences like ego dissolution. Later studies show changes across several networks, and a 2024 precision-imaging study found psilocybin desynchronises activity brain-wide, most strongly in the DMN. How central the DMN is remains an open question. This is an active, evolving area of science, described here for education rather than as settled fact or a medical claim."
+    }
+  },
+  "frozenGlossary": {
+    "ego-dissolution": {
+      "id": "ego-dissolution",
+      "term": "Ego dissolution",
+      "alternateNames": [
+        "Ego loss",
+        "Self-dissolution"
+      ],
+      "category": "experience",
+      "definition": "The temporary softening or disappearance of the felt sense of being a separate self during a psilocybin experience. Brain-imaging studies associate it with disrupted default-mode-network connectivity and broader changes across networks. Subjective reports range from boundary blurring to a total felt unity with surroundings. It is usually reported around the peak of the experience; no study has timed it as a separate phase. For most people it is temporary and, by itself, not known to cause physical harm; lasting difficulty is reported in a minority and is a reason to seek help.",
+      "relatedTerms": [
+        "ego-death",
+        "default-mode-network",
+        "mystical-experience"
+      ],
+      "relatedScenarios": [
+        "ego-dissolution"
+      ]
+    },
+    "re-entry": {
+      "id": "re-entry",
+      "term": "Re-entry",
+      "alternateNames": [
+        "Coming down"
+      ],
+      "category": "experience",
+      "definition": "The phase of a psychedelic experience as effects subside. In controlled dosing studies the effects of oral psilocybin have largely faded by around six hours, so re-entry is the later part of that window. Often described as the most emotionally tender phase, when the sense of self is reconstituting. Gentle physical movement, writing soon after, and avoiding screens or news are practical suggestions for this phase, not findings.",
+      "relatedTerms": [
+        "afterglow",
+        "integration"
+      ]
+    }
+  },
+  "faqIds": [
+    "ego-dissolution-feel",
+    "ego-dissolution-duration",
+    "integrate-difficult-journey",
+    "days-after-experience",
+    "feel-disconnected-after",
+    "shadow-work-after",
+    "inner-child-healing",
+    "prepare-first-experience",
+    "set-and-setting",
+    "set-intentions",
+    "integration-practitioner",
+    "facilitator-solo-journeyers",
+    "default-mode-network",
+    "mystical-experience",
+    "rebus-model",
+    "trauma-healing",
+    "bad-trip-destabilized",
+    "warning-signs-help",
+    "spiritual-emergency",
+    "book-scenarios"
+  ],
+  "glossaryIds": [
+    "ego-dissolution",
+    "ego-death",
+    "integration",
+    "set",
+    "setting",
+    "default-mode-network",
+    "mystical-experience",
+    "microdosing",
+    "macrodosing",
+    "psilocybin",
+    "psilocin",
+    "threshold-dose",
+    "trip-sitter",
+    "difficult-experience",
+    "re-entry",
+    "afterglow",
+    "shadow",
+    "inner-child",
+    "rebus-model",
+    "psychedelic-assisted-therapy",
+    "harm-reduction",
+    "tolerance",
+    "entheogen",
+    "ineffability",
+    "noetic-quality"
+  ],
+  "faqCategoryIds": [
+    "preparation",
+    "journey",
+    "integration",
+    "safety",
+    "research",
+    "practitioners",
+    "brand"
+  ],
+  "glossaryCategoryIds": [
+    "experience",
+    "framework",
+    "practice",
+    "substance"
+  ],
+  "frozenFiles": {
+    "content/posts/02-psilocybin-integration-research.md": "a41bd529f0084a09428d82b03efa1b4048212dc7fc243ced073d99a83de2a625",
+    "content/scenarios/ego-dissolution.md": "b29bf3eaa4a1ad28be1afada4b0b30cd229809889c351978303fe3148d7569dc",
+    "src/app/scenarios/[slug]/page.tsx": "661fea9c7f18e777b9a7d06796e06718e21445c3063f211baaebd6f1ff06eb11",
+    "src/app/blog/[slug]/page.tsx": "84a76719202635ae349440afbc3b6f5e563e1a419b0547cd3fc3e2131e7ea2e6"
+  }
+}
