@@ -11,9 +11,7 @@ import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { isNoRowsError } from "@/lib/supabase-errors"
 import {
   generateBookSchema,
-  generateFAQSchema,
   generateBreadcrumbSchema,
-  BOOK_FAQS,
 } from "@/lib/structured-data"
 import { SITE_URL, bookMachineSummary } from "@/lib/identity"
 
@@ -264,9 +262,8 @@ export default async function BookPage({ params }: BookPageProps) {
     allowDirectSale: book.allowDirectSale,
   } as any)
 
-  // FAQPage JSON-LD — mirrors the visible book questions
-  // Machine-facing summary, not the mutable sales blurb, drives the book FAQ.
-  const faqSchema = generateFAQSchema(BOOK_FAQS(book.title, bookMachineSummary(book.slug, book.title)), bookUrl)
+  // No FAQ schema here: the page renders no visible FAQ, and machine-only
+  // question/answer markup would describe content that does not exist on the page.
 
   // BreadcrumbList JSON-LD — page position in the site
   const breadcrumbSchema = generateBreadcrumbSchema([
@@ -338,13 +335,6 @@ export default async function BookPage({ params }: BookPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: jsonLdScript(bookSchema),
-        }}
-      />
-      {/* FAQPage JSON-LD */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: jsonLdScript(faqSchema),
         }}
       />
       {/* BreadcrumbList JSON-LD */}
