@@ -46,5 +46,8 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Lint ratchet (no new or increased warnings vs lint-baseline.json)
+        run: pnpm lint:ratchet
+
       - name: Test (unit suite + crisis-detection checks)
         run: pnpm test

@@ -11,10 +11,28 @@ import nextTs from "eslint-config-next/typescript"
  * unused vars, 19 React-Compiler hook rules, 10 html-link-for-pages, 4
  * unescaped entities, and a handful of singles. Rewriting those is not a
  * quality-gate concern and would touch a hundred call sites, so the rules
- * with pre-existing ERRORS are set to `warn` here and the `lint` script
- * enforces `--max-warnings` at the count measured on that day. Any new
- * finding fails CI; lowering the ceiling as findings are fixed is the
- * intended follow-up. Do not raise the ceiling.
+ * with pre-existing ERRORS are set to `warn` here.
+ *
+ * Two gates enforce the ratchet (2026-09-06):
+ *   - `pnpm lint:ratchet` (scripts/lint-ratchet.mjs) is the primary gate. It
+ *     gives every warning a location-stable identity (file, rule, message,
+ *     enclosing scope, structural path to the node, a token-stream hash of
+ *     the enclosing statement, offending source line and position — never a raw
+ *     line number or absolute path) and compares counts
+ *     against the committed lint-baseline.json, which tracks the currently
+ *     approved warning population. An identity missing from the baseline, a
+ *     count increase, or any ESLint error fails as a regression — so an old
+ *     warning cannot be swapped for a new one, not even the same warning text
+ *     at another place in the same file. Two locations that still produce one
+ *     identity fail as an identity collision rather than being aggregated. A
+ *     warning moving lines passes. A warning disappearing or a count
+ *     decreasing is reported as "baseline tightening required": run
+ *     `pnpm lint:baseline` after the reviewed cleanup and commit the reduced
+ *     baseline, so the fixed warning cannot come back. Normal CI never
+ *     regenerates the baseline, and it must not be regenerated to silence a
+ *     newly introduced warning.
+ *   - `pnpm lint` keeps `--max-warnings` at the count measured on 2026-09-05
+ *     as a secondary ceiling only. Do not raise it.
  */
 export default defineConfig([
   ...nextVitals,
