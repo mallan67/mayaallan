@@ -171,6 +171,33 @@ test("no population-prevalence inference for lasting harm from selected cohorts 
   assert.match(termById.get("difficult-experience").definition, /neither shows how often|not well established/i)
 })
 
+// ---------------------------------------------------------------------------
+// Independent evidence review on #51 (three content corrections)
+// ---------------------------------------------------------------------------
+
+test("psilocybin: Colorado licensing is not misdated to 2026", () => {
+  const d = termById.get("psilocybin").definition
+  assert.doesNotMatch(d, /first cent(er|re)s licensed in 2026/i)
+  assert.doesNotMatch(d, /Colorado[^.]*\b2026\b/, "no 2026 date attached to the Colorado program")
+})
+
+test("psychedelic-assisted therapy: the 2026 MDMA resubmission is stated as reported, not as confirmed fact", () => {
+  const d = termById.get("psychedelic-assisted-therapy").definition
+  assert.match(d, /declined by the FDA in 2024/)
+  assert.match(d, /resubmission was reported in August 2026/)
+  // A categorical "resubmitted in 2026" is only acceptable once a primary
+  // Resilient / FDA source confirms the filing — change this test with it.
+  assert.doesNotMatch(d, /\b(and|was) resubmitted in 2026\b/)
+})
+
+test("prepare-first-experience: screening is explained by specific safety concerns, not a risk-ranking inference", () => {
+  const a = faqById.get("prepare-first-experience").answer
+  assert.doesNotMatch(a, /serious harm is most likely/i)
+  assert.doesNotMatch(a, /groups in which .* most likely/i)
+  assert.match(a, /psychiatric, cardiovascular, and drug-interaction safety concerns/)
+  assert.match(a, /Johnson, Richards and Griffiths, 2008/)
+})
+
 test("every definition still answers 'what does this term mean' — not a disclaimer wall", () => {
   for (const t of nonFrozenTerms) {
     const words = t.definition.split(/\s+/).length
