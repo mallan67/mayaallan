@@ -155,6 +155,22 @@ test("no entries deleted, added or duplicated: id lists equal the base snapshot,
   assert.equal(new Set(fixture.glossaryIds).size, fixture.glossaryIds.length)
 })
 
+test("no population-prevalence inference for lasting harm from selected cohorts (Codex P2 on #51)", () => {
+  // Carbonaro 2016 and Evans 2023 both recruited people who had already had a
+  // difficult experience, so they cannot say how often lasting harm occurs.
+  const texts = [
+    ["glossary difficult-experience", termById.get("difficult-experience").definition],
+    ["glossary ego-death", termById.get("ego-death").definition],
+    ["faq bad-trip-destabilized", faqById.get("bad-trip-destabilized").answer],
+    ["faq warning-signs-help", faqById.get("warning-signs-help").answer],
+    ["faq feel-disconnected-after", faqById.get("feel-disconnected-after").answer],
+  ]
+  for (const [label, text] of texts) {
+    assert.doesNotMatch(text, /\b(not rare|rarely|is rare|is common|a minority of people|most people)\b/i, `${label}: no prevalence claim`)
+  }
+  assert.match(termById.get("difficult-experience").definition, /neither shows how often|not well established/i)
+})
+
 test("every definition still answers 'what does this term mean' — not a disclaimer wall", () => {
   for (const t of nonFrozenTerms) {
     const words = t.definition.split(/\s+/).length
