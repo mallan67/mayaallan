@@ -116,25 +116,31 @@ export const BOOK_ASINS: Record<string, string> = {
 // DELIBERATELY SEPARATE from the mutable marketing blurb stored in Supabase
 // (`books.blurb`), which is human sales copy and may be edited freely in admin.
 // A sales blurb must never become machine-readable authority copy: these
-// curated summaries feed the Book JSON-LD `description`, the book FAQ
-// ("What is this book about?"), and the /llms.txt + /llms-full.txt feeds, so
+// curated summaries feed the Book JSON-LD `description`, the /llms.txt +
+// /llms-full.txt feeds, and the OG/Twitter image fallback text, so
 // structured/authority positioning stays non-clinical no matter what the blurb
 // says. Editorial copy only — never regex-sanitized blurb.
+//
+// Accuracy rule: a summary must describe the printed book truthfully. It must
+// not claim the book contains no dosing or use material (the Psilocybin
+// Integration Guide's Part I does), and it must not sell on that material
+// either; it states the educational, non-clinical position and stops there.
 export const BOOK_MACHINE_SUMMARIES: Record<string, string> = {
   "psilocybin-integration-guide":
-    "Psilocybin Integration Guide is an educational resource for post-experience reflection, integration, and self-inquiry. It offers practical frameworks for making sense of meaningful or difficult experiences and applying insights to everyday life. It does not provide instructions for obtaining, dosing, or using psilocybin and is not a substitute for medical, legal, or professional advice.",
+    "Psilocybin Integration Guide is an educational, non-clinical resource for post-experience reflection, integration, and self-inquiry. It offers practical frameworks for making sense of meaningful or difficult experiences and applying insights to everyday life. It is not a clinical or professional text and is not a substitute for medical, legal, or professional advice.",
 }
 
 /**
  * Machine-facing summary for a book — the single source used by JSON-LD, the
- * book FAQ, and the llms.txt feeds. Never returns the mutable sales blurb.
- * Falls back to a generic non-clinical sentence for books without a curated
- * summary (so a new book can never silently leak an unsanitized blurb).
+ * llms.txt feeds and the social-image fallback. Never returns the mutable
+ * sales blurb. Falls back to a generic, subject-neutral non-clinical sentence
+ * for books without a curated summary (so a new book can never silently leak
+ * an unsanitized blurb, and is never described as a psilocybin book by default).
  */
 export function bookMachineSummary(slug: string, title?: string): string {
   return (
     BOOK_MACHINE_SUMMARIES[slug] ??
-    `${title ? `"${title}"` : "This book"} by Maya Allan is a non-clinical, educational resource for post-experience reflection, integration, and self-inquiry. It does not provide instructions for obtaining, dosing, or using psilocybin and is not a substitute for medical, legal, or professional advice.`
+    `${title ? `"${title}"` : "This book"} by Maya Allan is an educational, non-clinical resource. It is not a clinical or professional text and is not a substitute for medical, legal, or professional advice.`
   )
 }
 
