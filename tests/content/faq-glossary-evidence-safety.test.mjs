@@ -201,6 +201,17 @@ test("psychedelic-assisted therapy: the 2026 MDMA resubmission is stated as repo
   assert.doesNotMatch(d, /\b(and|was) resubmitted in 2026\b/)
 })
 
+test("feel-disconnected-after: no false overall superlative about Evans et al. 2023", () => {
+  // Evans et al. 2023: emotional difficulties were the most endorsed closed-
+  // ended category (76%); social difficulties 27%; social disconnection was
+  // the most common SOCIAL subtype (13% of respondents), not the most common
+  // difficulty overall.
+  const a = faqById.get("feel-disconnected-after").answer
+  assert.doesNotMatch(a, /social disconnection was the most commonly (described|reported) difficulty/i)
+  assert.doesNotMatch(a, /disconnection was the most common (difficulty|problem)\b/i)
+  assert.match(a, /Evans et al\., 2023/)
+})
+
 test("prepare-first-experience: screening is explained by specific safety concerns, not a risk-ranking inference", () => {
   const a = faqById.get("prepare-first-experience").answer
   assert.doesNotMatch(a, /serious harm is most likely/i)
