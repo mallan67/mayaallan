@@ -48,7 +48,7 @@ ISBN rule (per current KDP guidance; recheck in the KDP account): KDP requires a
 
 Copy in this section aligns with the site's current non-clinical positioning: post-experience reflection, integration, self-inquiry, personal agency, and educational rather than professional or clinical guidance. Use it for author profiles and retailer descriptions. It is derived from `AUTHOR_BIO` and the site's own book copy.
 
-**Accuracy rule for retailer pages.** This copy must describe the purchased book truthfully. The printed book's Part I contains preparation material (set and setting, dosage, fasting, the role of a guide or sitter — see the manuscript-derived section and `docs/book-review/psilocybin-integration-guide-review.md`). Approved copy therefore must **not** claim the book contains no dosing or use material, and must **not** use that material as a selling point either: it stays silent on it and states the non-clinical, no-therapeutic-claims position. (Known stale runtime description, recorded here for a separate runtime PR: `BOOK_MACHINE_SUMMARIES["psilocybin-integration-guide"]` in `src/lib/identity.ts` describes the *book* with the same "does not provide instructions for obtaining, dosing, or using psilocybin" sentence, and `generateBookSchema` emits it as the Book JSON-LD `description`, which also feeds the llms feeds. Against the manuscript facts above that sentence is inaccurate for the book and should be corrected in code, not preserved. It is not reused here.)
+**Accuracy rule for retailer pages.** This copy must describe the purchased book truthfully. The printed book's Part I contains preparation material (set and setting, dosage, fasting, the role of a guide or sitter — see the manuscript-derived section and `docs/book-review/psilocybin-integration-guide-review.md`). Approved copy therefore must **not** claim the book contains no dosing or use material, and must **not** use that material as a selling point either: it stays silent on it and states the non-clinical position. The same discipline applies to outcomes: the printed cover and manuscript use healing language ("Heal Traumas", "healing trauma through catharsis"), so approved copy must not deny that the book does; it simply makes no therapeutic promises of its own. (Known stale runtime description, recorded here for a separate runtime PR: `BOOK_MACHINE_SUMMARIES["psilocybin-integration-guide"]` in `src/lib/identity.ts` describes the *book* with the same "does not provide instructions for obtaining, dosing, or using psilocybin" sentence, and `generateBookSchema` emits it as the Book JSON-LD `description`, which also feeds the llms feeds. Against the manuscript facts above that sentence is inaccurate for the book and should be corrected in code, not preserved. It is not reused here.)
 
 ### Tagline (short fields)
 
@@ -56,13 +56,13 @@ Copy in this section aligns with the site's current non-clinical positioning: po
 
 ### Short description (~60 words)
 
-> Psilocybin Integration Guide is an educational resource for post-experience reflection, integration, and self-inquiry. It offers practical frameworks for making sense of meaningful or difficult experiences and applying insights to everyday life. It is an educational book, not a clinical or professional text: it makes no therapeutic claims and is not a substitute for medical, legal, or professional advice.
+> Psilocybin Integration Guide is an educational resource for post-experience reflection, integration, and self-inquiry. It offers practical frameworks for making sense of meaningful or difficult experiences and applying insights to everyday life. It is an educational book, not a clinical or professional text, and it is not a substitute for medical, legal, or professional advice. This description makes no therapeutic promises.
 
 ### Medium description (~120 words)
 
 > Psilocybin Integration Guide by Maya Allan walks through 40 real journey scenarios — ego dissolution, shadow figures, entity contact, cosmic consciousness, inner child material, difficult emotional release, and the re-entry phase. Each scenario is structured as Description, Cause, Navigation, Lesson, and Example: what is happening, why it arises, how to navigate it, the lesson it can carry, and an example.
 >
-> It is a non-clinical, educational book written for readers exploring post-experience reflection and integration. Its focus is the meaning-making after an experience, which the book treats as the reader's own to do. It makes no therapeutic claims and is not a substitute for medical, legal, or professional advice; readers are responsible for understanding and complying with local laws.
+> It is a non-clinical, educational book written for readers exploring post-experience reflection and integration. Its focus is the meaning-making after an experience, which the book treats as the reader's own to do. It is not a clinical or professional text and is not a substitute for medical, legal, or professional advice; this description makes no therapeutic promises, and readers are responsible for understanding and complying with local laws.
 
 ### Audience line
 
@@ -144,7 +144,7 @@ Recommended for Amazon KDP (4 candidates; use additional slots only for accurate
 Not recommended as a keyword: `psilocybin integration guide` — it duplicates the title, and current KDP guidance says to avoid keywords that repeat information already present elsewhere in the book's metadata.
 
 Removed from the former "Core 7" on review:
-- `psychedelic integration therapy` — "therapy" frames the book as clinical; it makes no therapeutic claims.
+- `psychedelic integration therapy` — "therapy" frames the book as clinical treatment, which it is not, and the approved copy makes no therapeutic promises.
 - `trauma integration psychedelics` — a therapeutic-outcome claim; the manuscript's trauma-informed Inner Child chapter does not make the book a trauma-treatment guide.
 - `psilocybin microdosing safety` — not the book's subject, and the site provides no dosing or use guidance.
 
@@ -205,7 +205,7 @@ Amazon KDP allows a limited set of HTML tags in book descriptions: `<b>`, `<em>`
 
 <p>It is a non-clinical, educational book written for readers exploring post-experience reflection and integration. Its focus is the meaning-making after an experience, which the book treats as the reader's own to do.</p>
 
-<p><em>It makes no therapeutic claims and is not a substitute for medical, legal, or professional advice. Readers are responsible for understanding and complying with local laws.</em></p>
+<p><em>It is not a clinical or professional text and is not a substitute for medical, legal, or professional advice. This description makes no therapeutic promises. Readers are responsible for understanding and complying with local laws.</em></p>
 ```
 
 ### Manuscript-derived version — verify before reuse
