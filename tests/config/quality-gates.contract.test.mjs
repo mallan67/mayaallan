@@ -67,6 +67,21 @@ test("CI workflow runs typecheck, lint and test on pull requests and main", () =
   assert.doesNotMatch(wf, /secrets\.UPSTASH/)
 })
 
+test("CI runs the warning-identity lint ratchet after lint and before test, and never regenerates the baseline", () => {
+  const wf = readFileSync(p("../../.github/workflows/quality-gates.yml"), "utf8")
+  const lintAt = wf.search(/run:\s*pnpm lint\s*\n/)
+  const ratchetAt = wf.search(/run:\s*pnpm lint:ratchet\s*\n/)
+  const testAt = wf.search(/run:\s*pnpm test\b/)
+  assert.ok(lintAt >= 0 && ratchetAt >= 0 && testAt >= 0, "lint, lint:ratchet and test steps all exist")
+  assert.ok(lintAt < ratchetAt && ratchetAt < testAt, "step order: lint -> lint:ratchet -> test")
+  assert.doesNotMatch(wf, /lint:baseline|--update/, "baseline regeneration is manual only")
+  assert.equal(pkg.scripts["lint:ratchet"], "node scripts/lint-ratchet.mjs")
+  assert.equal(pkg.scripts["lint:baseline"], "node scripts/lint-ratchet.mjs --update")
+  assert.ok(existsSync(p("../../lint-baseline.json")), "committed baseline exists")
+  // The numeric ceiling stays only as a secondary safety net; the ratchet is the primary gate.
+  assert.match(pkg.scripts.lint, /--max-warnings(=| )\d+/)
+})
+
 test("the existing monitors are untouched (cheap health URL, deploy-notify)", () => {
   const hc = readFileSync(p("../../.github/workflows/health-check.yml"), "utf8")
   assert.match(hc, /HEALTH_URL:\s*https:\/\/www\.mayaallan\.com\/api\/health\s*$/m)

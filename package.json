@@ -10,6 +10,8 @@
     "build": "node scripts/test-crisis-detection.mjs && next build",
     "dev": "next dev",
     "lint": "eslint . --max-warnings 172",
+    "lint:ratchet": "node scripts/lint-ratchet.mjs",
+    "lint:baseline": "node scripts/lint-ratchet.mjs --update",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "test": "node scripts/run-tests.mjs",
