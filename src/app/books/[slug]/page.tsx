@@ -131,10 +131,10 @@ export async function generateMetadata({ params }: BookPageProps): Promise<Metad
           },
         ],
       },
+      // No `site` / `creator` handle: the X profile is not claimed (see
+      // AUTHOR_PROFILES in identity.ts).
       twitter: {
         card: "summary_large_image",
-        site: "@mayaallan",
-        creator: "@mayaallan",
         title: ogTitle,
         description: socialDescription,
         images: [twitterImageUrl],
