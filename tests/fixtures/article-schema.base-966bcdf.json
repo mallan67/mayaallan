@@ -1,0 +1,110 @@
+{
+  "base": "966bcdfb5954bfb10cf074565881133ae950c0f6",
+  "cases": [
+    {
+      "name": "full",
+      "input": {
+        "headline": "Freeze test article headline",
+        "description": "Fixed description used only to pin generateArticleSchema behavior.",
+        "url": "https://www.mayaallan.com/scenarios/freeze-test",
+        "datePublished": "2026-09-05",
+        "dateModified": "2026-09-06",
+        "image": "https://www.mayaallan.com/scenarios/freeze-test/opengraph-image",
+        "keywords": [
+          "alpha",
+          "beta"
+        ],
+        "wordCount": 1234,
+        "isPartOf": {
+          "name": "Psilocybin Journey Scenarios",
+          "url": "https://www.mayaallan.com/scenarios"
+        },
+        "citation": [
+          {
+            "@type": "ScholarlyArticle",
+            "name": "Example et al. 2020",
+            "url": "https://doi.org/10.0000/example"
+          }
+        ]
+      },
+      "expected": {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Freeze test article headline",
+        "description": "Fixed description used only to pin generateArticleSchema behavior.",
+        "url": "https://www.mayaallan.com/scenarios/freeze-test",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://www.mayaallan.com/scenarios/freeze-test"
+        },
+        "datePublished": "2026-09-05",
+        "dateModified": "2026-09-06",
+        "inLanguage": "en",
+        "image": "https://www.mayaallan.com/scenarios/freeze-test/opengraph-image",
+        "keywords": "alpha, beta",
+        "wordCount": 1234,
+        "author": {
+          "@type": "Person",
+          "name": "Maya Allan",
+          "url": "https://www.mayaallan.com",
+          "sameAs": [
+            "https://www.instagram.com/maya.allan66/"
+          ]
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Maya Allan",
+          "url": "https://www.mayaallan.com"
+        },
+        "isPartOf": {
+          "@type": "CreativeWorkSeries",
+          "name": "Psilocybin Journey Scenarios",
+          "url": "https://www.mayaallan.com/scenarios"
+        },
+        "citation": [
+          {
+            "@type": "ScholarlyArticle",
+            "name": "Example et al. 2020",
+            "url": "https://doi.org/10.0000/example"
+          }
+        ]
+      }
+    },
+    {
+      "name": "minimal (dateModified defaults to datePublished; optional fields absent)",
+      "input": {
+        "headline": "Minimal",
+        "description": "Minimal description.",
+        "url": "https://www.mayaallan.com/blog/minimal",
+        "datePublished": "2026-01-01"
+      },
+      "expected": {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "Minimal",
+        "description": "Minimal description.",
+        "url": "https://www.mayaallan.com/blog/minimal",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://www.mayaallan.com/blog/minimal"
+        },
+        "datePublished": "2026-01-01",
+        "dateModified": "2026-01-01",
+        "inLanguage": "en",
+        "author": {
+          "@type": "Person",
+          "name": "Maya Allan",
+          "url": "https://www.mayaallan.com",
+          "sameAs": [
+            "https://www.instagram.com/maya.allan66/"
+          ]
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Maya Allan",
+          "url": "https://www.mayaallan.com"
+        }
+      }
+    }
+  ]
+}

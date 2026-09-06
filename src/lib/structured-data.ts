@@ -187,8 +187,10 @@ export function generateArticleSchema(input: ArticleSchemaInput, siteUrl = SITE_
 }
 
 // =============================================================================
-// Pre-defined FAQ content (rendered visibly on /about and book pages, and
-// mirrored into their FAQPage JSON-LD)
+// Pre-defined FAQ content — AUTHOR_FAQS is rendered visibly on /about and
+// mirrored into that page's FAQPage JSON-LD. Book pages have no visible FAQ
+// and emit no FAQPage schema (the former machine-only book FAQ constant was
+// removed: FAQPage markup must describe questions a reader can actually see).
 // =============================================================================
 
 export const AUTHOR_FAQS: FAQItem[] = [
@@ -207,49 +209,6 @@ export const AUTHOR_FAQS: FAQItem[] = [
   {
     question: "Who are Maya Allan's books for?",
     answer: "Maya Allan's books are written for readers navigating their own psilocybin experiences — anyone seeking clear, educational guidance for reflection, integration, and self-agency.",
-  },
-]
-
-export const BOOK_FAQS = (bookTitle: string, bookDescription?: string): FAQItem[] => [
-  // What the book is about
-  {
-    question: `What is "${bookTitle}" about?`,
-    answer: bookDescription || `"${bookTitle}" by Maya Allan is an educational guide for understanding and reflecting on psilocybin experiences, offering practical wisdom for readers doing their own integration.`,
-  },
-  {
-    question: `What topics does "${bookTitle}" cover?`,
-    answer: `"${bookTitle}" covers post-experience reflection and integration practices, ways of working with challenging or confusing experiences, and frameworks for translating insights into everyday life.`,
-  },
-  // Who benefits from the book
-  {
-    question: `Who is "${bookTitle}" for?`,
-    answer: `"${bookTitle}" is written for readers navigating their own psilocybin experiences who want practical, grounded guidance for reflection and integration.`,
-  },
-  {
-    question: `Can beginners use "${bookTitle}"?`,
-    answer: `Yes, "${bookTitle}" is accessible to beginners while also offering depth for experienced readers. It provides foundational concepts for those new to integration alongside more advanced reflection frameworks.`,
-  },
-  {
-    question: `Is "${bookTitle}" suitable for therapists and mental health professionals?`,
-    answer: `"${bookTitle}" is an educational resource, not a clinical or professional text, and it makes no therapeutic claims. Readers from many backgrounds have found its reflection frameworks useful, but it is not a substitute for professional training or care.`,
-  },
-  {
-    question: `Is "${bookTitle}" a guide to using psilocybin?`,
-    answer: `No. "${bookTitle}" is intended for post-experience reflection and education. It is not a guide to obtaining, dosing, or using psilocybin, and it does not replace medical, legal, or professional advice.`,
-  },
-  // What readers will learn/gain
-  {
-    question: `What will I learn from "${bookTitle}"?`,
-    answer: `Readers of "${bookTitle}" will find practical reflection and integration frameworks, ways to process and apply insights over time, and language for making sense of difficult or meaningful experiences.`,
-  },
-  {
-    question: `How is "${bookTitle}" different from other psilocybin books?`,
-    answer: `"${bookTitle}" by Maya Allan focuses on practical integration rather than just the experience itself. It offers actionable frameworks for readers doing their own reflection, emphasizing self-agency and grounded, practical wisdom.`,
-  },
-  // Author credibility
-  {
-    question: `Who wrote "${bookTitle}"?`,
-    answer: `"${bookTitle}" was written by Maya Allan, an author and educator focused on psilocybin integration, post-journey reflection, self-inquiry, and consciousness exploration.`,
   },
 ]
 
