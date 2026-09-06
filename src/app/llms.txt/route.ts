@@ -48,9 +48,14 @@ function retailerLabel(url: string): string {
 }
 
 // =============================================================================
-// /llms.txt — the AI engine equivalent of robots.txt + sitemap, combined.
+// /llms.txt — proposed LLM-friendly overview and discovery file.
 // =============================================================================
-// Spec: https://llmstxt.org/
+// Proposal/specification: https://llmstxt.org/
+//
+// llms.txt complements existing web standards rather than replacing them:
+// robots.txt communicates crawler-access preferences, sitemap.xml enumerates
+// indexable URLs, while llms.txt provides a curated Markdown overview and links
+// that agents can use when they need context about a site.
 //
 // What this file does:
 //   ChatGPT, Claude, Perplexity, Google AI Overviews, and other AI engines can
