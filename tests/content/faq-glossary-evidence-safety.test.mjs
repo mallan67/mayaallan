@@ -148,11 +148,22 @@ test("glossary: every term has id, term, category and definition; relatedTerms a
   }
 })
 
-test("no entries deleted, added or duplicated: id lists equal the base snapshot, in order", () => {
-  assert.deepEqual(faq.questions.map((q) => q.id), fixture.faqIds)
-  assert.deepEqual(glossary.terms.map((t) => t.id), fixture.glossaryIds)
-  assert.equal(new Set(fixture.faqIds).size, fixture.faqIds.length)
-  assert.equal(new Set(fixture.glossaryIds).size, fixture.glossaryIds.length)
+test("no entry accidentally deleted: every base ID is still present (additions and reordering are allowed)", () => {
+  // Only the five frozen entries are pinned to the base snapshot (above).
+  // Here the snapshot is used solely as a deletion guard, so routine FAQ /
+  // glossary expansion does not require rewriting the fixture (Codex on #51).
+  const faqIds = new Set(faq.questions.map((q) => q.id))
+  const termIds = new Set(glossary.terms.map((t) => t.id))
+  const missingFaq = fixture.faqIds.filter((id) => !faqIds.has(id))
+  const missingTerms = fixture.glossaryIds.filter((id) => !termIds.has(id))
+  assert.deepEqual(missingFaq, [], "FAQ entries deleted")
+  assert.deepEqual(missingTerms, [], "glossary entries deleted")
+})
+
+test("no duplicated IDs in the current FAQ and glossary", () => {
+  const dup = (ids) => ids.filter((id, i) => ids.indexOf(id) !== i)
+  assert.deepEqual(dup(faq.questions.map((q) => q.id)), [])
+  assert.deepEqual(dup(glossary.terms.map((t) => t.id)), [])
 })
 
 test("no population-prevalence inference for lasting harm from selected cohorts (Codex P2 on #51)", () => {
