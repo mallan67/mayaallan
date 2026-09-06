@@ -10,68 +10,50 @@ import {
   generateBreadcrumbSchema,
   AUTHOR_FAQS,
 } from "@/lib/structured-data"
-import { SITE_URL, AUTHOR_JOB_TITLE } from "@/lib/identity"
+import { SITE_URL, AUTHOR_JOB_TITLE, AUTHOR_NAME, AUTHOR_BIO } from "@/lib/identity"
 
-// Cache author bio for 5 min (admin edits in Settings will revalidate
-// the page automatically when they save).
+// Cache the author photo lookup for 5 min (admin edits in Settings will
+// revalidate the page automatically when they save).
 export const revalidate = 300
 
-async function getAuthorInfo() {
+// Public author identity (name, bio) is governed in code — src/lib/identity.ts
+// (AUTHOR_NAME, AUTHOR_BIO). site_settings only supplies the author PHOTO, so
+// an admin edit can never change what the site says Maya is.
+async function getAuthorPhoto(): Promise<string | null> {
   try {
-    // site_settings is snake_case post-migration; map to camelCase
-    // before returning so existing UI consumers (`.authorName` etc.)
-    // continue working.
     const { data: settings, error } = await supabaseAdmin
       .from(Tables.siteSettings)
-      .select("id, author_name, author_bio, author_photo_url")
+      .select("author_photo_url")
       .order("id", { ascending: true })
       .limit(1)
       .single()
 
     if (error) {
-      console.error("About page - Error fetching author info:", error.message, error.code)
+      console.error("About page - Error fetching author photo:", error.message, error.code)
       return null
     }
-
-    const mapped = {
-      id: settings.id,
-      authorName: settings.author_name as string | null,
-      authorBio: settings.author_bio as string | null,
-      authorPhotoUrl: settings.author_photo_url as string | null,
-    }
-    return mapped
+    return (settings?.author_photo_url as string | null) ?? null
   } catch (error) {
-    console.error("About page - Failed to fetch author info:", error)
+    console.error("About page - Failed to fetch author photo:", error)
     return null
   }
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const author = await getAuthorInfo()
-
   const title = "About"
 
-  // Truncate at the last whole word so we don't ship "...inherited narratives an..."
-  const truncateAtWord = (str: string, max = 155) => {
-    if (str.length <= max) return str
-    const slice = str.slice(0, max)
-    const lastSpace = slice.lastIndexOf(" ")
-    return slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…"
-  }
-
-  const description = author?.authorBio
-    ? truncateAtWord(author.authorBio, 155)
-    : "Learn more about Maya Allan — author and educator writing non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
+  // Canonical, code-governed description (not derived from any DB field).
+  const description =
+    "Learn more about Maya Allan — author and educator writing non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
   // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
   // Author photos may not be the correct aspect ratio for social sharing
   const imageUrl = `${SITE_URL}/opengraph-image`
-  const authorName = author?.authorName || "Maya Allan"
 
   return {
     title,
     description,
     openGraph: {
-      title: `About ${authorName}`,
+      title: `About ${AUTHOR_NAME}`,
       description,
       url: `${SITE_URL}/about`,
       type: "profile",
@@ -80,14 +62,14 @@ export async function generateMetadata(): Promise<Metadata> {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: authorName,
+          alt: AUTHOR_NAME,
           type: "image/png",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: `About ${authorName}`,
+      title: `About ${AUTHOR_NAME}`,
       description,
       images: [imageUrl],
     },
@@ -98,14 +80,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  const author = await getAuthorInfo()
+  const authorPhotoUrl = await getAuthorPhoto()
 
-  // Generate Author schema for SEO
-  const authorSchema = generateAuthorSchema(
-    SITE_URL,
-    author?.authorBio || "Maya Allan is an author and educator exploring consciousness, integration, and self-agency through lived experience and inquiry.",
-    author?.authorPhotoUrl ?? undefined,
-  )
+  // Generate Author schema for SEO — canonical bio, dynamic photo only
+  const authorSchema = generateAuthorSchema(SITE_URL, AUTHOR_BIO, authorPhotoUrl ?? undefined)
 
   // FAQPage JSON-LD — mirrors the visible reader questions below
   const faqSchema = generateFAQSchema(AUTHOR_FAQS, `${SITE_URL}/about`)
@@ -155,12 +133,12 @@ export default async function AboutPage() {
           {/* Side-by-side: photo + intro text */}
           <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8 md:gap-12 items-start">
             {/* Photo — smaller, circular */}
-            {author?.authorPhotoUrl && (
+            {authorPhotoUrl && (
               <div className="flex justify-center md:justify-start">
                 <div className="w-[180px] h-[180px] md:w-[200px] md:h-[200px] rounded-full overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.05)]">
                   <Image
-                    src={author.authorPhotoUrl}
-                    alt={author.authorName || "Maya Allan"}
+                    src={authorPhotoUrl}
+                    alt={AUTHOR_NAME}
                     width={200}
                     height={200}
                     className="w-full h-full object-cover"
@@ -173,7 +151,7 @@ export default async function AboutPage() {
             {/* Name + intro */}
             <div className="text-center md:text-left">
               <h1 className="font-serif text-[clamp(2rem,4.5vw,2.8rem)] font-semibold tracking-[-0.02em] mb-2">
-                {author?.authorName || "Maya Allan"}
+                {AUTHOR_NAME}
               </h1>
               <p className="text-[0.85rem] text-gold font-semibold tracking-[0.06em] uppercase mb-5">
                 {AUTHOR_JOB_TITLE}
@@ -194,26 +172,10 @@ export default async function AboutPage() {
       {/* ── Bio Section ── */}
       <section className="py-16 md:py-20">
         <div className="max-w-[680px] mx-auto px-5 md:px-9">
-          {author?.authorBio ? (
-            <div className="text-[1.05rem] leading-[1.85] text-charcoal-mid whitespace-pre-wrap">
-              {author.authorBio}
-            </div>
-          ) : (
-            <>
-              <p className="text-[1.1rem] text-charcoal font-medium leading-[1.75] mb-6">
-                I believe deep inner clarity is a fundamental human birthright.
-              </p>
-              <p className="text-[1.05rem] text-charcoal-mid leading-[1.85] mb-5">
-                It&apos;s a capacity we all have — but it gets buried under inherited narratives, the pressure of who we&apos;re &ldquo;supposed&rdquo; to be, and a world that profits from our confusion. My work starts with a simple conviction: no one can do this inner work for us.
-              </p>
-              <p className="text-[1.05rem] text-charcoal-mid leading-[1.85] mb-5">
-                I&apos;m not a guru, and I&apos;m not interested in being one. I&apos;m a writer who cares about practical tools over abstract theories. This is grounded work — self-knowledge, radical acceptance, and finally feeling at home in your own skin.
-              </p>
-              <p className="text-[1.05rem] text-charcoal-mid leading-[1.85]">
-                My writing is for anyone who&apos;s tired of being told what to think. I offer structure and perspective to help you trust your own perception — and step fully into the authorship of your own life.
-              </p>
-            </>
-          )}
+          {/* Canonical bio — governed in src/lib/identity.ts, never from the DB */}
+          <div className="text-[1.05rem] leading-[1.85] text-charcoal-mid whitespace-pre-wrap">
+            {AUTHOR_BIO}
+          </div>
         </div>
       </section>
 

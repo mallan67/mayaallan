@@ -4,13 +4,13 @@ import { SITE_URL } from "@/lib/identity"
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Get in touch with Maya Allan for speaking engagements, collaborations, or general inquiries.",
+  description: "Get in touch with Maya Allan for press, collaborations, or reader inquiries.",
   alternates: {
     canonical: `${SITE_URL}/contact`,
   },
   openGraph: {
     title: "Contact Maya Allan",
-    description: "Get in touch for speaking engagements, collaborations, or general inquiries.",
+    description: "Get in touch for press, collaborations, or reader inquiries.",
     url: `${SITE_URL}/contact`,
     images: [
       {
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Contact Maya Allan",
-    description: "Get in touch for speaking engagements, collaborations, or general inquiries.",
+    description: "Get in touch for press, collaborations, or reader inquiries.",
     images: [`${SITE_URL}/opengraph-image`],
   },
 }

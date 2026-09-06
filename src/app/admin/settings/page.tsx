@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import ImageUpload from "@/components/ImageUpload"
+import { AUTHOR_NAME, AUTHOR_BIO, AUTHOR_JOB_TITLE } from "@/lib/identity"
 
 type SiteSettings = {
   id: number
@@ -14,8 +15,6 @@ type SiteSettings = {
   socialFacebook?: string | null
   socialYoutube?: string | null
   socialTiktok?: string | null
-  authorName?: string | null
-  authorBio?: string | null
   authorPhotoUrl?: string | null
   defaultOgImageUrl?: string | null
   siteIconUrl?: string | null
@@ -65,8 +64,6 @@ export default function AdminSettingsPage() {
         socialFacebook: String(form.get("socialFacebook") || ""),
         socialYoutube: String(form.get("socialYoutube") || ""),
         socialTiktok: String(form.get("socialTiktok") || ""),
-        authorName: String(form.get("authorName") || ""),
-        authorBio: String(form.get("authorBio") || ""),
         authorPhotoUrl: authorPhotoUrl || "",
         defaultOgImageUrl: defaultOgImageUrl || "",
         siteIconUrl: siteIconUrl || "",
@@ -149,23 +146,18 @@ export default function AdminSettingsPage() {
         <div className="border border-slate-200 rounded-lg p-6 space-y-4">
           <h2 className="text-lg font-semibold">Author</h2>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Author Name</label>
-            <input
-              name="authorName"
-              defaultValue={settings.authorName || ""}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Author Bio</label>
-            <textarea
-              name="authorBio"
-              rows={8}
-              defaultValue={settings.authorBio || ""}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg"
-            />
+          {/* Public author name and bio are governed in code (src/lib/identity.ts)
+              so the site's identity cannot drift through an admin edit. They are
+              shown here read-only; only the photo is editable. */}
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Author name and bio (managed in code)
+            </p>
+            <p className="text-sm font-medium text-slate-900">{AUTHOR_NAME} — {AUTHOR_JOB_TITLE}</p>
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">{AUTHOR_BIO}</p>
+            <p className="text-xs text-slate-500">
+              To change these, edit AUTHOR_NAME / AUTHOR_BIO in <code>src/lib/identity.ts</code> and deploy.
+            </p>
           </div>
 
           <div>

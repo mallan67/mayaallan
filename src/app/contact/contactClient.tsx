@@ -47,7 +47,7 @@ export default function ContactClient() {
     <div className="max-w-xl mx-auto px-4 py-10 md:py-12">
       <h1 className="font-serif text-2xl md:text-3xl font-semibold mb-4">Contact</h1>
       <p className="text-sm text-slate-700 mb-4">
-        Use this form to reach out regarding speaking, collaborations, or general inquiries.
+        Use this form to reach out regarding press, collaborations, or reader inquiries.
       </p>
 
       {status === "success" && (

@@ -131,10 +131,10 @@ export async function generateMetadata(): Promise<Metadata> {
       ],
     },
     // X (formerly Twitter) card metadata - object name must be "twitter" per meta tag spec
+    // No `site` / `creator` handle: the X profile is not claimed (see the
+    // commented-out entry in AUTHOR_PROFILES). Add it back only once it is.
     twitter: {
       card: "summary_large_image",
-      site: "@mayaallan", // X handle
-      creator: "@mayaallan", // X handle
       title: siteName,
       description,
       images: [`${SITE_URL}/opengraph-image`],
