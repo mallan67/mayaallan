@@ -116,8 +116,10 @@ export const BOOK_ASINS: Record<string, string> = {
 // DELIBERATELY SEPARATE from the mutable marketing blurb stored in Supabase
 // (`books.blurb`), which is human sales copy and may be edited freely in admin.
 // A sales blurb must never become machine-readable authority copy: these
-// curated summaries feed the Book JSON-LD `description`, the /llms.txt +
-// /llms-full.txt feeds, and the OG/Twitter image fallback text, so
+// curated summaries feed the book page's <meta name="description">, its Open
+// Graph description and Twitter description (via generateMetadata in
+// src/app/books/[slug]/page.tsx), the Book JSON-LD `description`, the
+// /llms.txt + /llms-full.txt feeds, and the OG/Twitter image fallback text, so
 // structured/authority positioning stays non-clinical no matter what the blurb
 // says. Editorial copy only — never regex-sanitized blurb.
 //
@@ -131,11 +133,13 @@ export const BOOK_MACHINE_SUMMARIES: Record<string, string> = {
 }
 
 /**
- * Machine-facing summary for a book — the single source used by JSON-LD, the
- * llms.txt feeds and the social-image fallback. Never returns the mutable
- * sales blurb. Falls back to a generic, subject-neutral non-clinical sentence
- * for books without a curated summary (so a new book can never silently leak
- * an unsanitized blurb, and is never described as a psilocybin book by default).
+ * Machine-facing summary for a book — the single source used by the book
+ * page's meta description, Open Graph description and Twitter description
+ * (generateMetadata), the Book JSON-LD `description`, the llms.txt feeds and
+ * the social-image fallback. Never returns the mutable sales blurb. Falls back
+ * to a generic, subject-neutral non-clinical sentence for books without a
+ * curated summary (so a new book can never silently leak an unsanitized blurb,
+ * and is never described as a psilocybin book by default).
  */
 export function bookMachineSummary(slug: string, title?: string): string {
   return (
