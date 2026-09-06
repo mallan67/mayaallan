@@ -1,29 +1,38 @@
 # Book Metadata — *Psilocybin Integration Guide*
 
-One source of truth for every platform. Copy-paste what you need.
+**What this file is.** A manually maintained reference and copy-paste sheet for external book platforms (Amazon KDP, Goodreads, Bookshop, Open Library, LibraryThing and similar).
+
+**What this file is not.** It is not a runtime source for mayaallan.com — nothing on the site reads it. For author positioning it is subordinate to the canonical site identity in code (`src/lib/identity.ts`: `AUTHOR_NAME`, `AUTHOR_JOB_TITLE`, `AUTHOR_BIO`, `BOOK_MACHINE_SUMMARIES`); if the two ever disagree, the code is right and this file is stale. Book listing data on the site comes from the `books` database row, not from here.
+
+**Before reusing anything below**, recheck externally maintained facts (ISBNs, dates, page count, categories, platform rules) against the relevant publishing account or platform documentation. Each section states where its content comes from.
+
+Last reviewed: 2026-09-06
 
 ---
 
 ## Core identifiers
 
-| Field | Value |
-|---|---|
-| **Title** | Psilocybin Integration Guide |
-| **Subtitle** | 40 Real Scenarios for Navigating What You See, Feel & Experience |
-| **Cover tagline 1** | Rewire Your Mind • Release Fears • Heal Traumas |
-| **Cover tagline 2** | Inner Freedom • Self-Agency • Awakening • Transformation |
-| **Author** | Maya Allan |
-| **Publisher** | Maya Allan (self-published) |
-| **First Edition** | December 2025 |
-| **Language** | English |
-| **Amazon ASIN** | B0G7JWDJYQ — `amazon.com/dp/B0G7JWDJYQ` (verified 2026-05-19) |
-| **Page count** | 289 (hardcover) |
-| **Primary category** | Self-Help / Personal Growth / Spiritual |
-| **Secondary category** | Body, Mind & Spirit / Entheogens & Visionary Substances |
+| Field | Value | Source |
+|---|---|---|
+| **Title** | Psilocybin Integration Guide | Matches the site (`books` row, Book JSON-LD) |
+| **Subtitle** | 40 Real Scenarios for Navigating What You See, Feel & Experience | Matches the site (`alternativeHeadline`) |
+| **Cover tagline 1 (printed)** | Rewire Your Mind • Release Fears • Heal Traumas | Printed cover — factual record only; not the canonical author positioning (see "Approved external positioning") |
+| **Cover tagline 2 (printed)** | Inner Freedom • Self-Agency • Awakening • Transformation | Printed cover — factual record only |
+| **Author** | Maya Allan | `AUTHOR_NAME` |
+| **Author role** | Author and Educator | `AUTHOR_JOB_TITLE` |
+| **Publisher** | Maya Allan (self-published) | Matches the site's Book JSON-LD publisher |
+| **First edition** | December 2025 | Externally maintained (KDP account) — not verified from the repository; last checked 2026-09-06 against this file only |
+| **Language** | English | Matches the site (`inLanguage: en`) |
+| **Amazon ASIN** | B0G7JWDJYQ — `amazon.com/dp/B0G7JWDJYQ` | `BOOK_ASINS` in `identity.ts`; listing verified 2026-05-19 |
+| **Page count** | 289 (hardcover) | Externally maintained (KDP) — not verified from the repository |
+| **Primary category** | Self-Help / Personal Growth / Spiritual | Externally maintained — recheck in the KDP account |
+| **Secondary category** | Body, Mind & Spirit / Entheogens & Visionary Substances | Externally maintained — recheck in the KDP account |
 
 ---
 
 ## ISBNs — one per edition
+
+Externally maintained (KDP / Google Play accounts). The repository does not verify these; the site's Book JSON-LD currently carries the ASIN only. The paperback ISBN matches the EAN `9798994148839` embedded in the site's Bookshop, Barnes & Noble and Waterstones links.
 
 | ISBN | Edition | Channel |
 |---|---|---|
@@ -35,17 +44,45 @@ Each edition's copyright page must print its own ISBN (not shared).
 
 ---
 
-## Descriptions (use whichever length fits the platform)
+## Approved external positioning
 
-### Tagline (15 words) — for short fields
+Copy in this section aligns with the site's current non-clinical positioning: post-experience reflection, integration, self-inquiry, personal agency, and educational rather than professional or clinical guidance. Use it for author profiles and retailer descriptions. It is derived from `BOOK_MACHINE_SUMMARIES`, `AUTHOR_BIO` and the site's own book copy.
+
+### Tagline (short fields)
+
+> Forty real journey scenarios, and a non-clinical, educational guide to making sense of them afterward.
+
+### Short description (~60 words)
+
+> Psilocybin Integration Guide is an educational resource for post-experience reflection, integration, and self-inquiry. It offers practical frameworks for making sense of meaningful or difficult experiences and applying insights to everyday life. It does not provide instructions for obtaining, dosing, or using psilocybin and is not a substitute for medical, legal, or professional advice.
+
+### Medium description (~120 words)
+
+> Psilocybin Integration Guide by Maya Allan walks through 40 real journey scenarios — ego dissolution, shadow figures, entity contact, cosmic consciousness, inner child material, difficult emotional release, and the re-entry phase. Each scenario includes a description of what is happening, why it arises, how to reflect on it afterward, the lesson it can carry, and an example.
+>
+> It is a non-clinical, educational book written for readers exploring post-experience reflection and integration. Its focus is the meaning-making after an experience, which the book treats as the reader's own to do. It does not provide instructions for obtaining, dosing, or using psilocybin, and it is not a substitute for medical, legal, or professional advice.
+
+### Audience line
+
+> Readers exploring post-experience reflection, integration, and self-inquiry.
+
+---
+
+## Manuscript-derived descriptions — verify before reuse
+
+The descriptions below were written from the printed book's structure and predate the site's current positioning. They record what the manuscript contains (Part I preparation material including dosage, fasting, and the role of a guide or sitter; Part II journey scenarios; Part III integration; appendices; the research and lineage influences the manuscript cites). They are kept here as a factual record of the printed book, **not** as Maya's credentials or expertise, and **not** as approved external marketing claims.
+
+Before any sentence below is reused on an external platform: (1) check it against the actual manuscript; (2) replace audience and authority wording ("practitioners, healers, facilitators", "medicine long shrouded in mystery", "direct integration practice") with the approved positioning above; (3) do not present preparation or dosing content as a selling point in copy that carries the author's name alongside the site.
+
+### Legacy tagline
 
 > A grounded, research-informed companion for every phase of the psilocybin journey — 40 real scenarios with practical navigation.
 
-### Short description (~55 words) — for BookBub, Goodreads short blurb
+### Legacy short description
 
 > A grounded, research-informed companion for anyone working with psilocybin. Through 40 real scenarios — from ego dissolution and shadow work to inner child healing and integration — author Maya Allan walks readers through what can arise during a journey, why, and how to navigate it with care. For guided, solo, and group journeys alike.
 
-### Medium description (~140 words) — for most catalog pages, Open Library, LibraryThing
+### Legacy medium description
 
 > A grounded, research-informed companion for anyone working with psilocybin. Through 40 real scenarios — from ego dissolution and shadow work to inner child healing and cosmic consciousness — this guide walks you through what can arise during a psilocybin journey, why it's happening, and how to navigate it with care.
 >
@@ -53,7 +90,7 @@ Each edition's copyright page must print its own ISBN (not shared).
 >
 > For practitioners, healers, facilitators, and anyone seeking psilocybin with intention rather than escape.
 
-### Long description (~400 words) — for Amazon KDP, your own website, publisher info
+### Legacy long description
 
 > The psilocybin journey is an inner pilgrimage — a return to truth. But the moments that matter most often happen at the edges: when ego begins to dissolve, when old grief surfaces unbidden, when an entity appears with a message, or when the journey ends and you're left asking *"what do I do with what I saw?"*
 >
@@ -73,31 +110,38 @@ Each edition's copyright page must print its own ISBN (not shared).
 
 ---
 
-## Categories / BISAC codes (for Amazon KDP and IngramSpark)
+## Categories / BISAC codes (Amazon KDP and IngramSpark)
+
+Externally maintained selections — recheck in the publishing account before reuse. Amazon KDP currently allows up to **3 categories** at title setup (check current KDP help for the live limit).
 
 Primary:
 - **OCC037000** — BODY, MIND & SPIRIT / Entheogens & Visionary Substances
 
-Secondary (pick 1-2 more):
+Secondary (pick up to 2 more):
 - **SEL021000** — SELF-HELP / Motivational & Inspirational
 - **SEL036000** — SELF-HELP / Personal Growth / Self-Esteem
 - **SEL032000** — SELF-HELP / Spiritual
-- **PSY022040** — PSYCHOLOGY / Psychotherapy / Counseling
+- **PSY022040** — PSYCHOLOGY / Psychotherapy / Counseling — note: a psychotherapy category sits awkwardly with the book's non-clinical positioning; prefer the Self-Help options unless the manuscript supports it.
 
 ---
 
-## Keywords / search tags (up to 7 for Amazon KDP; pick best for each platform)
+## Keywords / search tags
 
-Core 7 for Amazon KDP:
-1. `psilocybin integration guide`
-2. `psychedelic integration therapy`
-3. `mushroom journey handbook`
-4. `psilocybin trip scenarios`
-5. `trauma integration psychedelics`
-6. `inner child healing`
-7. `psilocybin microdosing safety`
+Amazon KDP accepts up to **7 keywords or short phrases** and requires that they accurately describe the book. Reviewed 2026-09-06 against the manuscript description above and the current non-clinical positioning.
 
-Additional tags for Goodreads / BookBub / LibraryThing:
+Recommended for Amazon KDP (5 of the 7 slots; fill the remaining slots only with phrases the manuscript supports):
+1. `psilocybin integration guide` — the title
+2. `psychedelic integration` — the book's subject
+3. `psilocybin trip scenarios` — Part II (40 scenarios)
+4. `mushroom journey handbook` — Part II structure
+5. `inner child work` — Part III (dedicated Inner Child chapter)
+
+Removed from the former "Core 7" on review:
+- `psychedelic integration therapy` — "therapy" frames the book as clinical; it makes no therapeutic claims.
+- `trauma integration psychedelics` — a therapeutic-outcome claim; the manuscript's trauma-informed Inner Child chapter does not make the book a trauma-treatment guide.
+- `psilocybin microdosing safety` — not the book's subject, and the site provides no dosing or use guidance.
+
+Additional tags for Goodreads / BookBub / LibraryThing (descriptive of the book's topics; "trauma healing" removed for the reason above):
 - psilocybin
 - psychedelic
 - integration
@@ -108,7 +152,6 @@ Additional tags for Goodreads / BookBub / LibraryThing:
 - shadow work
 - ego death
 - spiritual awakening
-- trauma healing
 - mystical experience
 - self-inquiry
 - spirituality
@@ -118,17 +161,15 @@ Additional tags for Goodreads / BookBub / LibraryThing:
 
 ## Author bio variants
 
-### Short (50 words)
+Derived directly from the canonical `AUTHOR_BIO` and `AUTHOR_JOB_TITLE` in `src/lib/identity.ts`. Do not add credentials, lived psychedelic experience, therapeutic qualifications, practitioner status, or clinical authority. If `identity.ts` changes, regenerate these.
 
-> Maya Allan is an author, speaker, and wellness advocate exploring belief systems, inherited patterns, and the integration of psychedelic experience. She approaches this work as an explorer, not an authority — empowering readers to walk their path with intention and care. Visit mayaallan.com for free reflection tools and more writing.
+### Short (~50 words)
 
-### Medium (120 words)
+> Maya Allan is an author and educator focused on psilocybin integration, post-journey reflection, and self-inquiry. She writes non-clinical, educational resources — including the Psilocybin Integration Guide — that help readers make sense of their own experiences. Free reflection tools and more writing are at mayaallan.com.
 
-> Maya Allan is an author, speaker, and wellness advocate whose work centers on three pillars: belief systems, ancestry and memory, and practical tools for mental reshaping.
->
-> With years of personal journeying and immersive study in plant medicine traditions, spiritual psychology, and trauma integration, she empowers people to work with psilocybin safely, intentionally, and meaningfully.
->
-> Her mission is simple and profound: to remind every seeker that the power to awaken, remember, understand, and transform belongs to them — rooted in love. She believes this is not an elite privilege, but the birthright of every human soul. Free reflection tools and integration resources are available at mayaallan.com.
+### Medium (~80 words)
+
+> Maya Allan is an author and educator focused on psilocybin integration, post-journey reflection, and self-inquiry. She writes non-clinical, educational resources — including the Psilocybin Integration Guide — that help readers make sense of their own experiences and build a personal reflective practice. Her work centers on personal agency: the meaning-making after an experience is the reader's own to do. Free reflection tools and integration resources are available at mayaallan.com.
 
 ---
 
@@ -137,34 +178,51 @@ Additional tags for Goodreads / BookBub / LibraryThing:
 | Where | URL |
 |---|---|
 | Author website | https://www.mayaallan.com |
-| Tools landing | https://www.mayaallan.com/tools |
-| Integration tool (companion to this book) | https://www.mayaallan.com/integration |
+| Practices (reflection tools landing) | https://www.mayaallan.com/practices |
+| Integration Reflection | https://www.mayaallan.com/integration-reflection |
 | Blog | https://www.mayaallan.com/blog |
+| Book page | https://www.mayaallan.com/books/psilocybin-integration-guide |
 
 ---
 
 ## Amazon KDP book description HTML (ready to paste)
 
-Amazon KDP allows limited HTML in book descriptions (strong, em, br, p, h4, h5, ul, li). Here's a formatted version of the long description you can paste:
+Amazon KDP allows a limited set of HTML tags in book descriptions: `<b>`, `<em>`, `<i>`, `<u>`, `<p>`, `<br>`, `<h4>` through `<h6>`, `<ol>`, `<ul>`, `<li>`. Do not include URLs, testimonials, review requests, pricing, or promotional dates — Amazon prohibits them inside the description. Recheck current KDP help before pasting.
+
+### Approved positioning version
+
+```html
+<p><b>Psilocybin Integration Guide</b> is an educational resource for post-experience reflection, integration, and self-inquiry.</p>
+
+<p>It walks through <b>40 real journey scenarios</b> &mdash; ego dissolution, shadow figures, entity contact, cosmic consciousness, inner child material, difficult emotional release, and the re-entry phase. Each scenario includes a description of what is happening, why it arises, how to reflect on it afterward, the lesson it can carry, and an example.</p>
+
+<p>It is a non-clinical, educational book written for readers exploring post-experience reflection and integration. Its focus is the meaning-making after an experience, which the book treats as the reader's own to do.</p>
+
+<p><em>It does not provide instructions for obtaining, dosing, or using psilocybin, and it is not a substitute for medical, legal, or professional advice.</em></p>
+```
+
+### Manuscript-derived version — verify before reuse
+
+Formatted from the legacy long description; subject to the same checks as that section (manuscript accuracy; replace audience and authority wording with the approved positioning).
 
 ```html
 <p><em>The psilocybin journey is an inner pilgrimage &mdash; a return to truth.</em> But the moments that matter most often happen at the edges: when ego begins to dissolve, when old grief surfaces unbidden, when an entity appears with a message, or when the journey ends and you're left asking <em>"what do I do with what I saw?"</em></p>
 
-<p>This book is a grounded, research-informed companion for every phase of that journey. Through <strong>40 real scenarios</strong> &mdash; each structured with Description, Cause, Navigation, Lesson, and Example &mdash; Maya Allan walks you through what may arise during a psilocybin experience, what it means, and how to move through it with care.</p>
+<p>This book is a grounded, research-informed companion for every phase of that journey. Through <b>40 real scenarios</b> &mdash; each structured with Description, Cause, Navigation, Lesson, and Example &mdash; Maya Allan walks you through what may arise during a psilocybin experience, what it means, and how to move through it with care.</p>
 
 <h4>What's inside</h4>
 
-<p><strong>Part I &mdash; Preparation &amp; Basics.</strong> Understanding what psilocybin does in your brain and body, set and setting, dosage, fasting, and the role of a guide or sitter.</p>
+<p><b>Part I &mdash; Preparation &amp; Basics.</b> Understanding what psilocybin does in your brain and body, set and setting, dosage, fasting, and the role of a guide or sitter.</p>
 
-<p><strong>Part II &mdash; The Journey (Choose Your Path).</strong> 40 scenarios organized across three paths: journeys with a guide or friend, solo journeys, and group journeys. From cosmic consciousness to past-life regression to healing trauma through catharsis.</p>
+<p><b>Part II &mdash; The Journey (Choose Your Path).</b> 40 scenarios organized across three paths: journeys with a guide or friend, solo journeys, and group journeys. From cosmic consciousness to past-life regression to healing trauma through catharsis.</p>
 
-<p><strong>Part III &mdash; Deepening &amp; Integration.</strong> A dedicated Inner Child chapter with trauma-informed care, a full chapter on integration practices, ethical considerations, and post-journey reflection.</p>
+<p><b>Part III &mdash; Deepening &amp; Integration.</b> A dedicated Inner Child chapter with trauma-informed care, a full chapter on integration practices, ethical considerations, and post-journey reflection.</p>
 
 <p>Appendices include a glossary, the current legal landscape (as of December 2025), curated resources, and practical integration worksheets.</p>
 
 <p>Drawing on peer-reviewed research (Johns Hopkins, Imperial College London, Coherence Therapy), lineage wisdom, and direct integration practice, this guide meets you where you are.</p>
 
-<p><strong>This is not a recreational guide. This is the book for people who approach psilocybin with intention.</strong></p>
+<p><b>This is not a recreational guide. This is the book for people who approach psilocybin with intention.</b></p>
 ```
 
 ---
@@ -177,9 +235,11 @@ Amazon KDP allows limited HTML in book descriptions (strong, em, br, p, h4, h5, 
 
 ## Platform-specific reminders
 
-- **Amazon KDP:** only ONE BISAC category goes on the book detail page at a time, but you can select up to 10 keywords for discoverability. Use the Core 7 above.
-- **Goodreads:** reader-driven platform. Tag generously. Invite readers to review. Once you claim your author page, post the first chapter excerpt in your bio.
+Platform rules change; recheck each platform's current help pages before acting on these.
+
+- **Amazon KDP:** up to 3 categories at title setup and up to 7 keywords or short phrases; keywords must accurately describe the book. Use the recommended list above.
+- **Goodreads:** reader-driven platform. Tag generously. Invite readers to review. Once you claim your author page, post the first chapter excerpt in your bio. (The author-page claim is still pending per `identity.ts`; the book listing itself is verified.)
 - **BookBub:** uses category + tags. They curate Featured Deals based on genre fit. Body/Mind/Spirit is your primary.
 - **Open Library:** minimal metadata required — title, author, publisher, date, ISBN. After creating the record, you can add cover image, description, and subjects.
 - **LibraryThing:** small but passionate user base. Good for niche discoverability.
-- **Your own site:** the book page on mayaallan.com can and should include the long description and a direct link to the Integration tool as a companion resource (already wired via the cross-link card).
+- **Your own site:** the book page on mayaallan.com renders the `books` database row (title, subtitles, blurb, cover, prices, retailer links) plus a "Related reading" section that links the site's research article and the ego-dissolution scenario. It does not read this file, and it no longer emits a book FAQ. The Integration Reflection tool is reached from the Practices section, not from a book-page cross-link card.
