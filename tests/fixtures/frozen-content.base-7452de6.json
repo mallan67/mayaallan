@@ -120,9 +120,10 @@
     "substance"
   ],
   "frozenFiles": {
-    "content/posts/02-psilocybin-integration-research.md": "a41bd529f0084a09428d82b03efa1b4048212dc7fc243ced073d99a83de2a625",
-    "content/scenarios/ego-dissolution.md": "b29bf3eaa4a1ad28be1afada4b0b30cd229809889c351978303fe3148d7569dc",
-    "src/app/scenarios/[slug]/page.tsx": "661fea9c7f18e777b9a7d06796e06718e21445c3063f211baaebd6f1ff06eb11",
-    "src/app/blog/[slug]/page.tsx": "84a76719202635ae349440afbc3b6f5e563e1a419b0547cd3fc3e2131e7ea2e6"
-  }
+    "content/posts/02-psilocybin-integration-research.md": "13bdd42d4a6aab3da57fd4ca2fd489d6c24a569c4d627e18bcf90f99babbde93",
+    "content/scenarios/ego-dissolution.md": "202156eda0052c84ebb13f2c9e2d3237ec58177428000afce94c02a75d537f42",
+    "src/app/scenarios/[slug]/page.tsx": "0620dee2159fcd5ef0a565ef53f878094f0ea6c0ca81a9cda1bb09055fa6b751",
+    "src/app/blog/[slug]/page.tsx": "e12b6a61d151c9ea43f9ee639df3ae855af11caaccdb1010938b52f70aaac342"
+  },
+  "hashNote": "sha256 of UTF-8 content with CRLF normalized to LF (platform-independent)"
 }

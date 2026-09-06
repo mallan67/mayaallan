@@ -51,9 +51,14 @@ test("the two frozen glossary entries are unchanged from base (field-for-field)"
   }
 })
 
-test("frozen experiment content files and page routes are byte-identical to base", () => {
+// Line endings are normalized before hashing: the repo stores LF, but a
+// Windows checkout with core.autocrlf=true sees CRLF, and the digest must be
+// identical on both (Codex P1 on #51). Content is otherwise byte-for-byte.
+const sha256Normalized = (buf) => createHash("sha256").update(buf.toString("utf8").replace(/\r\n/g, "\n")).digest("hex")
+
+test("frozen experiment content files and page routes are unchanged from base (sha256, LF-normalized)", () => {
   for (const [rel, expected] of Object.entries(fixture.frozenFiles)) {
-    const actual = createHash("sha256").update(readFileSync(p("../../" + rel))).digest("hex")
+    const actual = sha256Normalized(readFileSync(p("../../" + rel)))
     assert.equal(actual, expected, `unchanged: ${rel}`)
   }
 })
