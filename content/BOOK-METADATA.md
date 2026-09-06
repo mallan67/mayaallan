@@ -48,7 +48,7 @@ Each edition's copyright page must print its own ISBN (not shared).
 
 Copy in this section aligns with the site's current non-clinical positioning: post-experience reflection, integration, self-inquiry, personal agency, and educational rather than professional or clinical guidance. Use it for author profiles and retailer descriptions. It is derived from `AUTHOR_BIO` and the site's own book copy.
 
-**Accuracy rule for retailer pages.** This copy must describe the purchased book truthfully. The printed book's Part I contains preparation material (set and setting, dosage, fasting, the role of a guide or sitter — see the manuscript-derived section and `docs/book-review/psilocybin-integration-guide-review.md`). Approved copy therefore must **not** claim the book contains no dosing or use material, and must **not** use that material as a selling point either: it stays silent on it and states the non-clinical, no-therapeutic-claims position. (The site's own machine summary in `identity.ts` says the *site* provides no such instructions; that sentence is about mayaallan.com and is not reused here as a description of the book.)
+**Accuracy rule for retailer pages.** This copy must describe the purchased book truthfully. The printed book's Part I contains preparation material (set and setting, dosage, fasting, the role of a guide or sitter — see the manuscript-derived section and `docs/book-review/psilocybin-integration-guide-review.md`). Approved copy therefore must **not** claim the book contains no dosing or use material, and must **not** use that material as a selling point either: it stays silent on it and states the non-clinical, no-therapeutic-claims position. (Known stale runtime description, recorded here for a separate runtime PR: `BOOK_MACHINE_SUMMARIES["psilocybin-integration-guide"]` in `src/lib/identity.ts` describes the *book* with the same "does not provide instructions for obtaining, dosing, or using psilocybin" sentence, and `generateBookSchema` emits it as the Book JSON-LD `description`, which also feeds the llms feeds. Against the manuscript facts above that sentence is inaccurate for the book and should be corrected in code, not preserved. It is not reused here.)
 
 ### Tagline (short fields)
 
@@ -60,7 +60,7 @@ Copy in this section aligns with the site's current non-clinical positioning: po
 
 ### Medium description (~120 words)
 
-> Psilocybin Integration Guide by Maya Allan walks through 40 real journey scenarios — ego dissolution, shadow figures, entity contact, cosmic consciousness, inner child material, difficult emotional release, and the re-entry phase. Each scenario includes a description of what is happening, why it arises, how to reflect on it afterward, the lesson it can carry, and an example.
+> Psilocybin Integration Guide by Maya Allan walks through 40 real journey scenarios — ego dissolution, shadow figures, entity contact, cosmic consciousness, inner child material, difficult emotional release, and the re-entry phase. Each scenario is structured as Description, Cause, Navigation, Lesson, and Example: what is happening, why it arises, how to navigate it, the lesson it can carry, and an example.
 >
 > It is a non-clinical, educational book written for readers exploring post-experience reflection and integration. Its focus is the meaning-making after an experience, which the book treats as the reader's own to do. It makes no therapeutic claims and is not a substitute for medical, legal, or professional advice; readers are responsible for understanding and complying with local laws.
 
@@ -196,7 +196,7 @@ Amazon KDP allows a limited set of HTML tags in book descriptions: `<b>`, `<em>`
 ```html
 <p><b>Psilocybin Integration Guide</b> is an educational resource for post-experience reflection, integration, and self-inquiry.</p>
 
-<p>It walks through <b>40 real journey scenarios</b> &mdash; ego dissolution, shadow figures, entity contact, cosmic consciousness, inner child material, difficult emotional release, and the re-entry phase. Each scenario includes a description of what is happening, why it arises, how to reflect on it afterward, the lesson it can carry, and an example.</p>
+<p>It walks through <b>40 real journey scenarios</b> &mdash; ego dissolution, shadow figures, entity contact, cosmic consciousness, inner child material, difficult emotional release, and the re-entry phase. Each scenario is structured as Description, Cause, Navigation, Lesson, and Example: what is happening, why it arises, how to navigate it, the lesson it can carry, and an example.</p>
 
 <p>It is a non-clinical, educational book written for readers exploring post-experience reflection and integration. Its focus is the meaning-making after an experience, which the book treats as the reader's own to do.</p>
 
