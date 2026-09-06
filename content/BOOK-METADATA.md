@@ -40,7 +40,7 @@ Externally maintained (KDP / Google Play accounts). The repository does not veri
 | **979-8-9941488-5-3** | Hardcover | Amazon (KDP Hardcover) |
 | **979-8-9941488-9-1** | Ebook | Google Play Books |
 
-Each edition's copyright page must print its own ISBN (not shared).
+ISBN rule (per current KDP guidance; recheck in the KDP account): KDP requires an ISBN for paperback and hardcover titles that require one; an ISBN is not required to publish a KDP eBook. If Maya supplies her own ISBN and prints it in a print manuscript, that printed ISBN must match the ISBN entered for that edition during title setup. Each edition uses its own ISBN; there is no requirement that every edition print an ISBN on its copyright page.
 
 ---
 
@@ -112,14 +112,18 @@ Before any sentence below is reused on an external platform: (1) check it agains
 
 ---
 
-## Categories / BISAC codes (Amazon KDP and IngramSpark)
+## Amazon KDP categories
 
-Externally maintained selections — recheck in the publishing account before reuse. Amazon KDP currently allows up to **3 categories** at title setup (check current KDP help for the live limit).
+Amazon KDP currently permits up to **3 category selections** per title. They are chosen in Amazon's current category / subcategory / placement picker, not by entering BISAC codes; the available selections differ by marketplace and sometimes by format, and they must be rechecked in the live KDP account before or during any update. The actual selections made in the KDP account are not recorded in this file. Do not treat the BISAC codes below as the values to enter in the KDP category picker.
+
+## BISAC codes / external publishing metadata
+
+Externally maintained records for IngramSpark and other systems that use BISAC subject codes — recheck in the relevant publishing account before reuse. They are not the current Amazon KDP category selections.
 
 Primary:
 - **OCC037000** — BODY, MIND & SPIRIT / Entheogens & Visionary Substances
 
-Secondary (pick up to 2 more):
+Secondary candidates:
 - **SEL021000** — SELF-HELP / Motivational & Inspirational
 - **SEL036000** — SELF-HELP / Personal Growth / Self-Esteem
 - **SEL032000** — SELF-HELP / Spiritual
@@ -131,12 +135,13 @@ Secondary (pick up to 2 more):
 
 Amazon KDP accepts up to **7 keywords or short phrases** and requires that they accurately describe the book. Reviewed 2026-09-06 against the manuscript description above and the current non-clinical positioning.
 
-Recommended for Amazon KDP (5 of the 7 slots; fill the remaining slots only with phrases the manuscript supports):
-1. `psilocybin integration guide` — the title
-2. `psychedelic integration` — the book's subject
-3. `psilocybin trip scenarios` — Part II (40 scenarios)
-4. `mushroom journey handbook` — Part II structure
-5. `inner child work` — Part III (dedicated Inner Child chapter)
+Recommended for Amazon KDP (4 candidates; use additional slots only for accurate, manuscript-supported phrases not already represented in the title, contributors, categories, or other metadata):
+1. `psychedelic integration` — the book's subject
+2. `psilocybin trip scenarios` — Part II (40 scenarios)
+3. `mushroom journey handbook` — Part II structure
+4. `inner child work` — Part III (dedicated Inner Child chapter)
+
+Not recommended as a keyword: `psilocybin integration guide` — it duplicates the title, and current KDP guidance says to avoid keywords that repeat information already present elsewhere in the book's metadata.
 
 Removed from the former "Core 7" on review:
 - `psychedelic integration therapy` — "therapy" frames the book as clinical; it makes no therapeutic claims.
