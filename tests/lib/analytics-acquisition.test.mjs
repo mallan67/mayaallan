@@ -86,7 +86,7 @@ test("summarizeAcquisition counts a visitor as returning only when they came bac
   const s = summarizeAcquisition(rows)
   assert.equal(s.totalVisitors, 4)
   assert.equal(s.returningVisitors, 2, "b and d came back on a later date; a and c did not")
-  assert.equal(s.oneTimeVisitors, 2, "a and c never came back")
+  assert.equal(s.singleDayVisitors, 2, "a and c were only ever seen on their first day")
 })
 
 test("summarizeAcquisition honours a limit per list without changing the totals", () => {
@@ -100,7 +100,7 @@ test("summarizeAcquisition returns empty lists and zero counts for no data, so t
   const s = summarizeAcquisition([])
   assert.deepEqual(s.referrers, [])
   assert.deepEqual(s.landingPages, [])
-  assert.deepEqual([s.totalVisitors, s.oneTimeVisitors, s.returningVisitors], [0, 0, 0])
+  assert.deepEqual([s.totalVisitors, s.singleDayVisitors, s.returningVisitors], [0, 0, 0])
 })
 
 test("summarizeAcquisition tolerates rows with missing timestamps instead of throwing", () => {
@@ -169,7 +169,7 @@ test("the counts partition the visitors: every row is one visitor, either one-ti
   // every row IS a new visitor for that range. What varies is whether they
   // came back. Naming the remainder "first-time" would have been wrong.
   const s = summarizeAcquisition(rows)
-  assert.equal(s.oneTimeVisitors + s.returningVisitors, s.totalVisitors)
+  assert.equal(s.singleDayVisitors + s.returningVisitors, s.totalVisitors)
   assert.equal(s.totalVisitors, 4)
 })
 

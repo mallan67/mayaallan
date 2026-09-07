@@ -204,7 +204,7 @@ async function RangeSection({ days, label }: { days: number; label: RangeKey }) 
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <Card title="New visitors" value={fmtNum(acquisition.totalVisitors)} hint="First seen in this range, of those who accepted cookies" />
-        <Card title="Visited once" value={fmtNum(acquisition.oneTimeVisitors)} hint="Never came back" />
+        <Card title="One day only" value={fmtNum(acquisition.singleDayVisitors)} hint="Not seen again on a later day" />
         <Card title="Came back later" value={fmtNum(acquisition.returningVisitors)} hint="Returned on a later day" />
       </div>
 
@@ -323,15 +323,22 @@ export default async function AdminAnalyticsPage() {
 
       <div className="text-xs text-slate-500 mb-6 space-y-2">
         <p>
-          <strong className="text-slate-700">Two sources, and they will not match.</strong> Everything on this page
-          comes from first-party attribution cookies, so it counts only visitors who pressed
-          &quot;Accept&quot; on the consent banner — a real but partial slice, and always an undercount of actual
-          traffic. Total page views for <em>every</em> visitor, including those who declined, are counted without
-          cookies and live in the Vercel Web Analytics dashboard.
+          <strong className="text-slate-700">Different cards count different populations — read them separately.</strong>
         </p>
         <p>
-          What this page is for: which sources and landing pages bring people who go on to subscribe, start a tool,
-          or buy. UTM-tagged campaigns surface in Top campaigns once they receive traffic.
+          <strong className="text-slate-700">Counts everyone:</strong> purchases and revenue come from order records,
+          and newsletter, contact and checkout figures come from events written server-side. These are recorded
+          whether or not the person accepted cookies.
+        </p>
+        <p>
+          <strong className="text-slate-700">Counts only those who accepted:</strong> Visitors, sources and landing
+          pages come from first-party attribution cookies, so they are always an undercount of real traffic. Total
+          page views for <em>every</em> visitor are counted without cookies and live in the Vercel Web Analytics
+          dashboard.
+        </p>
+        <p>
+          What the acquisition panels are for: which sources and landing pages bring people who go on to subscribe,
+          start a tool, or buy. UTM-tagged campaigns surface in Top campaigns once they receive traffic.
         </p>
       </div>
 

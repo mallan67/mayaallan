@@ -25,7 +25,8 @@ export type RankedLabel = { label: string; visitors: number }
 
 export type AcquisitionSummary = {
   totalVisitors: number
-  oneTimeVisitors: number
+  /** Visitors never seen again on a LATER calendar day. Same-evening returns fall here. */
+  singleDayVisitors: number
   returningVisitors: number
   referrers: RankedLabel[]
   landingPages: RankedLabel[]
@@ -126,8 +127,12 @@ function rank(counts: Map<string, number>, limit: number): RankedLabel[] {
  * Callers select rows whose `first_seen_at` falls inside the reporting range,
  * so every row is a visitor newly acquired in that range: `totalVisitors` IS
  * the new-visitor count. What varies is whether they came back afterwards, so
- * the split is returning vs one-time — never "first-time", which would read as
- * zero for someone who arrived yesterday and returned today.
+ * the split is returning vs single-day — never "first-time", which would read
+ * as zero for someone who arrived yesterday and returned today.
+ *
+ * "Returning" is measured by calendar day, so the complement means "not seen
+ * again on a later day", NOT "visited exactly once": a visitor who comes back
+ * the same evening still counts as single-day. Label it accordingly.
  *
  * `limit` truncates each ranked list only; the headline counts always describe
  * every row passed in.
@@ -154,7 +159,7 @@ export function summarizeAcquisition(rows: readonly VisitorRow[], options: { lim
 
   return {
     totalVisitors: rows.length,
-    oneTimeVisitors: rows.length - returningVisitors,
+    singleDayVisitors: rows.length - returningVisitors,
     returningVisitors,
     referrers: rank(referrers, limit),
     landingPages: rank(landingPages, limit),

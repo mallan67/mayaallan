@@ -106,14 +106,25 @@ test("the visitor query pages past the Supabase row cap rather than trusting a s
   assert.match(adminAnalytics, /\.order\("visitor_id"/, "a unique secondary sort makes the paging order total")
 })
 
-test("the visitor cards say what they actually count", () => {
+test("the visitor cards say what they actually count, and claim nothing stronger", () => {
   // Every selected row first appeared inside the range, so the headline IS the
-  // new-visitor count; the remainder after returners is "visited once", not
-  // "first-time". A card labelled First-time would read as 0 for someone who
-  // arrived yesterday and came back today.
+  // new-visitor count. The complement is measured by CALENDAR DAY: someone who
+  // returns the same evening still falls in it, so it cannot be sold as
+  // "visited once" or "never came back".
   assert.match(adminAnalytics, /New visitors/)
-  assert.match(adminAnalytics, /oneTimeVisitors/)
+  assert.match(adminAnalytics, /singleDayVisitors/)
   assert.doesNotMatch(adminAnalytics, /title="First-time"/)
+  assert.doesNotMatch(adminAnalytics, /Never came back|Visited once/i)
+  assert.match(adminAnalytics, /later day/i, "the day-level rule is stated where the number is shown")
+})
+
+test("the undercount disclaimer names the panels it applies to, not the whole page", () => {
+  // Orders and server-inserted events (newsletter, contact, purchases) are
+  // recorded with no attribution cookie, so a blanket "this page counts only
+  // visitors who accepted" would be false for several cards.
+  assert.doesNotMatch(adminAnalytics, /Everything on this page/i, "no blanket claim over cards that count everyone")
+  assert.match(adminAnalytics, /order records|orders and/i, "names the figures that are not consent-limited")
+  assert.match(adminAnalytics, /Visitors, sources and landing pages|acquisition panels/i, "names the panels that are")
 })
 
 // ---------------------------------------------------------------------------
