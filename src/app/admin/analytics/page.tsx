@@ -121,6 +121,10 @@ async function acquisitionSince(sinceIso: string): Promise<AcquisitionSummary & 
       .select("visitor_id, first_seen_at, last_seen_at, first_landing_page, first_referrer")
       .gte("first_seen_at", sinceIso)
       .order("first_seen_at", { ascending: true })
+      // first_seen_at is not unique. Without a unique tie-breaker, rows sharing a
+      // timestamp across a page boundary can repeat in one window and vanish
+      // from the next, so totals and rankings drift.
+      .order("visitor_id", { ascending: true })
       .range(from, to)
 
     if (error) {
@@ -199,8 +203,8 @@ async function RangeSection({ days, label }: { days: number; label: RangeKey }) 
       <h2 className="font-serif text-lg font-semibold">{label}</h2>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <Card title="Visitors" value={fmtNum(acquisition.totalVisitors)} hint="People who accepted attribution cookies" />
-        <Card title="First-time" value={fmtNum(acquisition.newVisitors)} />
+        <Card title="New visitors" value={fmtNum(acquisition.totalVisitors)} hint="First seen in this range, of those who accepted cookies" />
+        <Card title="Visited once" value={fmtNum(acquisition.oneTimeVisitors)} hint="Never came back" />
         <Card title="Came back later" value={fmtNum(acquisition.returningVisitors)} hint="Returned on a later day" />
       </div>
 

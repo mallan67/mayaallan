@@ -88,7 +88,6 @@ test("the admin analytics page reads the stored acquisition data and renders sou
   assert.match(adminAnalytics, /summarizeAcquisition/, "aggregates through the tested pure helper")
   assert.match(adminAnalytics, /Where visitors come from/i)
   assert.match(adminAnalytics, /Landing pages/i)
-  assert.match(adminAnalytics, /\.limit\(/, "the direct query is bounded, like the orders query beside it")
 })
 
 test("the admin analytics page tells the operator that cookie-gated data undercounts, so numbers are not misread", () => {
@@ -102,6 +101,19 @@ test("the visitor query pages past the Supabase row cap rather than trusting a s
   assert.match(adminAnalytics, /collectPaged/, "uses the tested pager")
   assert.match(adminAnalytics, /\.range\(/, "pages through explicit row windows")
   assert.match(adminAnalytics, /truncated/, "surfaces partial results instead of hiding them")
+  // first_seen_at is not unique: tied rows at a page boundary can otherwise be
+  // duplicated into one page and dropped from the next.
+  assert.match(adminAnalytics, /\.order\("visitor_id"/, "a unique secondary sort makes the paging order total")
+})
+
+test("the visitor cards say what they actually count", () => {
+  // Every selected row first appeared inside the range, so the headline IS the
+  // new-visitor count; the remainder after returners is "visited once", not
+  // "first-time". A card labelled First-time would read as 0 for someone who
+  // arrived yesterday and came back today.
+  assert.match(adminAnalytics, /New visitors/)
+  assert.match(adminAnalytics, /oneTimeVisitors/)
+  assert.doesNotMatch(adminAnalytics, /title="First-time"/)
 })
 
 // ---------------------------------------------------------------------------

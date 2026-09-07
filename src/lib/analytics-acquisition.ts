@@ -25,7 +25,7 @@ export type RankedLabel = { label: string; visitors: number }
 
 export type AcquisitionSummary = {
   totalVisitors: number
-  newVisitors: number
+  oneTimeVisitors: number
   returningVisitors: number
   referrers: RankedLabel[]
   landingPages: RankedLabel[]
@@ -123,8 +123,14 @@ function rank(counts: Map<string, number>, limit: number): RankedLabel[] {
 /**
  * Turn visitor rows into the acquisition figures the dashboard prints.
  *
- * `limit` truncates each ranked list only; the headline visitor counts always
- * describe every row passed in.
+ * Callers select rows whose `first_seen_at` falls inside the reporting range,
+ * so every row is a visitor newly acquired in that range: `totalVisitors` IS
+ * the new-visitor count. What varies is whether they came back afterwards, so
+ * the split is returning vs one-time — never "first-time", which would read as
+ * zero for someone who arrived yesterday and returned today.
+ *
+ * `limit` truncates each ranked list only; the headline counts always describe
+ * every row passed in.
  */
 export function summarizeAcquisition(rows: readonly VisitorRow[], options: { limit?: number } = {}): AcquisitionSummary {
   const limit = options.limit ?? 10
@@ -148,7 +154,7 @@ export function summarizeAcquisition(rows: readonly VisitorRow[], options: { lim
 
   return {
     totalVisitors: rows.length,
-    newVisitors: rows.length - returningVisitors,
+    oneTimeVisitors: rows.length - returningVisitors,
     returningVisitors,
     referrers: rank(referrers, limit),
     landingPages: rank(landingPages, limit),
