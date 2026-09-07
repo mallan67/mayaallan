@@ -72,9 +72,14 @@ export default function PrivacyPage() {
             parameters in the URL. We do not store your raw IP for analytics purposes.
           </li>
           <li>
-            <strong>Visitor and session identifiers.</strong> We set a long-lived first-party visitor ID and a per-visit
-            session ID in cookies so we can measure things like &quot;did the same person come back later and buy.&quot;
-            These IDs are random; they do not contain personal information.
+            <strong>Aggregate page views.</strong> We count how many times each page is opened, using a cookieless
+            measurement that does not set a cookie and stores no identifier on your device. See section 7.
+          </li>
+          <li>
+            <strong>Visitor and session identifiers.</strong> Only if you accept on the consent banner, we set a
+            long-lived first-party visitor ID and a per-visit session ID in cookies so we can measure things like
+            &quot;did the same person come back later and buy.&quot; These IDs are random; they do not contain personal
+            information.
           </li>
           <li>
             <strong>AI chat conversations.</strong> When you use Belief Inquiry, Integration, or Reset, your messages
@@ -210,11 +215,19 @@ export default function PrivacyPage() {
             limits. These are always on.
           </li>
           <li>
-            <strong>Analytics (optional, consent-gated)</strong> — the visitor and session identifiers described
-            above, used to measure how the site is performing in aggregate. We do not run third-party advertising
-            trackers. If you are in the EU, the UK, or any other jurisdiction where consent is required for non-
-            essential cookies, these are set only after you accept on the consent banner. You can revisit your
-            choice at any time using the &quot;Cookie preferences&quot; link in the site footer.
+            <strong>Cookieless page-view measurement (always on, no consent needed)</strong> — we count page views
+            through <strong>Vercel Web Analytics</strong>, which records the page you opened, the site that referred
+            you, and coarse device, browser and country information. It does not set a cookie and does not store any
+            identifier on your device, so it cannot follow you between visits or across other websites, and it is not
+            the kind of storage access that requires consent. It tells us how many people read a page — never who you
+            are.
+          </li>
+          <li>
+            <strong>Attribution cookies (optional, consent-gated)</strong> — the visitor and session identifiers
+            described above, which let us connect a first visit to a later purchase and measure which campaigns work.
+            We do not run third-party advertising trackers. These are set only after you accept on the consent banner,
+            and declining them leaves the rest of the site fully working. You can revisit your choice at any time
+            using the &quot;Cookie preferences&quot; link in the site footer.
           </li>
         </ul>
         <p>You can block cookies in your browser settings; some site features may stop working if you do.</p>

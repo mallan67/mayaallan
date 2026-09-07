@@ -27,6 +27,7 @@
  * change their mind.
  */
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
 
 const STORAGE_KEY = "mayaallan_consent_v1"
@@ -117,12 +118,12 @@ export default function ConsentBanner() {
             Privacy choices
           </p>
           <p id="consent-body" className="text-sm text-cream/80 mt-1 leading-relaxed">
-            We use a small set of first-party cookies to measure how the site is performing —
-            anonymous visitor IDs and UTM-based campaign attribution. No advertising trackers, no
-            cross-site sharing.{" "}
-            <a href="/privacy" className="underline hover:text-gold">
+            May we set a small set of first-party cookies — an anonymous visitor ID and campaign
+            attribution — so we can tell whether a first visit later led to a purchase? Page views are
+            already counted without cookies either way. No advertising trackers, no cross-site sharing.{" "}
+            <Link href="/privacy" className="underline hover:text-gold">
               See our privacy policy
-            </a>
+            </Link>
             .
           </p>
         </div>

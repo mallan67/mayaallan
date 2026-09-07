@@ -13,6 +13,7 @@ import Link from "next/link"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin } from "@/lib/supabaseAdmin"
 import { redirect } from "next/navigation"
+import { summarizeAcquisition, type VisitorRow, type AcquisitionSummary } from "@/lib/analytics-acquisition"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -104,6 +105,53 @@ async function topCampaigns(sinceIso: string, limit = 10): Promise<Array<{
   }))
 }
 
+/**
+ * Where visitors came from and what they opened first.
+ *
+ * `marketing_visitors` holds one row per consented visitor with their
+ * first-touch referrer and landing page. Like the orders query above, visitor
+ * volume is bounded at this scale, so a direct select with an explicit limit
+ * is enough and needs no extra Postgres function. Aggregation happens in
+ * summarizeAcquisition, which is unit-tested.
+ */
+async function acquisitionSince(sinceIso: string): Promise<AcquisitionSummary> {
+  const { data, error } = await supabaseAdmin
+    .from("marketing_visitors")
+    .select("visitor_id, first_seen_at, last_seen_at, first_landing_page, first_referrer")
+    .gte("first_seen_at", sinceIso)
+    .limit(10_000)
+
+  if (error || !data) {
+    if (error) console.error("[admin/analytics] visitor acquisition query failed:", error.message, error.code)
+    return summarizeAcquisition([])
+  }
+  return summarizeAcquisition(data as VisitorRow[])
+}
+
+function RankedList({ title, rows, empty }: { title: string; rows: Array<{ label: string; visitors: number }>; empty: string }) {
+  return (
+    <div className="border border-slate-200 rounded-lg p-4 bg-white">
+      <h3 className="text-sm font-semibold mb-3">{title}</h3>
+      {rows.length === 0 ? (
+        <p className="text-sm text-slate-500">{empty}</p>
+      ) : (
+        <table className="w-full text-sm">
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.label} className="border-t border-slate-100 first:border-t-0">
+                <td className="py-2 pr-3 truncate max-w-[22rem]" title={row.label}>
+                  {row.label}
+                </td>
+                <td className="py-2 text-right tabular-nums">{fmtNum(row.visitors)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
 function fmtNum(n: number): string {
   return n.toLocaleString("en-US")
 }
@@ -139,11 +187,30 @@ async function RangeSection({ days, label }: { days: number; label: RangeKey }) 
   const checkoutRate = bookViews > 0 ? (checkouts / bookViews) * 100 : 0
   const purchaseRate = checkouts > 0 ? (purchases / checkouts) * 100 : 0
 
-  const campaigns = await topCampaigns(sinceIso)
+  const [campaigns, acquisition] = await Promise.all([topCampaigns(sinceIso), acquisitionSince(sinceIso)])
 
   return (
     <section className="space-y-4">
       <h2 className="font-serif text-lg font-semibold">{label}</h2>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <Card title="Visitors" value={fmtNum(acquisition.totalVisitors)} hint="People who accepted attribution cookies" />
+        <Card title="First-time" value={fmtNum(acquisition.newVisitors)} />
+        <Card title="Came back later" value={fmtNum(acquisition.returningVisitors)} hint="Returned on a later day" />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <RankedList
+          title="Where visitors come from"
+          rows={acquisition.referrers}
+          empty="No referrer data yet. Direct visits and accepted-cookie visits appear here."
+        />
+        <RankedList
+          title="Landing pages"
+          rows={acquisition.landingPages}
+          empty="No landing-page data yet."
+        />
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card title="Newsletter signups" value={fmtNum(subscribers)} />
@@ -238,11 +305,19 @@ export default async function AdminAnalyticsPage() {
         </div>
       </div>
 
-      <p className="text-xs text-slate-500 mb-6">
-        Attribution data starts collecting from the moment PR E deploys. Historical pre-deploy
-        traffic won&apos;t appear here. UTM-tagged campaigns surface in the Top campaigns table
-        below once they start receiving traffic.
-      </p>
+      <div className="text-xs text-slate-500 mb-6 space-y-2">
+        <p>
+          <strong className="text-slate-700">Two sources, and they will not match.</strong> Everything on this page
+          comes from first-party attribution cookies, so it counts only visitors who pressed
+          &quot;Accept&quot; on the consent banner — a real but partial slice, and always an undercount of actual
+          traffic. Total page views for <em>every</em> visitor, including those who declined, are counted without
+          cookies and live in the Vercel Web Analytics dashboard.
+        </p>
+        <p>
+          What this page is for: which sources and landing pages bring people who go on to subscribe, start a tool,
+          or buy. UTM-tagged campaigns surface in Top campaigns once they receive traffic.
+        </p>
+      </div>
 
       <div className="space-y-10">
         {RANGES.map((r) => (
