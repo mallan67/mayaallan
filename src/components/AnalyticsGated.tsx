@@ -1,26 +1,31 @@
 "use client"
 
 /**
- * Consent-gated wrappers for the analytics + attribution stack. Renders
- * the underlying components ONLY when the user has accepted analytics.
+ * The site's two measurement layers, split by what they actually store.
  *
- * - GatedAnalytics  → wraps @vercel/analytics
- * - GatedMarketing  → wraps MarketingAttributionClient (visitor / session
- *                     cookies + UTM capture + /api/marketing/visitor upsert)
+ * - CookielessAnalytics → Vercel Web Analytics. Counts page views and reports
+ *   path, referrer, country, device and browser. It sets NO cookie and writes
+ *   NO identifier to the visitor's device, so it is not the kind of storage
+ *   access that requires consent under ePrivacy, and it runs for every
+ *   visitor. Without it the site measured nothing at all: page views were
+ *   previously gated behind the consent banner, so every undecided or
+ *   declining visitor was invisible.
  *
- * Both components return null until consent is "accepted". When the user
- * accepts mid-session, the gates rerender and the wrapped components
- * mount and bootstrap. Rejected / undecided users see no analytics at
- * all.
+ * - GatedMarketing → MarketingAttributionClient. This one DOES store a
+ *   long-lived visitor ID and a per-visit session ID in first-party cookies
+ *   and ties campaign attribution to later purchases. That is consented
+ *   storage, so it mounts only after the visitor accepts.
+ *
+ * Keep this split intact. If a future change makes the page-view layer store
+ * an identifier, it belongs behind the consent gate with the other one, and
+ * the privacy page has to change with it.
  */
 
 import { Analytics } from "@vercel/analytics/next"
 import MarketingAttributionClient from "@/components/MarketingAttributionClient"
 import { useConsent } from "@/components/ConsentBanner"
 
-export function GatedAnalytics() {
-  const consent = useConsent()
-  if (consent !== "accepted") return null
+export function CookielessAnalytics() {
   return <Analytics />
 }
 

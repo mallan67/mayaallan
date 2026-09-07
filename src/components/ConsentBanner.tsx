@@ -27,32 +27,13 @@
  * change their mind.
  */
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
+import { CONSENT_EVENT, clearConsent, readConsent, writeConsent, type ConsentState } from "@/lib/consent"
 
-const STORAGE_KEY = "mayaallan_consent_v1"
-const CONSENT_EVENT = "mayaallan:consent-changed"
-
-export type ConsentState = "accepted" | "rejected" | null
-
-function readConsent(): ConsentState {
-  if (typeof window === "undefined") return null
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (raw === "accepted" || raw === "rejected") return raw
-    return null
-  } catch {
-    return null
-  }
-}
-
-function writeConsent(value: "accepted" | "rejected") {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, value)
-    window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: value }))
-  } catch {
-    // Ignore — private windows / storage disabled.
-  }
-}
+// Re-exported so existing component imports keep working; the storage itself
+// lives in @/lib/consent so non-component code (analytics helpers) can read it.
+export type { ConsentState }
 
 /**
  * Hook for peer components to subscribe to consent state. Re-renders the
@@ -82,12 +63,7 @@ export function useConsent(): ConsentState {
  * then re-mounts automatically.
  */
 export function reopenConsent() {
-  try {
-    window.localStorage.removeItem(STORAGE_KEY)
-    window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: null }))
-  } catch {
-    // Ignore.
-  }
+  clearConsent()
 }
 
 export default function ConsentBanner() {
@@ -117,12 +93,12 @@ export default function ConsentBanner() {
             Privacy choices
           </p>
           <p id="consent-body" className="text-sm text-cream/80 mt-1 leading-relaxed">
-            We use a small set of first-party cookies to measure how the site is performing —
-            anonymous visitor IDs and UTM-based campaign attribution. No advertising trackers, no
-            cross-site sharing.{" "}
-            <a href="/privacy" className="underline hover:text-gold">
+            May we set a small set of first-party cookies — an anonymous visitor ID and campaign
+            attribution — so we can tell whether a first visit later led to a purchase? Page views are
+            already counted without cookies either way. No advertising trackers, no cross-site sharing.{" "}
+            <Link href="/privacy" className="underline hover:text-gold">
               See our privacy policy
-            </a>
+            </Link>
             .
           </p>
         </div>

@@ -13,6 +13,7 @@ import Link from "next/link"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin } from "@/lib/supabaseAdmin"
 import { redirect } from "next/navigation"
+import { summarizeAcquisition, collectPaged, type VisitorRow, type AcquisitionSummary } from "@/lib/analytics-acquisition"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -104,6 +105,62 @@ async function topCampaigns(sinceIso: string, limit = 10): Promise<Array<{
   }))
 }
 
+/**
+ * Where visitors came from and what they opened first.
+ *
+ * `marketing_visitors` holds one row per consented visitor with their
+ * first-touch referrer and landing page. Supabase REST caps a response at
+ * ~1000 rows regardless of `.limit()`, so this pages through explicit row
+ * windows rather than analysing whatever the first page happened to contain.
+ * Aggregation happens in summarizeAcquisition; both helpers are unit-tested.
+ */
+async function acquisitionSince(sinceIso: string): Promise<AcquisitionSummary & { truncated: boolean }> {
+  const { rows, truncated } = await collectPaged<VisitorRow>(async (from, to) => {
+    const { data, error } = await supabaseAdmin
+      .from("marketing_visitors")
+      .select("visitor_id, first_seen_at, last_seen_at, first_landing_page, first_referrer")
+      .gte("first_seen_at", sinceIso)
+      .order("first_seen_at", { ascending: true })
+      // first_seen_at is not unique. Without a unique tie-breaker, rows sharing a
+      // timestamp across a page boundary can repeat in one window and vanish
+      // from the next, so totals and rankings drift.
+      .order("visitor_id", { ascending: true })
+      .range(from, to)
+
+    if (error) {
+      console.error("[admin/analytics] visitor acquisition query failed:", error.message, error.code)
+      return null
+    }
+    return (data ?? []) as VisitorRow[]
+  })
+
+  return { ...summarizeAcquisition(rows), truncated }
+}
+
+function RankedList({ title, rows, empty }: { title: string; rows: Array<{ label: string; visitors: number }>; empty: string }) {
+  return (
+    <div className="border border-slate-200 rounded-lg p-4 bg-white">
+      <h3 className="text-sm font-semibold mb-3">{title}</h3>
+      {rows.length === 0 ? (
+        <p className="text-sm text-slate-500">{empty}</p>
+      ) : (
+        <table className="w-full text-sm">
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.label} className="border-t border-slate-100 first:border-t-0">
+                <td className="py-2 pr-3 truncate max-w-[22rem]" title={row.label}>
+                  {row.label}
+                </td>
+                <td className="py-2 text-right tabular-nums">{fmtNum(row.visitors)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
 function fmtNum(n: number): string {
   return n.toLocaleString("en-US")
 }
@@ -139,11 +196,37 @@ async function RangeSection({ days, label }: { days: number; label: RangeKey }) 
   const checkoutRate = bookViews > 0 ? (checkouts / bookViews) * 100 : 0
   const purchaseRate = checkouts > 0 ? (purchases / checkouts) * 100 : 0
 
-  const campaigns = await topCampaigns(sinceIso)
+  const [campaigns, acquisition] = await Promise.all([topCampaigns(sinceIso), acquisitionSince(sinceIso)])
 
   return (
     <section className="space-y-4">
       <h2 className="font-serif text-lg font-semibold">{label}</h2>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <Card title="New visitors" value={fmtNum(acquisition.totalVisitors)} hint="First seen in this range, of those who accepted cookies" />
+        <Card title="One day only" value={fmtNum(acquisition.singleDayVisitors)} hint="Not seen again on a later day" />
+        <Card title="Came back later" value={fmtNum(acquisition.returningVisitors)} hint="Returned on a later day" />
+      </div>
+
+      {acquisition.truncated && (
+        <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+          Partial data: more visitors exist in this range than could be read in one pass, so the counts and
+          rankings below describe the earliest rows only.
+        </p>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <RankedList
+          title="Where visitors come from"
+          rows={acquisition.referrers}
+          empty="No referrer data yet. Direct visits and accepted-cookie visits appear here."
+        />
+        <RankedList
+          title="Landing pages"
+          rows={acquisition.landingPages}
+          empty="No landing-page data yet."
+        />
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card title="Newsletter signups" value={fmtNum(subscribers)} />
@@ -238,11 +321,34 @@ export default async function AdminAnalyticsPage() {
         </div>
       </div>
 
-      <p className="text-xs text-slate-500 mb-6">
-        Attribution data starts collecting from the moment PR E deploys. Historical pre-deploy
-        traffic won&apos;t appear here. UTM-tagged campaigns surface in the Top campaigns table
-        below once they start receiving traffic.
-      </p>
+      <div className="text-xs text-slate-500 mb-6 space-y-2">
+        <p>
+          <strong className="text-slate-700">Different cards count different populations — read them separately.</strong>
+        </p>
+        <p>
+          <strong className="text-slate-700">Counts everyone:</strong> purchases and revenue come from order records,
+          and newsletter, contact and checkout figures come from events written server-side. These are recorded
+          whether or not the person accepted cookies.
+        </p>
+        <p>
+          <strong className="text-slate-700">Counts only those who accepted:</strong> Visitors, sources and landing
+          pages come from first-party attribution cookies, so they are always an undercount of real traffic. Total
+          page views for <em>every</em> visitor are counted without cookies and live in the Vercel Web Analytics
+          dashboard.
+        </p>
+        <p>
+          What the acquisition panels show: how visitors who accepted cookies arrived, and what they opened first.
+          They are not joined to subscriptions, tool sessions or orders, so they cannot tell you which source
+          converts — only which source arrives. Outcome-by-campaign lives in Top campaigns, for UTM-tagged links.
+        </p>
+        <p>
+          <strong className="text-slate-700">Two capture limits worth knowing.</strong> The first touch is recorded
+          at the moment consent is given, not on arrival, so a visitor who browses a few pages before accepting is
+          attributed to the page they were on when they accepted, and can show this site as their own referrer.
+          Return visits are detected once per new session, so someone who comes back on a later day in the same tab
+          they left open may not be counted as a return.
+        </p>
+      </div>
 
       <div className="space-y-10">
         {RANGES.map((r) => (
