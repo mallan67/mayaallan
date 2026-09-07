@@ -118,6 +118,23 @@ test("the visitor cards say what they actually count, and claim nothing stronger
   assert.match(adminAnalytics, /later day/i, "the day-level rule is stated where the number is shown")
 })
 
+test("the acquisition panels do not claim to identify which sources convert", () => {
+  // They aggregate marketing_visitors rows and never join to subscriptions,
+  // tool events or orders, so they cannot rank sources by outcome. Saying they
+  // do would send an operator to spend money on the wrong campaign.
+  assert.doesNotMatch(adminAnalytics, /go on to subscribe|bring people who go on to/i)
+})
+
+test("the acquisition panels state the two capture limits that would otherwise mislead", () => {
+  // 1. First touch is recorded when consent is granted, not on arrival, so a
+  //    visitor who browses before accepting is attributed to a later page and
+  //    can show the site itself as their referrer.
+  // 2. Return detection needs a fresh session, so a later-day return inside a
+  //    long-open tab is not recorded.
+  assert.match(adminAnalytics, /before accepting|when consent is given|after they accept/i)
+  assert.match(adminAnalytics, /same tab|new session|reopen/i)
+})
+
 test("the undercount disclaimer names the panels it applies to, not the whole page", () => {
   // Orders and server-inserted events (newsletter, contact, purchases) are
   // recorded with no attribution cookie, so a blanket "this page counts only

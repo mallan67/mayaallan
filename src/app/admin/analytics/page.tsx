@@ -337,8 +337,16 @@ export default async function AdminAnalyticsPage() {
           dashboard.
         </p>
         <p>
-          What the acquisition panels are for: which sources and landing pages bring people who go on to subscribe,
-          start a tool, or buy. UTM-tagged campaigns surface in Top campaigns once they receive traffic.
+          What the acquisition panels show: how visitors who accepted cookies arrived, and what they opened first.
+          They are not joined to subscriptions, tool sessions or orders, so they cannot tell you which source
+          converts — only which source arrives. Outcome-by-campaign lives in Top campaigns, for UTM-tagged links.
+        </p>
+        <p>
+          <strong className="text-slate-700">Two capture limits worth knowing.</strong> The first touch is recorded
+          at the moment consent is given, not on arrival, so a visitor who browses a few pages before accepting is
+          attributed to the page they were on when they accepted, and can show this site as their own referrer.
+          Return visits are detected once per new session, so someone who comes back on a later day in the same tab
+          they left open may not be counted as a return.
         </p>
       </div>
 
