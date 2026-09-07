@@ -7,7 +7,7 @@ import Link from "next/link"
 // on this for dispute defense. Update `lastUpdated` and the prose any
 // time the data practices change (new third party added, new collection
 // surface, retention period changed, etc).
-const LAST_UPDATED = "May 20, 2026"
+const LAST_UPDATED = "September 7, 2026"
 
 export const metadata: Metadata = {
   title: "Privacy Policy",

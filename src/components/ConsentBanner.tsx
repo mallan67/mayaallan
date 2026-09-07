@@ -29,31 +29,11 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { CONSENT_EVENT, clearConsent, readConsent, writeConsent, type ConsentState } from "@/lib/consent"
 
-const STORAGE_KEY = "mayaallan_consent_v1"
-const CONSENT_EVENT = "mayaallan:consent-changed"
-
-export type ConsentState = "accepted" | "rejected" | null
-
-function readConsent(): ConsentState {
-  if (typeof window === "undefined") return null
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (raw === "accepted" || raw === "rejected") return raw
-    return null
-  } catch {
-    return null
-  }
-}
-
-function writeConsent(value: "accepted" | "rejected") {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, value)
-    window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: value }))
-  } catch {
-    // Ignore — private windows / storage disabled.
-  }
-}
+// Re-exported so existing component imports keep working; the storage itself
+// lives in @/lib/consent so non-component code (analytics helpers) can read it.
+export type { ConsentState }
 
 /**
  * Hook for peer components to subscribe to consent state. Re-renders the
@@ -83,12 +63,7 @@ export function useConsent(): ConsentState {
  * then re-mounts automatically.
  */
 export function reopenConsent() {
-  try {
-    window.localStorage.removeItem(STORAGE_KEY)
-    window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: null }))
-  } catch {
-    // Ignore.
-  }
+  clearConsent()
 }
 
 export default function ConsentBanner() {

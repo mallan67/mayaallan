@@ -1,47 +1,62 @@
 import { track } from "@vercel/analytics/react"
+import { hasAnalyticsConsent } from "@/lib/consent"
+
+/**
+ * Custom behavioral events.
+ *
+ * These are NOT page views. They describe what a person did inside the
+ * reflection tools — which tool, how many turns, how long before the first
+ * message, whether they bought an export, how they rated the session. Page
+ * views are counted cookielessly for every visitor; this behavioral layer is
+ * only sent for visitors who explicitly accepted on the consent banner, which
+ * is what the privacy page and the banner say.
+ *
+ * Every helper below goes through `emit`, so there is exactly one guarded call
+ * site. Do not call `track` directly from anywhere else.
+ */
+type EventProps = Record<string, string | number | boolean | null>
+
+function emit(name: string, props?: EventProps) {
+  if (!hasAnalyticsConsent()) return
+  track(name, props)
+}
 
 export type AnalyticsTool = "reset" | "belief_inquiry" | "integration"
 
 export function trackToolViewed(tool: AnalyticsTool) {
-  track("tool_viewed", { tool })
+  emit("tool_viewed", { tool })
 }
 
 export function trackToolStarted(tool: AnalyticsTool) {
-  track("tool_started", { tool })
+  emit("tool_started", { tool })
 }
 
 export function trackTurnReached(tool: AnalyticsTool, count: 3 | 6 | 10) {
-  track(`turn_reached_${count}`, { tool })
+  emit(`turn_reached_${count}`, { tool })
 }
 
-export function trackSessionCompleted(
-  tool: AnalyticsTool,
-  totalTurns: number
-) {
-  track("session_completed", { tool, total_turns: totalTurns })
+export function trackSessionCompleted(tool: AnalyticsTool, totalTurns: number) {
+  emit("session_completed", { tool, total_turns: totalTurns })
 }
 
-export function trackTimeToFirstMessage(
-  tool: AnalyticsTool,
-  milliseconds: number
-) {
-  track("time_to_first_message", { tool, ms: milliseconds })
+export function trackTimeToFirstMessage(tool: AnalyticsTool, milliseconds: number) {
+  emit("time_to_first_message", { tool, ms: milliseconds })
 }
 
 export function trackExportCtaViewed(tool: AnalyticsTool) {
-  track("export_cta_viewed", { tool })
+  emit("export_cta_viewed", { tool })
 }
 
 export function trackExportCtaClicked(tool: AnalyticsTool) {
-  track("export_cta_clicked", { tool })
+  emit("export_cta_clicked", { tool })
 }
 
 export function trackExportPurchased(tool: AnalyticsTool) {
-  track("export_purchased", { tool })
+  emit("export_purchased", { tool })
 }
 
 export type FeedbackRating = "grounded" | "uncertain" | "not_for_me" | "skip"
 
 export function trackSessionFeedback(tool: AnalyticsTool, rating: FeedbackRating) {
-  track("session_feedback", { tool, rating })
+  emit("session_feedback", { tool, rating })
 }

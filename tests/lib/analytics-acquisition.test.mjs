@@ -9,7 +9,7 @@
  */
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { referrerLabel, landingPathLabel, summarizeAcquisition } from "../../src/lib/analytics-acquisition.ts"
+import { referrerLabel, landingPathLabel, summarizeAcquisition, collectPaged } from "../../src/lib/analytics-acquisition.ts"
 
 // ---------------------------------------------------------------------------
 // referrerLabel — a human-readable source per visitor
@@ -108,6 +108,60 @@ test("summarizeAcquisition tolerates rows with missing timestamps instead of thr
   assert.equal(s.totalVisitors, 1)
   assert.equal(s.returningVisitors, 0)
   assert.deepEqual(s.landingPages, [{ label: "(unknown)", visitors: 1 }])
+})
+
+// ---------------------------------------------------------------------------
+// collectPaged — Supabase REST caps a response at ~1000 rows regardless of the
+// .limit() we ask for, so a single query silently analyses a truncated subset
+// and reports wrong rankings. Paging is the fix that needs no new SQL function.
+// ---------------------------------------------------------------------------
+
+const pagerOver = (all, { failAt = -1 } = {}) => {
+  const calls = []
+  const fetchPage = async (from, to) => {
+    calls.push([from, to])
+    if (calls.length - 1 === failAt) return null
+    return all.slice(from, to + 1)
+  }
+  return { fetchPage, calls }
+}
+
+test("collectPaged stops after one request when the first page is short", async () => {
+  const { fetchPage, calls } = pagerOver([1, 2, 3])
+  const out = await collectPaged(fetchPage, { pageSize: 10 })
+  assert.deepEqual(out.rows, [1, 2, 3])
+  assert.equal(out.truncated, false)
+  assert.deepEqual(calls, [[0, 9]], "no wasted second request")
+})
+
+test("collectPaged walks past the row cap and returns every row", async () => {
+  const all = Array.from({ length: 25 }, (_, i) => i)
+  const { fetchPage, calls } = pagerOver(all)
+  const out = await collectPaged(fetchPage, { pageSize: 10 })
+  assert.equal(out.rows.length, 25, "all rows, not just the first page")
+  assert.deepEqual(out.rows, all)
+  assert.equal(out.truncated, false)
+  assert.deepEqual(calls, [[0, 9], [10, 19], [20, 29]])
+})
+
+test("collectPaged reports truncation instead of silently analysing a partial set", async () => {
+  const all = Array.from({ length: 100 }, (_, i) => i)
+  const out = await collectPaged(pagerOver(all).fetchPage, { pageSize: 10, maxPages: 2 })
+  assert.equal(out.rows.length, 20)
+  assert.equal(out.truncated, true, "the caller must be able to say the numbers are partial")
+})
+
+test("collectPaged treats a failed page as truncation and keeps what it already has", async () => {
+  const all = Array.from({ length: 30 }, (_, i) => i)
+  const out = await collectPaged(pagerOver(all, { failAt: 1 }).fetchPage, { pageSize: 10 })
+  assert.deepEqual(out.rows, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+  assert.equal(out.truncated, true)
+})
+
+test("collectPaged handles an empty table", async () => {
+  const out = await collectPaged(pagerOver([]).fetchPage, { pageSize: 10 })
+  assert.deepEqual(out.rows, [])
+  assert.equal(out.truncated, false)
 })
 
 test("ties break alphabetically so the dashboard ordering is stable between renders", () => {

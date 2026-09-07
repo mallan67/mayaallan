@@ -74,6 +74,37 @@ export function landingPathLabel(raw: string | null | undefined): string {
   return trimmed === "" ? "/" : trimmed
 }
 
+/**
+ * Read every row of a Supabase table through successive row windows.
+ *
+ * Supabase REST returns at most ~1000 rows per response no matter what
+ * `.limit()` asks for — this repo's own migration notes say so, which is why
+ * the event counts use Postgres functions. A single select would therefore
+ * rank a truncated, arbitrary subset once traffic grows and quietly report the
+ * wrong sources. Paging needs no new SQL.
+ *
+ * `fetchPage(from, to)` returns one inclusive window, or null if the query
+ * failed. Stops on a short page (the end), on a failure, or at `maxPages`;
+ * the last two set `truncated` so the caller can say the numbers are partial.
+ */
+export async function collectPaged<T>(
+  fetchPage: (from: number, to: number) => Promise<T[] | null>,
+  options: { pageSize?: number; maxPages?: number } = {},
+): Promise<{ rows: T[]; truncated: boolean }> {
+  const pageSize = options.pageSize ?? 1000
+  const maxPages = options.maxPages ?? 25
+  const rows: T[] = []
+
+  for (let page = 0; page < maxPages; page++) {
+    const from = page * pageSize
+    const batch = await fetchPage(from, from + pageSize - 1)
+    if (batch === null) return { rows, truncated: true }
+    rows.push(...batch)
+    if (batch.length < pageSize) return { rows, truncated: false }
+  }
+  return { rows, truncated: true }
+}
+
 /** Calendar day of a timestamp, or null when it is missing or unparseable. */
 function calendarDay(value: string | null | undefined): string | null {
   if (!value) return null

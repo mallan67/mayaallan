@@ -94,3 +94,37 @@ test("the admin analytics page reads the stored acquisition data and renders sou
 test("the admin analytics page tells the operator that cookie-gated data undercounts, so numbers are not misread", () => {
   assert.match(adminAnalytics, /consent/i)
 })
+
+test("the visitor query pages past the Supabase row cap rather than trusting a single .limit()", () => {
+  // Supabase REST caps a response at ~1000 rows whatever .limit() asks for, as
+  // this repo's own migration notes. A single request would silently rank a
+  // truncated subset once traffic grows.
+  assert.match(adminAnalytics, /collectPaged/, "uses the tested pager")
+  assert.match(adminAnalytics, /\.range\(/, "pages through explicit row windows")
+  assert.match(adminAnalytics, /truncated/, "surfaces partial results instead of hiding them")
+})
+
+// ---------------------------------------------------------------------------
+// Behavioral events are NOT page views and must not become always-on with them.
+// ---------------------------------------------------------------------------
+
+const trackHelpers = read("../../src/lib/analytics.ts")
+
+test("custom behavioral events stay behind consent even though page views do not", () => {
+  // These report tool usage, turn counts, session timing, export actions and
+  // feedback ratings. Mounting the analytics runtime for everyone must not
+  // start sending them for visitors who declined or have not answered.
+  assert.match(trackHelpers, /consent/i, "the module consults consent")
+  const emitCalls = trackHelpers.match(/(^|[^.\w])track\(/g) ?? []
+  assert.equal(emitCalls.length, 1, "exactly one guarded call site, not one per helper")
+  const gate = trackHelpers.search(/consent/i)
+  const callSite = trackHelpers.search(/(^|[^.\w])track\(/m)
+  assert.ok(gate < callSite, "consent is checked before the event is sent")
+})
+
+test("the privacy page's last-updated date moves with this change in data practices", () => {
+  const m = privacy.match(/const LAST_UPDATED = "([^"]+)"/)
+  assert.ok(m, "LAST_UPDATED is declared")
+  assert.notEqual(m[1], "May 20, 2026", "a new always-on processor disclosure cannot keep the old date")
+  assert.match(m[1], /2026/)
+})

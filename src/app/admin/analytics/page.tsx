@@ -13,7 +13,7 @@ import Link from "next/link"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin } from "@/lib/supabaseAdmin"
 import { redirect } from "next/navigation"
-import { summarizeAcquisition, type VisitorRow, type AcquisitionSummary } from "@/lib/analytics-acquisition"
+import { summarizeAcquisition, collectPaged, type VisitorRow, type AcquisitionSummary } from "@/lib/analytics-acquisition"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -109,23 +109,28 @@ async function topCampaigns(sinceIso: string, limit = 10): Promise<Array<{
  * Where visitors came from and what they opened first.
  *
  * `marketing_visitors` holds one row per consented visitor with their
- * first-touch referrer and landing page. Like the orders query above, visitor
- * volume is bounded at this scale, so a direct select with an explicit limit
- * is enough and needs no extra Postgres function. Aggregation happens in
- * summarizeAcquisition, which is unit-tested.
+ * first-touch referrer and landing page. Supabase REST caps a response at
+ * ~1000 rows regardless of `.limit()`, so this pages through explicit row
+ * windows rather than analysing whatever the first page happened to contain.
+ * Aggregation happens in summarizeAcquisition; both helpers are unit-tested.
  */
-async function acquisitionSince(sinceIso: string): Promise<AcquisitionSummary> {
-  const { data, error } = await supabaseAdmin
-    .from("marketing_visitors")
-    .select("visitor_id, first_seen_at, last_seen_at, first_landing_page, first_referrer")
-    .gte("first_seen_at", sinceIso)
-    .limit(10_000)
+async function acquisitionSince(sinceIso: string): Promise<AcquisitionSummary & { truncated: boolean }> {
+  const { rows, truncated } = await collectPaged<VisitorRow>(async (from, to) => {
+    const { data, error } = await supabaseAdmin
+      .from("marketing_visitors")
+      .select("visitor_id, first_seen_at, last_seen_at, first_landing_page, first_referrer")
+      .gte("first_seen_at", sinceIso)
+      .order("first_seen_at", { ascending: true })
+      .range(from, to)
 
-  if (error || !data) {
-    if (error) console.error("[admin/analytics] visitor acquisition query failed:", error.message, error.code)
-    return summarizeAcquisition([])
-  }
-  return summarizeAcquisition(data as VisitorRow[])
+    if (error) {
+      console.error("[admin/analytics] visitor acquisition query failed:", error.message, error.code)
+      return null
+    }
+    return (data ?? []) as VisitorRow[]
+  })
+
+  return { ...summarizeAcquisition(rows), truncated }
 }
 
 function RankedList({ title, rows, empty }: { title: string; rows: Array<{ label: string; visitors: number }>; empty: string }) {
@@ -198,6 +203,13 @@ async function RangeSection({ days, label }: { days: number; label: RangeKey }) 
         <Card title="First-time" value={fmtNum(acquisition.newVisitors)} />
         <Card title="Came back later" value={fmtNum(acquisition.returningVisitors)} hint="Returned on a later day" />
       </div>
+
+      {acquisition.truncated && (
+        <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+          Partial data: more visitors exist in this range than could be read in one pass, so the counts and
+          rankings below describe the earliest rows only.
+        </p>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <RankedList
