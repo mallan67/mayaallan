@@ -275,3 +275,27 @@ WebFetch reads are timed from the surrounding logged `date -u` stamps (±1 min).
 | 13 | Google Search Central: AI features and your website | https://developers.google.com/search/docs/appearance/ai-features | updated 2025-12-10 | ~18:24Z, re-read ~18:33Z | Official |
 | 14 | OpenAI Help Center: Publishers and Developers FAQ | https://help.openai.com/en/articles/12627856-publishers-and-developers-faq | "Updated: 27 days ago" (≈2026-08-28) | 18:24:59Z | Official |
 | 15 | Ahrefs: 38% of AI Overview citations pull from the top 10 | https://ahrefs.com/blog/ai-overview-citations-top-10/ | 2026-03-02 | ~18:26Z | Vendor data |
+
+| 16 | Growth Memo: The Consensus Gap | https://www.growth-memo.com/p/the-consensus-gap | 2026-05-11 | ~18:26Z | Independent consultant |
+| 17 | Bing Webmaster blog: Introducing AI Performance | https://blogs.bing.com/webmaster/February-2026/Introducing-AI-Performance-in-Bing-Webmaster-Tools-Public-Preview | 2026-02-10 | ~18:26Z | Official |
+| 18 | Ahrefs: AI assistants prefer to cite fresher content | https://ahrefs.com/blog/do-ai-assistants-prefer-to-cite-fresh-content/ | 2025-07-28 | ~18:27Z | Vendor data |
+| 19 | Lily Ray: Why calling yourself the "best" could help competitors | https://lilyraynyc.substack.com/p/why-calling-yourself-the-best-could | 2026-06-17 | ~18:27Z | Independent practitioner |
+| 20 | Lily Ray: Is Google cracking down on self-promotional listicles? | https://lilyraynyc.substack.com/p/is-google-finally-cracking-down-on | 2026-02-03 | ~18:27Z | Independent practitioner |
+| 21 | Chen, Wang, Chen, Koudas: GEO, How to Dominate AI Search | https://arxiv.org/abs/2509.08919 | 2025-09-10 | ~18:28Z | Academic preprint |
+| 22 | Ahrefs: How to Rank on ChatGPT (data-based) | https://ahrefs.com/blog/how-to-rank-on-chatgpt/ | 2026-03-13 | ~18:29Z | Vendor (secondary for Indig, Allsopp, SparkToro) |
+| 23 | SparkToro / Similarweb: AI brand mentions, direct visits and search | https://sparktoro.com/blog/new-research-from-similarweb-how-ai-brand-mentions-influence-direct-visits-traditional-search-queries/ | 2026-06-29 | ~18:29Z | Independent + panel data |
+| 24 | Pew Research: Google users less likely to click with AI summary | https://www.pewresearch.org/short-reads/2025/07/22/google-users-are-less-likely-to-click-on-links-when-an-ai-summary-appears-in-the-results/ | 2025-07-22 | ~18:29Z | Independent research |
+| 25 | Vercel + MERJ: The rise of the AI crawler | https://vercel.com/blog/the-rise-of-the-ai-crawler | 2024-12-17 (older, still the reference) | ~18:30Z | Practitioner measurement |
+| 26 | Vercel docs: Filtering Analytics | https://vercel.com/docs/analytics/filtering | last_updated 2026-09-16 | ~18:30Z | Official (platform) |
+| 27 | Clickport: Why ChatGPT traffic shows as direct in GA4 | https://clickport.io/blog/chatgpt-direct-traffic-ga4 | updated 2026-09-18 | ~18:31Z | Vendor |
+| 28 | Lawrence Hitches: utm_source=chatgpt.com explained (100-brand data) | https://www.lawrencehitches.com/utm-source-chatgpt-explained/ | 2026-09-20 | ~18:31Z | Consultant / agency data |
+| 29 | Digital Commerce 360: ChatGPT traffic and sales trail traditional channels (Kaiser & Schulze) | https://www.digitalcommerce360.com/2025/10/24/study-chatgpt-traffic-sales-trail-traditional-digital-channels/ | 2025-10-24 | 18:31Z | Trade press (reports peer-reviewed study; original https://pubsonline.informs.org/doi/10.1287/mksc.2025.0489 returned 403) |
+| 30 | Vercel blog: How we're adapting SEO for LLMs and AI search | https://vercel.com/blog/how-were-adapting-seo-for-llms-and-ai-search | 2025-06-10 | ~18:30Z | Practitioner (engineering blog) |
+| 31 | Ahrefs: 90+ AI SEO statistics | https://ahrefs.com/blog/ai-seo-statistics/ | 2025-11-10 | ~18:29Z | Vendor (own-site 23× figure) |
+| L1 | Live site: robots.txt, llms.txt, sitemap.xml | https://www.mayaallan.com/robots.txt (and /llms.txt, /sitemap.xml) | live | 18:25:08Z | Live GET |
+| L2 | Live site pages (home, book, about, faq, research post; scenarios, blog, glossary, tools, media, events) | https://www.mayaallan.com/ | live | 18:25:23Z, 18:30:07Z, 18:31:42Z, 18:32:16Z | Live GET |
+| L3 | Goodreads book page | https://www.goodreads.com/book/show/245299940-psilocybin-integration-guide | live | 18:32:04Z | Live GET |
+| L4 | Secondary domains redirect | https://psilowire.com/, https://psilocybinintegrationguide.com/ | live | 18:32:39Z | Live GET |
+| L5 | GitHub mallan67/mayaallan PR metadata (#45, #46, #57, #58) | https://github.com/mallan67/mayaallan/pulls | live | 18:25:35Z, 18:25:46Z, 18:32:51Z, 18:34:23Z | gh api |
+
+_Saved to GitHub `work/site-visibility` in nine commits (the tool's command-size limit forced chunking). Each append was built from the live file fetched at push time._
