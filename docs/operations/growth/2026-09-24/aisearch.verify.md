@@ -183,3 +183,68 @@ The lens's own conclusion is that off-site mentions matter and on-site markup ba
   - A rehash of `b7a0f8a6` and `ea9c7231` (2026-05-19), which wired sameAs and ISBN plus ASIN identifiers, and of PR #50.
   - Live at 18:50:54Z: the Book `identifier` holds only the ASIN, although `ea9c7231` says it emits the ISBN too, and Person `sameAs` lists Instagram only.
   - Treat the missing ISBN as a one-line data fix inside another PR. Adding sameAs links for profiles that do not exist yet does nothing.
+
+## Corrections to the lens's summary
+1. "Peer-reviewed study found ChatGPT referrals convert worse": the Digital Commerce 360 report (2025-10-24) does not give a review status.
+2. "Only the homepage has an email signup field": `/contact` also has an email input.
+3. "The tool pages serve about 1.2k characters": measured inside `<main>`, it is 618–678 characters on three tool pages and 3,916 on `/integration-journal`.
+4. "YouTube is the most-cited AIO source for health queries": this came from German-language queries in Berlin, and 24 of the 25 most-cited videos were from medical channels.
+5. Vercel's "seeding authentic community mentions" is advice, not a measured cause of its ChatGPT signups.
+6. The Reddit share in ChatGPT is contested: Semrush (Nov 2025) says it collapsed to about 10%, while Ahrefs (Mar 2026) says Reddit is ChatGPT's #1 cited domain.
+7. The lens names ai-02's IndexNow and ai-13's sameAs/ISBN as new builds, but both shipped on 2026-05-19.
+
+## Revised order
+1. **Week 1, owner (about 1 hour):**
+   - ai-01: enable Vercel Web Analytics and merge PR #57.
+   - ai-02 and ai-03: one session in Bing Webmaster Tools and Search Console.
+   - ai-12: read the existing tracker data.
+2. **Week 1, code (S):**
+   - ai-10: email capture on the deep pages, with on-page delivery.
+   - ai-01: AI host mapping in the PR #57 helper.
+3. **Weeks 1–2, owner:** a single ai-12 run (10 prompts × 2 runs × 3 engines) to get the cited-domain list.
+4. **Ongoing, owner:**
+   - ai-06: pitches and review copies, with honest-rating requests.
+   - ai-04: podcast guest spots published on YouTube.
+   - ai-05: 3–5 Reddit answers a week.
+5. **Gated:** ai-08 runs only after ai-03 and ai-02 show indexed pages and real question demand.
+
+## Not done / UNVERIFIED
+- No replacement sources were searched for after the WebSearch budget ran out (18:50:26Z).
+  - Current AI-crawler JavaScript rendering (ai-09) is UNVERIFIED.
+  - General content-page email-capture conversion benchmarks (ai-10) are UNVERIFIED.
+  - Amazon's review policy for free or advance copies is UNVERIFIED.
+- Subreddit rules: Reddit returned 403 in the lens run; not rechecked here.
+- Whether the AEO tracker cron still runs, and what it recorded, sits behind the admin login: UNVERIFIED.
+- Search Console and Bing Webmaster Tools status need the owner's account: UNVERIFIED.
+- Whether subscribers carry first-touch attribution cannot be seen from PR metadata: UNVERIFIED.
+- The Growth Memo article of 2026-04-13 is paywalled; only its headline was verified.
+
+## Sources opened (UTC read time, 2026-09-24)
+| Source | Published or updated | Read |
+|---|---|---|
+| help.openai.com/en/articles/12627856 | "Updated 27 days ago" (about 2026-08-28) | 18:49:21Z (curl) |
+| searchenginejournal.com/…/574974 | 2026-05-14 | 18:49:06Z |
+| clickport.io/blog/chatgpt-direct-traffic-ga4 (vendor) | 2026-09-18 | 18:49:06Z |
+| vercel.com/docs/analytics/filtering | 2026-09-16 | 18:49:06Z |
+| blogs.bing.com/webmaster/February-2026/… | 2026-02-10 | 18:49:06Z |
+| developers.google.com/search/docs/appearance/ai-features | 2025-12-10 | 18:49:33Z |
+| ahrefs.com/blog/ai-overview-citations-top-10 (vendor data) | 2026-03-02 | 18:49:33Z |
+| ahrefs.com/blog/ai-brand-visibility-correlations (vendor data) | 2025-12-12 | 18:49:33Z |
+| seranking.com/blog/health-ai-overviews-youtube-vs-medical-sites (vendor) | 2026-01-14 | 18:49:33Z |
+| ahrefs.com/blog/how-to-rank-on-chatgpt | 2026-03-13 | 18:49:33Z |
+| tryprofound.com/blog/ai-platform-citation-patterns (vendor) | 2025-06-05, updated Aug 2025 | 18:49:53Z |
+| semrush.com/blog/most-cited-domains-ai (vendor) | 2025-11-10 | 18:49:53Z |
+| vercel.com/blog/how-were-adapting-seo-for-llms-and-ai-search | 2025-06-10 | 18:49:53Z |
+| arxiv.org/abs/2509.08919 (preprint) | 2025-09-10 | 18:49:53Z |
+| lilyraynyc.substack.com (2 posts) | 2026-02-03; 2026-06-17 | 18:49:53Z |
+| growth-memo.com shorter-focused (paywalled) | 2026-04-13 | 18:50:10Z |
+| growth-memo.com the-consensus-gap | 2026-05-11 | 18:50:10Z |
+| ahrefs.com/blog/do-ai-assistants-prefer-to-cite-fresh-content | 2025-07-28 | 18:50:10Z |
+| vercel.com/blog/the-rise-of-the-ai-crawler | 2024-12-17 | 18:50:10Z |
+| seranking.com/blog/ai-traffic-research-study (vendor) | 2026-06-18 | 18:50:10Z |
+| digitalcommerce360.com/2025/10/24/… | 2025-10-24 | 18:50:10Z |
+| ahrefs.com/blog/ai-seo-statistics (vendor self-report) | 2025-11-10 | 18:50:26Z |
+| goodreads.com/book/show/245299940 | live | 18:50:26Z |
+| lawrencehitches.com/utm-source-chatgpt-explained (consultant) | 2026-09-20 | 18:50:26Z |
+| github.com/Medium/medium-api-docs | archived 2023-03-02 | 18:51:23Z |
+| support.google.com/youtube/answer/2801964 | no date shown | 18:51:37Z |
