@@ -88,3 +88,38 @@ Correction (S) — no new helper, no new Upstash key, no rewrite of the contact/
 - **Export webhook:** same call after `renderAndEmailSessionPdf` succeeds, `dedupKey: "export-sale:<sessionId>"`.
 - **Phone push:** not in v1; email reaches the phone. If added later, a public ntfy.sh topic is readable by anyone who knows its name, so send no buyer data.
 - PayPal may already email the seller for each payment (**UNVERIFIED** this run); the site alert still adds attribution (UTM, landing page).
+
+### ana-4 — Weekly digest + tracking-dark alarm → **REJECT as written; replace with one daily cron**
+
+Why:
+- **No read-only token exists.** The narrowest Vercel token is project-scoped and "can only read and write resources belonging to that one project" (vercel.com/docs/accounts/access-tokens, last_updated 2026-09-08). A read-write, deploy-capable token in the app runtime just to fetch a page-view count is a poor trade, and a token with an expiry is a scheduled failure that silently kills the digest.
+- **Too many schedules.** Two new crons plus the existing Monday `aeo-track` cron = three schedules for one owner. One is enough.
+- **Noise alarm.** "WA page views in 24 h = 0" will fire on ordinary quiet days at current traffic → ignored alarms → the dead system Maya asked to avoid.
+- **Unneeded table.** `site_metrics_weekly` only exists to outlive Hobby’s 1-month WA window. The evidence says Pro (12 months, M1), and `marketing_events` / `orders` already keep history in Supabase.
+
+Correction (S–M):
+- **One cron** `/api/cron/daily-check` at `0 12 * * *` (valid on Hobby and Pro), guarded by `CRON_SECRET` like `aeo-track`.
+- **Daily:** synthetic end-to-end probe (write a `heartbeat` row through the normal insert path, read it back, delete it); `alertAdmin` only on real failure (probe fails, Supabase or Resend down); "checkout started but no purchase after 24 h" is a digest line, not an alarm; purge analytics rows older than the stated retention (M7).
+- **Mondays:** ONE digest email — last 7 days of server events (sales, export sales, leads, journal downloads, retailer/buy/share clicks, 404s), the latest AEO probe result that `aeo-track` already stores, the number of alerts sent, and a link to the Vercel Analytics tab for page views. Footer: "If this email does not arrive on a Monday, monitoring is broken." The digest is its own dead-man switch.
+- **Page views inside the digest:** later and optional, only if Maya accepts a project-scoped token with an expiry plus an alert on 401/403.
+- **Admin:** one "System status" card on `/admin/analytics` showing the last daily-check result. No new dashboard.
+
+### ana-5 — Privacy copy + CSP tidy → **KEEP, folded into the #57 amendment**
+
+Correction: #57 already names Vercel Web Analytics. What is still missing is the GPC statement, what Reject does, a retention period, and removal of the no-consent legal claim (ana-1). CSP tidy is safe but optional: WA v2 loads from same-origin randomized paths (Resilient Intake, Vercel WA privacy doc 2026-06-26); in the live chunk `va.vercel-scripts.com` appears once (the SDK dev path) and `vitals.vercel-insights.com` does not appear. Check a Preview for CSP violations before removing.
+
+### ana-6 — Uptime → **KEEP, reworded: keep the existing GitHub probe, add no vendor**
+
+Why: the repo is **public** (`gh api repos`, 19:00:56Z), and GitHub-hosted runners are "free … for public repositories that use standard GitHub-hosted runners" (GitHub Actions billing docs). The low run rate is documented: "The `schedule` event can be delayed during periods of high loads … some queued jobs may be dropped." Two risks the lens missed:
+1. "In a public repository, scheduled workflows are automatically disabled when no repository activity has occurred in 60 days." The probe will stop quietly once Maya stops committing.
+2. A failure opens a GitHub issue — a second alert channel whose email delivery depends on GitHub notification settings (**UNVERIFIED**).
+
+Correction: the ana-4 daily check plus the Monday digest is the primary liveness signal; the GitHub probe stays as a free backup. Do not sign up for free external monitors: their free plans are framed for non-commercial use (UptimeRobot free: "Good for hobby and non-profit projects"; Better Stack: "Free for personal projects"; pricing pages ~19:08Z). Minute-level uptime means paying (UptimeRobot Solo $13/mo monthly), which current traffic does not justify.
+
+### ana-7 — PostHog later → **KEEP as deferred, with corrections**
+
+- `cookieless_mode: "on_reject"` keeps counting rejecting visitors, which breaks the "Reject stops counting" rule. If ever adopted, do not load PostHog at all on Reject/GPC.
+- Clickmaps need autocapture, and autocapture on the three tool pages would record starter-prompt button text. Exclude the tool pages and /contact from PostHog **entirely**, not just from replay.
+- It must replace part of the one system, not add to it: adopt only when the digest raises a concrete question that clicks cannot answer.
+
+---
