@@ -19,3 +19,26 @@ Continues `00-PIONEER-PLAYBOOK.md` (sections 1, 2, 3A-3C). Sections 5-7 (first 1
 | D11 | StoryOrigin newsletter swaps and group promos (fit for nonfiction UNVERIFIED) | StoryOrigin | `utm_source=storyorigin&utm_medium=swap` | MAYA | 1h a week | M | book-bookfunnel-storyorigin |
 | D12 | Goodreads Giveaway after the author claim (cost UNVERIFIED) | Goodreads | - | MAYA | 1h | M | SE 5 |
 | D13 | Claim the BookBub author profile now; a Featured Deal only after reviews exist ($784 for Advice & How-To at $0.99, 650,000+ subscribers) | BookBub | UNVERIFIED | MAYA | 30m now | M later | book-bookbub, [S50] |
+| D14 | The Fussy Librarian deal ($0.99-$5.99 books, 120,000 subscribers; reviews recommended, not required) | email promo | - | MAYA | 30m | M | [S51] |
+| D15 | Nominate the ebook for Kindle Deals (beta) | KDP Marketing | - | MAYA | 15m | M | book-kindle-deals |
+| D16 | A+ Content: scenario list, journal preview, circle invitation | KDP | - | MAYA | 2h | M | book-a-plus |
+| D17 | Small Sponsored Products test (ad policy for this topic UNVERIFIED) | Amazon Ads | - | MAYA | 1h + budget | L-M | book-amazon-ads |
+| D18 | ISNI via Bowker ($5) | ISNI | - | MAYA | 15m | L | book-isni |
+| D19 | Go wide via Draft2Digital ($20 + ~10%: Apple, Kobo, NOOK, OverDrive, Hoopla, BorrowBox, cloudLibrary, Tolino, Everand, Bookshop) with one Books2Read link, after D1-D2 | Draft2Digital | back-matter `/book-<store>` | MAYA | 1d | M | book-d2d, [S45] |
+| D20 | IngramSpark for print (BISAC settable; coexistence with KDP Expanded Distribution UNVERIFIED) | IngramSpark | - | MAYA | 1d | L-M | [S52] |
+| D21 | Decide the audiobook route before launch: ACX vs Voices by INaudio vs Spotify for Authors vs ElevenReader Publishing (60% direct + $0.20 per hour streamed, non-exclusive) | audio retail | `/listen` | MAYA | 1d | M | book-acx, book-voices-inaudio, book-spotify-authors, [S53] |
+| D22 | Audiobook early-listener list on /books, now | site | `source=audiobook-waitlist` | PR | 1h | M | BHC M14 |
+| D23 | Companion print Integration Journal (SEL045000 Journaling) with a QR code to the circles | KDP print | `utm_source=journal&utm_medium=print-qr` | CONTENT | 3d | M | book-companion-journal |
+| D24 | Pair the book with 5 books on Book DNA (formerly Shepherd; free) | Book DNA | UNVERIFIED | MAYA | 1h | L | [S54] |
+| D25 | Free BookLife profile; Readers' Favorite free review | BookLife, Readers' Favorite | review page | MAYA | 1h | L | book-paid-reviews, [S55] |
+| D26 | Retailer link hygiene and own affiliate IDs; `rel=sponsored` on any paid link | site | - | PR | 1h | L | book-outbound-links |
+
+### 3E. Niche venues (the psychedelic field)
+
+| # | Action | Venue | Link / tag | Owner | Effort | Lead | Source |
+|---|---|---|---|---|---|---|---|
+| E1 | Join the "Spread the word" ambassador kit; propose the journal for "Preparation Tools" (1 listed) and the circle for "Integration Circles & Therapists"; mention that their integration.maps.org link times out | Fireside Project /resources (32 links, rel noopener, no nofollow) | clean URL, or `utm_source=fireside&utm_medium=referral&utm_campaign=resource-listing` | MAYA | 2h | M | niche-npo-fireside, [S56] |
+| E2 | Ask for a resources listing (10,000+ trained peers) | Zendo Project | `utm_source=zendo&utm_medium=referral` | MAYA | 1h | L-M | [S57] |
+| E3 | Put the Psychedelic Info Line in the help box; ask for a listing | Unlimited Sciences | referral | MAYA | 30m | L | [S57] |
+| E4 | Submit each circle series with every field complete (incomplete submissions are dropped; MAPS "generally will not contact you") | MAPS community event calendar | `utm_source=maps-calendar&utm_medium=event-listing` | MAYA | 30m a series | H | niche-evt-maps-calendar, [S29] |
+| E5 | Submit the free tools as a "Tool Builder"; ask to be on the "Essential Psychedelic Books" list | Psychedelics.com Contribute | `utm_source=psychedelics-com&utm_medium=directory` | MAYA | 1h | M | [S46] |
