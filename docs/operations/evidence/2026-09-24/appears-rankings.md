@@ -83,3 +83,33 @@ Bing shows 7-10 organic results on page 1. WS returns 9-10. "none" = no mayaalla
 | Whether the free integration-journal PDF is crawlable | no PDF/download URL in the live HTML (18:28:07Z); the download flow was not exercised (safety rule: no download/submit clicks) | owner or a Playwright lens |
 | Search impressions / clicks / who searches | not observable from outside | Search Console + Bing Webmaster Tools (owner-account) |
 | Which engine the WebSearch tool uses; personalisation | undisclosed; all checks anonymous, US English | - |
+
+## 5. Method notes (how the engines behaved)
+
+- **Bing page 1 only.** `first=11`, `first=11&FORM=PERE`, a session cookie jar taken from the first response, and `format=rss&first=11/21` all returned the same 7 results (tested on "psilocybin integration", 18:19:50Z-18:20:14Z). "Top 20" cannot be observed on Bing by curl. Recorded depth: 7-10.
+- **Bing decoys.** Some queries (and all queries after ~18:25:40Z) came back as 10 off-topic results built from one word of the query: "mayaallan" -> Google homepages, then tankless water heaters; "what to do after a mushroom trip" -> dictionary pages for "do"; "site:mayaallan.com grandmother" -> dictionary pages for "grandmother". Genuine responses had 7 results plus a People-also-ask block. Every row flagged "decoy" is excluded from conclusions.
+- **Stability.** For every non-decoy query, the second Bing observation (different UA, 3-4 minutes later) gave the same mayaallan positions and the same top 3.
+- **WS.** Returns 9-10 results per query with a model-written summary. Only the result URLs and their order were used as evidence, not the summary text (except in rank-W3, which is labelled as summary text).
+- **Parser.** Bing `li.b_algo > h2 > a` hrefs, with `bing.com/ck/a?...u=a1<base64>` decoded to the target URL and `msockid` stripped. Note: the "mayaallan" flag in the raw run also matched `linkedin.com/in/mayaallan`; only mayaallan.com hosts are counted as site positions here.
+
+## 6. Brand SERPs (raw)
+
+**"Maya Allan"**
+- Bing B1 18:19:46Z (10): 1 mayaallan.com/ "Maya Allan - Author of the Psilocybin Integration Guide" | 2 mayaallan.com/books | 3 linkedin.com/in/mayaallan "Licensed Real Estate Broker, Founder, MAllan" | 4 zillow.com/profile/Maya%20Allan | 5 realtor.com/realestateagents/56d52bb5de071e0100624ed3 | 6 loopnet.com/.../maya-allan/l5e5eegb "Mallan Real Estate Inc." | 7 mallannyhomes.com/agents/2/ | 8 homes.com/real-estate-agents/maya-allan/scwqzj4/ | 9 streeteasy.com/profile/818487-maya-allan | 10 citysnap.com/Maya-Allan. B2 18:24:16Z: #1-#3 identical.
+- WS 18:21:35Z-51Z (10): 1 facebook.com/maya.allan.100483/ | 2 facebook.com/public/Maya-Allan/ | 3 instagram.com/mayaalenaa/ ("Maya Allen") | 4 in.pinterest.com/mayaallan2/ | 5 mayaallan.com/ | 6 mayaallan.com/about | 7 en.wikipedia.org/wiki/Maya_Penn | 8 wiki/Maya_Laner | 9 wiki/Maya_Henry | 10 instagram.com/popular/mya-allan/
+
+**"Maya Allan author"**
+- Bing B1 18:19:47Z (7): 1 mayaallan.com/ | 2 mayaallan.com/books | 3 facebook.com/profile.php?id=61572138340473 "Maya Allan Author - Facebook" | 4 facebook.com/authormayaalden/ | 5 books.google.com/books/about/Psilocybin_Integration_Guide.html?id=HvafEQAAQBAJ | 6 thecut.com/author/maya-allen/ | 7 researchgate.net/profile/Maya-Allan (McGill). B2 18:24:17Z: #1-#2 identical.
+- WS (9): 1 wiki/Maya_S | 2 wiki/Maya_(Campbell_novel) | 3 facebook.com/authormayaalden/ | 4 wiki/Maya_Tatsukawa | 5 wiki/Rosetta_Allan | 6 mayaallan.com/ | 7 mayaallan.com/about | 8 bookseriesinorder.com/maya-alden/ | 9 romance.io/authors/.../maya-alden/latest
+
+**"Maya Allan psilocybin"**
+- Bing B1 18:19:49Z (7): 1 mayaallan.com/ | 2 mayaallan.com/books/psilocybin-integration-guide | 3 books.google.com (HvafEQAAQBAJ) | 4 amazon.com/.../dp/B0G7JWDJYQ | 5 barwebooks.com/product/psilocybin-integration-guide-40-real-scenarios-... | 6 amazon.ca/...-ebook/dp/B0G765BZDL | 7 thriftbooks.com/w/psilocybin-integration-guide-40-real-scenarios-... . B2 18:24:18Z: #1-#2 identical.
+- WS (9): 1 amazon.com/.../dp/B0G91GZMLT (ISBN 9798994148839) | 2 amazon.com/.../dp/B0G7JWDJYQ (ISBN 9798994148853) | 3 amazon.com/...-ebook/dp/B0G765BZDL (Kindle) | 4 mayaallan.com/ | 5 mayaallan.com/about | 6 researchgate.net figure (ancient Maya mushrooms) | 7 sciencedirect.com S2173580814001527 | 8 academia.edu/7482218 | 9 wiki/Seeking_the_Magic_Mushroom
+
+**"Maya Allan book"**
+- Bing B1 18:19:50Z (7): 1 mayaallan.com/books | 2 mayaallan.com/ | 3 amazon B0G7JWDJYQ | 4 books.google.com | 5 amazon Kindle B0G765BZDL | 6 barwebooks.com | 7 thriftbooks.com. B2 18:24:19Z: #1-#2 identical.
+- WS (9): 1 bibliovault.org (ISBN 9781566390361, Allan Burns) | 2 wiki/Maya_(Campbell_novel) | 3 wiki/Maya_S | 4 wiki/The_Gathering_(Armstrong_novel) | 5 romance.io (Maya Alden) | 6 mayaallan.com/ | 7 wiki/Maya_Tatsukawa | 8 wiki/Maya_Zankoul | 9 wiki/Rosetta_Allan
+
+**"mayaallan.com"** WS 18:22:36Z-52Z (9): 1 in.pinterest.com/mayaallan2/ | 2 wiki/Mayajaal | 3 wiki/Maya_S | 4 wiki/Maya | 5 mayaallan.com/ | 6 wiki/Mayan | 7 wiki/Maya_Jayapal | 8 wiki/Maya_S._Krishnan | 9 wiki/Maya_Penn. Bing: decoy.
+
+**"psilowire"** Bing 18:20:34Z (7): psilowave.com/, psilovibe.org/, psilowave.com/about, psychwire.com/, app.psychwire.com/notifications, instagram.com/psilo.delic/, instagram.com/psychwire__/ . WS (9): facebook.com/Psilowave, psilowave.com, psilosiren.com, dungeonsdragons.fandom.com (Psilofyr), wiki/Psi_wheel, wiki/Psi, mimir.net, dandwiki.com, wiki/Psilate.
