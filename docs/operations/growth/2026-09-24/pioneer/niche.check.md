@@ -48,3 +48,67 @@
 | niche-evt-ps2027 | yes | **no** | unknown | MAPS homepage says "PS27 registrations are now live", so it should be live; dates and city still UNVERIFIED |
 
 ## Item-by-item evidence
+
+### niche-b2b-or-centers: KEEP. Fix the "43%" claim.
+
+**Verified:**
+- The CSV row for 4/1/2026–6/30/2026 shows `ClientsServed=1220`, `OtherInsideUS=525`, `OutsideUS=20`, `NoAnswerForCounty=51`. Source: https://www.oregon.gov/oha/PH/PREVENTIONWELLNESS/Documents/OPS-Data-File-2026-Q2.csv (2026-09-24T22:11:59Z).
+
+**Wrong: the denominator.**
+- 525/1220 is 43.0%, but residence comes from the optional client data form. Oregon county rows plus other-state, outside-US and no-answer rows add to only about 820 (suppressed cells are shown as -99).
+- 525 is about **64% of clients who reported residence**.
+- Correct wording: "at least 525 of 1,220 clients (43%) came from other US states; about 64% of those who answered".
+
+**UNVERIFIED: "so they leave with no licensed integration support".**
+- This is an inference. OAR 333-333 could not be read in this run.
+- Do not use this line in outreach copy until the rules on integration-session location or telehealth are checked.
+
+**Mechanics:**
+- The directory lives at `psilocybin.oregon.gov/license-directory` (HTTP 200 at 22:17:32Z) and can be filtered by clicking "license type".
+- The page itself says: "The OPS Licensee Directory is **not a comprehensive list** of all OPS licensees". Listing is opt-in. Source: https://www.oregon.gov/oha/PH/PREVENTIONWELLNESS/Pages/Psilocybin-Licensee-Directory.aspx (22:12:12Z).
+
+**Missed policy:**
+- Outreach email to centers is commercial email under CAN-SPAM: "The law makes no exception for business-to-business email".
+- Every email needs a postal address and an opt-out, and opt-outs must be honored within 10 business days. The penalty is up to $53,088 per email.
+- Source: https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business (edited Jan 2024; read ~22:21:50Z).
+
+**Tag:** fine (`utm_source=or-<center>&utm_medium=b2b-partner&utm_campaign=aftercare-kit-2026q4`).
+
+### niche-b2b-co-centers: KEEP
+
+**Verified:** "Approved Licenses as of 9-18-26 … Healing Center 11 standard 35 micro". The page also says "The map below highlights the locations of licensed healing centers". Source: https://nmd.colorado.gov/ (curl 22:12:36Z; WebFetch returned 403).
+
+**Look-up:** the Licensee Look-up Tool link goes to `https://codor.mylicense.com/NMD_Verification/`.
+
+**Missed:**
+- Healing centers are only the premises. **Facilitators** are licensed separately by DORA, and DORA publishes a roster generator. See missing venue M1.
+- The NMD page also links a 7/6/26 "Industry Bulletin: Prohibition of Sales of Regulated Nat[ural Medicine]…". Read it before proposing anything sold on premises (UNVERIFIED content).
+
+### niche-dir-nm-mpp: KEEP as watch only. Status is WRONG.
+
+**Verified:**
+- "The program is set to be implemented by December 31, 2026" — https://www.nmhealth.org/about/mcpp/ (22:12:12Z).
+- The /mpp/ page says the DOH "is now embarking on the critical task of developing… rules". It lists no hearing dates yet, and advisory-board meeting materials are not posted. Source: https://www.nmhealth.org/about/mcpp/mpp/ (~22:12:40Z).
+
+**Correction:**
+- Status should be **pre-launch**, not live.
+- "Follow the advisory board materials" is not possible yet. Instead, watch for public hearings. The page lists a public program inbox (medical.psilocybin@doh.nm.gov).
+- The program is medical, with qualifying conditions (treatment-resistant depression, PTSD, SUD, end-of-life). Rules on clinicians and training are pending, so non-clinician "integration" roles are unknown.
+- Lead value: low until 2027.
+
+### niche-npo-fireside: KEEP, with corrected mechanics
+
+**Verified:**
+- "about 40,000 conversations" and "100+ volunteers" appear on the homepage, not on the spread-the-word page. Source: https://www.firesideproject.org/ (22:13:09Z).
+
+**Wrong: "Join the Ambassador Kit program".**
+- The page lists four open Google Drive folders: Volunteer Spark Kit, Clinic Partner Folder, Community Spark Kit, and Fireside Ambassador Kit ("All are welcome!").
+- There is no application or program to join. Source: https://www.firesideproject.org/spread-the-word (~22:12:45Z).
+
+**Wrong: "propose one free tool for /resources".**
+- /resources has no submission route.
+- Of its 40 external anchors, 0 are nofollow; they use `rel="noopener"` only, so links are **followed**. Source: https://www.firesideproject.org/resources (22:13:02Z).
+
+**Missed:**
+- Fireside also sells "Psychedelic Coaching — scheduled, long-term prep and integration by video". That makes it a partial competitor for integration buyers.
+- Adding 62-FIRESIDE to the tool pages is still good harm-reduction practice, whatever the lead value.
