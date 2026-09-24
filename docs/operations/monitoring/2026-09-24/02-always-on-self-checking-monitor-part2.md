@@ -117,7 +117,7 @@ End with a report: issue, reproduced (yes/no + UTC), PR URL or reason, commands 
 
 ## 7. Not done / UNVERIFIED
 
-- Nothing in §4-§6 is built. This file is the only change.
+- Nothing in §4-§6 is built. These two files are the only change (plus unreferenced chunk blobs in the git object store used to assemble them; no branch points to them).
 - **UNVERIFIED:** the Vercel team plan (Hobby vs Pro). It was not read because access was project-scoped only. It decides Web Analytics limits, log retention, cron precision, Drains and Alerts availability.
 - **UNVERIFIED:** whether `/api/cron/aeo-track` ran on 2026-09-21 (F29).
 - **UNVERIFIED:** whether the PayPal button renders client-side and whether the analytics beacon fires in a real browser. Not tested: a real browser visit would add a fake visitor, and Web Analytics is off anyway.
