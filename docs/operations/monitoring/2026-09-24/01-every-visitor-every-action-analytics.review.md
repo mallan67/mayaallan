@@ -123,3 +123,19 @@ Correction: the ana-4 daily check plus the Monday digest is the primary liveness
 - It must replace part of the one system, not add to it: adopt only when the digest raises a concrete question that clicks cannot answer.
 
 ---
+
+## 4. What the lens missed
+
+**M1. Plan tier and Vercel’s Hobby commercial rule.** No allowed project-scoped call exposes the plan. But GitHub shows **182 Vercel Preview deployments between 18:17:18Z and 19:09:02Z** (`gh api` deployments, 19:09:40Z; sampled statuses "success"), all from docs commits to `work/site-visibility`, and Vercel lists them READY. Vercel’s limits page (last_updated 2026-09-16) caps Hobby at 100 deployments per hour and 100 per day. So the team is on Pro or a Pro trial (**INFERRED**). Consequences: Vercel custom events and the 12-month WA window are available (no snapshot table needed); and if it is a 14-day trial it will fall back to Hobby — Vercel’s Fair Use Guidelines (last_updated 2026-09-14) say "Hobby teams are restricted to non-commercial personal use only" and list "Any method of requesting or processing payment from visitors of the site" as commercial. **This site cannot run on Hobby.** Maya: confirm in Vercel → Settings → Billing (owner, 1 minute).
+
+**M2. Every docs commit rebuilds the whole site.** 182 full Next.js preview builds in 52 minutes, triggered by markdown-only commits. On Pro this burns build capacity; on Hobby it would exhaust the 100/day deployment limit and block a production deploy (for example the #57 merge) until the window resets. Fix (owner, S): set the project **Ignored Build Step** in Vercel settings to exit 0 when only `docs/**` changed. `ignoreCommand` or `git.deploymentEnabled` in `vercel.json` (vercel.com/docs/project-configuration) also work, but `vercel.json` is read from the commit being built, so the project setting takes effect on all branches at once.
+
+**M3. Bearer tokens and order ids in URLs** (see ana-1): `/download/[token]` in the path, `/checkout/success?orderId=…` in the query, both copied into `landing_page`. One shared sanitizer for WA, the attribution client and every new event.
+
+**M4. The consent-copy and legal-claim defects in #57** (see ana-1). The Codex review passed them, so "green and clean" is not enough evidence to merge.
+
+**M5. Dirty retailer links on the live book page** (19:04:07Z). AbeBooks carries Impact affiliate parameters (`clickid=…`, `cm_mmc=aff-_-ir-_-353196-_-77798`, `ref_=aff_ir_353196_77798`) that look copied from someone else’s affiliate link — they would credit that affiliate for Maya’s traffic (ownership **UNVERIFIED**). Barnes & Noble contains a `jsessionid`; Bokus a Google `srsltid` click-id; Bookshop.org `source=IndieBound&ref=https://www.google.com/`; Amazon is a bare `a.co` short link with no attribution. Fix (owner, S, no code): paste clean canonical URLs in `/admin/books/psilocybin-integration-guide/retailers`. Retailer-side attribution (a Bookshop.org affiliate ID, Amazon attribution tags for authors) is a growth decision; current terms not read this run (**UNVERIFIED**).
+
+**M6. Export ($9.99 PDF) revenue is invisible.** `src/app/api/export/webhook/route.ts` (main@ed7461a) writes no `orders` row and no `marketing_events` row; the session is deleted after delivery and the Upstash TTL is 24 h. Export sales exist only in PayPal. The lens had this UNVERIFIED; it is now confirmed. Fix: the `export_purchased` server row in ana-2, with the amount.
+
+**M7. No analytics retention period.** /privacy says only "Analytics events are retained for current product analysis". Pick one (13 months matches the CNIL sheet the lens cites), purge in the daily check, and state it on /privacy.
