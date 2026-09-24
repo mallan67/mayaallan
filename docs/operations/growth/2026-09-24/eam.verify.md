@@ -126,3 +126,62 @@ All three feed one Resend sequence (PR #42).
    - Subreddit self-promotion rules could not be read live (HTTP 403 at 18:53:25Z), so they are UNVERIFIED. Read each community's rules before posting.
 4. **Domain:** repoint psilocybinintegrationguide.com from `/` to the book page (owner, Vercel domains, S).
 5. **Measure:** sessions and captures per `ref`, and `brand_mention` per week in the AEO tracker (the PR #46 split). Judge over weeks, not days. That is the lesson from HubSpot and Indig.
+
+## Live sources read for this review (UTC, 2026-09-24)
+
+**GitHub `mallan67/mayaallan` (gh api):**
+- PR list: 18:46:35Z.
+- PR bodies #57, #12, #45, #46 and #58: 18:46:45Z.
+- `main` commit titles: 18:46:58Z.
+- Issues and the messages of commits `1f9413b`, `2e559a0`, `1029986`, `5be3503`, `b7a0f8a`: 18:47:27Z.
+- PR #57 mergeability and branch head: 18:53:02Z.
+- Reviewed commit `170bf0f`: 18:53:14Z.
+
+**www.mayaallan.com (GET only):**
+- Tool pages and `/practices`: 18:47:47Z.
+- Links on tool, scenario and glossary pages; the book price; the psilocybinintegrationguide.com 308: 18:48:05Z.
+- og:image counts, email inputs and glossary anchors: 18:48:23Z.
+- `/_vercel/insights/script.js` returned 200 at 18:53:02Z. That does not show whether Web Analytics is enabled.
+
+**Publication dates** (page metadata via curl, 18:48:44Z):
+
+| Source | Published | Modified |
+|---|---|---|
+| Growth Unhinged, Indig | 2026-07-15 | 2026-09-15 |
+| Growth Unhinged, HubSpot | 2026-09-16 | 2026-09-21 |
+| Interact | 2026-09-08 | |
+| Riddle | 2026-06-22 | 2026-07-28 |
+| Growth Method | 2026-02-13 | |
+| HubSpot blog | 2025-01-03 | |
+| Pew | 2025-07-22 | |
+| Ahrefs, AIO clicks | 2026-02-04 | 2026-08-27 |
+| Ahrefs, AI conversions | 2025-06-16 | 2026-08-12 |
+| Ahrefs, brand correlation | 2025-05-26 | 2026-04-27 |
+| Growth Memo | 2026-07-27 | |
+| theStacc | 2026-07-10 | |
+
+**Content reads** (WebFetch and curl, 18:48:44Z to 18:53:02Z):
+- Each page in the table above.
+- hubspot.com/ai-search-grader (curl, 18:49:40Z).
+- vercel.com/blog/how-were-adapting-seo-for-llms-and-ai-search (2025-06-10).
+- tryprofound.com/blog/ai-platform-citation-patterns (2025-06-05, updated Aug 2025).
+- Google Search Central blog 2025-05-21 ("unique, non-commodity content").
+- Google spam policies (updated 2026-08-28) and the gen-AI content guidance (updated 2025-12-10), curl 18:50:14Z.
+- status.search.google.com/incidents.json, read 18:50:24Z: spam updates began 2026-03-24, 2026-06-24, 2026-08-18 and 2026-09-24T16:15Z (the last still ongoing).
+- Vercel docs: analytics custom-events (updated 2026-06-26) and limits-and-pricing (updated 2026-08-25).
+- YouTube harmful or dangerous content policy.
+- atg.wa.gov MHMDA page.
+- Search Console help 7440203 (says "no need to resubmit").
+- Next.js opengraph-image docs (updated 2026-07-09).
+
+## Not done / UNVERIFIED
+- **No new searches.** The session's web-search budget was used up (200/200 at ~18:52Z), so there was no independent search for counter-evidence or for 2025-26 results from solo authors. Only the lens's own sources and directly fetched primary docs were checked.
+- **Not read live:**
+  - The Vercel project plan and whether Web Analytics is switched on. Vercel is outside this task's tool scope; the source used is PR #58.
+  - The HubSpot grader's form fields, which are rendered by JavaScript.
+  - Subreddit rules (HTTP 403).
+  - Search Console status of the PR #45 pages.
+  - Paid-ad policies for psychedelic content. The plan here is organic only.
+- **Out of scope:** whether the April tool events call `@vercel/analytics` `track()` would need the source files.
+- **Unknown:** whether any distribution work was ever posted off-site.
+- Nothing was built, merged or submitted.
