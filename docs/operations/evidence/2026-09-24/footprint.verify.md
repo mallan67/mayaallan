@@ -5,7 +5,7 @@
 - **Live sources used:** curl GET/HEAD from this machine to amazon.com/.co.uk/.ca/.de/.com.au, goodreads.com, play.google.com, books.google.com, barnesandnoble.com, thriftbooks.com, abebooks.com, bokus.com, itunes.apple.com (Search and Lookup APIs), openlibrary.org, wikidata.org API, loc.gov / lx2.loc.gov SRU / id.loc.gov, web.archive.org CDX, bing.com, pinterest.com, youtube.com, public.api.bsky.app, linktr.ee, substack, medium, tiktok, threads, instagram, reddit, api.pullpush.io, listennotes, barwebooks.com, www.mayaallan.com and the extra domains. WebFetch (a separate network path) for Bing, Instagram and Medium. Vercel MCP `list_project_domains` (project prj_CkwsvLxnWkKGJlyAA93lRVxAOQ9Y, team team_kZQh5NYLyrOKqffK0r9EXf4E). GitHub API for repo metadata.
 - **Not used:** no repository source files, no local files, no Playwright, no logins, no POST requests (apart from the gitsave git API calls), no /api/cron, /api/admin or /api/indexnow calls.
 - **Limits of this run:** the WebSearch tool budget was used up (it refused queries at about 18:58Z), so the WebSearch-only observations in the input could not be re-run with WebSearch. DuckDuckGo HTML answered 202 (anomaly page) and Mojeek blocked automated requests (18:58:54Z to 18:59:13Z). Bing (curl, plus WebFetch) was the only search engine that answered. Goodreads `/book/show/*` pages answered 202 with an AWS WAF challenge to curl (18:53:07Z and 18:53:16Z), so book-level facts were re-read from the Goodreads author page and the `/work/editions/*` pages, which answered 200.
-- **How this file was written:** in 6 appended parts, because the shell command-length limit rejected a single save. Each part was appended to the live GitHub copy of this file.
+- **How this file was written:** in 7 appended commits (6 content parts plus this tally fix), because the shell command-length limit rejected a single save. Each part was appended to the live GitHub copy of this file.
 
 ## Verdict table
 
@@ -62,4 +62,4 @@
 
 ## Tally
 
-15 findings: 12 confirmed (4 of them with corrections: foot-02, foot-07, foot-12, plus a changed solution owner on foot-10), 0 refuted, 3 uncertain (foot-09, foot-14; foot-07's Medium sub-claim only). Severity changes: foot-03 high→medium, foot-04 medium→low. Main correction: the Instagram bio already links mayaallan.com.
+15 findings: **13 confirmed** (foot-01 to foot-08, foot-10 to foot-13, foot-15), **0 refuted**, **2 uncertain** (foot-09, foot-14). Corrections inside confirmed findings: foot-02 and foot-07 (the Instagram bio already links mayaallan.com; a second Pinterest profile and a TikTok handle exist; the Medium claim could not be re-verified), foot-12 (the site book page carries the same "Heal Traumas" tagline), foot-10 (the solution owner must be vercel-setting + code-pr). Severity changes: foot-03 high to medium, foot-04 medium to low. The file was finalised in 7 commits on work/site-visibility, and each commit changed only this path.
