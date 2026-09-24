@@ -171,3 +171,58 @@ Episode counts and last-episode dates come from the Apple Podcasts lookup API (h
 | niche-pr-featured | Featured (terkel.io now redirects here) | live | Free $0 tier; Lite $29/mo billed annually ($348); "Monitor HARO and similar feeds" | medium | https://featured.com/pricing (18:40:17Z) |
 | niche-pr-hb2bw | Help a B2B Writer | **dead / in transition**: helpab2bwriter.com redirects to mentionmatch.com, which says "We are launching soon" | n/a | low | https://helpab2bwriter.com/ redirects to https://mentionmatch.com/ (18:39:57Z, ~18:40:30Z) |
 | niche-pr-haro | HARO / Connectively | **UNVERIFIED** (HTTP 429 on both) | n/a | unknown | https://www.helpareporter.com/ ; https://connectively.us/ (18:39:57Z) |
+
+---
+
+## 3. Rules and ethics (read live)
+
+- **Federal law:** Psilocybin (7437) and Psilocyn (7438) are listed in 21 CFR 1308.11 (Schedule I). eCFR version dated 2026-09-21, read 18:47:37Z at https://www.ecfr.gov/api/versioner/v1/full/2026-09-21/title-21.xml?part=1308&section=1308.11. Never source, sell or facilitate, and never link to sourcing guides.
+- **State programs** are the lawful routes to access: Oregon (ORS 475A), Colorado (NMD/DORA) and New Mexico (pre-launch). Partner centers hold licenses and carry their own compliance duties, so let them decide placement and never imply state endorsement.
+- **Health claims (FTC):** claims about health benefits need "competent and reliable scientific evidence". Present the book and tools as education and integration support, not as treatment for depression or PTSD. https://www.ftc.gov/business-guidance/resources/health-products-compliance-guidance (18:45:07Z)
+- **Endorsements:** disclose paid podcast spots (Third Wave, $1,500) and any referral fees paid to centers. https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking (live 18:45:27Z)
+- **Google Ads (recreational drugs policy):** "Ads for products or services marketed as facilitating recreational drug use are not allowed. Ads for instructional content about producing, purchasing, or using recreational drugs are not allowed." https://support.google.com/adspolicy/answer/6014299 (18:45:07Z)
+- **Communities:** follow the Reddit sitewide rules quoted in 2B. The Source of Sources ban applies to any off-topic pitch. The Psychedelic Support community directory does not accept groups that "offer illegal substances".
+- **Safety:** Fireside says "If you are having an emergency, call 911." Put that note and the 62-FIRESIDE line on the tool pages.
+
+## 4. Dead or stale: skip these
+
+| Item | Evidence (read UTC) |
+|---|---|
+| Wonderland (the Miami psychedelics conference) | wonderlandmiami.com now presents "Miami's Most Seductive Nightlife Experience", not a conference (~18:37:40Z). Status of the brand elsewhere: UNVERIFIED. |
+| catalystsummit.org | Now "A National Summit on the Future of Learning", not a psychedelic event (~18:37:40Z) |
+| Psilocybin Summit (online) | Only the 2021 edition is referenced (~18:46:00Z) |
+| Psychedelic Science Review | Latest RSS item 2024-07-18 (18:32:18Z) |
+| Psychedelic Spotlight | "New Era Loading ... redesign ... Coming Soon"; RSS has 0 items (~18:32:40Z) |
+| Psychedelics Today article submissions | Form is `closedform` (~18:36:30Z) |
+| Psychable Podcast (5 eps, last 2025-05-16); Psychedelic Therapy Frontiers (last 2025-10-14) | Apple lookup (18:35:04Z) |
+| Help a B2B Writer | Redirects to the pre-launch MentionMatch site (18:39:57Z) |
+
+## 5. Tagging conventions
+
+**UTM:** `utm_source=VENUE-SLUG&utm_medium=TYPE&utm_campaign=NAME`
+- medium: `directory`, `community`, `guest-article`, `podcast`, `event`, `b2b-partner`, `press-quote`, `newsletter`
+- campaign: `pioneer-niche-2026q4` (default), `aftercare-kit-2026q4`, `integration-circle-2026q4`, `horizons-2026`
+- Example: `https://www.mayaallan.com/integration-reflection?utm_source=fireside&utm_medium=community&utm_campaign=pioneer-niche-2026q4`
+- Editorial hosts often strip query strings. For podcasts and print, ask for a short dedicated landing path (proposed, **not live today**) and have the page record the source.
+
+**Structured data:** the live `sameAs` holds only Instagram (read 18:27:56Z). Add each *profile* URL once it exists: author pages at chacruna.net/author/SLUG, lucid.news/author/SLUG and Tripsitter; Qwoted and Featured expert profiles; the Eventbrite organizer page. Podcast guest episodes and conference partner listings are pages *about* her rather than profiles, so they go under `subjectOf`, not `sameAs`.
+
+## 6. UNVERIFIED (not filled from memory)
+
+- Reddit first-party subscriber counts, per-subreddit rules and link `rel` (HTTP 403)
+- DoubleBlind (captcha)
+- Psychedelic Science 2027 dates and city (captcha)
+- HARO and Connectively (HTTP 429)
+- Oregon licensed service-center count (list renders client-side)
+- Colorado facilitator count
+- Whether Psychable lists authors
+- Spirit Plant Medicine vendor fee
+- Next Breaking Convention date
+- Meetup counts
+- Naropa program
+- Podcast guest paths marked UNVERIFIED
+- Oregon training-program names (extracted by a summarizer)
+
+## 7. Not done in this pass
+
+No outreach, sign-ups or posts were made (forbidden). psilowire.com and psilocybinintegrationguide.com were not fetched (out of scope: GET is limited to www.mayaallan.com). Organization eligibility for Horizons Community Allies and the Fireside ambassador terms still have to be confirmed by Maya on those sites.
