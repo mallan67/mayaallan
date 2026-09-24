@@ -108,3 +108,24 @@ The engineer's rule throughout: every venue gets its own tracked door, every new
 - Owner: owner account + small code PR. Effort: 1 day plus $150-$250. First lead: day 3-7 (estimate).
 - Measure: utm_source=booksirens|hidden-gems|goodreads-giveaway&utm_medium=arc&utm_campaign=arc-2026q4; generate_lead {lead_type: arc}; weekly review count per retailer.
 - Evidence: map 04 numbers (0 reviews everywhere; prices above); map 06 missing (BookSirens 51,000+). Amazon's own ARC rules were not re-read this run (UNVERIFIED); follow each service's terms.
+
+### Move 6 - Google network lead stack
+- Venues: Google Play Books (goog-10), Google Books preview and full-text search (goog-09), preferred sources (goog-08), Reader Revenue Manager newsletter sign-up and Search Console platform properties (map 02 missing).
+- Steps: (1) Play promo codes: up to 3 campaigns a month, 5,000 codes each. One campaign per audience (ARC readers, center pilots, podcast listeners); codes are given only on email-capture pages (/free-copy/<campaign>), so each code is a lead. (2) Join the Play affiliate program (7%) and use those links on the site's Google Play buttons. (3) Google Books: test a larger preview and print the vanity URL in the front matter, so readers who find a scenario through full-text search reach the site; link the site to https://books.google.com/books?vid=ISBN9798994148891. (4) Preferred-sources link (https://www.google.com/preferences/source?q=mayaallan.com) in blog and newsletter footers, after the Search Console setting in move 2. (5) Test Reader Revenue Manager's 1-click newsletter sign-up on /blog and /scenarios; it needs a Publisher Center publication, and eligibility for a one-author site is UNVERIFIED. (6) Add the YouTube channel as a Search Console platform property once move 11 ships.
+- Owner: owner account + code PR. Effort: 1 day. First lead: day 5-10 (estimate).
+- Measure: utm_source=google-play&utm_medium=promo-code&utm_campaign=<audience>; generate_lead {lead_type: free-copy}; redemptions and preview traffic in Partner Center.
+- Evidence: map 02 numbers (codes, 7% affiliate, 20-100% preview, ebook $9.99, ISBN 9798994148891); goog-08, goog-09, goog-10.
+
+### Move 7 - Take-home integration kit for Oregon and Colorado centers (B2B)
+- Venues: Oregon's 22 operating service centers and 383 facilitators (map 01); Colorado's 46 licensed healing centers (map 05) and, live at 22:57:08Z, 86 active facilitators, 94 clinical facilitators and 691 in training (DORA open data).
+- Steps: (1) PR: printable /kit page, "Back home after your session: the first 30 days": scenario index, journal link, Fireside line, when to seek help. (2) One QR per center: psilowire.com/kit/<center> -> /kit?utm_source=or-svc-<slug> or co-hc-<slug>&utm_medium=print-qr&utm_campaign=take-home-kit. (3) Free offer: 50 printed cards or the PDF, plus 25 Play promo codes for a client pilot; the center decides placement. (4) Outreach 10 centers a week, Oregon first: 525 of 1,220 Q2-2026 clients came from other states, 71% of county responders were out of state, 59% of age responders were 45+ (maps 01, 05). (5) Send each center a quarterly scan count (aggregate only). (6) Use state rosters for business outreach only; never copy names or addresses into this repository.
+- Owner: outreach (Maya) + code PR. Effort: 2 days to build, 2-3 hours a week. First lead: B2B reply day 7-14; first client scan day 21-45 (estimates).
+- Measure: kit_request; vanity_hit {kit/<slug>}; generate_lead by utm_source=or-svc-* and co-hc-*.
+- Evidence: mkt-01, mkt-02, mkt-ws-01, niche-b2b-or-centers, niche-b2b-co-centers; DORA live read. What centers may hand to clients under Oregon and Colorado rules was not read (UNVERIFIED): ask each center.
+
+### Move 8 - Casebook adoption by training programs (one yes reaches every cohort)
+- Venues: 15 active Oregon training programs (map 01); 11 active Colorado programs (DORA NMTP, 22:57:08Z); CIIS (niche-edu-ciis); Third Wave and Fireside coach certifications (map 01 missing); Heroic Hearts Project, on Oregon's approved list (map 05 missing).
+- Steps: (1) Package the 40 scenarios as a Teaching Casebook with discussion prompts (mkt-ws-04, mkt-10). (2) Price anchor: MAPS sells a practitioner 20-pack at $60 (map 01 missing); desk copy free, cohort license as per-student ebook codes. (3) Email each program director a one-page PDF and ask to be listed as recommended reading. (4) Offer a free 45-minute guest session, "integration after the licensed session".
+- Owner: outreach + content. Effort: 3 days, then 2 hours a week. First lead: day 10-30 (estimate).
+- Measure: utm_source=trainer-<program>&utm_medium=b2b&utm_campaign=casebook; casebook_request.
+- Evidence: mkt-10, mkt-ws-04, niche-edu-or-programs, web-edu-ops; DORA live read.
