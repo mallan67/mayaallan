@@ -105,3 +105,67 @@ When they exist, add ISNI, Wikidata, BookBub and the Spotify author profile. The
 | Rank and review signal | none | Yes: sales rank, "also bought", reviews |
 | Constraint | Blocks KDP Select: *"you cannot distribute your book digitally anywhere else, including on your website"* (S10) | n/a |
 | Pioneer play | Sell **what retailers cannot**: a bundle of ebook, fillable journal PDF and audio preview, delivered via BookFunnel. Keep list-price parity. | Use retailers for discovery. Every edition's back matter routes readers to the site. |
+
+## 6. Pioneer sequence, ordered by lead value per unit of effort
+
+**Days 0-7 ($5 to $20):**
+1. Fix the metadata:
+   - D1: new ebook edition, or ask KDP Support to clear the ebook ISBN.
+   - D2: primary subject OCC039000.
+   - D3: remove the duplicate contributor.
+   - Goodreads: claim the profile, combine the works, add the paperback.
+   - Open Library: add the author link.
+2. Register an ISNI ($5).
+3. Build a Books2Read UBL.
+4. Clean the retailer URLs and add own affiliate IDs.
+5. Add back-matter calls to action with UTMs to every edition.
+
+**Days 7-30 ($150 to $400):** run the review engine.
+- BookSirens: $10 plus $2 per reader.
+- Hidden Gems: about $140 for 50 readers.
+- Readers' Favorite: free review.
+- NetGalley: request per-title pricing.
+- BookFunnel ($30/yr) and StoryOrigin ($100/yr): reader magnet built from the Integration Journal.
+
+**Days 14-45 ($20 plus about 10%):** go wide.
+- Apple Books direct (70%).
+- D2D for Kobo, NOOK, Everand, Tolino and **libraries** (OverDrive, Hoopla, cloudLibrary, BorrowBox, Vivlio).
+- Nominate the Kindle ebook for Kindle Deals.
+
+**Audiobook launch:**
+- Spotify for Authors plus Voices by INaudio (wide), with redemption codes as a lead magnet.
+- Or ACX, if the choice is Audible-only.
+
+**Days 45-90:**
+- Once 10+ reviews exist, apply for a BookBub Featured Deal: Advice & How-To at $0.99 costs **$784** for about **2,000-3,500 clicks**.
+- A partner creates the "Psychedelic Integration Books" Goodreads list.
+- Pitch Chacruna-style roundups.
+- Publish the companion print *Integration Journal* on KDP (SEL045000).
+- Scope a German edition.
+
+## 7. UNVERIFIED (live source unreachable or not shown)
+
+- Amazon Ads book policy text (JS-only).
+- ACX exclusive/non-exclusive royalty split (help.acx.com JS-only; old URLs 404/308).
+- Kobo Writing Life and B&N Press mechanics (403/503).
+- Goodreads Giveaway prices (behind login).
+- Booksprout plans (JS app).
+- NetGalley per-title price ("reach out").
+- Bookshop.org affiliate %.
+- Spotify for Authors royalty %.
+- Voices by INaudio fees.
+- LoC PCN/CIP eligibility (403).
+- WorldCat holdings (429/JS).
+- LibraryThing (403).
+- Reddit subscriber counts (403).
+- Google Trends (429).
+- Google Books API (429 daily quota).
+- Lucid News and DoubleBlind review submission.
+- `rel` (dofollow/nofollow) of the website links on Goodreads, Open Library, BookBub and Spotify profiles (not observable while logged out).
+- KDP policy on external links inside ebook back matter.
+- Amazon category tree name for "entheogens" (not fetched).
+- Whether A+ content allows URLs (only part of the guideline was read).
+
+## 8. What this map does not cover
+
+Conversion on the site, AI-citation studies and measurement dashboards belong to the parallel workflow. Nothing here was posted, signed up for or purchased.
