@@ -193,3 +193,56 @@
 - Substack metadata says "Over 89[,000]". The latest issue is from 2026-09-21: "Did psychedelics help build ancient civilizations?: 5 Questions for journalist Andrew Lawler". That shows authors do get the 5 Questions slot.
 - Tips go to the newsletter tips inbox, published on the page.
 - Sources: https://themicrodose.substack.com/about and `/api/v1/archive` (22:15:54Z).
+
+### niche-pod-integration-small: KEEP. These are the best-fit shows for a new author.
+
+Source: Apple Podcasts search API, https://itunes.apple.com/search?media=podcast&term=… (22:15:16Z).
+
+| show | episodes | last episode | owner email in RSS |
+|---|---|---|---|
+| The Integration Session (Centre for Psychedelics Health and Research) | 36 | 2026-09-17 | yes |
+| The Psychedelic Integration Compass (Clara Parati) | 8 | 2026-09-21 | not found in the first 60 KB |
+| Hope for Humanity (Julian Bermudez) | 43 | 2026-09-08 | yes |
+| Unjourneying (Mira Funk, LCSW) | 9 | 2026-08-03 | yes |
+| The Psychedelic Integration Podcast (Sinclair Fleetwood) | 136 | 2026-06-15 | yes |
+
+- The Sinclair Fleetwood show has had no episode for **101 days**, so it is lower priority.
+- The owner-email check was run on each feed at 22:15:28Z. Emails are not reproduced here.
+- Link rel in show notes: UNVERIFIED.
+
+### niche-pod-thirdwave: DROP
+
+- 376 episodes, last 2026-09-23 (Apple API, 22:15:16Z).
+- The guest page says "$1,500" and "3,100+" downloads per episode. It is "especially well-suited for Retreat Centers…, Clinic Founders…, Coaches". Source: https://thethirdwave.co/new-podcast-guest/ (~22:15:30Z).
+- That works out to about $0.48 per download, for an ebook sale. It is paid placement, so any mention must be disclosed as an ad.
+
+### niche-edu-ciis: KEEP at low
+
+- Verified: "12-month… 140-150 hours… 8 class weekends"; "Applications for the 2026-2027 cohort are now closed"; "2027-2028 application cycle will open on January 15, 2027". Source: https://www.ciis.edu/continuing-education/center-for-psychedelic-therapies-and-research (~22:15:40Z).
+- No public reading list or submission route was found.
+- CIIS is also an Oregon-approved training program (PDF below) and a Horizons Community Ally.
+
+### niche-edu-or-programs: KEEP. Names are now verified.
+
+- The PDF was modified 2026-09-23 (Last-Modified: Wed, 23 Sep 2026 17:32:04 GMT). Source: https://www.oregon.gov/oha/PH/PREVENTIONWELLNESS/Documents/Active-Psilocybin-Training-Programs.pdf (22:16:05Z).
+- It lists these 14 programs:
+  1. A Emerald Valley Institute (Eugene)
+  2. AAA Learning Institute (Eugene)
+  3. Acadia Professional Learning (Portland)
+  4. Alfred M. Hubbard Institute (San Francisco)
+  5. Berkeley Center for the Science of Psychedelics (Berkeley)
+  6. CIIS (San Francisco)
+  7. Changa Institute (Portland)
+  8. Entheogen Institute (Ashland)
+  9. Heroic Hearts Process Psychedelic Coach & Facilitator Training (online)
+  10. InnerTrek (Damascus)
+  11. Numinus Certification Pathway (Murray, UT)
+  12. Oregon Psychedelic Institute (Joseph)
+  13. The Leela School of Awakening (Ashland)
+  14. Weaving Bridges Natural Fellowship (Portland)
+
+### niche-dir-psychedelic-support: DROP for now
+
+- Provider network: "require providers to be licensed in a health profession". Community directory: groups must "host regular online or in-person events… can not offer illegal substances".
+- **Both** say "We are not accepting new applications at this time". Members get an "Invitation to publish articles in our blog", but that is closed too.
+- Source: https://psychedelic.support/join/ (22:21:45Z).
