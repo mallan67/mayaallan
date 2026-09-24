@@ -55,3 +55,21 @@ No finding was refuted. Five severities were lowered: ana-02, ana-03, ana-04, an
 
 - **Why high and not critical:** While ana-01 is off, 0 visitors are counted with or without the gate. Once ana-01 is on, the gate means only visitors who accept are counted; it undercounts rather than zeroing. The claim that "most visitors never" accept is not measurable here, because the acceptance rate is unknown.
 - **Solution check:** PR #57 (live description) replaces GatedAnalytics with an unconditional cookieless `<Analytics/>` and keeps GatedMarketing. That fixes page-view counting only together with ana-01 and a production deploy built from the merge commit. Web Analytics also records referrer and UTM for every counted view, so the "where from" question is covered for everyone. The first-party first-touch record stays consent-only. I could not test the fix on the preview, because it is SSO-protected.
+
+### ana-03: No click tracking (CONFIRMED but overstated, severity lowered to medium)
+| check | source | UTC read | result |
+|---|---|---|---|
+| chunk scan | 20 chunks from 12 pages, plus 3 extra chunks found on /belief-inquiry, /nervous-system-reset and /integration-journal (`93b33527075b290f`, `a3a5de630bb5e7f8`, `5bcaff4db7d4d1ce`): 23 in total | 18:48:11Z–18:49:22Z | Custom `"event"` calls appear only in `9a7cf34cbe809fe3.js`: tool_viewed, tool_started, session_completed, time_to_first_message, export_cta_viewed, export_cta_clicked, session_feedback. `turn_reached_n` is not a literal string there (probably built at run time). The 3 extra chunks have no events. There are no third-party trackers |
+| how AI-tool events are sent | 9a7cf34cbe809fe3.js | 18:56:30Z | `null==(i=window.va)\|\|i.call(window,"event",…)`, so nothing is sent unless the consent-gated Analytics component created `window.va` |
+| first-party event | fc986f8dd4b371e4.js | 18:49:30Z | `book_viewed` POST to /api/marketing/event, with no consent check |
+| retailer links | GET /books/psilocybin-integration-guide | 18:56:56Z | Barnes & Noble and Bookshop.org are plain `<a target="_blank" rel="noopener noreferrer nofollow sponsored">` links with no click handler |
+| **counter-evidence** | fc986f8dd4b371e4.js (PaymentButtons) | 18:49:30Z | The "Buy … with PayPal" button runs `window.location.href='/checkout/privacy-gate?bookId=…'`, which is a navigation to the site's own page |
+
+- **Where the finding is overstated:** It says "who clicks where cannot be answered, even after ana-01 and ana-02 are fixed". That is not fully true:
+  - Buy clicks show up as requests to /checkout/privacy-gate in the ~24-hour runtime logs. After ana-01 and PR #57 they would also be Web Analytics page views.
+  - Completed orders and newsletter sign-ups are recorded on the server (the /privacy page says orders are stored; `/api/subscribe` exists).
+  - The real gap is outbound clicks to retailers (Amazon, Barnes & Noble, Bookshop.org) and other outbound links.
+- **Why medium:** With near-zero human traffic (ana-05), click tracking produces nothing until visibility is fixed.
+- **Solution check:** Vercel `track()` custom events need a paid Vercel plan. I could not check the plan here (that needs a team-level tool, which is out of scope), so it **needs an outside-source check**. Also, PR #57 deliberately keeps `track()` behind consent (PR comment, 2026-09-07T03:10:00Z), so adding an ungated `track()` would contradict that design.
+- **Better fix:** reuse the existing first-party pattern that book_viewed uses (`/api/marketing/event`: no cookie, no identifier). Send `retailer_click {retailer, book}` with `navigator.sendBeacon` on click. This does not depend on the Vercel plan and counts every visitor.
+- **Side note:** `rel=noreferrer` hides mayaallan.com as the referrer from the retailers.
