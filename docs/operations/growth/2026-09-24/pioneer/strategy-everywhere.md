@@ -150,3 +150,31 @@ The engineer's rule throughout: every venue gets its own tracked door, every new
 - Owner: content + owner account + code PR (VideoObject). Effort: 3-4 hours a week. First lead: day 14-30 (estimate).
 - Measure: utm_source=youtube&utm_medium=video&utm_campaign=scenario-<n>; utm_source=podcast-rss&utm_medium=audio; spoken psilocybinintegrationguide.com/listen; Search Console YouTube property.
 - Evidence: map 01 (integration videos 2-9 years old, at most 34K views; scenario video 152,568); mkt-ws-02; YouTube autocomplete has no long tail for "psilocybin integration" (22:55:36Z), an open lane.
+
+### Move 12 - Podcast guest sprint from a live list
+- Venues (Apple Podcasts search API, 22:54:42Z; episodes, last episode): integration shows active in 90 days: The Psychedelic Integration Compass (8, 2026-09-21), The Integration Session (36, 09-17), Hope for Humanity (43, 09-08), Unjourneying (9, 08-03), Psychedelic Medicine Podcast with Dr. Lynn Marie Morski (207, 09-09); The Microdose (94, 06-29). Microdosing: Microdose U (400, 09-23), Embodied Microdosing (47, 09-06), Microdosing For Healing (82, 08-28). Midlife, for the 45+ majority (mkt-14): The Midlife Chrysalis (164, 09-23), Women Mastering Midlife (116, 09-14), The Unapologetic MidLife Podcast (41, 09-09). Skip The Psychedelic Podcast's $1,500 guest fee and do not pitch Psychedelic Passage (sourcing guide; map 05).
+- Steps: (1) PR: /press page with one bio, headshot, three talk angles and the Oregon data hook (web-presskit). (2) Five pitches a week to the owner email in each RSS feed. (3) Ask for show-notes links to the journal and scenario index (followed in 2 of 2 samples, web-pod-showsnotes); say psilocybinintegrationguide.com/pod/<show> on air. (4) Listener offer: a free copy at /free-copy/pod-<show> (move 6 codes).
+- Owner: outreach. Effort: 3 hours a week. First lead: day 30-60 (estimate; recording-to-air lag).
+- Measure: utm_source=podcast-<show>&utm_medium=audio&utm_campaign=guest-2026q4; vanity_hit {pod/<show>}.
+- Evidence: niche-pod-integration-small; map 01 (9 shows, 7 active); iTunes live read.
+
+### Move 13 - "Oregon Returners": a quarterly data report that press and AI answers can cite
+- Venues: Source of Sources, Qwoted and Featured free tiers (niche-pr-sos, niche-pr-qwoted, niche-pr-featured); Lucid News, Chacruna and Psychedelics Today (followed links in samples; niche-pub-*); The Microdose news tips; Zenodo DOI (web-assets); AI answer engines.
+- Steps: (1) A report page built from Oregon's official quarterly OPS data file and Colorado DORA open data: 5,935 clients in 2025, 2,172 in H1 2026 (down 34%); 525 of 1,220 Q2 clients from other states; 59% of age responders 45+; top visit reasons change of perspective 444, anxiety 383, depression 358, PTSD 204 (maps 01, 05). (2) Dataset JSON-LD, CSV download, methods note, quarterly refresh date. (3) An embeddable chart whose attribution link is rel="nofollow", to stay clear of widget-link schemes; the value is referral and citation. (4) A Zenodo DOI for the summary. (5) Pitch angle: "Most legal psilocybin clients go home to places with no integration support."
+- Owner: content + code PR. Effort: 2-3 days, then half a day per quarter. First lead: day 14-30 (estimate).
+- Measure: referrer; utm_source=embed-<host>&utm_medium=embed; generate_lead on the report page.
+- Evidence: maps 01 and 05 numbers; niche-pub-*, niche-pr-*, web-assets. Reuse terms for Oregon's file not read (UNVERIFIED): cite the source on every chart.
+
+### Move 14 - Go wide: Apple Books, libraries and the German-language wave
+- Venues: Draft2Digital to Apple Books, Kobo, NOOK, OverDrive/Libby, Hoopla, BorrowBox, cloudLibrary, Tolino, Everand, Bookshop (book-d2d, book-libraries); Books2Read link (book-books2read); Kindle Translate beta (map 04 missing).
+- Steps: (1) After the ISBN fix, D2D for the ebook outside Amazon ($20 activation, about 10%); stay out of KDP Select (book-kdp-select). (2) Switch on library channels. (3) One Books2Read "buy anywhere" link on the site. (4) Apple Books shows 40 results for "psilocybin integration", 8 of them German titles dated 2026-08-21 to 09-03, and not Maya's book (map 04): ask for Kindle Translate German (invite-only) and use the site's de hreflang for a German landing page. (5) Vanity back-matter URL per store.
+- Owner: owner account. Effort: 1 day. First lead: day 30-60 (estimate).
+- Measure: utm_source=apple-books|kobo|libby|hoopla&utm_medium=backmatter via /book-<store> slugs.
+- Evidence: map 04 numbers and items; map 03 missing (D2D partners).
+
+### Move 15 - Be the disclosed answer in forums (Reddit and Google's Forums filter)
+- Venues: r/PsychedelicTherapy, r/microdosing, r/RationalPsychonaut, r/Psychonaut, r/shrooms (third-party mirror in map 05: 35k, 292k, 99k, 522k, 799k; live counts HTTP 403 at 22:54:26Z, so UNVERIFIED; mkt-x-02); TripSit Discord (16,903 members, map 05); Google's Forums filter (map 02 missing).
+- Steps: (1) Maya's own account; the profile says she is the author. (2) 30 minutes a day on post-experience questions that match a scenario page; at most 1 link per 10 comments; follow each subreddit's self-promotion rules. (3) Answer first the threads Google shows under Forums for the query family ("psilocybin integration reddit" is a live suggestion, 22:55:25Z).
+- Owner: Maya. Effort: 30 minutes a day. First lead: day 3-14 (estimate; small).
+- Measure: utm_source=reddit&utm_medium=community&utm_campaign=<sub>; generate_lead.
+- Evidence: niche-com-r-psychedelictherapy; map 05 numbers; map 02 missing.
