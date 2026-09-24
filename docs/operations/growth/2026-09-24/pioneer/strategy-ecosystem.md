@@ -175,3 +175,32 @@ Owners: CODE = pull request on mallan67/mayaallan; OWNER = Maya's own accounts; 
 - **Steps:** (1) A monthly email to each partner with counts only from their slug: scans, journal downloads, opt-ins (data from the measurement workflow's GA4). (2) /support: an editorial directory of partners who want to be listed (centers, coaches, circles). No payment and no required link back, per the link-scheme red lines [web-spam-redlines]; licensed facilitators are described only from public licence data. (3) Outbound directory links carry utm_source=mayaallan&utm_medium=referral, so partners see Maya as a source of clients, not only a supplier.
 - **Effort:** 2 developer days. **First lead:** month 2 (renewals and partner-to-partner referrals).
 - **Measure:** partner_report_open; directory_click {partner}; active partner slugs month over month; partner-sourced share of all opt-ins.
+
+## 4. The first 30 days (Sep 24 to Oct 24, 2026)
+
+| Week | Build (CODE / OWNER) | Outreach and events |
+|---|---|---|
+| 1 (Sep 24-Oct 1) | M1 PR: /partners, registry, /p/[slug], /k/[code], journal ?partner=; M7 support box; BookFunnel page (M5-A) | Build OR list (M2) and CO list (M3); 5 podcast pitches (M6); ask a Horizons ally to co-host (M9); list the first circle for about Oct 21 on Eventbrite + MAPS calendar (M8) |
+| 2 (Oct 1-8) | Casebook pack draft (M4); first partner pages | 30 center/facilitator emails (M2, M3); 22 training-program emails (M4); DPO stakeholder meeting Oct 2 and hearing Oct 8 (M3); 5 more podcast pitches |
+| 3 (Oct 8-15) | Print cards for each yes; PsiloWire Action (M11) | Follow-ups; 30 retreat emails (M10); first guest session booked (M4) |
+| 4 (Oct 15-24) | First digest issue (M11) | Horizons Oct 15-17 (M9); first circle (M8); NMD form with 2 endorsements (M3); day-30 review Oct 24 |
+
+**Day-30 scorecard (targets, not evidence):** 120 organisations contacted; 15 conversations; 6 live partner pages; 2 guest sessions booked; 1 bulk or casebook order; 25 circle registrations; 100 partner-attributed journal downloads; 50 email opt-ins. If fewer than 3 partners say yes by day 21, change the offer (shorter card, no print, PDF only) before sending more.
+
+## 5. Months 2-6: how it compounds
+
+- **Month 2:** casebook v1 adopted by 1-2 programs (M4); site-native bulk codes (M5-B); practitioner bundle (M13); first partner reports (M15).
+- **Month 3:** scenario audio feed and embeds (M12); New Mexico template (M14); 15 live partner slugs; second circle co-host.
+- **Months 4-6:** Colorado listing decision (M3); COMP360 clinician one-pager (M14); /support directory (M15); digest issue 6 (M11); casebook renewals with each new cohort.
+- **Month-6 target:** 25-40 active partner slugs; partners are the source of more than half of all opt-ins; at least 3 training programs using the casebook.
+- **Why it compounds:** each new cohort, client and listener enters through a slug that already exists, so the cost per partner falls while the reach per partner repeats every quarter. Trainees who learn with the casebook carry it into their own practices, and the directory and reports give partners a reason to stay.
+
+## 6. Measurement spec (hand to the measurement workflow)
+
+- **UTM grammar:** lowercase, hyphens, no spaces; the registry file (M1) is the only source of slugs.
+  - utm_source: or-svc-<slug>, or-fac-<slug>, co-hc-<slug>, co-fac-<slug>, trainer-<program>, retreat-<slug>, podcast-<show>, coach-<slug>, clinic-<slug>, nm-clinic-<slug>, doula-<slug>, fireside, zendo, unlimited-sciences, co-nmd, eventbrite, maps-calendar, society-<slug>, horizons-2026, psilowire, mayaallan.
+  - utm_medium: print-qr, email, pdf, b2b, audio, audio-embed, referral, event, event-qr, partner, digest.
+  - utm_campaign: take-home-kit, casebook, bulk, guest-2026q4, resource-listing, circle-<yyyy-mm>, nyc-oct, post-retreat, practitioner-bundle, nm-launch, scenario-audio, <yyyy-mm>.
+- **Events:** partner_form_submit, partner_page_view, kit_scan (server-side on /k/), journal_pdf_generate, email_optin, event_register, bulk_licence_request, casebook_request, digest_subscribe, directory_click, ebook_checkout_start, purchase. Each carries the partner slug.
+- **Structured data:** partner pages are noindex and carry no sameAs; the main Book and Person JSON-LD fixes stay with the entity workflow ([web-schema-graph]).
+- **Weekly check:** leads by slug and by move; any slug with scans but no downloads means a broken page or card.
