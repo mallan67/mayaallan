@@ -5,13 +5,14 @@
 > scratch files, old handoffs or memory; anything not re-read live is marked **UNVERIFIED**; the
 > **Not done** list is always current.
 
-**Last updated:** 2026-09-24T18:16:09Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
+**Last updated:** 2026-09-24T18:21:58Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
 
 ## Owner goals (2026-09-24)
-1. The site must be **visible** — in Google, Bing and AI answers.
-2. The owner must be able to **see traffic** and **who clicks where**.
+1. **Leads.** One month in, zero leads — the only measure of success is leads (newsletter signups, inquiries, book purchases, event registrations, tool users who leave an email).
+2. The site must be **visible** — in Google, Bing and AI answers — and the owner must **see traffic and who clicks where**.
 3. **Every live failure** reported with a concrete solution; an in-depth report.
-4. Work saved directly to git, with this continuous handoff.
+4. **No dead information, no rehash.** What was done before did not produce leads; use what is new (2025-2026) and what top engineers/developers actually do, with evidence of results.
+5. Everything saved directly to git, with this continuous handoff. Nothing read from or written to local/scratch files.
 
 ## Confirmed live (so far)
 
@@ -27,22 +28,21 @@
 UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots index, follow`, canonical `https://www.mayaallan.com`, and **no analytics script** (curl at 2026-09-24T17:48Z — that capture passed through a local scratch file, so it is being re-read git-direct).
 
 ## In progress
-- **Live site audit** (crawl, real browser incl. console errors, crawler access, Vercel errors, cron evidence, visitor data) — relaunched with evidence committed directly to `docs/operations/evidence/2026-09-24/`.
-- **Where the site appears** (index presence, brand/book/topic rankings, off-site footprint, archive/crawl datasets) — relaunched, evidence committed directly to git.
-- **Visibility research** (official Google/Bing/Vercel/AI-provider docs: indexing, AI-answer eligibility, analytics + click tracking, authority).
+- **Live site audit** — workflow `wf_c925e59f-494` (started ~2026-09-24T18:17Z): 9 live checks (crawl, real browser + console, crawler access, errors/ops/SEO-cron, visitors/clicks, index presence, rankings, off-site footprint, crawl/archive datasets). Each check and each adversarial re-check commits to `docs/operations/evidence/2026-09-24/`.
+- **Leads growth research** — workflow `wf_d03eba2c-a01` (started 2026-09-24T18:21:58Z): what top engineers/developers do now (2025-2026) — prior-efforts diagnosis (from live GitHub history), live lead-path audit, engineering-as-marketing, AI-assistant citation practice, niche landscape + channels, measurement engineering → **30-day lead plan**. Output commits to `docs/operations/growth/2026-09-24/`.
+- Stopped (not used): official-docs SEO research `wf_dbb8efd1-bbd` — stopped 2026-09-24T18:21:58Z on owner instruction (generic checklist = rehash).
 
 ## Not done
-- [ ] Google Search Console / Bing Webmaster Tools status — unknown; needs the owner to sign in inside the automated browser window (credentials are never typed by the agent).
+- [ ] Live audit results + adversarial verdicts (running).
+- [ ] 30-day lead plan (running).
+- [ ] In-depth report: all live failures + solutions, ranked by effect on leads.
+- [ ] Google Search Console / Bing Webmaster Tools status — unknown; needs the owner to sign in inside the automated browser window (agent never types credentials).
 - [ ] Site admin `/admin/aeo` dashboard review — needs owner sign-in.
-- [ ] In-depth report (all failures + solutions) — after the audits land.
-- [ ] Fix PRs for each confirmed failure.
-- [ ] Merge PR #57 — **owner decision**.
-- [ ] Enable Vercel Web Analytics — **owner action** (dashboard toggle).
-
-## Owner decisions waiting
-1. **Merge PR #57** (green and conflict-free since 2026-09-07).
-2. **Enable Web Analytics** in Vercel → project `mayaallan` → Analytics → Enable.
+- [ ] Fix PRs for confirmed failures — after the report.
+- [ ] PR #57 (open since 2026-09-07) — decide only after the lead plan; not assumed to be the answer.
+- [ ] Vercel Web Analytics toggle — owner action; part of the week-1 instrumentation decision in the lead plan.
 
 ## Log (append-only)
 - 2026-09-24T18:16:09Z — Handoff started. Branch `work/site-visibility` created from main `ed7461a07e499694eba25ada437817c35983bd87`.
 - 2026-09-24 (earlier this session) — First audit run was stopped after it went outside the requested scope (4 metadata-only Gmail searches, provider/Vercel documentation fetches); its results were discarded. Later runs that wrote captures to a local scratch folder were stopped on the owner's instruction; nothing from those runs is used.
+- 2026-09-24T18:21:58Z — Owner: "do not use dead information… what they have done did not work… zero leads… read what savvy top engineers and developers do". Refocused on leads; stopped generic docs research; launched leads growth research `wf_d03eba2c-a01`. Live audit `wf_c925e59f-494` continues (current live state, not old advice). Draft PR #58 holds this handoff.
