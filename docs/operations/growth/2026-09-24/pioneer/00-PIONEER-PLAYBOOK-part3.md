@@ -130,3 +130,39 @@ Day 1 = Fri 2026-09-25. Day 14 = Thu 2026-10-08, the first circle and the Colora
 - **S46** https://www.psychedelics.com/contribute/ (22:18:15Z) and https://ask.psychedelics.com/ (~22:17:45Z).
 - **S47** https://www.wikidata.org/wiki/Wikidata:Notability - read 18:59:14Z-19:00:01Z.
 - **S48** https://developers.openai.com/apps-sdk/deploy/submission and https://help.openai.com/en/articles/8554407-gpts-faq - read 19:01:41Z-19:02:00Z.
+- **S49** https://www.netgalley.com/request_terms - read 19:04:32Z.
+- **S50** https://www.bookbub.com/partners/pricing - read 18:36:09Z.
+- **S51** https://www.thefussylibrarian.com/advertising - read 22:38:37Z.
+- **S52** https://www.ingramspark.com/pricing - read 22:37:10Z.
+- **S53** https://elevenreader.io/publishing -> https://elevenlabs.io/audiobooks - read 22:38:47Z.
+- **S54** https://building.bookdna.com (22:38:08Z), https://bookdna.com/about/our-story (22:37:49Z), https://shepherd.com/ (domain for sale; 22:37:32Z).
+- **S55** https://booklife.com/reviews - read 22:38:28Z.
+- **S56** https://firesideproject.org/ (19:04:09Z) and its /resources and /spread-the-word pages (22:55:24Z-22:56:45Z).
+- **S57** https://zendoproject.org/ and https://unlimitedsciences.org/psychedelic-info-line/ - read 19:15:48Z and 22:18:29Z.
+- **S58** https://chacruna.net/ and https://www.lucid.news/ - read 19:15:48Z.
+- **S59** https://psychedelicstoday.com/contact/ - read 18:58:39Z; show-notes sample (2026-08-12 episode) read 18:36:58Z (IN-06).
+- **S60** https://www.bps.community/ - read 22:18:29Z.
+- **S61** https://www.sourceofsources.com/ (19:03:25Z; ~22:54:45Z), https://www.qwoted.com/, https://featured.com/ and https://featured.com/pricing (~19:06Z; ~22:58Z); helpareporter.com returned HTTP 429.
+- **S62** https://podmatch.com/ and https://www.matchmaker.fm/ - read ~19:03Z.
+- **S63** https://deathcafe.com/ - "24649 Death Cafes"; read 22:58:30Z (BHC) and 23:11:39Z (Judge 3).
+- **S64** https://luma.com/pricing (~22:58Z); Zoom Basic 40-minute / 100-participant limit read 23:00:36Z (URL in strategy-community.md).
+- **S65** https://heroicheartsproject.org/ , https://vetsolutions.org/ , https://www.reasonforhope.org/ , https://nedalliance.org/ - read 19:15:48Z (Heroic Hearts also 22:17:32Z).
+- **S66** https://www.osmind.org/ - read 19:15:48Z.
+- **S67** https://thethirdwave.co/directory/get-listed/ - read 19:17:02Z.
+- **S68** https://www.biospace.com/fda/stakeholders-urge-fda-to-define-data-treatment-standards-as-psychedelic-drugs-near-market - 2026-09-15; read ~22:57Z (DATA).
+- **S69** https://www.bizjournals.com/portland/news/2026/07/09/psilocybin-data-oregon-demographic-usage-decline.html - 2026-07-09; found via Bing News RSS at 22:57:18Z (DATA).
+- **S70** https://psychedelicalpha.com/resources - read ~22:54Z.
+- **S71** https://developers.google.com/search/docs/appearance/structured-data/dataset (updated 2026-09-08), https://scholar.google.com/intl/en/scholar/inclusion.html , https://about.zenodo.org/ - read ~22:54Z-22:58Z.
+- **S72** https://developers.google.com/knowledge-graph - updated 2024-04-26; read 19:16:48Z.
+- **S73** https://support.google.com/websearch/answer/16904498 - read ~18:33:30Z.
+- **S74** https://www.psychedelicpassage.com/ - read 22:21:45Z.
+- **S75** https://www.goodreads.com/author/list/65134359.Maya_Allan - read 18:55:36Z (duplicate record 245349971); book 245299940 read 18:26:49Z.
+- **S76** Kit Creator Network (74,000 creators) and beehiiv recommendations - read ~22:58Z; URLs in strategy-community.md.
+- **S77** https://news.ycombinator.com/showhn.html (~19:03Z); YouTube feature tiers https://support.google.com/youtube/answer/9890437 (19:04:19Z) and https://support.google.com/youtube/answer/13748639 (19:03:50Z).
+
+## Not done, and still UNVERIFIED
+
+- **Nothing in this playbook has been executed.** No PR, listing, email, sign-up, purchase or post exists because of it.
+- **Carried, not re-read:** S20-S77 were read by other workers earlier today; this synthesis re-read only S1-S19.
+- **UNVERIFIED:** KDP Select status; the shared-ISBN defect itself (Judge 2 could not confirm it: Google Books API 429; the paperback retailer links use ean=9798994148839); KDP's policy on links inside ebooks; Fireside's hours; the cost of a paid meeting plan; Reddit community sizes; the Oct 8 Colorado hearing topic and comment deadline; Colorado rules on unlicensed "integration" gatherings; Oregon and Colorado conduct rules beyond the clauses cited; the Amazon Author Central link field; rel values on Eventbrite, Luma, Meetup, YouTube and Open Library links; Google Trends values; Reader Revenue Manager eligibility; whether ARC services allow an email-required landing page; the audiobook release date; Kindle Translate; trademark availability of any new name; current site traffic and email-list size.
+- **Owned elsewhere:** GA4 event names, conversion and AI-citation measurement belong to the parallel measurement workflow.
