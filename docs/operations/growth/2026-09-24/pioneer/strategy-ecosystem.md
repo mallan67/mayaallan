@@ -204,3 +204,27 @@ Owners: CODE = pull request on mallan67/mayaallan; OWNER = Maya's own accounts; 
 - **Events:** partner_form_submit, partner_page_view, kit_scan (server-side on /k/), journal_pdf_generate, email_optin, event_register, bulk_licence_request, casebook_request, digest_subscribe, directory_click, ebook_checkout_start, purchase. Each carries the partner slug.
 - **Structured data:** partner pages are noindex and carry no sameAs; the main Book and Person JSON-LD fixes stay with the entity workflow ([web-schema-graph]).
 - **Weekly check:** leads by slug and by move; any slug with scans but no downloads means a broken page or card.
+
+## 7. Guardrails and risks
+
+- **Money and licensed facilitators:** no commissions, referral fees or revenue shares to licensed facilitators or centers until the Oregon and Colorado conduct rules have been read live (UNVERIFIED in this run). Free kits and wholesale packs only.
+- **Framing:** education and reflection only; no dosing, sourcing or treatment claims; every page carries the M7 support box. Partners that sell sourcing guides are excluded (Psychedelic Passage, niche-map caution).
+- **Social proof gap:** the book has 0 ratings on every retailer and on Goodreads [books map]. Partners will check. Run the ARC engine [book-arc-engine] and claim Goodreads [book-goodreads-author] in parallel; the partner quotes from M2 also help.
+- **Metadata defects:** shared ISBN across ebook and paperback [book-isbn-defect]; wrong BISAC shelving [book-bisac]. Fix before any print bulk order.
+- **No capture today:** without M1, partner traffic produces no leads (F14). M1 ships first; the conversion workflow owns the main-site opt-in and should reuse the same event names.
+- **Directory data:** the Oregon licensee list has no export (F6), and the 22-of-35 Oregon center count is secondary [market map]. Count the list by hand before promising coverage.
+- **Capacity:** one author. Outreach is capped at about 30 emails a week so that each yes gets its kit within 3 days.
+- **Paid venues:** Horizons pass $300 [niche map]; BookFunnel $200/yr (F9); print and postage cost UNVERIFIED. Nothing else in month 1 costs money.
+- **Links:** partner and directory links are editorial and never traded; any paid placement is rel=sponsored [web-spam-redlines].
+
+## 8. Not done / UNVERIFIED
+
+- Oregon and Colorado conduct rules on product sales and referral payments; facilitator continuing-education requirements: not read (search budget used up).
+- Oregon licensee directory contents and email coverage (F6): not exported.
+- Psychedelic Science 2027 dates and call for proposals: psychedelicscience.org returned HTTP 202 with no content at 22:55:45Z; [niche-evt-ps2027] stays UNVERIFIED.
+- The Colorado NMD recommendation form's fields and review time: the form was not opened.
+- Show backlogs and guest policies for the M6 podcasts; retreat aftercare practices for M10; the NEDA directory for M14.
+- Card print and postage prices; Horizons travel costs.
+- No outreach was sent, no account was created and nothing was posted in this run. All moves are proposals for Maya.
+
+Sources: the six checked maps in docs/operations/growth/2026-09-24/pioneer/ on branch work/site-visibility (01-market-map, 02-google-network + part2, 03-all-search-engines, 04-book-ecosystem + part2, 05-psychedelic-niche-venues, 06-open-web-entity-links + part2), plus F1-F15 above, all read live on 2026-09-24 between 22:53:03Z and 22:58:39Z.
