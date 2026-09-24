@@ -33,3 +33,24 @@
 | B&N work id | 1148993659 (one variant: 9798994148839 paperback) | barnesandnoble.com JSON-LD | 18:25:56Z |
 | Open Library | work OL45177926W, edition OL61601841M (paperback only), author OL16288546A | openlibrary.org JSON | 18:26:26Z-18:26:41Z |
 | Instagram | @maya.allan66 (in site JSON-LD `sameAs`) | site HTML + instagram.com | 18:18:55Z, 18:30:44Z |
+
+## 3. Inventory: where it appears, and whether it links back
+
+"Links back?" means a link to, or a text mention of, `mayaallan.com` (or psilowire.com / psilocybinintegrationguide.com) found in the fetched HTML.
+
+| # | URL | What it is | Exists? | Links back? | Name / photo / bio consistency | UTC read / source |
+|---|---|---|---|---|---|---|
+| 1 | https://www.amazon.com/dp/B0G765BZDL | Amazon Kindle listing | yes, 200 | **no** (0 mentions) | byline "Maya Allan (Author)"; BSR #3,144,369 Kindle Store; ratings histogram 0% on every star (0 ratings); shows ISBN-13 979-8994148839, the paperback ISBN | 18:20:07Z, 18:22:42Z, 18:23:21Z curl |
+| 2 | https://www.amazon.com/dp/B0G91GZMLT | Amazon paperback | yes, 200 | **no** | page title "Allan, Maya, Allan, Maya" (author listed twice); BSR #957,243 Books; 0 ratings | 18:20:09Z, 18:22:44Z, 18:23:22Z |
+| 3 | https://www.amazon.com/dp/B0G7JWDJYQ | Amazon hardcover | yes, 200 | **no** | title "Allan, Maya, Allan, Maya"; BSR #3,949,951 Books; 0 ratings | 18:20:12Z, 18:22:47Z, 18:23:24Z |
+| 4 | https://www.amazon.com/stores/author/B0G76975ST | Amazon author page | yes, 200 | **no** | has an author photo (amzn-author-media) and a long bio. Headline is "Author · Speaker · Wellness Advocate"; the site says "Author and Educator". The bio opens "I believe deep inner clarity is a fundamental human birthright ... no one can heal us but ourselves" and then repeats both sentences. The site version says "no one can do this inner work for us". | 18:23:41Z; site /about 18:34:57Z |
+| 5 | amazon.co.uk / .ca / .de / .com.au `/dp/B0G765BZDL`; amazon.co.uk `/dp/B0G91GZMLT` | international Amazon | yes, all 200 | not checked per page | titles match | 18:32:56Z-18:33:03Z |
+| 6 | https://www.goodreads.com/book/show/245299940-psilocybin-integration-guide | Goodreads Kindle edition (linked from the site sameAs) | yes, 200 | **no** | 0 ratings, avg 0; record ISBN 9798994148839 (paperback ISBN) with format Kindle Edition, ASIN B0G765BZDL | 18:23:56Z |
+| 7 | https://www.goodreads.com/book/show/245349971-psilocybin-integration-guide | Goodreads hardcover | yes, 200 | **no** | separate work 274327770, **not combined** with work 274201719 | 18:24:11Z, 18:33:56Z |
+| 8 | https://www.goodreads.com/author/show/65134359.Maya_Allan | Goodreads author page | yes, 200 | **no** (no website field) | **unclaimed look**: placeholder photo, no bio; "0 ratings, 0 reviews"; the book list shows the title twice | 18:24:10Z, 18:33:44Z |
+| 9 | https://play.google.com/store/books/details?id=HvafEQAAQBAJ | Google Play ebook | yes, 200 | **no** | "by Maya Allan"; published Dec 15 2025; ISBN 9798994148891; no reviews shown | 18:24:40Z |
+| 10 | https://books.google.com/books?id=HvafEQAAQBAJ | Google Books | yes, 200 | **no** | description tagline "Rewire Your Mind • Release Fears • Heal Trauma"; this clashes with the site "non-clinical, educational" positioning | 18:24:41Z |
+| 11 | https://www.barnesandnoble.com/w/psilocybin-integration-guide-maya-allan/1148993659 | B&N | yes, 200 | **no** | paperback only, $21.99 (JSON-LD InStock), but the page HTML also shows "This item is currently out of stock online." No NOOK ebook, no hardcover, no About the Author | curl 18:25:02Z-18:25:56Z; WebFetch 18:25:06Z-18:25:34Z also reports "out of stock online" |
+| 12 | https://www.thriftbooks.com/w/.../57728042/ | ThriftBooks | yes, 200 | **no** | "0 rating"; ISBN 9798994148839 | 18:25:04Z |
+| 13 | https://www.abebooks.com/9798994148839/.../plp | AbeBooks | yes, 200 | **no** | author "Allan, Maya" | 18:25:06Z |
+| 14 | https://www.bokus.com/bok/9798994148839/psilocybin-integration-guide/ | Bokus (Sweden) | yes, 200 | **no** | Maya Allan, paperback (Häftad) | 18:25:06Z |
