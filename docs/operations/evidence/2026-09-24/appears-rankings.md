@@ -55,3 +55,31 @@ Bing shows 7-10 organic results on page 1. WS returns 9-10. "none" = no mayaalla
 | rank-08 | low | **"belief inquiry" is not winnable as a bare term.** Both engines return only academic philosophy (Friedman "Inquiry and Belief", JSTOR, Wiley Nous, PhilPapers, Clifford, Peirce). | Bing 18:20:51Z, 18:24:26Z; WS 18:22:16Z-26Z | The page name will never attract searchers for this term. | Target long-tail phrasing ("inherited beliefs", "limiting belief self-inquiry") (content) |
 | rank-09 | info | **"psilowire" has no search presence.** Results are psilowave.com, psilovibe.org, psychwire.com and Instagram "psilo.delic"; nothing from psilowire.com. | Bing 18:20:34Z, 18:24:32Z (`psilowire.com`); WS 18:22:36Z-52Z | Only matters if psilowire is meant to be a public brand. | Owner: decide whether psilowire.com is a brand or only a redirect alias (owner-account) |
 | rank-10 | medium | **Search demand and clicks can't be observed from outside.** No allowed tool reaches Google results. Bing curl shows page 1 only. The count of people who searched, saw a result or clicked is only in Search Console / Bing Webmaster Tools, and this lens cannot read either. | Section 5 (blocked engines, pagination); scope list | "Who looks and who clicks where" in search stays unanswered until the owner connects those consoles. | Verify mayaallan.com in Google Search Console and Bing Webmaster Tools; export Performance (queries, impressions, clicks, positions) weekly (owner-account) |
+
+## 3. What works
+
+| id | what works | evidence (UTC) |
+|---|---|---|
+| rank-W1 | Bing ranks the site #1 and #2 for all 4 name queries ("Maya Allan", "... author", "... psilocybin", "... book"), the same on both observations | Bing B1 18:19:46Z-50Z, B2 18:24:16Z-19Z |
+| rank-W2 | Bing ranks `/books/psilocybin-integration-guide` #1 for "Psilocybin Integration Guide", ahead of Amazon, Google Books and Barnes & Noble; #1 + #2 for "Psilocybin Integration Guide Maya Allan" | Bing 18:20:34Z-35Z, 18:24:20Z-21Z |
+| rank-W3 | WS shows the site in the top 10 for all 4 name queries (#4-#6) and for "mayaallan.com" (#5). The WS summary text quotes the site's own positioning ("author and educator offering non-clinical, educational resources for psilocybin integration...") | WS 18:21:35Z-51Z, 18:22:36Z-52Z |
+| rank-W4 | Bing has about 36 site pages indexed ("About 36 results"), including `/books`, `/blog`, `/practices` and a blog post | Bing `site:mayaallan.com` 18:24:46Z |
+| rank-W5 | Topic pages are technically indexable: 8 pages return HTTP 200, `index, follow`, no X-Robots-Tag, self-canonical, response 0.32-0.71 s. Not ranking is a relevance/authority problem, not a blocking problem | GET 18:26:10Z-26Z |
+| rank-W6 | robots.txt allows all crawlers, named AI crawlers included (GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot, Claude-Web, anthropic-ai); only `/admin/`, `/api/`, `/download/` are disallowed. The sitemap lists 38 URLs, including 5 language home/about variants | GET 18:25:25Z |
+| rank-W7 | The book is distributed widely enough to fill the title results: Amazon (3 listings), Amazon.ca, Google Books, Google Play Books, Barnes & Noble, ThriftBooks, barwebooks.com, Walmart category page | Bing 18:19:49Z-18:20:35Z; WS 18:21:51Z-18:22:52Z |
+| rank-W8 | An author Facebook presence ranks: "Maya Allan Author - Facebook" (facebook.com/profile.php?id=61572138340473) at Bing #3 for "Maya Allan author". Owner to confirm it is hers | Bing 18:19:47Z |
+
+## 4. Unverified / not exercised
+
+| item | why | what would verify it |
+|---|---|---|
+| Google positions for every query | no allowed live access to Google results | needs outside-source check: Google Search Console Performance, or a manual signed-out Google search by the owner |
+| DuckDuckGo positions | html endpoint: one HTTP 200 at 18:19:10Z (9 result links, not parsed before the block), then "bots use DuckDuckGo too" captcha at 18:19:23Z and 18:22:52Z; lite endpoint captcha 18:21:35Z; d.js JS challenge (HTTP 202) 18:23:10Z; WebFetch also got the captcha (~18:23Z) | needs outside-source check (manual search in a browser) |
+| Bing positions 8-20 | Bing ignored `first=11`, `FORM=PERE`, session cookies and `format=rss` pagination; every request returned page 1 (18:19:50Z-18:20:14Z) | Bing Webmaster Tools, or a manual browser session |
+| Bing rows marked "decoy" | "mayaallan", "mayaallan.com", "... 40 real scenarios", "psychedelic integration book(s)", "what to do after a mushroom trip" and variant, all `site:mayaallan.com <word>` queries (18:25:40Z-44Z), "Maya Allan <topic>" queries (18:26:00Z-04Z) | manual browser check. Control: `site:mayaallan.com grandmother` returned dictionary pages (18:25:58Z) although `/blog/inherited-beliefs-grandmother-marriage` is in Bing's `site:` list, so keyword-restricted site checks are unreliable |
+| Topic absence for T9 and T10 | only 1 valid observation (WS); Bing returned decoys | a second engine or a manual Bing check |
+| Whether psilowire.com, psilocybinintegrationguide.com and mayaallan.vercel.app have pages indexed | Bing `site:` returned unrelated decoy sets (18:24:46Z-48Z); the planned WS domain check was not run because the WebSearch budget (200/200) was used up at ~18:25:30Z | Search Console / Bing Webmaster Tools, or a manual `site:` check |
+| Yahoo, Brave, Mojeek, Startpage | Yahoo: 307 to `/_bv/` bot verification then HTTP 500 (18:21:03Z); Brave: HTTP 429 + captcha (18:21:20Z); Mojeek: JS captcha (18:21:20Z); Startpage: proof-of-work challenge (18:23:21Z) | manual browser checks |
+| Whether the free integration-journal PDF is crawlable | no PDF/download URL in the live HTML (18:28:07Z); the download flow was not exercised (safety rule: no download/submit clicks) | owner or a Playwright lens |
+| Search impressions / clicks / who searches | not observable from outside | Search Console + Bing Webmaster Tools (owner-account) |
+| Which engine the WebSearch tool uses; personalisation | undisclosed; all checks anonymous, US English | - |
