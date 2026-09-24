@@ -111,3 +111,29 @@ No finding was refuted. Five severities were lowered: ana-02, ana-03, ana-04, an
 - **Script URLs:** `/_vercel/speed-insights/script.js` and `/87c4d7cd412437e3/script.js` both returned 200 (12,567 B), twice each, at 18:53:21Z–18:53:25Z.
 - **Why low:** With about 0 human visitors, real-visitor speed data would be empty. Lab tools (PageSpeed Insights, Lighthouse) are enough to diagnose SEO issues now.
 - **Solution check:** `<SpeedInsights/>` plus the dashboard toggle is correct. PR #57 changes `package.json`, but I did not check whether it adds Speed Insights, because reading repository source is out of scope.
+
+### ana-07: Privacy page does not match behaviour (PARTIALLY CONFIRMED, severity lowered to low)
+- **Reads:** GET /privacy twice, 18:53:38Z–18:53:43Z. The text was the same both times and contained:
+  - "Last updated: May 20, 2026".
+  - "If you are in the EU, the UK, or any other jurisdiction where consent is required for non-essential cookies, these are set only after you accept on the consent banner."
+  - "Vercel — hosts the website and stores public assets in Vercel Blob". Vercel Web Analytics is not named.
+  - "Supabase — provides the database where orders, contact-form submissions, and aggregated analytics events are stored".
+- **Confirmed:**
+  - Vercel Web Analytics is not named, although the consent-gated component loads it.
+  - book_viewed is not described specifically. It carries no identifier and no cookie, so the gap is small.
+- **Not a mismatch:**
+  - Asking every visitor worldwide is stricter than the policy text requires; it does not contradict it.
+  - The Supabase storage claim cannot be shown wrong from live behaviour.
+- **Solution check:** The live description of PR #57 says the privacy page "names Vercel Web Analytics". Whether it also covers book_viewed is **unverified**: the preview is SSO-protected and reading source is out of scope.
+
+### ana-08: PR #57 unmerged (CONFIRMED, medium)
+| check | source | UTC read | result |
+|---|---|---|---|
+| PR state | gh api pulls/57 | 18:53:58Z | state=open, merged=false, draft=false, mergeable=true, mergeable_state=clean, created 2026-09-07T02:58:16Z, updated 2026-09-07T03:49:42Z, head `fa5d59b3eb5e4aa94623d08ef9a2a5e8f0eb0224`, 14 files, +781/−91 |
+| up to date with main | gh api commits/main; compare `fa5d59b3...main` | 18:54:03Z | main HEAD is `ed7461a07e49…` (#56), which is the PR's base. main is 0 commits ahead, so no rebase is needed |
+| checks | commit status and check-runs | 18:54:00Z | Vercel: success; gates: success; on-success: success; on-failure: skipped; Vercel Preview Comments: success |
+| review | reviews and issue comments | 18:54:11Z | Codex, 2026-09-07T03:49:40Z: "Didn't find any major issues" |
+| preview | get_deployment dpl_31rT3aihaj2kw1vkzqDkpV8ZVYCb | ~18:54:20Z | READY; branch feat/analytics-visibility-2026-09-07; sha fa5d59b3 |
+| production | list_deployments target=production, limit 3 | ~18:54:20Z | dpl_5ug8W5ASgWuKHpxSYScqtAH1q9Q4 (READY, sha ed7461a). The two production deployments before it are the same sha |
+
+- **Solution check:** Merge and turn on the toggle, as proposed. Then confirm that the production deployment's `githubCommitSha` is the merge commit, and that count_pageviews returns a number.
