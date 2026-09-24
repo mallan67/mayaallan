@@ -170,3 +170,38 @@ Correction: the ana-4 daily check plus the Monday digest is the primary liveness
 | — | PostHog: deferred (ana-7 conditions). External uptime vendor: not needed | — | — |
 
 Result: one inbox (alerts + Monday digest), one admin screen (`/admin/analytics` with a status card), one data store (Supabase), plus Vercel WA for page views. No new vendor, cookie or CSP host.
+
+---
+
+## 6. Open questions (revised)
+
+1. Is the Vercel team on Pro, or on a Pro trial (and if so, when does it end)? The evidence says not Hobby, and Hobby is not allowed for this site anyway.
+2. For **EU/UK** undecided visitors, should the cookieless count start before Accept (as #57 does)? Engineering recommendation: stop on Reject and GPC everywhere; get legal advice on the EEA/UK default. Traffic there is small, so waiting for Accept costs little data.
+3. Should the free journal offer an optional "email me the PDF" field? (Unchanged.)
+4. Alerts: email only for v1 (recommended).
+5. Audiobook card: hide it until release, or "Coming soon — notify me"?
+
+## 7. Not done / UNVERIFIED
+
+- **Not done:** no code changed; no PR opened, merged or commented on. **WA still disabled and PR #57 still open** at ~19:00Z.
+- **INFERRED, not read from a plan field:** the Vercel plan tier.
+- **UNVERIFIED:** whether the AbeBooks affiliate parameters are Maya’s; whether PayPal already sends seller payment emails; whether a Search Console property exists (DNS not checked); whether GitHub emails Maya about health-incident issues; exactly which query parameters WA filters (path tokens are recorded either way); current Bookshop.org and Amazon attribution terms.
+- **Not assessed:** whether a national audience-measurement exemption covers WA in DE or FR (not legal advice).
+- **No real-browser run:** banner and network behaviour are inferred from shipped code, as in the lens.
+
+## 8. Sources (all read 2026-09-24 UTC)
+
+- **GitHub API `mallan67/mayaallan`** (18:58Z–19:25Z): repo metadata (public); `main` ed7461a; PR #57 (`/pulls/57`, `/files` + patches, compare, check-runs, status, reviews, comments); files on main (`marketing-events.ts`, `api/marketing/event`, PayPal and export webhooks, contact, subscribe, `integration-journal`, `vercel.json`, `.github/workflows/health-check.yml`, `api/cron/aeo-track`, `MarketingAttributionClient.tsx`, `ConsentBanner.tsx`, `download/[token]/page.tsx`, `checkout/success/page.tsx`, repo tree); code searches (`/api/marketing/event`, `download_started`, `beforeSend`, `Hobby`); health-check runs; repo deployments and statuses.
+- **HTTP GET www.mayaallan.com** (19:03Z–19:13Z): `/`, `/privacy`, `/books/psilocybin-integration-guide`, `/integration-journal`, `/robots.txt`, `/sitemap.xml`, `/api/health`, `/_vercel/insights/script.js`, `/_next/static/chunks/312c5210c9c35dc5.js`, `/de` `/fr` `/es` `/pt` `/he` `/events` `/media`, a 404 probe.
+- **Vercel API, project prj_CkwsvLxnWkKGJlyAA93lRVxAOQ9Y only** (~18:59Z–19:09Z): `count_pageviews`, `count_events`, `get_project`, `get_deployment`, `list_deployments` (production; branch `work/site-visibility`), `list_project_domains` (all four extra domains 308 → www).
+- **Vercel docs:** analytics/limits-and-pricing (2026-08-25); analytics/privacy-policy (2026-06-26); analytics/web-analytics-api (2026-06-26); cron-jobs/usage-and-pricing (2026-07-15); limits (2026-09-16); limits/fair-use-guidelines (2026-09-14); accounts/access-tokens (2026-09-08); vercel.com/pricing (no date); project-configuration `ignoreCommand` / `git.deploymentEnabled` (docs search).
+- **EDPB Guidelines 2/2023 v2** (adopted 2024-10-16), PDF text ¶33: https://www.edpb.europa.eu/system/files/documents/2024-10/edpb_guidelines_202302_technical_scope_art_53_eprivacydirective_v2_en_0.pdf
+- **PostHog:** /pricing, /docs/session-replay/pricing, /docs/toolbar/heatmaps (no dates); /docs/product-analytics/cookieless-tracking (2025-08-27); posthog-js 1.434.12 via data.jsdelivr.com + cdn.jsdelivr.net.
+- **Microsoft Clarity:** consent-mode (updated 2025-12-05); FAQ (updated 2026-09-21) — learn.microsoft.com.
+- **Plausible:** plausible.io (no date); plausible.io/js/script.js (size).
+- **California AG CCPA:** https://oag.ca.gov/privacy/ccpa (updated 2026-08-28). **Washington AG MHMDA:** https://www.atg.wa.gov/protecting-washingtonians-personal-health-data-and-privacy (no date).
+- **GitHub docs:** Actions billing (public repos free); events-that-trigger-workflows (`schedule` delays; 60-day auto-disable in public repos).
+- **Uptime vendors:** https://uptimerobot.com/pricing/ and https://betterstack.com/pricing (no dates).
+- **Google:** Search Console Performance report help, https://support.google.com/webmasters/answer/7576553.
+
+None of the products discussed is discontinued (no DEAD marks).
