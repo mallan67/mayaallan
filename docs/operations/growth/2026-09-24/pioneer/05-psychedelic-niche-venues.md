@@ -121,3 +121,26 @@ Episode counts and last-episode dates come from the Apple Podcasts lookup API (h
 | niche-pod-psychedelicstoday | Psychedelics Today | 776 / 2026-08-12 | **Guest pitch form** on /contact ("guests that bring a new or unique perspective") | medium (competitive) |
 | niche-pod-thirdwave | The Psychedelic Podcast (Third Wave, Paul F. Austin) | 376 / 2026-09-23 | Free application (https://thethirdwave.co/new-podcast-guest/). If accepted, a **$1,500** "investment" covers the episode, 3 social clips and a newsletter mention to 45,000+. Treat it as sponsored and disclose it. | unknown (paid) |
 | niche-pod-stale | Psychedelic Therapy Frontiers (Numinus) 220 / **2025-10-14**; Psychedelic Salon 790 / 2026-08-17 (archival talks); Mind and Matter 311 / 2026-08-28 (neuroscience) | as listed | Low fit or dormant | low |
+
+### E. Conferences and events, 2026-2027
+
+| id | Event | Dates / place | Ways in | Cost | Lead value | Source (read UTC) |
+|---|---|---|---|---|---|---|
+| niche-evt-horizons | Horizons (19th conference) | **Oct 15-17, 2026**, New York Academy of Medicine, NYC | Register. **Community Allies** program for mission-aligned organizations that promote the conference (21 listed). The partners page has 60 external links, **0 nofollow**. | Fri+Sat community $300; 3-day community $775 (late-September rates) | **high** | https://horizonsconference.org/register ; /partner-interest ; /partners (18:43:02Z to 18:43:38Z) |
+| niche-evt-phf | Psychedelic Healthcare Forum (Psychedelic Alpha) | **Oct 15, 2026**, NYC (register via Horizons) | Industry networking with executives, providers and regulators | Community $650 | medium (B2B) | https://psychedelicalpha.com/psychedelic-healthcare-forum-2026/ (18:42:47Z) |
+| niche-evt-spmc | Spirit Plant Medicine Conference | **Oct 23-25, 2026**, Vancouver BC | Vendor application at /vendor-application-2026; sponsor page; media kit. Vendor fee **UNVERIFIED** (page renders in JS). | Tickets 1-day $200+, weekend $575, VIP $750 (from a WebFetch summary) | medium | https://spiritplantmedicine.com/ (18:37:20Z, ~18:46:25Z) |
+| niche-evt-maps-calendar | MAPS "Upcoming Psychedelic Community Events" | Rolling list. Seen: Collaborence Oct 3-4; ALPS Oct 9-10 (Aarau CH); 1st KAP International Association Summit Oct 16-18 (Barcelona); The Microdosing Summit **Oct 20-22, 2026, Austin TX**; Psychedelics Design Nov 6-7 (GB); NYSHRA conference Nov 9-10 (Utica NY) | **Submit your own event** at https://maps.org/event-calendar-submission/ ; request a MAPS speaker at maps.org/speakerrequest | Free | **high** (with play 3) | https://maps.org/take-action/events/ (18:38:15Z, 18:39:03Z) |
+| niche-evt-ps2027 | Psychedelic Science 2027 (MAPS) | Named in the MAPS navigation; dates and city **UNVERIFIED** (psychedelicscience.org is behind a captcha) | Watch for CFP and exhibitor pages | UNVERIFIED | high if confirmed | https://maps.org/ (18:37:54Z) |
+| niche-evt-icpr | ICPR (OPEN Foundation) | 2026 edition already held (June 4-6, 2026, NL); "ICPR returns in 2028" | Outside the window | n/a | low | https://www.icpr-conference.com/ (18:37:20Z) |
+| niche-evt-breaking-convention | Breaking Convention (UK, biennial) | Next date **UNVERIFIED**; contact by email | n/a | UNVERIFIED | low-medium | https://breakingconvention.co.uk/ (~18:37:40Z) |
+
+### F. Training programs and universities (reading lists)
+
+| id | Program | Status | Way in | Lead value | Source (read UTC) |
+|---|---|---|---|---|---|
+| niche-edu-ciis | CIIS Center for Psychedelic Therapies and Research certificate (12 months, 140-150 hrs, 8 weekends) | live. "Applications for the 2026-2027 cohort are now closed. Our 2027-2028 application cycle will open on January 15, 2027." | Desk copy to faculty; propose as a supplemental integration resource | medium (long-term) | https://www.ciis.edu/continuing-education/center-for-psychedelic-therapies-and-research (18:39:36Z) |
+| niche-edu-or-programs | Oregon active psilocybin facilitator training programs (PDF) | live. A WebFetch extraction counted 14 programs, including CIIS, InnerTrek, Heroic Hearts Project, Numinus Network Training and Changa Institute. **Check the names by hand**; one extracted name looked implausible. | Offer student access and the aftercare kit to each program | medium-high | https://www.oregon.gov/oha/PH/PREVENTIONWELLNESS/Documents/Active-Psilocybin-Training-Programs.pdf (~18:31Z) |
+| niche-edu-berkeley | UC Berkeley BCSP: Psychedelic Facilitation Certificate Program; Ferriss-UC Berkeley journalism fellowships; Altered States podcast | live | Program contact. The journalism fellows are the next reporters on this beat. | medium | https://psychedelics.berkeley.edu/ (18:46:54Z) |
+| niche-edu-vital | Vital (Psychedelics Today) | live. "Applications now open for our October 2026 cohort" | Affiliate form (Psychedelics Today contact page) | medium | https://www.vitalpsychedelictraining.com/ (18:46:54Z) |
+| niche-edu-fluence | Fluence | live. "Pre-enrollment is now open" for a COMP360 psilocybin certificate, described as a "post-approval training program" | Clinician audience; resource partnership | medium | https://www.fluencetraining.com/ (18:46:54Z) |
+| niche-edu-naropa | Naropa | **UNVERIFIED** (no psychedelic program link found on the homepage) | n/a | unknown | https://www.naropa.edu/ (18:46:54Z) |
