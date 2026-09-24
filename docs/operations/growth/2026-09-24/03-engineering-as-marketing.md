@@ -146,3 +146,32 @@ The table orders tactics by build priority, not by id. Owner: **code-pr** = a Gi
   2. Link to `/books/psilocybin-integration-guide?ref=tool-<slug>` and carry `ref` into the checkout attribution.
   3. The follow-up emails from eam-01 include the same link on Day 3.
 - **Measure:** `tool_complete → book_view → checkout_start → purchase`, filtered by `ref`.
+
+### eam-03: Contextual offers instead of a generic newsletter
+- **Why:** on the live site, no email field exists on `/scenarios/ego-dissolution`, `/blog/psilocybin-integration-research` or the book page. The homepage box promises only "1-2 emails per month". Interact's diagnostic above applies **[vendor]**.
+- **Steps:** build one `<ContextualOffer>` component with a per-template offer:
+  - scenario page: "the one-page *If this happens* card for this scenario (PDF)"
+  - research article: "the reading list plus a note when new trials publish"
+  - glossary and FAQ: "the 7-day journal by email" (eam-02)
+  - book page: a free sample scenario. Maya decides what to give away.
+
+  Each offer uses the same Resend path as eam-01.
+- **Measure:** `capture_submit / page_view` per template, and which offer wins.
+
+### eam-02: Integration Journal as a 7-day email version
+- **Why:** the generator already exists and is 7 days long (live). Free tools have replaced PDFs as the default magnet (HubSpot blog, 2025-01-03) **[vendor]**. Riddle's gated-vs-skippable result applies **[vendor]**. Evidence specific to email courses is **UNVERIFIED**.
+- **Steps:**
+  1. Keep "Download free PDF · No email required" exactly as it is.
+  2. Add a second button: "Or get it as 7 mornings of prompts by email".
+  3. The sequence: Day 0 is a signed PDF link (the existing `/download` route), Days 1-7 each bring one prompt adapted from the book, and Day 8 brings the book and events.
+  4. Optional, and only if Maya approves: an A/B test through Vercel Flags of an email-required PDF. The page copy must change honestly if that variant runs.
+- **Measure:** email-version signups divided by PDF downloads; Day-7 completion; purchases with `ref=journal-email`.
+
+### eam-05: Answer blocks written for AI citation, each leading into a tool
+- **Why:** question and long queries trigger AI summaries 53-60% of the time, and clicks fall to 8% (Pew). AI-referred visitors convert 23x at Ahrefs, and ChatGPT brings about 10% of new Vercel signups. Google asks for "unique, non-commodity content" (2025-05-21).
+- **Steps:**
+  1. Collect real questions from community threads and from the AEO tracker prompts.
+  2. For each question: a 2-3 sentence direct answer, then **Maya's own framework from the book** (the proprietary part), then sources to the PR #45 standard, then a **tool entry point** ("try the 5-minute reset now"). The tool is the part an AI answer cannot give on your behalf.
+  3. Put these blocks on existing pages (FAQ, scenarios) rather than new thin URLs.
+  4. Add one frozen prompt per question to the AEO tracker (PR #46) and hold it for 4 weeks.
+- **Measure:** `source_citation` rate on search-capable engines per prompt; referral sessions from chatgpt.com and perplexity.ai; leads from those sessions.
