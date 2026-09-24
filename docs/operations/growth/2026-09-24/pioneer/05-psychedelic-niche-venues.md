@@ -62,3 +62,23 @@ Link-back evidence comes from a sampled external-link `rel` check on one current
 | niche-dir-co-nmd | Colorado Natural Medicine Division: healing-center map + Licensee Look-up; DORA facilitator lookup and roster | live (licensees only) | Prospect list: 46 healing centers as of 9-18-26. Facilitator count **UNVERIFIED** (roster needs a form). | n/a | **high** (B2B) | https://nmd.colorado.gov/ (18:30:16Z); https://dpo.colorado.gov/NaturalMedicine (18:43:50Z) |
 | niche-dir-nm-mpp | New Mexico Medical Psilocybin Program | live (pre-launch) | Watch the Psilocybin Advisory Board materials (July 17, 2026 meeting posted). Build provider relationships before the Dec 31, 2026 launch. | n/a | high (first mover) | https://www.nmhealth.org/about/mcpp/ (18:30:38Z) |
 | niche-dir-retreatguru | Retreat Guru (839 upcoming plant-medicine retreats) | live | Prospect list for retreat partnerships. Listing as an author: **UNVERIFIED**. | UNVERIFIED | high (B2B list) | https://retreat.guru/be/psychedelic-retreats (18:44:48Z) |
+
+### B. Communities
+
+Subreddit counts come from GummySearch public pages (third party), each marked "Last updated" Sept 18-22, 2026. **reddit.com returned HTTP 403 to `about.json` and blocked WebFetch** (18:24:59Z), so no first-party count was read. Per-subreddit rules and Reddit link `rel` are **UNVERIFIED**. Reddit sitewide rules (https://redditinc.com/policies/reddit-rules, 18:27:09Z): "Participate authentically ... do not spam"; "Keep it legal ... do not solicit or facilitate illegal or prohibited transactions".
+
+| id | Venue | Members (updated) | How to get in | Lead value | Source (read UTC) |
+|---|---|---|---|---|---|
+| niche-com-r-psychedelictherapy | r/PsychedelicTherapy | 35k (Sep 18) | Best topical fit. Answer integration questions; link a free tool only when it directly answers. | **high** (fit) | https://gummysearch.com/r/PsychedelicTherapy/ (18:26:42Z) |
+| niche-com-r-shrooms | r/shrooms | 799k (Sep 18) | Value-first answers; no promotion | medium | https://gummysearch.com/r/shrooms/ (18:26:42Z) |
+| niche-com-r-psychonaut | r/Psychonaut | 522k (Sep 21) | same | medium | https://gummysearch.com/r/Psychonaut/ (18:26:42Z) |
+| niche-com-r-microdosing | r/microdosing | 292k (Sep 19) | same | medium | https://gummysearch.com/r/microdosing/ (18:26:42Z) |
+| niche-com-r-rationalpsychonaut | r/RationalPsychonaut | 99k (Sep 22) | Evidence-first audience: cite research, no hype | medium | https://gummysearch.com/r/RationalPsychonaut/ (18:26:42Z) |
+| niche-com-r-therapeuticketamine | r/TherapeuticKetamine | 61k (Sep 19) | Integration is relevant to KAP patients too | medium | https://gummysearch.com/r/TherapeuticKetamine/ (18:26:04Z) |
+| niche-com-r-psilocybinmushrooms | r/PsilocybinMushrooms | 145k (Sep 18) | Leans toward cultivation, so poor fit | low | https://gummysearch.com/r/PsilocybinMushrooms/ (18:26:04Z) |
+| niche-com-r-psychedelicmedicine | r/PsychedelicMedicine | 8k (Sep 21) | Small and professional | low-medium | https://gummysearch.com/r/PsychedelicMedicine/ (18:26:04Z) |
+| niche-com-r-adjacent | r/CPTSD 482k; r/Soulnexus 126k; r/Mindfulness 1.5M; r/Meditation 3.6M | Sep 18-22 | Nervous-system and journaling tools fit here **without** psychedelic framing | medium | gummysearch.com/r/NAME/ (18:26:04Z) |
+| niche-com-tripsit | TripSit Discord (harm reduction) | 16,903 members, 2,277 online (first-party API) | A community space, not a promotional one; take part as a member | low (direct) | Discord invite API (18:40:45Z) |
+| niche-com-eventbrite | Eventbrite online "psychedelic integration" events | Active circles, e.g. "Free Psychedelic Integration Circle" (Tue Oct 13) and "Bi-Weekly Psychedelic Integration Group" (Oct 6 + 5 more dates); total **UNVERIFIED** | Host your own free recurring circle (play 3). Organizer-profile link rel UNVERIFIED. | **high** (direct opt-ins) | https://www.eventbrite.com/d/online/psychedelic-integration/ (~18:44:30Z) |
+| niche-com-forums | Bluelight (live), DMT-Nexus (HTTP 200); Shroomery **UNVERIFIED** | not captured | Harm-reduction culture; self-promotion is poorly received | low | https://www.bluelight.org/community/ ; https://www.dmt-nexus.me/forum/ (18:41:00Z) |
+| niche-com-meetup | Meetup psychedelic topics | **UNVERIFIED** (the page rendered "0 members 0 groups" client-side) | n/a | unknown | https://www.meetup.com/topics/psychedelics/ (18:44:19Z) |
