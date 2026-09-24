@@ -99,3 +99,38 @@
 | PR #57 "count every visitor" (gh api) | open, mergeable=clean, not merged. Body: "The site currently measures **nothing**"; Vercel Web Analytics disabled; `marketing_visitors` (consent-gated) records first landing page and referrer; landing-page grouping strips query strings | 18:25:46Z, 18:34:23Z |
 | PR #46 AEO tracker (gh api) | merged 2026-09-05. Only Perplexity Sonar searches the web; Claude, OpenAI and Gemini calls are "plain completions answering from training data" | 18:25:46Z |
 | PR #45 (gh api) | Body dated 2026-09-05 reports two pages as "Crawled, currently not indexed" in Search Console. **Current Search Console status: UNVERIFIED** (no access this session) | 18:25:46Z |
+
+---
+
+## 3. Tactics for this site
+
+### ai-01: Turn measurement on and tag AI referrals (do this first)
+- **Steps:**
+  1. Maya enables Web Analytics (Vercel → mayaallan → Analytics → Enable) and merges PR #57.
+  2. A follow-up `code-pr` adds a tested `classifyAiReferral()` to `src/lib/analytics-acquisition.ts`:
+     - Read `utm_source` **before** the query is stripped.
+     - `utm_source=chatgpt.com` → ChatGPT.
+     - Referrer hosts `chatgpt.com` / `chat.openai.com` → ChatGPT; `perplexity.ai` / `www.perplexity.ai` → Perplexity; `gemini.google.com` → Gemini; `copilot.microsoft.com` → Copilot; `claude.ai` → Claude.
+     - Show an **"AI assistants"** row in the admin "Where visitors come from" panel.
+     - Store the AI engine as a first-touch attribute on subscribers and orders, so a *lead* can be tied to an engine.
+  3. `marketing_visitors` only records visitors who give cookie consent. For everyone else use the Vercel Referrers panel. The UTM filter needs Web Analytics Plus; a cookieless custom event is the alternative, and whether the current plan allows it is **UNVERIFIED**.
+- **Owner:** mixed (owner-account + code-pr). **Effort:** S.
+- **Expected impact:** No leads by itself, but it is the only way to see any AI lead. OpenAI documents the UTM. GA4 built the same classification in May 2026. 35.7%–70.6% of AI sessions arrive with no referrer, so the UTM is the safety net.
+- **Measure:** Weekly AI-assistant sessions by engine and landing page, and leads with AI first touch. Treat all counts as a floor.
+
+### ai-02: Bing Webmaster Tools + AI Performance + IndexNow
+- **Steps:**
+  1. Maya verifies www.mayaallan.com in Bing Webmaster Tools (the Search Console import is fine), submits `/sitemap.xml` and opens **AI Performance**.
+  2. A `code-pr` adds an IndexNow key file and pings IndexNow on publish or update for blog, scenario and FAQ changes. Bing recommends this.
+- **Owner:** mixed. **Effort:** S.
+- **Expected impact:** This is the only free first-party source of **AI citation counts and grounding queries**, here for Copilot and Bing AI (Bing, 2026-02-10). It tells her which questions AI is already matching her pages to.
+- **Measure:** Total citations, cited pages and grounding queries, weekly.
+
+### ai-03: Get the pages that matter indexed (Google)
+- **Steps:**
+  1. Maya runs Search Console URL Inspection on the book page, /faq, /glossary, the research post and the scenario page.
+  2. She records their status in the handoff doc.
+  3. Any page still "Crawled, currently not indexed" goes to the content fixes in `ai-08`, not to repeated resubmission.
+- **Owner:** owner-account. **Effort:** S.
+- **Expected impact:** Google requires a page to be "indexed and eligible … with a snippet". Since 2026 AIO takes 62% of its citations from outside the top 10 (Ahrefs, 2026-03-02), so indexed pages that answer narrow sub-questions can be cited without ranking top 10.
+- **Measure:** Indexed count, and Search Console "Web" impressions per page (AI features are counted there).
