@@ -18,3 +18,31 @@ The problems this lens did find are about quality and signals, not blocking:
 2. (vis-02, medium) Sometimes `<title>`, meta robots, description and `rel=canonical` are sent **after `</head>`**, in the body. This happens in about 1 in 5 to 1 in 3 responses for the Googlebot, GPTBot and Chrome UAs, and never for Bingbot.
 3. (vis-03, medium) Several sitemap pages are thin or empty in the server-rendered HTML: /books (50 words in main), /events (15), /media (8), /contact (23), /media/Mushroom-Healing (7).
 4. (vis-04, medium) Structured-data gaps: the Book has no isbn, the Articles have no image or dateModified, Person and Organization entities are ambiguous, and sameAs lists Instagram only.
+
+## 1. Crawler UA matrix (GET, no redirects followed, `--compressed`)
+
+Pass A: GET, read 2026-09-24T18:19:59Z to 18:20:19Z, 4 requests at a time. The URLs are https://www.mayaallan.com + path. Each cell shows `status / body bytes`. For every one of the 120 responses: no challenge text ("Vercel Security Checkpoint", "Just a moment", captcha, "Access denied"), no `x-vercel-mitigated`, no `x-vercel-challenge-token`, no `X-Robots-Tag`. HTML pages returned `X-Vercel-Cache: MISS`; /sitemap.xml and /robots.txt returned `HIT`.
+
+| UA | / | /books | /books/psilocybin-integration-guide | /blog | /blog/affirmations-vs-integration | /about | /sitemap.xml | /robots.txt | read (UTC) |
+|---|---|---|---|---|---|---|---|---|---|
+| Chrome 128 (baseline) | 200/91506 | 200/44939 | 200/95452 | 200/38272 | 200/62206 | 200/48263 | 200/10027 | 200/2990 | 18:19:59-18:20:18 |
+| Googlebot desktop | 200/90273 | 200/44939 | 200/97014 | 200/38272 | 200/62249 | 200/49496 | 200/10027 | 200/2990 | 18:19:59-18:20:18 |
+| Googlebot smartphone | 200/91506 | 200/44939 | 200/95366 | 200/38229 | 200/62206 | 200/49496 | 200/10027 | 200/2990 | 18:19:59-18:20:18 |
+| Bingbot | 200/89941 | 200/44658 | 200/95168 | 200/37944 | 200/61966 | 200/47981 | 200/10027 | 200/2990 | 18:19:59-18:20:19 |
+| GPTBot | 200/91506 | 200/46172 | 200/96685 | 200/38272 | 200/62206 | 200/49496 | 200/10027 | 200/2990 | 18:20:00-18:20:19 |
+| OAI-SearchBot | 200/91506 | 200/46172 | 200/96685 | 200/38272 | 200/62249 | 200/48263 | 200/10027 | 200/2990 | 18:20:00-18:20:19 |
+| ChatGPT-User | 200/90273 | 200/44896 | 200/95366 | 200/39505 | 200/63482 | 200/49496 | 200/10027 | 200/2990 | 18:20:00-18:20:19 |
+| ClaudeBot | 200/90273 | 200/44939 | 200/96685 | 200/39505 | 200/63482 | 200/48263 | 200/10027 | 200/2990 | 18:20:00-18:20:19 |
+| Claude-SearchBot | 200/90273 | 200/44939 | 200/95452 | 200/39505 | 200/63482 | 200/49496 | 200/10027 | 200/2990 | 18:20:01-18:20:19 |
+| Claude-User | 200/90273 | 200/46172 | 200/95409 | 200/39505 | 200/62206 | 200/49453 | 200/10027 | 200/2990 | 18:20:01-18:20:19 |
+| PerplexityBot | 200/90273 | 200/46172 | 200/95452 | 200/38229 | 200/63482 | 200/49496 | 200/10027 | 200/2990 | 18:20:01-18:20:19 |
+| Perplexity-User | 200/90273 | 200/46172 | 200/95452 | 200/38229 | 200/62249 | 200/48263 | 200/10027 | 200/2990 | 18:20:01-18:20:19 |
+| Applebot | 200/89984 | 200/44658 | 200/95168 | 200/37944 | 200/61966 | 200/47981 | 200/10027 | 200/2990 | 18:20:01-18:20:19 |
+| DuckDuckBot | 200/89984 | 200/44658 | 200/95168 | 200/37901 | 200/61966 | 200/47981 | 200/10027 | 200/2990 | 18:20:01-18:20:19 |
+| CCBot | 200/90273 | 200/46172 | 200/95409 | 200/38272 | 200/62249 | 200/48263 | 200/10027 | 200/2990 | 18:20:01-18:20:19 |
+
+Every UA got the same page title for a given path: "/" = "Maya Allan — Author of the Psilocybin Integration Guide", /books = "Books \| Maya Allan", book = "Psilocybin Integration Guide - 40 Real Psychedelic Experiences \| Maya Allan", /blog = "Writing — Belief work, nervous-system regulation, integration \| Maya Allan", post = "The difference between an affirmation and an integration — and why it matters \| Maya Allan", /about = "About \| Maya Allan".
+
+Pass B (second, independent observation): HEAD, read 2026-09-24T18:26:42Z to 18:26:57Z, same 15 UAs x 8 URLs, 120 requests. Status counts {"200":120}. `x-vercel-mitigated` 0, `x-vercel-challenge*` 0, `X-Robots-Tag` 0.
+
+Body sizes vary by 1.2 to 1.8 KB between UAs. Two back-to-back Chrome GETs of /books were byte-identical (44915 = 44915, 18:22:31Z). Diffing Chrome, GPTBot and Bingbot responses for /books (18:22:47Z) showed the differences are only in the order of the React Server Components flight payload and in where the metadata sits (see section 4b). They are not differences in page content. No cloaking was seen.
