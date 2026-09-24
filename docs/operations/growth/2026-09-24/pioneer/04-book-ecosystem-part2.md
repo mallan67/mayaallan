@@ -37,3 +37,20 @@ Continues `04-book-ecosystem.md`, which has the baseline, defects D1-D8, the mar
 | book-bookbub-profile | BookBub author profile | live | The Partners site offers "Claim an Author Profile" and "Create a Free Author Website" (S30). | $0 | UNVERIFIED | medium |
 | book-bookbub-deal | BookBub Featured Deal | live | **Advice and How-To:** $629 free / **$784 at $0.99** / $1,454 $1-2 / $2,115 $2-3 / $2,958 $3+. **650,000+** subscribers. **2,000-3,500** clicks at $0.99-$3+. **Religion and Spirituality:** $353 / $439 / $820 / $1,190 / $1,664; 470,000+; 1,375-2,200 clicks. **General Nonfiction:** $457 / $621 / $1,135 / $1,639 / $2,293; 1,070,000+; 2,000-3,500 (S30). Acceptance criteria not read (UNVERIFIED). | as listed | none | high **after** reviews exist |
 | book-netgalley | NetGalley | live | "A per-title listing fee, available for self-published authors". Backlist is allowed ("already been published"). Also offered through the IBPA member program. Price: "Reach out" (UNVERIFIED). Reaches reviewers, librarians, booksellers, educators and media (S33). | contact | none | medium-high (librarians + media) |
+| book-booksirens | BookSirens | live | "$10 per ARC + $2 per Reader", promoted for 3 months; or the "Author" plan at **$100/yr**; "You are NOT paying readers for reviews" (S31). | $10 + $2/reader | none | high (reviews) |
+| book-hidden-gems | Hidden Gems Books ARC | live | Accepts **Self-Help, General Non-Fiction, Faith/Spirituality**. $20 deposit covers 1-10 readers, then $3/reader up to 140; MAX $400; 50-reader minimum. So **50 readers is about $140**. Claims ">80%" review rate. Price table dated "updated as of Sept 20, 2018" (still shown live) (S32). | ~$140-$400 | none | high (reviews) |
+| book-booksprout | Booksprout | live (JS app); plans **UNVERIFIED** | n/a | UNVERIFIED | none | medium |
+| book-bookfunnel | BookFunnel | live | First-Time Author **$30/yr** (1 pen name, 500 downloads/mo, group promos, author swaps). Mid-List **$200/yr** (5,000 downloads, secure ARC delivery). Bestseller **$300/yr** (S31). | $30-$300/yr | Landing pages link to the site | **high**: reader-magnet ebooks deliver to email capture |
+| book-storyorigin | StoryOrigin | live | Standard **$10/mo or $100/yr**: group promos, newsletter swaps, collect reader emails, affiliate tags (S31). | $100/yr | landing pages | high (list growth) |
+| book-readers-favorite | Readers' Favorite | live | "Get a Free Review of Your Book". 5-star reviews get a seal (S41). | $0 option | review page | low-medium |
+| book-kirkus-indie | Kirkus Indie | live | Traditional review from **$450** (7-9 weeks), expedited $599. The author can choose not to publish a negative review (S41). | $450+ | Kirkus page | low-medium |
+
+### 2H. Psychedelic and wellness media (book-specific formats)
+
+| id | Venue | Status | What is there (live) | Next step | Lead value |
+|---|---|---|---|---|---|
+| book-chacruna | Chacruna | live | A search for "book review" returns *Book Launch* posts and "20 Best Books About Peyote and Mescaline" lists (S42). | Pitch an integration-books roundup, or a book-launch post. Submission rules UNVERIFIED. | medium |
+| book-maps | MAPS | live | Runs a store "Bookshop" and gives away a free **MAPS Integration Workbook** ("Get Your Free Guide"). The workbook is an email-capture model in Maya's exact topic (S42). | Study it as a benchmark. Whether indie titles can be listed is UNVERIFIED. | medium (benchmark) |
+| book-psychedelics-today | Psychedelics Today | live | A search for "book" returns 2 book-review mentions (S42). | UNVERIFIED | low-medium |
+| book-lucid-news / book-doubleblind | Lucid News; DoubleBlind | **UNVERIFIED** | Lucid News unreachable (HTTP 000); DoubleBlind returned a 202 JS challenge. | n/a | n/a |
+| book-reddit | Reddit book/psychedelic subs | **UNVERIFIED** | reddit.com returned 403 to about.json and old.reddit, so no subscriber counts (S40). | n/a | n/a |
