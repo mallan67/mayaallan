@@ -114,3 +114,59 @@
   - Ebook ISBN 9798994148891: "Maya Allan", 289 pages, "Selected pages".
   - Both read 18:58:50Z-18:58:52Z.
 - **Sources:** knowledgepanel/answer/7534902 and /7534842 (about 18:57Z).
+
+**goog-07 DROP for now.**
+- Requirements: "currently only available in the United States"; 18 or older; 10,000 followers on YouTube, Instagram, X or TikTok. Facebook does not qualify.
+- `profile.google.com/claim` redirects to sign-in (19:04:59Z).
+- Use Search Console platform properties now (M1).
+- **Sources:** websearch/answer/16904498 (19:04:57Z); search-profiles doc (updated 2026-09-16).
+
+**goog-08 KEEP (low).**
+- Confirmed: global for Top Stories, plus AI Mode and AI Overviews; domain or subdomain only; the deep link works; custom button added 2026-08-20.
+- **Missed prerequisite:** "you must make sure your site is included in Search generative AI features in Search Console".
+- **Source:** preferred-sources doc (updated 2026-09-18; 19:05:16Z).
+
+**goog-09 KEEP, lead medium (not high).**
+- Confirmed:
+  - no link to mayaallan.com on the ebook record
+  - full text scanned: "If a user searches a word that appears on a page of your book, your book can be listed"
+  - "You can choose to make 20% to 100% of your book's content browseable"
+- It offers discovery only, with no path back to the site or to email.
+- **Sources:** books/partner/answer/10010291 and /3474239 (about 18:59Z).
+
+**goog-10 KEEP, corrected.**
+- **Price:** $9.99 (Play listing, about 18:59:20Z).
+- **Revenue share:** 70% under the 2019 TOS, otherwise 52%; some Asian countries are excluded (answer 9331459).
+- **Promo codes:** "up to 3 promo campaigns per month. Each campaign can create up to 5,000 codes". Percent-off is for ebooks only (answer 9827742).
+- **Correction:** the affiliate program pays "7% commission" when referred books are "purchased within 24 hours of a referral". That is an attribution window, not the payout time. It runs through Partnerize, for "active Play Books partners" (answer 9358246).
+- **Margin:** a Play sale earns 70% and gives Maya no buyer email, while the on-site PayPal sale keeps the buyer relationship.
+- **Missed policy:** Google's review-snippet guideline (added 2026-07-24) rules out "Reviews written in exchange for a benefit (such as money, discounts, vouchers, or free products) that don't clearly and prominently disclose the incentivization". Offer codes only for honest, disclosed reviews, never conditioned on the rating.
+- The FTC 16 CFR 465 text was unreachable (eCFR bot check; ftc.gov 404), so it is UNVERIFIED.
+- **Source:** review-snippet doc (19:13:11Z).
+
+**goog-11 KEEP (conditional). Status is restricted.**
+- "This program is currently limited to select publishers" in 12 countries, including the US.
+- Distributor delivery exists: the page describes a migration form for publishers who sell through distributors.
+- The custom-TOC claim is not on this page (UNVERIFIED).
+- Audiobook promo codes are confirmed in answer 9827742 (free or fixed price).
+- **Source:** books/partner/answer/14164701 (19:00:15Z).
+
+**goog-12 KEEP as Maya's decision, lead low.**
+- Confirmed:
+  - an EPUB in EN, ES, DE, FR, HI or pt-BR that is offered on Play
+  - "If the auto-narrated audiobook is for sale elsewhere, it must also be for sale on Google Play Books"
+  - free "for a limited time"
+  - "52% revenue share"
+- No "Beta" label was found.
+- UNVERIFIED: whether the Play file is an EPUB, and whether this conflicts with the human-narrated edition's distribution terms.
+- **Source:** play.google.com/books/publish/autonarrated/ (19:00:16Z).
+
+**goog-13 DROP.**
+- "eBooks and digital books (not including audiobooks)" and "Services" are unsupported.
+- A directly sold audiobook is not excluded by that line; the drug-policy outcome is UNVERIFIED.
+- **Source:** merchants/answer/6150006 (19:00:26Z).
+
+**goog-14 DROP.**
+- The merchant-listing doc (updated 2026-09-08) applies the free listings guidelines (merchants/answer/12073010), and those exclude ebooks. The ebook's answer is effectively "no".
+- `offers` and `isbn` in the Book JSON-LD are harmless hygiene only.
+- **Read:** 19:00:30Z-19:00:52Z.
