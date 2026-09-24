@@ -153,3 +153,17 @@ No finding was refuted. Five severities were lowered: ana-02, ana-03, ana-04, an
 - **405 responses between 18:10Z and 18:40Z:** on /api/checkout/paypal, /api/checkout/paypal/capture-order, /api/subscribe and /api/marketing/*. These are GET probes by audit agents, **not purchases or sign-ups**.
 - **Correction:** This verifier also made about 60 GETs between 18:46Z and 18:58Z. Treat logs as polluted until **at least about 2026-09-25T19:00Z**, which is 24 hours after the last audit or verification request.
 - **Solution:** correct.
+
+## "Works" spot-checks
+| item | holds | live re-check (UTC) |
+|---|---|---|
+| All 12 key pages return 200 | yes | GET of the 12 paths, 18:47:49Z–18:47:59Z: all 200. Also 17 more sitemap pages at 18:48:49Z–18:49:07Z: all 200. The sitemap lists 38 URLs (18:48:38Z) |
+| The other domains 308 to www | yes | 18:54:39Z: https apex and https alt domains each 308 to `https://www.mayaallan.com/`; `https://psilowire.com/about` 308 to `/about`, so the path is kept. The http:// versions take 2 hops (308 to https, then 308 to www) |
+| No third-party trackers | yes | HTML of 13 pages (18:46:47Z, 18:55:03Z–18:55:21Z) and 23 chunks (18:48Z–18:49Z): no GTM, gtag, Clarity, Meta pixel, PostHog, Plausible or Umami |
+| No cookie before consent | yes | Response headers of /, the book page and /privacy, 18:55:03Z: no Set-Cookie |
+| Consent banner and "Cookie preferences" link | yes | The banner logic is in chunk 312c5210 (18:47:00Z). The "Cookie preferences" text is present on / and /privacy (18:55:03Z–18:55:21Z) |
+| Analytics and Speed Insights scripts served; CSP allows them | yes | 4 script URLs returned 200, twice each (18:53:21Z–18:53:25Z). CSP (18:54:39Z): `script-src 'self' … https://va.vercel-scripts.com`, `connect-src 'self' … https://vitals.vercel-insights.com`. The endpoints are on the site's own domain, so no CSP change is needed |
+| Runtime logs record the tracking calls | yes | 18:10Z–18:40Z: /api/marketing/visitor 6 and /api/marketing/event 2 (grouped by path, ~18:51Z) |
+| No runtime errors in 7 days | yes | get_runtime_errors 7d and 24h (~18:55:30Z): "No runtime errors found". get_runtime_logs statusCode=5xx since 2026-09-23T19:00Z: 0 rows. 404s exist (scanner paths) but are not errors |
+| Health check workflow succeeds and matches /api/health | yes | See ana-09 (18:52:34Z) |
+| PR #57 ready to merge | yes | See ana-08 (18:53:58Z–18:54:20Z) |
