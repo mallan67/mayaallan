@@ -60,3 +60,29 @@ GitHub, live (`gh api`, 18:23:51Z-18:24:00Z): the 58 PRs so far are mostly harde
   - Omnius [agency, 2026-08-19]: 15k+ WordPress pages for an AI-image SaaS, 67 → 2,100+ monthly signups over Mar 2024-Jan 2025. That is a different category and a pre-2026 window.
 - **Bad information to ignore:** Digital Applied [agency] published "Programmatic SEO After March 2026" on **2026-03-18**, nine days **before** Google's March 2026 core update began (2026-03-27). It quotes unsourced stats such as "87% average traffic loss". An "Originality.ai study of 2,600 programmatic sites" circulates in search snippets, but no primary source was found. It is **UNVERIFIED**.
 - **For this site:** only 2 scenario pages and a handful of blog posts exist, and two pages were "Crawled, currently not indexed" (PR #45). A site that can't yet get 2 pages indexed should not add 100 thin pages. Google's documentation says crawled-not-indexed pages "may or may not be indexed in the future; no need to resubmit".
+
+### 2.4 Answer pages for long-tail questions
+- **Pew** (2025-07-22; 900 adults, 68,879 searches): with an AI summary, users clicked a result in **8%** of visits versus **15%** without one, and clicked a link inside the summary in **1%**. **60%** of searches starting with who/what/when/why produced a summary, as did **53%** of searches of 10+ words.
+- **Ahrefs** (2026-02-04; 300k keywords, Dec 2023 vs Dec 2025): an AI Overview correlates with a **58% lower CTR** for position 1.
+- **But AI referrals convert:** at Ahrefs (2025-06-16), "0.5% of Ahrefs traffic is from AI search" yet "12.1% of signups", which is **23x**. The author warns that this may not last. At Vercel (2025-06-10), "ChatGPT now refers around 10% of new Vercel signups". Semrush [vendor] (2025-07-21) puts an AI visitor at "4.4 times as valuable" as an organic one, based on its own model.
+- **Google** (John Mueller, 2025-05-21): "Focus on making unique, non-commodity content". It also says AI Overview clicks "are higher quality, where users are more likely to spend more time on the site." Google's AI-features documentation (updated 2025-12-10) adds: "no additional requirements … You don't need to create new machine readable files, AI text files, or markup".
+- **Indig** (Growth Memo, 2026-07-27): AI Mode queries run "3x longer". His advice is to lead with unique or proprietary information in direct, plain writing.
+
+### 2.5 Mentions and distribution (what makes tools and answers get cited)
+- **Ahrefs** (2025-05-26; 75k brands; DR>40 sample): Spearman correlation with AI Overview visibility is **0.664 for branded web mentions** against **0.218 for backlinks** and 0.326 for DR. The authors stress that "correlation ≠ causation".
+- **Profound** [vendor] (2025-06-05, updated Aug 2025; 680M citations): the top cited domains are Wikipedia at 7.8% for ChatGPT, Reddit at 6.6% for Perplexity, and Reddit 2.2% / YouTube 1.9% / Quora 1.5% for AI Overviews.
+- **Vercel's tactics:** find new questions on Reddit, X, GitHub and forums, publish the definitive evidence-based answer, then share it in those same places.
+
+### 2.6 Embeddable widgets
+- **Policy:** "Keyword-rich, hidden, or low-quality links embedded in widgets that are distributed across various sites" count as link spam (Google spam policies, 2026-08-28).
+- **Results evidence from 2025-2026: none found in this session. UNVERIFIED.** Low priority (eam-09).
+
+### 2.7 Downloadable workbooks, PDF generators and email courses
+- The site already has a server-side PDF generator (the Integration Journal) with no email step.
+- HubSpot's blog [vendor] (2025-01-03) describes free mini-tools **replacing** e-books and PDFs as the lead magnet of choice.
+- **No 2025-2026 practitioner numbers for email courses were found. UNVERIFIED.** The case for turning the journal into a 7-day email version rests on 2.2 (people exchange an email for a personalised, useful follow-up) and on the journal's 7-day structure. It is an inference, so it has to be measured.
+
+### 2.8 Building in public
+- **No 2025-2026 practitioner numbers were found within this session's budget. UNVERIFIED.** The closest verified lesson is HubSpot's "**Run your own tests** … validate a play with your own data before scaling it" (2026-09-16). This lens does not recommend it as a lead channel for now.
+
+---
