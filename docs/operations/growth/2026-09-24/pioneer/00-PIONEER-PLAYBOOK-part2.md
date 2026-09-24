@@ -107,3 +107,31 @@ Continues `00-PIONEER-PLAYBOOK.md` (sections 1, 2, 3A-3C). Sections 5-7 (first 1
 | H1 | Back Home Circle: twice a month, 60 minutes, reading + reflection | Luma, Eventbrite, /events, MAPS calendar | `utm_source=luma&utm_medium=event-listing&utm_campaign=back-home-circle-2026-10` (source eventbrite or maps-calendar on those listings) | MAYA | 5h + 2h a session | H | BHC M1, [S42], [S64] |
 | H2 | 7-Day Integration Cohort, starting on the 1st of each month | email (Resend) | `source=cohort-7day` | CONTENT + PR | 1.5d | H | BHC M8, [S9] |
 | H3 | "The Integration Letter", twice a month, doubling as the circle calendar | newsletter | `utm_source=newsletter&utm_medium=email&utm_campaign=letter-<nn>` | CONTENT | 3h an issue | H | BHC M9 |
+| H4 | Midlife and 65+ circle track; offer a co-hosted session to the organizer of Eventbrite's "Psychedelics After 65" | Eventbrite | `utm_campaign=midlife-circle` | MAYA | 1d | M | BHC M11, [S42] |
+| H5 | Horizons-week salon (see E13, E14) | NYC | `utm_campaign=horizons-2026` | MAYA | 1d | H | BHC M6 |
+| H6 | Manual newsletter swaps; Kit (74,000-creator network) and beehiiv recommendations are the fallback, with no provider switch now | other newsletters | `utm_source=<newsletter>&utm_medium=swap` | MAYA | 1h | M | BHC M9, [S76] |
+| H7 | Open circle host kit on the Death Cafe model (24,649 gatherings), only after counsel review, a code of conduct and a "reflection, not processing" format | /circles | `utm_source=circle-<city>&utm_medium=community&utm_campaign=circle-kit` | CONTENT + PR | 4-5d | M (month 3+) | BHC M3, [S63] |
+| H8 | In-person circles with local hosts in Portland and Denver/Boulder (these qualify for Event rich results) | local rooms | `utm_source=circle-portland&utm_medium=community` (circle-denver for Denver) | MAYA | 1d a city | M (month 2+) | BHC M12 |
+| H9 | Live listen-along circles once the audiobook ships (YouTube live needs the Intermediate feature tier, which requires phone verification) | YouTube | `utm_campaign=listen-along` | MAYA | - | M | BHC M14, [S77] |
+
+### 3I. On-site assets
+
+| # | Action | Venue | Link / tag | Owner | Effort | Lead | Source |
+|---|---|---|---|---|---|---|---|
+| I1 | Capture PR: optional email + `source` value on /events, the 4 tools, /scenarios, /glossary, /books | site | `source=<page>` | PR | 1.5-2d | H | BHC M2, [S5] |
+| I2 | "Email me this reflection" (text sent, not stored; separate unticked newsletter box) + a privacy-safe share card (the prompt only, never the user's text) | the 4 tools | `utm_source=share&utm_medium=tool-card&utm_campaign=<tool>` | PR | 2d | H | DATA M4 |
+| I3 | Help box 62-FIRESIDE / 988 / 911 on every tool, scenario, event and partner page (0 Fireside mentions today) | site | - | PR | 0.5d | safety | ECO M7, [S7], [S9] |
+| I4 | Replace "Heal Traumas" in the book page og:image:alt (a therapeutic claim) | book page | - | PR | 15m | trust | Judge 2, [S7] |
+| I5 | The 39 missing scenario pages, 10 a week, plain-language titles | /scenarios | own URL | CONTENT + PR | 1h a page | H | SE 3, [S10] |
+| I6 | Vanity router `/pod`, `/kit`, `/book`, `/free-copy`, `/listen`, `/arc` (307 + UTMs, `vanity_hit`, noindex) | www.mayaallan.com, reached through both spare domains | see section 4 | PR | 0.5d | enabler | SE 1, [S6] |
+| I7 | `/free-copy/<campaign>` (a Play code behind an email) | site | `utm_medium=promo-code` | PR | 0.5d | H | SE 6 |
+| I8 | `/arc` | site | `utm_medium=arc` | PR | 0.5d | H | SE 5 |
+| I9 | `/circles` hub; /events entries with `registration_url`, `eventAttendanceMode`, `offers` at price 0, and an ICS feed | site | - | PR | 1d | H | BHC M2, [S3] |
+| I10 | `/kit`: a printable "first 30 days back home" page, plus `/kit/<slug>` | site | `utm_medium=print-qr` | PR | 1d | H | ECO M1, SE 7 |
+| I11 | One Person `@id` graph; Book `isbn` per format and `workExample` after the ISBN fix | site JSON-LD | - | PR | 0.5d | M | web-schema-graph, [S7], [S8] |
+| I12 | RSS feeds for /blog and /scenarios (0 feeds today) | site | - | PR | 2h | L-M | [S11] |
+| I13 | Scenario Finder: 6 questions -> the closest scenarios -> prompts by email (month 2; no Show HN) | site | `utm_campaign=scenario-finder` | PR | 3-5d | M | CAT M4 |
+| I14 | A psilocybin-microdosing track in the journal | /integration-journal | - | CONTENT | 1d | M | mkt-ws-08 |
+| I15 | A "back home after Oregon or Colorado" section written for readers aged 45+ | site | - | CONTENT | 0.5d | M | mkt-ws-07, mkt-14 |
+| I16 | "Invite a companion" and "Bring a friend to the circle" after a tool is completed | the 4 tools | `utm_source=tool-<name>&utm_medium=share&utm_campaign=invite` | PR | 0.5-1d | M | BHC M13 |
+| I17 | Circle page strings in Spanish and Portuguese later (es and pt-BR hreflang already exist) | site | - | CONTENT | 1d | L | ECO M10 |
