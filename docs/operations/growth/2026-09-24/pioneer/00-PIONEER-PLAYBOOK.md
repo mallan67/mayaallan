@@ -138,3 +138,31 @@ Every viable, live idea from the 6 maps and the 5 strategies, de-duplicated and 
 | B5 | Applebot is already allowed; there is nothing to submit | Spotlight, Siri, Safari | organic | - | 0 | L | eng-apple |
 | B6 | Amazon: 7 keywords, 3 categories, first reviews (changes take up to 72h) | Amazon search, Alexa for Shopping | back-matter `/book` | MAYA | 1d | H | vert-amazon |
 | B7 | Amazon Author Central: paste the one bio (whether a website link is possible is UNVERIFIED) | Amazon author page B0G76975ST | UNVERIFIED | MAYA | 1h | M | web-amazon |
+| B8 | Goodreads Author Program ("Is this you?", about 2 business days); merge 245349971 into 245299940; add the website | Goodreads | website field: rel noopener, no nofollow (sample); `utm_source=goodreads&utm_medium=profile&utm_campaign=author` | MAYA | 1h | H | vert-goodreads, web-goodreads, [S75] |
+| B9 | A reader or partner (not Maya) starts an honest integration-books Listopia list (none exists) | Goodreads Listopia | book page | partner | 30m | M | book-goodreads-listopia |
+| B10 | Apple Books for Authors direct, or via Draft2Digital (the book is absent from Apple's 40 results) | Apple Books | back-matter `/book-apple` | MAYA | 0.5d | M | vert-apple-books |
+| B11 | Claim the website on Pinterest (tag, file or DNS); scenario pins | Pinterest | `utm_source=pinterest&utm_medium=social&utm_campaign=scenario-<n>` | MAYA | 1h + 1h a week | L-M | vert-pinterest |
+| B12 | List every circle where people search for circles (30 listings on page 1 for online psychedelic integration) | Eventbrite search | `utm_source=eventbrite&utm_medium=event-listing&utm_campaign=<circle>` | MAYA | 30m an event | H | [S42] |
+| B13 | Luma listings (free events, email blasts, Zoom integration) | Luma | `utm_source=luma&utm_medium=event-listing` | MAYA | 30m an event | H | BHC M1, [S64] |
+| B14 | Meetup online, Portland and Denver (organizer fee UNVERIFIED) | Meetup | `utm_source=meetup&utm_medium=event-listing` | MAYA | 1h | M | [S43] |
+| B15 | Podcast directories for the scenario feed (month 2) | Apple Podcasts, Spotify for Creators | `utm_medium=audio` | MAYA | 1d | M | vert-apple-podcasts, vert-spotify-podcasts |
+| B16 | Find guest targets and owner emails | Listen Notes, Podcast Index, Apple Podcasts search API | - | MAYA | 1h | M | [S44] |
+| B17 | Edit Open Library author OL16288546A (website, bio); add each format as an edition after the ISBN fix | Open Library | links field (rel UNVERIFIED) | MAYA | 30m | L | book-open-library |
+| B18 | Library discovery through Draft2Digital's channels (month 2) | OverDrive/Libby, Hoopla, BorrowBox, cloudLibrary | back-matter `/book-libby` | MAYA | 0.5d | L-M | book-libraries, [S45] |
+| B19 | Offer the free tools and glossary to the Psybrary, an AI Q&A "grounded in curated psychedelic literature" | Psychedelics.com | `utm_source=psychedelics-com&utm_medium=directory` | MAYA | 1h | M | [S46] |
+| B20 | Pick one newsletter home: Resend (already in the repo) or a Substack mirror (post-body links followed); do not run both | Substack | `utm_source=substack&utm_medium=email` | MAYA | 1h an issue | M | vert-substack, web-substack |
+
+### 3C. AI answers
+
+| # | Action | Venue | Link / tag | Owner | Effort | Lead | Source |
+|---|---|---|---|---|---|---|---|
+| C1 | Keep robots.txt allowing OAI-SearchBot, PerplexityBot, Claude, Applebot and Meta (all allowed today) | ChatGPT, Perplexity, Claude, Meta AI | - | - | 0 | M | ai-chatgpt, ai-perplexity, ai-claude, ai-meta, [S12] |
+| C2 | Write each scenario page as a direct 100-150 word answer to a live autocomplete question, with references and the help box | AI Overviews, AI Mode, ChatGPT, Perplexity, Copilot | own URL | CONTENT | 1h a page | H | SE 3 |
+| C3 | Name the method lightly: add "scenario-based integration" as a DefinedTerm in the glossary set and on the book page (no category launch) | AI answers | - | PR | 0.5d | L | CAT M1-lite |
+| C4 | One identical one-sentence bio everywhere, so engines attribute consistently | all profiles | - | CONTENT | 1h | M | web-presskit |
+| C5 | Monthly citation check: Bing AI Performance + Search Console Generative AI report, per URL | Bing, Google | - | MAYA | 30m a month | measure | eng-bing, goog-02 |
+| C6 | Get into the curated corpora that answer engines read: Colorado NMD resources, Fireside, the Psybrary (rows E1, E5, B19) | directories | clean URL | MAYA | see rows | M | [S24], [S56], [S46] |
+| C7 | Wikidata items only after one independent reference exists; disclose the conflict of interest | Wikidata | P856 official website | MAYA | 1h | L | book-wikidata, [S47] |
+| C8 | Watch the OpenAI Apps directory, which replaces the retiring custom GPTs (psilocybin policy fit UNVERIFIED) | ChatGPT | - | - | - | L | [S48] |
+
+*Continued in `00-PIONEER-PLAYBOOK-part2.md` (3D-3I and section 4) and `00-PIONEER-PLAYBOOK-part3.md` (sections 5-7).*
