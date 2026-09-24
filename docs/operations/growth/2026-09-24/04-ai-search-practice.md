@@ -69,3 +69,33 @@
 | "Publish 'best X' lists ranking yourself #1" | Self-promotional listicles lost visibility in Jan 2026: five SaaS sites dropped −29% to −49% (Lily Ray, 2026-02-03). In AIO these lists are cited ~69% of the time while the recommendation goes to a competitor, and smaller brands end up giving "free marketing for competitors" (Lily Ray, 2026-06-17) | **Do not do** |
 | "Our GEO platform shows AI traffic converts 5–9× / 4.4×" | Vendor-published figures. The peer-reviewed counter-evidence (Kaiser & Schulze, reported 2025-10-24): 973 e-commerce sites, $20B revenue, Aug 2024–Jul 2025. ChatGPT referrals converted below organic search (by ~13%) and below affiliate (by 86%), and were ~0.2% of sessions | Plan for low volume. Do not budget on conversion multipliers |
 | "Track one AI visibility score" | 91% of citations are specific to one engine (Consensus Gap), and lists repeat <1 time in 100 (SparkToro via Ahrefs) | Measure per engine and repeat samples (`ai-12`) |
+
+### 1.5 How AI referrals show up in analytics now
+| Engine | What arrives at the site | Source |
+|---|---|---|
+| ChatGPT | Referrer `chatgpt.com` (older traffic: `chat.openai.com`). Links carry **`utm_source=chatgpt.com`**. OpenAI: "ChatGPT automatically includes the UTM parameter utm_source=chatgpt.com in referral URLs". Requires that `OAI-SearchBot` is not blocked | OpenAI Help Center "Publishers and Developers – FAQ" (page shows "Updated: 27 days ago", i.e. about 2026-08-28), read 18:24:59Z |
+| Perplexity, Copilot, Gemini, Claude | Referrers `perplexity.ai`, `copilot.microsoft.com`, `gemini.google.com`, `claude.ai` were observed in 100 brands' GA4 data. No UTM tagging is documented for these engines | Lawrence Hitches / StudioHawk data (consultant), 2026-09-20 |
+| Google AI Overviews / AI Mode | **Cannot be separated** from organic. They are counted inside Search Console's "Web" search type (Google). A May 2025 AI Mode `noreferrer` bug was confirmed by Google and fixed on 2025-05-28 (SERoundtable, 2025-05-23, updated). One practitioner (2026-08-15) says clicks now arrive as `google / organic`; the same article also describes a separate "AI Mode" filter in Search Console, which contradicts Google's doc, so that part is **not relied on** | Google doc 2025-12-10; SERoundtable; Hitches 2026-08-15 |
+| GA4 (if ever used) | Since May 2026 there is a built-in **"AI Assistant"** default channel with medium `ai-assistant`. Google names ChatGPT, Gemini and Claude but has not published the full list. Sessions without a referrer still fall into Direct | Search Engine Journal (Matt Southern), 2026-05-14 |
+| Missing referrer | 35.7% of AI-tagged sessions had no referrer (Clickport, own sample, vendor). Loamly measured 70.6% (Feb 2026, via Clickport, **not read at source**). Treat any AI count as a floor | Clickport (vendor), updated 2026-09-18 |
+| Vercel Web Analytics (this site's stack) | The Referrers panel is available. The **UTM filter needs Web Analytics Plus or Enterprise** | Vercel docs "Filtering Analytics", last_updated 2026-09-16 |
+| Bing / Copilot citations (no clicks) | Bing Webmaster Tools **AI Performance** shows total citations, average cited pages, **grounding queries** and per-URL citations across Copilot, Bing AI summaries and partners. It does not show clicks | Bing Webmaster blog, 2026-02-10 |
+
+---
+
+## 2. Live state of mayaallan.com that matters here (read 2026-09-24T18:25Z–18:34Z)
+| Check (method) | Result | Read at |
+|---|---|---|
+| `robots.txt` (GET) | All engines allowed: `*`, GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot, PerplexityBot, Perplexity-User, Google-Extended. Only /admin, /api and /download are disallowed. **No crawler blocking problem** | 18:25:08Z |
+| `llms.txt` (GET) | 200, 5,651 bytes, already exists | 18:25:08Z |
+| Sitemap (GET) | 38 URLs: 5 blog posts, **1 scenario page** (`/scenarios/ego-dissolution`), 5 language homepages and /about pages | 18:25:08Z |
+| Server HTML as `OAI-SearchBot` UA (GET) | Home, book, /about, /faq and the research post are server-rendered (FAQ 16.6k chars, research post 19.0k). The tool pages `/integration-reflection` and `/belief-inquiry` serve ~1.2k chars of text | 18:25:23Z, 18:30:07Z |
+| Structured data | Person, WebSite, Organization, Book, FAQPage, Article and BreadcrumbList are present. Author `sameAs` = Instagram only. Book `identifier` = ASIN only. ISBN 9798994148839 appears only inside a retailer URL | 18:25:23Z, 18:31:42Z |
+| Analytics in HTML | No GA, Vercel Analytics or other analytics script detected | 18:25:23Z |
+| Email capture in server HTML | Homepage has 1 email input. Book page, /faq, /glossary, /blog, the research post, /scenarios and the tool pages have **0** (anything rendered client-side after interaction was not checked) | 18:25:23Z, 18:30:07Z |
+| Goodreads book page (GET) | "0.00 · 0 ratings · 0 reviews". Published Dec 15, 2025. Author page exists: `goodreads.com/author/show/65134359.Maya_Allan` | 18:32:04Z |
+| Off-site profile links on homepage | None to YouTube, podcasts, LinkedIn, Medium, Substack, Goodreads author or Amazon author | 18:32:16Z |
+| psilowire.com, psilocybinintegrationguide.com | 308 redirect to `https://www.mayaallan.com/` | 18:32:39Z |
+| PR #57 "count every visitor" (gh api) | open, mergeable=clean, not merged. Body: "The site currently measures **nothing**"; Vercel Web Analytics disabled; `marketing_visitors` (consent-gated) records first landing page and referrer; landing-page grouping strips query strings | 18:25:46Z, 18:34:23Z |
+| PR #46 AEO tracker (gh api) | merged 2026-09-05. Only Perplexity Sonar searches the web; Claude, OpenAI and Gemini calls are "plain completions answering from training data" | 18:25:46Z |
+| PR #45 (gh api) | Body dated 2026-09-05 reports two pages as "Crawled, currently not indexed" in Search Console. **Current Search Console status: UNVERIFIED** (no access this session) | 18:25:46Z |
