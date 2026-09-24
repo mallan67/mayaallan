@@ -246,3 +246,54 @@ Source: Apple Podcasts search API, https://itunes.apple.com/search?media=podcast
 - Provider network: "require providers to be licensed in a health profession". Community directory: groups must "host regular online or in-person events… can not offer illegal substances".
 - **Both** say "We are not accepting new applications at this time". Members get an "Invitation to publish articles in our blog", but that is closed too.
 - Source: https://psychedelic.support/join/ (22:21:45Z).
+
+### niche-dir-psychable: KEEP. Listing eligibility is now verified.
+
+- "855+" practitioners; "Every listed practitioner offers or partners with integration support". Source: https://psychable.com/ (~22:16:40Z).
+- Listing types include Coaches and Community Groups. Pricing:
+  - Free: "One listing per directory to start"
+  - $55 per month
+  - $600 per year
+- If Maya runs a free circle, she can list as a Community Group at no cost.
+- It also works as a B2B prospect list.
+
+### niche-b2b-retreats: KEEP at low
+
+- Verified: "839 upcoming retreats". Source: https://retreat.guru/be/psychedelic-retreats (~22:16:40Z).
+- The first 8 listings were Soltara (CR), Psychonauta (PE), Taita Inti (SE), Arkana (PE), MexiSoul (MX), Ananda Lodge (CR), From Gaia for You (ES) and Acsauhaya (NL). Only the Acsauhaya listing text mentions integration, so "the ones checked all include integration" is **not supported**.
+- Beckley Retreats and MycoMeditations were not re-verified in this run.
+- Almost all listings are outside the US, and many are ayahuasca retreats. That means jurisdiction and brand-fit questions.
+
+### niche-com-r-psychedelictherapy: KEEP. Still UNVERIFIED.
+
+- Live Reddit `about.json` returned **HTTP 403** for all 8 subreddits tried (22:16:31Z).
+- The mirror shows "35k members", +4k per year (11.4%), last updated 2026-09-18. Source: https://gummysearch.com/r/PsychedelicTherapy/ (22:16:31Z).
+- The mirror also lists r/PsilocybinTherapy (15k), r/PsychedelicStudies (46k) and r/PsychedelicMedicine (8k) as adjacent subreddits. These are unverified.
+- Rules: each subreddit has its own self-promotion rules, plus the Reddit sitewide spam rules. Answer questions only, with no link in the first posts.
+
+### PR tools (niche-pr-sos, niche-pr-qwoted, niche-pr-featured): KEEP
+
+- **SOS:** "This list does not cost a dime" (paraphrased); "Up to three times a day"; pitching a reporter off topic "even once" gets you removed, "No exceptions, no appeals." Source: https://www.sourceofsources.com/ (~22:16:45Z).
+- **Qwoted:** Free "2/mo", "2 Hour Delay"; Pro "$149/mo", 35 pitches. Source: https://www.qwoted.com/pricing/ (~22:16:50Z).
+- **Featured:**
+  - Free tier: "2–3 media opportunities per week".
+  - Lite: $29/mo (billed annually, $348). Pro: $79/mo ($948).
+  - Source: https://featured.com/pricing (~22:16:50Z).
+  - `terkel.io` redirects to `featured.com` (22:16:49Z).
+- **Lead value:** low–medium. Psychedelic journalist queries are rare, so set keyword alerts.
+
+### niche-pr-hb2bw and niche-evt-wonderland: DEAD, confirmed
+
+- `helpab2bwriter.com` redirects to `mentionmatch.com`, which says it is "launching soon" (22:16:49Z).
+- `wonderlandmiami.com` now shows a WordPress.com nightlife site titled "Wonderland Miami" (22:16:49Z).
+
+### niche-pub-doubleblind: KEEP, verify in a browser
+
+- Still HTTP 202 with a 168-byte bot-check body (22:11:55Z); WebFetch saw an empty page.
+- Confirmed as a Horizons Community Ally ("print magazine and media company"). Source: https://horizonsconference.org/partners (22:14:24Z).
+
+### niche-evt-ps2027: KEEP. Status should be LIVE.
+
+- The MAPS homepage says "PS27 registrations are now live" and links to psychedelicscience.org. Source: https://maps.org/ (~22:13:25Z).
+- psychedelicscience.org itself returned 202 (bot check, 22:13:41Z), so dates, city, and the call for proposals (CFP) or exhibitor pages are UNVERIFIED.
+- **Competitor note:** the same homepage offers a MAPS "Integration Guide" in exchange for an email signup. A free integration lead magnet from the biggest brand in the field sets the bar for the one Maya offers.
