@@ -92,3 +92,33 @@ Header (10): `/ /books /belief-inquiry /nervous-system-reset /integration-reflec
 | psilocybinintegrationguide.com, www. | 308 -> www.mayaallan.com |
 | mayaallan.vercel.app | 308 -> www.mayaallan.com |
 | mayaallan-mallan.vercel.app, mayaallan-git-main-mallan.vercel.app | 302 -> vercel.com/sso-api (get_project: ssoProtection all_except_custom_domains) |
+
+## 4. Cookie consent and tracking — before vs after
+
+The Playwright profile arrived with `localStorage.mayaallan_consent_v1="rejected"` from an earlier run, so no banner showed at 18:18:49Z. I removed it (later also the cookies and sessionStorage) to simulate a first-time visitor.
+
+| UTC | Action | Requests (non-static, excl. RSC prefetch) | Storage / cookies |
+|---|---|---|---|
+| 18:19:29Z | Fresh visitor, home | document, 2 fonts, CSS, 2 /_next/image, 12 JS, 18 ?_rsc prefetches. **No analytics, no third party.** | Banner role=dialog "Privacy choices ... anonymous visitor IDs and UTM-based campaign attribution" with **Reject analytics** / **Accept all** + privacy link |
+| 18:19:44Z | **Accept all** | GET /9de18cd67c0a6252/script.js 200 (Vercel Analytics on an obfuscated first-party path, cache HIT). POST /api/marketing/visitor 200 {"ok":true}. POST /9de18cd67c0a6252/view 200 (text/plain, len 2, MISS, 18:19:46Z) | consent=accepted; cookies ma_visitor_id, ma_session_id, ma_first_touch, ma_last_touch (names only) |
+| 18:20:24Z | Fresh, /books, **Reject analytics** | none | consent=rejected, 0 cookies, no analytics script |
+| 18:20:59Z | Book page while rejected | POST /api/marketing/event 200, body {eventName:"book_viewed", path, properties:{book_id, slug, title, direct_sale_enabled:true, ebook_price:9.99}}, no cookie | sessionStorage ma_book_viewed:1 (once per session) |
+| 18:36:06Z | Footer **Cookie preferences** | - | banner reappears; stored consent cleared |
+| 18:36:16-26Z | Accept, then client-side link to /integration-journal | script.js 200; /view 200 for /practices **and again** for the route change | consent=accepted, but **no ma_* cookies and no /api/marketing/visitor** (ui-13) |
+| 18:37:02-21Z | Fully fresh: home (undecided) -> book page (undecided, book_viewed sent) -> Accept on page 2 | script.js, POST /api/marketing/visitor 200, /view 200 | 4 ma_* cookies, ma_bootstrapped set |
+
+- No requests at any time to va.vercel-scripts.com, /_vercel/insights or vitals.vercel-insights.com. Analytics runs from first-party `/9de18cd67c0a6252/`. No Google, Meta or other trackers.
+- The CSP (response header on /api/marketing/event) allows script-src self, PayPal and va.vercel-scripts.com, and connect-src self, *.supabase.co, PayPal and vitals.vercel-insights.com. It sets frame-ancestors 'none'. **No CSP violation in any console.**
+- Web Analytics: the orchestrator reports `web_analytics_not_enabled` (17:48Z; not re-read, and `get_project` does not expose the flag). PR #57 "feat(analytics): count every visitor, and show where they came from": **open, merged=false**, created 2026-09-07T02:58:16Z, updated 2026-09-07T03:49:42Z (gh api 18:38:14Z).
+- My test footprint, to exclude from stats: 2 visitor registrations (18:19:44Z, 18:37:21Z), 4 /view beacons (18:19:46Z, ~18:36:16Z, ~18:36:26Z, ~18:37:21Z), 2 book_viewed events (18:20:59Z, 18:37:11Z), UA Chrome/153 Windows.
+
+## 5. Tools and buy buttons (client-side only)
+
+| Item | Observed live | Stopped before |
+|---|---|---|
+| Belief Inquiry / Nervous System Reset / Integration Reflection | Textarea + 3 prompt chips + icon "Send message" button that stays **disabled** while empty. 0 API requests on load. Footer hidden, header visible. | Typing/sending, and clicking the prompt chips (they may send immediately) — AI submission |
+| Integration Journal | Phase radio "integration" selected client-side (18:27:32Z) with no console output and no request | "Download free PDF" (form submit, server-side PDF) |
+| Contact | Form renders; honeypot hidden correctly | "Send" |
+| Home newsletter | Email + honeypot + "Subscribe" (y~4452) | "Subscribe" |
+| Buy Ebook with PayPal · $9.99 | Rendered, visible, enabled, type=submit. Desktop 265x40 at y=2962; mobile y=4778. No paypal.com request before click (SDK not preloaded). | Click (payment) |
+| Retailer links | 9 visible (Amazon x3, Google Play, Barnes & Noble, Bookshop, Waterstones, bokus, AbeBooks), target=_blank rel="noopener noreferrer nofollow sponsored" | Opening them |
