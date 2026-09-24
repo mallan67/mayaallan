@@ -75,3 +75,32 @@
 | 33 | Reddit | community | **unverified**: search.json returned 403 twice | n/a | n/a | 18:32:38Z |
 | 34 | Wikidata / Library of Congress | knowledge graph / catalogue | **none**: Wikidata "Maya Allan" 0 entities, "Psilocybin Integration Guide" 0; LoC ISBN 9798994148839 0 results | n/a | n/a | 18:34:18Z-18:34:29Z |
 | 35 | https://github.com/mallan67/mayaallan/pull/54 | public dev PR, surfaced by WebSearch for the book + author query | yes (anonymous GET 200) | links to the repo, not the site | internal dev text appears in the book SERP | WebSearch 18:19:09Z-18:19:42Z (2 queries); gh api 18:33:19Z |
+
+## 4. Search-engine observations (appearance of the name, book and domains)
+
+| Query | Engine / read | Result |
+|---|---|---|
+| "Maya Allan" author | WebSearch, 18:19:09Z-18:19:42Z | mayaallan.com and /about present (positions 6-7 of 9); the rest are other Mayas |
+| "Psilocybin Integration Guide" "Maya Allan" | WebSearch, same bracket | 3 Amazon URLs first, then **GitHub PR #54**, then mayaallan.com and /about |
+| mayaallan.com | WebSearch, same bracket | Pinterest mayaallan2 first, then mayaallan.com; no third-party page mentions the domain |
+| "Psilocybin Integration Guide" 40 Real Scenarios | WebSearch, same bracket | 3 Amazon URLs; mayaallan.com **not** in the top 9 |
+| "Maya Allan" goodreads psilocybin | WebSearch, same bracket | Amazon x3, GitHub PR #54, mayaallan.com, /about; the Goodreads book page is **not** returned |
+| "Maya Allan" podcast OR interview psychedelic integration | WebSearch, same bracket | no interview or podcast with her; only her own site and Amazon |
+| psilowire.com | WebSearch, same bracket | **no result for the domain** (only look-alikes) |
+| psilocybinintegrationguide.com | WebSearch, same bracket | **no result for the domain** |
+| "Maya Allan" | Bing curl 18:27:27Z and Bing WebFetch 18:35:50Z-18:36:06Z | **#1 mayaallan.com, #2 mayaallan.com/books**, #3-#10 real-estate profiles (LinkedIn /in/mayaallan, Zillow, realtor.com, LoopNet, mallannyhomes.com, Homes.com, StreetEasy, Citysnap); about 26,500 results |
+| "Maya Allan" psilocybin | Bing curl 18:27:09Z | site home, site book page, Google Books, Amazon hardcover, barwebooks (dead), Amazon.ca Kindle, ThriftBooks |
+| site:mayaallan.com | Bing curl 18:27:10Z | about 36 results |
+| "mayaallan.com" -site:mayaallan.com | Bing curl 18:27:10Z (NYT Connections noise); Bing WebFetch 18:28:44Z-18:29:13Z (St. Lukes noise, about 50) | **no third-party page mentioning the domain** (2 observations) |
+| later Bing queries | Bing curl 18:27:24Z-18:27:53Z | Bing started returning generic "Maya" (Autodesk/civilization) results. Treated as throttling and **not** used as evidence |
+| DuckDuckGo / Mojeek / Brave / Yahoo | 18:26:59Z, 18:28:06Z, 18:28:24Z, 18:28:39Z | bot challenge / captcha / JS-only / empty body: **no data** |
+
+**Wayback Machine** (CDX API, 18:29:13Z-18:29:56Z): mayaallan.com has 89 unique URLs, all first captured 2026-01-30/31. The newest homepage capture is 20260131005213, so nothing has been captured in about 8 months. psilowire.com has 0 captures and psilocybinintegrationguide.com has 0.
+
+**Domain redirects** (curl, 18:19:42Z-18:19:45Z and 18:35:49Z-18:35:50Z): psilowire.com, www.psilowire.com, psilocybinintegrationguide.com, www.psilocybinintegrationguide.com, mayaallan.com and mayaallan.vercel.app all return **308 to https://www.mayaallan.com/** and keep the path (for example /scenarios becomes /scenarios). http://mayaallan.com returns 308 to https first.
+
+**What the site itself points to** (curl, 18:18:55Z-18:19:09Z, 18:34:41Z-18:34:43Z):
+- Person/Organization sameAs = only https://www.instagram.com/maya.allan66/.
+- On /, /about, /contact, /books and /media, **no visible link to any profile**: Instagram appears only inside script (JSON-LD / RSC) text.
+- The book page links retailers: a.co/d/hRppkCZ (goes to the Kindle B0G765BZDL), Bookshop, Google Play, AbeBooks, B&N, Bokus and Waterstones. It does **not** link Goodreads visibly (sameAs only) and does **not** link the Amazon author page.
+- Book JSON-LD identifier = ASIN B0G7JWDJYQ (the hardcover), with **no isbn**. sameAs mixes the hardcover (Amazon), paperback (B&N, Bookshop, Abe, Thrift), Kindle (Goodreads) and ebook (Google Play).
