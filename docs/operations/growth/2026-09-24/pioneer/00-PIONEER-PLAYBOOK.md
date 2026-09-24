@@ -91,3 +91,25 @@ Why it should work: (1) it is the only plan all three judges rated as able to pr
 **Day-30 scorecard (planning targets, not forecasts):** 25+ circle registrations across 2 sessions; 10+ ARC readers and 10+ honest reviews; 60 centers and programs contacted, 3+ yes; capture live on 8+ pages; 20 scenario pages live; 10 podcast pitches out; every lead attributed by `utm_source` or `source` (GA4 event names belong to the parallel measurement workflow).
 
 **If time runs short** (Maya has ~8-10 hours a week for this): keep M0, M2, M3, M4 and M7; pause the rest.
+
+## 3. The idea bank
+
+Every viable, live idea from the 6 maps and the 5 strategies, de-duplicated and grouped. Items marked UNVERIFIED were not confirmed live by any worker; check them before spending money or time. Dead or restricted items are in section 6, not here. The UTM and sameAs rules are in section 4.
+
+### 3A. Google network
+
+| # | Action | Venue | Link / tag | Owner | Effort | Lead | Source |
+|---|---|---|---|---|---|---|---|
+| A1 | Domain property: submit /sitemap.xml (38 URLs), switch on inclusion in generative AI features, add both spare domains to watch their 308s | Search Console | organic | MAYA | 1h | M | goog-01, [S30] |
+| A2 | Read the Generative AI performance report monthly, per URL | Search Console | - | MAYA | 30m a month | measure | goog-02, [S31] |
+| A3 | URL Inspection > Request indexing, for new scenario pages and the book page only | Search Console | - | MAYA | 5m a page | L | goog-03 |
+| A4 | Google Books: test a larger preview (20-100% allowed); link the site to `books.google.com/books?vid=ISBN9798994148891`; print `psilocybinintegrationguide.com/book` in the front matter | Google Books full-text search | no link from Google; front-matter vanity URL | MAYA | 1h | M | goog-09 |
+| A5 | Play promo codes: up to 3 campaigns a month x 5,000 codes, one campaign per audience, handed out only on `/free-copy/<campaign>` | Google Play Books | `utm_source=google-play&utm_medium=promo-code&utm_campaign=<audience>` | MAYA + PR | 0.5d | H | goog-10, SE 6 |
+| A6 | Fix the split author entity ("MAYA. ALLAN" on the print record) and the second Google Books bio | Google Books / KDP metadata | - | MAYA | 1h | L | goog-06, web-googlebooks |
+| A7 | Upload the finished audiobook to Play; decide separately on an auto-narrated interim edition (52% share) | Play Books Partner Center | - | MAYA | 0.5d | M | goog-11, goog-12 |
+| A8 | YouTube channel (month 2): up to 14 profile links (circles, free copy, journal); scenario talks and consented circle excerpts, educational only | YouTube | `/yt/<n>` -> `utm_source=youtube&utm_medium=video&utm_campaign=scenario-<n>` | MAYA + CONTENT | 3-4h a week | M | goog-15 |
+| A9 | Shorts cut from consented circle recordings, routed to the channel links | YouTube Shorts | same | CONTENT | 1h a short | L | goog-16 |
+| A10 | "Integration Scenarios" RSS podcast submitted in YouTube Studio once the audiobook master exists (check excerpt rights before any exclusive audio deal) | YouTube Music | `utm_source=podcast-rss&utm_medium=audio&utm_campaign=scenario-<n>` | MAYA | 1d + 30m an episode | M | goog-17 |
+| A11 | An indexed on-site watch page per video with VideoObject markup, including the new `creator` property | Google video results | own URL | PR | 1h a video | M | [S32], [S33] |
+| A12 | A 1200x675 hero image per post (max-image-preview:large is already live) | Google Discover | organic | CONTENT | 10m a post | L | goog-20, [S7] |
+| A13 | Event JSON-LD with a street address, for in-person events only (online-only events are excluded) | Event results, Google Maps | own URL | PR | 2h | L-M | goog-23, [S34] |
