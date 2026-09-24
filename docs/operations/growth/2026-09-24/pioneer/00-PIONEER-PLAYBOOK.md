@@ -113,3 +113,28 @@ Every viable, live idea from the 6 maps and the 5 strategies, de-duplicated and 
 | A11 | An indexed on-site watch page per video with VideoObject markup, including the new `creator` property | Google video results | own URL | PR | 1h a video | M | [S32], [S33] |
 | A12 | A 1200x675 hero image per post (max-image-preview:large is already live) | Google Discover | organic | CONTENT | 10m a post | L | goog-20, [S7] |
 | A13 | Event JSON-LD with a street address, for in-person events only (online-only events are excluded) | Event results, Google Maps | own URL | PR | 2h | L-M | goog-23, [S34] |
+| A14 | ProfilePage on /about; one Person `@id` linking today's 3 unlinked records; expand sameAs as each profile is claimed | Search, Knowledge Graph | - | PR | 0.5d | M | goog-24, web-schema-graph, [S8] |
+| A15 | Claim the Knowledge Panel only after YouTube and Search Console exist and a panel actually shows | Google Search | - | MAYA | 1h | L | goog-06 |
+| A16 | Add YouTube and Instagram as Search Console platform properties once they are active | Search Console | - | MAYA | 30m | L | [S35] |
+| A17 | Review snippets for the book from genuine on-page reviews only (no aggregated Amazon or Goodreads ratings; disclose any incentive) | Google Search | - | PR | 0.5d | M (after M4) | [S36] |
+| A18 | Disclosed, genuinely useful answers in the threads Google's Forums filter shows for "psilocybin integration reddit" | Google Forums filter | `utm_source=reddit&utm_medium=community&utm_campaign=<sub>` | MAYA | 30m a day | L | [S33] |
+| A19 | Alerts on "Maya Allan", "Psilocybin Integration Guide" and "Back Home Circle" | Google Alerts | - | MAYA | 10m | L | goog-31 |
+| A20 | Keyword Planner (an Ads account with no spend) to word scenario page titles | Google Ads tools | - | MAYA | 1h | L | goog-30 |
+| A21 | Trends UI checks on the query family; apply for the Trends API alpha (values UNVERIFIED this run) | Google Trends | - | MAYA | 30m | L | goog-29 |
+| A22 | GA4 / Tag Manager / Data Studio (formerly Looker Studio) using the UTM standard in section 4 | Google Analytics | - | PR | measurement workflow | measure | goog-34, [S37] |
+| A23 | Public `/events.ics` feed + "Add to Google Calendar" link on every circle | Google Calendar | - | PR | 2h | L | BHC M2 |
+| A24 | Alt text and descriptive file names on scenario images; watch the new multimodal report | Google Images / Lens | - | CONTENT | ongoing | L | goog-26, [S38] |
+| A25 | Preferred-sources deep link in the newsletter footer (low value for a non-news site) | Google Search | - | PR | 10m | L | goog-08, [S39] |
+| A26 | Reader Revenue Manager 1-click newsletter sign-up, only if Publisher Center accepts the site (eligibility UNVERIFIED) | Google News | - | MAYA | 1h | L | [S40] |
+
+### 3B. Other search engines and vertical search
+
+| # | Action | Venue | Link / tag | Owner | Effort | Lead | Source |
+|---|---|---|---|---|---|---|---|
+| B1 | Verify Bing Webmaster Tools, submit the sitemap, read the AI Performance report (the only engine that reports AI citations) | Bing, Copilot, DuckDuckGo, Yahoo | organic | MAYA | 1h | H | eng-bing, [S41] |
+| B2 | IndexNow key file + a ping on every deploy (Bing, Naver, Seznam, Yandex, Yep; up to 10,000 URLs per POST) | IndexNow | - | PR | 2h | M | eng-indexnow, [S41] |
+| B3 | DuckDuckGo and Yahoo follow Bing; the book page is already #1 on Bing and DuckDuckGo for its title | DuckDuckGo, Yahoo | organic | - | 0 | M | eng-duckduckgo, SE |
+| B4 | Brave has no submission path; earn links (press, podcasts, directories) | Brave Search | organic | - | 0 | L | eng-brave |
+| B5 | Applebot is already allowed; there is nothing to submit | Spotlight, Siri, Safari | organic | - | 0 | L | eng-apple |
+| B6 | Amazon: 7 keywords, 3 categories, first reviews (changes take up to 72h) | Amazon search, Alexa for Shopping | back-matter `/book` | MAYA | 1d | H | vert-amazon |
+| B7 | Amazon Author Central: paste the one bio (whether a website link is possible is UNVERIFIED) | Amazon author page B0G76975ST | UNVERIFIED | MAYA | 1h | M | web-amazon |
