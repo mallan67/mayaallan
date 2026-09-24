@@ -52,3 +52,65 @@
 | goog-38 Scholar | no | yes | no lead value |
 | goog-39 Google Podcasts | no | yes (dead) | shutdown dates sourced |
 | goog-40 Discover Follow | no | yes (dead) | stale help text remains |
+
+## 2. Live site state (read 18:55Z-19:16Z)
+
+- **Sitemap:** 38 `<loc>` entries (18:55:11Z).
+  - `/scenarios` links **one** scenario, `/scenarios/ego-dissolution` (18:55:32Z). 39 of the book's 40 scenarios are not on the web.
+  - `/blog` has 5 posts.
+- **DNS:**
+  - mayaallan.com has a `google-site-verification` TXT (18:55:11Z).
+  - psilowire.com and psilocybinintegrationguide.com have only an SPF TXT (18:55:24Z).
+  - All four hosts return 308 to `https://www.mayaallan.com/`.
+- **Robots meta:** `max-image-preview:large` is present in the googlebot meta (18:55:58Z).
+- **Blog posts (19:15:24Z-19:15:33Z):**
+  - no `og:image`, no `twitter:image`, no `<img>`, and no `image` in the Article JSON-LD
+  - `/blog/<slug>/opengraph-image` returns 404
+  - `Article.author.url` is the homepage
+- **/about:** Person, Organization, WebSite, FAQPage and BreadcrumbList. No ProfilePage. sameAs is only Instagram (18:55:46Z).
+- **Book page:**
+  - The Book JSON-LD has no `offers` or `isbn`; the only identifier is ASIN B0G7JWDJYQ (18:56:19Z).
+  - sameAs lists Amazon, B&N, Bookshop, ThriftBooks, AbeBooks, Goodreads and Play.
+  - og:image is 1200x630.
+- **/events:** no Event JSON-LD.
+- **Homepage:** no gtag, GTM or G- id (19:16:41Z).
+- **RSS:** feed paths return 404.
+- **Instagram @maya.allan66:** 18 followers, 3 posts (19:05:06Z).
+- **YouTube:** `@mayaallan`, `@maya.allan66`, `@MayaAllanAuthor` and `@mayaallanauthor` all return 404 (19:01:38Z).
+
+## 3. Item findings
+
+**goog-01 KEEP.**
+- The TXT token and the 38-URL sitemap are confirmed.
+- Adding the redirect domains needs new TXT records, and they will show almost no data (308 to home). Low priority.
+- The real organic gap is content: 1 of 40 scenario pages is live.
+- Verification status is UNVERIFIED.
+
+**goog-02 KEEP, lead low.**
+- The page says: "As of August 31, 2026, we've rolled out these insights to all websites worldwide."
+- Coverage is AI Overviews and AI Mode. The page describes impressions only; "click" never appears.
+- If the report is missing, the page gives two causes: not enough impressions, or the site is **excluded from Search generative AI features**. Check that the site is included.
+- **Source:** support.google.com/webmasters/answer/16984139 (18:56:27Z).
+
+**goog-03 KEEP.**
+- "Request indexing" and a per-property inspection limit are confirmed.
+- **Source:** answer/9012289 (18:56:36Z).
+
+**goog-04 DROP.**
+- "only ... JobPosting or BroadcastEvent embedded in a VideoObject".
+- **Source:** indexing-api quickstart (updated 2026-07-16; 18:56:50Z).
+
+**goog-05 DROP.**
+- Eligibility is "a physical location that customers can visit, or travels to customers"; virtual offices are ineligible.
+- A practitioner is eligible if "contacted directly at the verified location during stated hours".
+- The literal phrase "online-only" is not on the page; the rule is implied.
+- **Source:** support.google.com/business/answer/3038177 (18:57:01Z-18:57:18Z).
+
+**goog-06 KEEP, lead low.**
+- Sign-in keys are confirmed: YouTube, Search Console, Twitter, Facebook.
+- The page adds: "Not all knowledge panels are claimable as of now". Panels are automatic, and Google "doesn't manually create or delete Knowledge Panels".
+- **Google Books print record confirmed:**
+  - ISBN 9798994148839: author "MAYA. ALLAN", publisher "Amazon Digital Services LLC - Kdp", 290 pages.
+  - Ebook ISBN 9798994148891: "Maya Allan", 289 pages, "Selected pages".
+  - Both read 18:58:50Z-18:58:52Z.
+- **Sources:** knowledgepanel/answer/7534902 and /7534842 (about 18:57Z).
