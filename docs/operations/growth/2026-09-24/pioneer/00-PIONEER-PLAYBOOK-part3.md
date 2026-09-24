@@ -98,3 +98,35 @@ Day 1 = Fri 2026-09-25. Day 14 = Thu 2026-10-08, the first circle and the Colora
 - **IN-06** `06-open-web-entity-links.md` + `-part2.md` (blobs f2beedbc, e2d5f448; read 18:24Z-19:08Z).
 - **IN-07** Strategies: `strategy-everywhere.md` (419b0974), `strategy-community.md` (93b45738), `strategy-ecosystem.md` (503732e7), `strategy-data.md` (5453a087), `strategy-category.md` (12dda03d); their live reads 22:52Z-23:08Z.
 - **IN-08** Judges 1-3: scores and verdicts relayed to this synthesis (their live checks 23:09:48Z-23:13:43Z); not saved as a file in this folder. The six `*.check.md` files in the folder were not read by this synthesis.
+
+### 7.3 Sources carried from the maps, strategies and judges (read earlier on 2026-09-24 by the worker named; not re-read by this synthesis)
+
+- **S20** NSDUH 2024 and RAND (Sept 2025) usage figures, as carried by IN-01 (primary URLs listed in that file).
+- **S21** https://www.oregon.gov/oha/PH/PREVENTIONWELLNESS/Documents/OPS-Data-File-2026-Q2.csv - posted 2026-09-04; read by DATA 22:55:49Z-22:56:29Z, ECO 22:56:23Z, BHC 22:59:35Z-22:59:54Z (1,220 clients; 525 other US + 20 abroad; 470 columns; 493 of 834 aged 45+; 131 aged 65-79; 17 end-of-life visits).
+- **S22** ORS 475A.360 ("may, but need not, participate") - read by ECO 22:55:32Z; URL in strategy-ecosystem.md.
+- **S23** https://www.oregon.gov/oha/PH/PREVENTIONWELLNESS/Documents/Active-Psilocybin-Training-Programs.pdf - created 2026-09-23; read 22:16:05Z (niche map) and 22:54:04Z (ECO).
+- **S24** https://nmd.colorado.gov/ (46 healing centers as of 9-18-26; read 18:30:16Z) and https://nmd.colorado.gov/third-party-educational-resources (public form, followed links; read 19:11:49Z, 22:54:37Z, 22:55:07Z).
+- **S25** https://www.nmhealth.org/about/mcpp/ - New Mexico program due by 2026-12-31; read 18:30:38Z.
+- **S26** https://www.sec.gov/Archives/edgar/data/1816590/000181659026000059/q22026pressrelease.htm - Compass Q2 2026 release (2026-08-05; read 19:03:05Z-19:03:16Z); SEC 8-K of 2026-07-07 via IN-01.
+- **S27** https://www.marijuanamoment.net/new-jersey-governor-signs-bill-creating-psilocybin-therapy-pilot-program-and-allocating-6-million-to-psychedelic-treatment-effort/ - 2026-01-21 (secondary); read ~19:13Z.
+- **S28** https://dpo.colorado.gov/NaturalMedicine - stakeholder meeting 2026-10-02, hearing 2026-10-08 9:00 AM MDT; read 22:18:15Z (niche map) and 22:58:48Z (DATA); HTTP 403 to Judge 3 at 23:11:26Z.
+- **S29** https://maps.org/event-calendar-submission/ ; https://maps.org/take-action/events/ (22:13:33Z); https://maps.org/integration-station/ (19:17:02Z); https://virtualtrip.maps.org/product/maps-integration-workbook-bundle-20-pack/ (19:17:53Z).
+- **S30** https://support.google.com/webmasters/answer/16984139 - generative-AI inclusion setting; read 18:56:27Z.
+- **S31** https://developers.google.com/search/blog/2026/06/gen-ai-performance-reports - read 19:02:52Z (report for all sites from 2026-08-31).
+- **S32** https://developers.google.com/search/docs/appearance/video - read 19:14:46Z.
+- **S33** https://developers.google.com/search/updates - "Perspectives was renamed to Forums"; VideoObject `creator` (2026-09-24); read 19:05:48Z and 19:08:20Z.
+- **S34** https://developers.google.com/search/docs/appearance/structured-data/event - updated 2026-09-08; read 19:01:31Z.
+- **S35** https://support.google.com/webmasters/answer/17148418 and https://developers.google.com/search/blog/2026/07/search-console-social-video-platforms - read 19:13:54Z and 19:02:52Z.
+- **S36** https://developers.google.com/search/docs/appearance/structured-data/review-snippet - read 19:13:11Z (search gallery updated 2026-06-15).
+- **S37** https://lookerstudio.google.com -> https://datastudio.google.com - read 22:54:38Z-22:54:55Z (DATA).
+- **S38** https://developers.google.com/search/blog/2026/09/web-multimodal-in-sc - read 19:02:52Z.
+- **S39** https://developers.google.com/search/docs/appearance/preferred-sources - updated 2026-09-18.
+- **S40** https://support.google.com/news/publisher-center/answer/11449914 and https://newsinitiative.withgoogle.com/subscriptions/ - read 19:14:32Z and 19:14:06Z.
+- **S41** Bing AI Performance report (launched 2026-02-10) and IndexNow (5 participants; 10,000 URLs per POST), as read by IN-03 at 18:25:10Z-18:26:03Z; URLs in that file.
+- **S42** https://www.eventbrite.com/d/online/psychedelic-integration/ (19:01:10Z; ~22:54Z) and https://www.eventbrite.com/organizer/pricing/ (~19:05Z).
+- **S43** https://www.meetup.com/find/?keywords=psychedelic%20integration - read 22:18:29Z.
+- **S44** https://www.listennotes.com/about/ and https://podcastindex.org/ (19:01:10Z); Apple Podcasts search API, read 22:54:42Z-22:54:47Z (9 shows, 7 active).
+- **S45** https://www.draft2digital.com/partners/ and https://www.draft2digital.com/faq/ - read 19:00:01Z.
+- **S46** https://www.psychedelics.com/contribute/ (22:18:15Z) and https://ask.psychedelics.com/ (~22:17:45Z).
+- **S47** https://www.wikidata.org/wiki/Wikidata:Notability - read 18:59:14Z-19:00:01Z.
+- **S48** https://developers.openai.com/apps-sdk/deploy/submission and https://help.openai.com/en/articles/8554407-gpts-faq - read 19:01:41Z-19:02:00Z.
