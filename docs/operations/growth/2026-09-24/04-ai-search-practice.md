@@ -168,3 +168,35 @@
 - **Owner:** owner-account + content. **Effort:** M–L.
 - **Expected impact:** Earned-media bias (Chen et al., 2025-09-10). "Best of" pages make up 43.83% of the pages ChatGPT uses for product/service queries (Allsopp via Ahrefs, 2026-03-13). Self-promotional lists lost 29–49% visibility and push recommendations to competitors (Lily Ray, 2026-02-03 and 2026-06-17).
 - **Measure:** Count of third-party pages naming the book (log the URLs), referrals from them, and `ai-12` mentions.
+
+### ai-07: Reader reviews on Goodreads and Amazon (currently 0)
+- **Steps:**
+  1. Maya asks existing buyers and newsletter readers, by email after purchase, for an honest rating. No incentives; Amazon review rules apply.
+  2. Run a Goodreads giveaway or ARC outreach if the budget allows.
+  3. Claim and fill the Goodreads author profile and Amazon Author Central with the same one-line bio as the site.
+- **Owner:** owner-account. **Effort:** M.
+- **Expected impact:** **Inference, not measured this session.** Zero ratings leaves no third-party opinion signal for "book on X" answers. It supports `ai-06`, because list authors check reviews.
+- **Measure:** Goodreads and Amazon rating counts, re-checked monthly.
+
+### ai-08: One focused, answer-first page per question (scenarios and FAQ)
+- **Steps:**
+  1. Publish more of the 40 book scenarios as individual `/scenarios/<slug>` pages. Only 1 is live. Use the same sourced, labelled standard as PR #45 and the claims audit of PR #51.
+  2. Each page opens with a 2–3 sentence **direct answer** that names specific entities (studies, concepts, the book).
+  3. Then give detail, "How to read this" and "About the author", with a visible *Updated* date. Update only when the content really changes.
+  4. Keep pages short and single-topic, not "ultimate guides".
+  5. Link each page from the book page, /faq and /glossary.
+- **Owner:** content + code-pr (the template exists). **Effort:** M overall, about S per page.
+- **Expected impact:** 44.2% of citations come from the first 30% of a page, with 20.6% entity density (Indig via Ahrefs, 2026-03-13). Focused pages beat guides (Growth Memo, 2026-04-13). Guides/tutorials have the best cross-engine overlap (2026-05-11). ChatGPT prefers fresher pages (Ahrefs, 2025-07-28). **None of this helps if the page is not indexed (`ai-03`) or not mentioned anywhere (`ai-04`–`ai-06`).**
+- **Measure:** Per-page Search Console impressions, Bing AI citations per URL, AI-referral landing pages (`ai-01`), and `ai-12` citations.
+
+### ai-09: Server-render the explanatory text on the tool pages
+- **Steps:** A `code-pr` puts a server-rendered explanation (what the tool is, who it is for, how it relates to the book, the non-clinical note) in the initial HTML of `/integration-reflection`, `/belief-inquiry`, `/nervous-system-reset` and `/integration-journal`. The interactive part can stay client-side.
+- **Owner:** code-pr. **Effort:** S–M.
+- **Expected impact:** The main AI crawlers do not run JavaScript (Vercel/MERJ, 2024-12-17). Right now these pages serve ~1.2k chars. Free tools are a common "what can I use for X" answer, but that effect is **not measured for this niche**.
+- **Measure:** `curl -A OAI-SearchBot` shows the text, and the tool URLs appear in Bing AI Performance.
+
+### ai-10: Email capture where AI visitors actually land
+- **Steps:** A `code-pr` adds one contextual email offer (for example a printable integration-reflection worksheet via the existing Resend flow) to the book page, /faq, /glossary, blog posts, scenario pages and the tool pages. Only the homepage has one today.
+- **Owner:** code-pr. **Effort:** S.
+- **Expected impact:** AI visitors land deep and stay longer (9m19s vs 5m33s, SE Ranking 2026-06-18). Pages with no capture turn every such visit into zero leads. Conversion evidence is mixed (Kaiser & Schulze vs Ahrefs), so this is about *capturing* visits, not assuming a high conversion rate.
+- **Measure:** Signups by landing page and first-touch source (joins `ai-01`).
