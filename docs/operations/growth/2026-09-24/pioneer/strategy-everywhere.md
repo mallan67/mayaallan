@@ -207,3 +207,38 @@ The engineer's rule throughout: every venue gets its own tracked door, every new
 | BookSirens, Hidden Gems | paid listing | UNVERIFIED; paid links rel=sponsored | <service> / arc | no | book-arc-engine |
 | Reddit | own disclosed account | rel UNVERIFIED | reddit / community | no | niche-com-r-psychedelictherapy |
 | Substack, Pinterest, Bluesky (later) | publication; claim by tag or DNS; DNS handle | Substack followed in body; others UNVERIFIED | <venue> / newsletter or profile | yes if used | web-substack, web-pinterest, web-bluesky |
+
+## 6. 30-day calendar (2026-09-25 to 2026-10-24)
+
+- Week 1 (Sep 25-Oct 1): PRs for moves 1 and 2; KDP, Goodreads and Google Books fixes (4); /arc page and BookSirens (5); first Play promo campaign (6); first Scenario Circle listed (10); Colorado NMD form (9); scenarios 1-10 (3); forum answers daily (15).
+- Week 2 (Oct 2-8): Colorado stakeholder meeting Oct 2 and written comment by Oct 8 (9); /kit page and first 10 centers (7); /press page and first 5 podcast pitches (12); scenarios 11-20; YouTube channel and first 5 Shorts (11).
+- Week 3 (Oct 9-15): casebook outreach (8); Oregon Returners report live and pitched (13); podcast RSS submitted; scenarios 21-30; Horizons week meetup with an ally, Oct 15-17 (10).
+- Week 4 (Oct 16-24): scenarios 31-40; D2D and library channels (14); review count against the goal; BookBub decision; 30-day readout by utm_source and lead_type.
+- 30-day goals (goals, not forecasts): 40 of 40 scenario pages live and indexed; 25 honest reviews; 20 center or program conversations; 4 circles held; 100 opt-in leads with a known utm_source.
+
+## 7. Months 2-6: how it compounds
+
+- Month 2: podcast episodes air; BookBub or Fussy Librarian deal if accepted; Kindle Deals nomination (book-kindle-deals); first centers report scans.
+- Q4 2026: Oregon's next quarterly file refreshes move 13. New Mexico's Medical Psilocybin Program is due to start by 2026-12-31: offer the free kit and educational material to the program and clinics before launch (mkt-03, mkt-ws-06, niche-dir-nm-mpp).
+- Audiobook launch: choose ACX, Voices by INaudio, Spotify for Authors, ElevenReader or Play audiobooks (book-acx, book-voices-inaudio, book-spotify-authors, goog-11); the podcast trailer points to it.
+- H1 2027: COMP360 launch expected if the FDA approves (map 01): publish the non-clinical "between sessions" companion and clinician one-pager first (mkt-04, mkt-ws-05); watch the Psychedelic Science 2027 call for proposals (niche-evt-ps2027, UNVERIFIED).
+- Entity: claim the knowledge panel once the entity is consistent (goog-06); Wikidata only after an independent reference (web-wikidata). A Google Search profile needs 10,000 followers on one platform (web-g-profile): not a 6-month goal.
+
+## 8. Dead, closed or not eligible (shutdown and policy sources are in maps 02-06)
+
+Google Podcasts and Podcasts Manager (DEAD); FAQ rich results (removed 2026-05-07); Discover Follow (DEAD); Book Actions for single authors, Indexing API for blog pages, Business Profile for an online-only author, Merchant Center for ebooks, Ad Grants (not eligible); Google Ads for drug-adjacent content (restricted, mkt-x-01); subredditstats.com (DEAD, mkt-x-03); the old MAPS Integration List (DEAD); Findaway Voices (now Voices by INaudio); Shepherd (now Book DNA); custom GPTs (retiring); Third Wave directory (providers only); KDP Select while the site sells the ebook (book-kdp-select).
+
+## 9. Risks
+
+- Policy: YouTube treats psilocybin as a hard drug, Reddit bans self-promotion, paid search is restricted. Every asset stays educational, with no dosing or sourcing.
+- Regulation: what Oregon and Colorado centers may hand clients, and facilitator promotion rules, were not read (UNVERIFIED). Circles never involve substances.
+- Health: no clinical claims; a "when to seek help" box on every tool and scenario page.
+- Consent and privacy: event and ARC registrants join the newsletter only by explicit opt-in; state rosters are used for business outreach only and never copied into the repository.
+- Capacity: Maya is the bottleneck. If time is short, keep moves 10, 5, 6, 7 and 3 and pause the rest.
+- Identity: do not launch psilowire.com as a separate site within 30 days; it would split a young entity in two.
+
+## 10. Not done in this run
+
+- Nothing was executed on any venue or account; every move needs Maya's approval.
+- UNVERIFIED this run: live Reddit sizes (403), Google Trends (429), Bing positions for long scenario queries, Amazon's ARC policy, the rel attribute on YouTube, Eventbrite, Fireside, Open Library and BookSirens links, KDP's ebook link policy, Reader Revenue Manager eligibility, Oregon data reuse terms, center material rules.
+- The site was read only through public GET pages; file paths for the PRs are left to the implementing PR.
