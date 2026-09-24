@@ -120,3 +120,21 @@ Owners: CODE = pull request on mallan67/mayaallan; OWNER = Maya's own accounts; 
 - **Owner:** OUTREACH. **Effort:** 30 minutes per pitch, 1 hour per recording.
 - **First lead:** booking reply day 7-14; listener opt-ins from release, about day 25-60 (show backlogs UNVERIFIED).
 - **Measure:** utm_source=podcast-<show>&utm_medium=audio&utm_campaign=guest-2026q4; kit_scan {slug}; email_optin {slug}; purchase {utm_source}.
+
+### M7. Support-line and harm-reduction referral loop (CODE + OWNER + OUTREACH)
+- **Why:** Colorado's state page lists Fireside, Zendo and Unlimited Sciences (F7). Fireside's ambassador kit is open to all, and its /resources page links out without nofollow (F10). People who struggle afterwards cope mainly by reading and journaling [market map]. [mkt-07], [mkt-ws-09], [niche-npo-fireside].
+- **Steps:** (1) CODE: a "When to reach out" box on every tool, scenario and partner page: 62-FIRESIDE (call or text), the Unlimited Sciences info line, 988 for emergencies. Partners in M2-M4 will look for this before they say yes. (2) OWNER: join the Fireside Ambassador Kit; print the line on the M2 card. (3) OUTREACH: offer Fireside and Zendo the co-branded journal for their resource pages (/p/fireside, /p/zendo), free, with the opt-in off if they prefer.
+- **Effort:** 0.5 developer day + 2 hours. **First lead:** day 20-45 (nonprofits are slow; the main value is the endorsement M3 needs and the trust M2/M4 need).
+- **Measure:** utm_source=fireside|zendo|unlimited-sciences&utm_medium=referral&utm_campaign=resource-listing; journal_pdf_generate {slug}; referral sessions.
+
+### M8. A free monthly online integration circle, listed where the calendars are (OWNER + CONTENT)
+- **Why:** /events is empty (F14). The MAPS calendar takes submissions (F12, [niche-evt-maps-calendar]). Eventbrite free events cost nothing to publish, and its online search showed 30 psychedelic-integration events on page 1 [engines map missing item], [niche-com-eventbrite]. Brooklyn Psychedelic Society runs integration circles and is a Horizons Community Ally [niche map missing item]. [mkt-15].
+- **Steps:** (1) "Integration Scenarios Circle": 60 minutes, monthly, online; education and peer reflection only, no substances, not therapy; each session works one book scenario with the journal. (2) List it on Eventbrite, the MAPS calendar (fill every field: incomplete submissions are dropped, F12) and /events; offer co-hosting to one psychedelic society a month. (3) Registrations are email leads; recordings (with consent) feed the scenario video series [mkt-ws-02].
+- **Effort:** 3 hours a month. **First lead:** day 7-14 (Eventbrite registrations).
+- **Measure:** utm_source=eventbrite|maps-calendar|society-<slug>&utm_medium=event&utm_campaign=circle-2026-10; event_register; attendance rate; email_optin {source=circle}.
+
+### M9. Horizons NYC, October 15-17, 2026: the one in-window room (OUTREACH)
+- **Why:** F11; [niche-evt-horizons] (Friday+Saturday community pass $300; partners page has 60 external links, 0 nofollow); allies host off-site meetups that week [niche map missing item].
+- **Steps:** (1) Before Oct 1, ask one Community Ally (e.g. Brooklyn Psychedelic Society) to co-host a free off-site integration meetup that week; list it on Eventbrite (M8). (2) Bring 200 QR cards: psilocybinintegrationguide.com/k/horizons. (3) On industry day (Thursday) meet center operators, training programs and retreat companies; book 10 follow-up calls. (4) Ask how to become a 2027 Community Ally.
+- **Effort:** 3 days + $300 pass + travel (cost UNVERIFIED). **First lead:** day 21-23.
+- **Measure:** utm_source=horizons-2026&utm_medium=event-qr&utm_campaign=nyc-oct; kit_scan {horizons}; partner_form_submit within 14 days.
