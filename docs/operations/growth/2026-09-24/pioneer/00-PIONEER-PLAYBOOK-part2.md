@@ -163,3 +163,22 @@ Continues `00-PIONEER-PLAYBOOK.md` (sections 1, 2, 3A-3C). Sections 5-7 (first 1
 | Colorado NMD third-party resources | plain `<a>` | followed | clean URL (measure by referrer) | no |
 | Zendo, Unlimited Sciences | resource link | UNVERIFIED | clean URL | no |
 | Psychedelics.com | tool or book listing | UNVERIFIED | `utm_source=psychedelics-com&utm_medium=directory` | no |
+| Podcast show notes | 2 links (site + listener gift) | followed in 2 of 2 samples | `/pod/<show>` -> `utm_source=podcast-<show>&utm_medium=audio&utm_campaign=guest-2026q4` | no |
+| Chacruna, Psychedelics Today, Lucid News | in-article link | followed in the samples | `utm_source=<outlet>&utm_medium=guest-article` | no |
+| Journalist placements (SoS, Featured, Qwoted) | in-article link to /press | varies | `utm_source=<outlet>&utm_medium=pr&utm_campaign=journo-requests` | no |
+| Licensed centers (print) | QR code on the card | n/a | `/kit/<slug>` -> `utm_source=or-svc-<slug>&utm_medium=print-qr&utm_campaign=take-home-kit` (`co-hc-<slug>` in Colorado) | no |
+| Training programs | email or course-platform link | n/a | `utm_source=trainer-<program>&utm_medium=b2b&utm_campaign=casebook` | no |
+| Book back matter | printed URL | n/a | `/book` -> `utm_source=book&utm_medium=ebook&utm_campaign=backmatter` (medium print or audio for those editions) | no |
+| Google Play promo codes | code page | n/a | `/free-copy/<campaign>` -> `utm_source=google-play&utm_medium=promo-code&utm_campaign=<audience>` | no |
+| ARC services | reader landing page | n/a | `/arc` -> `utm_source=booksirens&utm_medium=arc&utm_campaign=arc-2026q4` (source hidden-gems for Hidden Gems) | no |
+| BookFunnel | landing page | n/a | `utm_source=bookfunnel&utm_medium=reader-magnet` | no |
+| Reddit and forums | comment link | UNVERIFIED this run | `utm_source=reddit&utm_medium=community&utm_campaign=<sub>` | no |
+| Newsletter | email links | n/a | `utm_source=newsletter&utm_medium=email&utm_campaign=letter-<nn>` | no |
+| Tool share cards and invites | share link | n/a | `utm_source=share&utm_medium=tool-card&utm_campaign=<tool>`; invites `utm_source=tool-<name>&utm_medium=share&utm_campaign=invite` | no |
+| Embeds | attribution link (brand name) | partners may nofollow | `utm_source=embed-<domain>&utm_medium=widget` | no |
+| psilowire.com | 308, path + query kept [S6] | - | `utm_source=psilowire&utm_medium=domain` | no (redirect) |
+| psilocybinintegrationguide.com | 308, path + query kept [S6] | - | target of the vanity router | no (redirect) |
+
+**Structured-data targets.** `Person`: one `@id`, sameAs = the claimed profiles above. `Book`: `isbn` per format and `workExample` only after the ISBN fix; keep the 7 retailer sameAs links. `ProfilePage` on /about. `Event` only for in-person events that have an address. `VideoObject` on the watch pages. `DefinedTermSet` for the glossary. No `FAQPage` (the FAQ rich result is dead [S16]).
+
+*Continued in `00-PIONEER-PLAYBOOK-part3.md`: 5. First 14 days, 6. Dead ends, 7. Sources.*
