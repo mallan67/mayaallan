@@ -82,3 +82,25 @@ Column key:
 | book-bookshop | Bookshop.org | live (paperback) | Fix the shelves (D2). "Bookshop.org for Authors" and an affiliate program exist; the commission % is UNVERIFIED (S5). | affiliate shop (UNVERIFIED) | own affiliate ID | $0 | 30 min | low-medium |
 | book-bn-nook | B&N Press (NOOK) | **UNVERIFIED** (press.barnesandnoble.com 403) | reachable via D2D (listed partner) | n/a | n/a | n/a | n/a | low-medium |
 | book-kobo | Kobo Writing Life | **UNVERIFIED** (kobo.com 403; KWL 503) | reachable via D2D (listed partner) | n/a | n/a | n/a | n/a | low-medium |
+
+### 2C. Aggregators
+
+| id | Venue | Status | Mechanics (live) | Link-back | Cost | Lead value |
+|---|---|---|---|---|---|---|
+| book-d2d | Draft2Digital | live | Stores listed: **Amazon, Apple Books, B&N, Kobo, Everand, Smashwords, Tolino, OverDrive, cloudLibrary, BorrowBox, Hoopla, Vivlio & Vivlio Libraries, Gardners, Fable, Bookshop.org**. Commission "approximately **10%** of the retail price". **$20** one-time activation, plus **$12/yr** if sales are under $100/yr. It refuses "Oversaturated Subject Content" incl. **Affirmation, Chakra, CBT, Guided Meditation, Hypnosis, Manifestation, Meditation, Mindfulness**. Nonfiction: "We may require further documentation of subject matter expertise". No 100%-AI books (S24). | UBL page | $20 + ~10% | medium-high (libraries) |
+| book-books2read | Books2Read Universal Book Link | live | "the service is free". Features: author pages with custom URLs and Reading Lists. One link routes each reader to their preferred store (S25). | The UBL lists stores; whether a site link can be added is UNVERIFIED | $0 | medium (one clean link for every venue) |
+| book-publishdrive | PublishDrive | live | Free plan: 1 ebook to Apple, B&N, Kobo, "No subscription. No commission". Paid plans are subscriptions (prices not shown) and claim "50 retailers and 240,000 libraries" (S26). | n/a | $0-sub | medium (alternative to D2D) |
+| book-streetlib | StreetLib | live site (JS app); mechanics **UNVERIFIED** | React shell with an "Anniversary" landing (S27) | n/a | n/a | low |
+
+### 2D. Libraries
+
+| id | Venue | Status | How to get in | Cost | Lead value |
+|---|---|---|---|---|---|
+| book-overdrive | OverDrive / Libby | live via D2D | D2D channel (S24). OverDrive's publisher page is a directory with no author-intake text. | D2D fees | medium-high: patrons meet the back-matter call to action |
+| book-hoopla | Hoopla | live via D2D (and Voices by INaudio for audio) | D2D channel | D2D fees | medium |
+| book-cloudlibrary-borrowbox | cloudLibrary, BorrowBox, Vivlio Libraries | live via D2D | D2D channel | D2D fees | low-medium |
+| book-indie-author-project | Indie Author Project (BiblioBoard) | live | Submissions "April 1st – May 31st". Categories are fiction plus **Memoir** only (S28). | n/a | **low** (self-help not eligible) |
+| book-worldcat | WorldCat | **UNVERIFIED** (S37) | Records normally follow library acquisitions (OverDrive/print). | $0 | medium (entity graph) |
+| book-library-talks | Library events (idea) | idea | Once D2D places the ebook in libraries, pair it with free "integration literacy" talks listed on /events. | $0 | medium |
+
+Continued in `04-book-ecosystem-part2.md` (sections 2E-9 and the full source list).
