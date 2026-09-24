@@ -1,4 +1,4 @@
-/* live-crawl lens c11: detail tables, packing into <=38 KB files, runner */
+/* live-crawl lens c11: detail tables and packing into <=38 KB files */
 function renderParts(D,A){const cut=(s,n)=>{s=String(s||"");return s.length>n?s.slice(0,n)+"...":s};
 const rb=["## robots.txt","","GET "+ORIGIN+"/robots.txt "+D.rb.status+" "+D.rb.ctype+" @"+D.rb.at+", "+D.rbBytes+" bytes, "+D.rbGroups+" user-agent groups, Disallow: "+D.rbDisallow.join(" ")+", Sitemap: "+D.rbSitemaps.join(" ")+", Host: "+(D.rbHost.join(" ")||"-")+", x-vercel-cache "+(D.rb.h["x-vercel-cache"]||"-")+", age "+(D.rb.h.age||"-")+" s.",""].join("\n");
 const sm=["## Sitemap URL audit","","GET "+ORIGIN+"/sitemap.xml "+D.sm.status+" "+D.sm.ctype+" @"+D.sm.at+", "+D.smBytes+" bytes, "+D.smUrls.length+" URLs, "+D.smAlt.length+" hreflang alternates.","",tbl(["#","loc","read UTC","status","redirects","self-canonical","indexable","inbound links","title"],A.sm.map((x,i)=>[i+1,x.u,x.r?x.r.at:"-",x.r?x.r.status:"not fetched",x.r?x.r.nred:"-",x.self,!x.noidx,x.inb,x.r&&x.r.p?cut(x.r.p.title,70):"-"])),""].join("\n");
@@ -10,8 +10,3 @@ return [i+1,pth(r.url),r.d,r.at,r.status,r.hops.map(h=>h.status).join(">"),r.fin
 const as=["## Asset checks","",tbl(["#","asset","kind","read UTC","HEAD status (GET fallback)","content-type","content-length","referenced by"],D.assets.map((a,i)=>[i+1,cut(pth(a.u),110),a.kinds.join(","),a.r.at,a.r.status+(a.r2?" / GET "+a.r2.status:""),a.r.ctype.split(";")[0],a.r.h["content-length"]||"-",a.from.length+" pages (first "+pth(a.from[0])+")"])),""].join("\n");
 const parts=[];let cur="";for(const s of [rb,sm,ht,ua,pg,as]){if(cur&&Buffer.byteLength(cur+s)>38000){parts.push(cur);cur=""}cur+=s+"\n"}if(cur)parts.push(cur);
 return parts.map((c,i)=>({path:BASE+"-part"+(i+2)+".md",c:"# Live crawl audit, part "+(i+2)+" (lens FULL LIVE CRAWL, ids crawl-)\n\nUTC window "+D.start+" to "+D.end+"; live sources and method as in `"+BASE+".md`.\n\n"+c}))}
-(async()=>{const D=await crawl();await assetsAndTests(D);const A=analyze(D);let F=findings(D,A);F=findings2(D,A,F);F=findings3(D,A,F);const W=works(D,A),U=unverified(D,A);
-const parts=renderParts(D,A);const idx=["## Evidence files","",...parts.map(p=>"- `"+p.path+"`: "+(p.c.match(/^## .*$/gm)||[]).map(x=>x.slice(3)).join("; ")),"- Crawler code: `docs/operations/evidence/2026-09-24/tools/crawl/` (gitsave.sh, c1.js to c11.js)",""].join("\n");
-const files=[...parts,{path:BASE+".md",c:renderMain(D,A,F,W,U)+"\n"+idx}];
-process.stdout.write("@@SUMMARY@@"+JSON.stringify({start:D.start,end:D.end,sizes:files.map(f=>[f.path,Buffer.byteLength(f.c)]),F:F.map(f=>({id:f.id,sev:f.sev,title:f.title,ev:f.ev.slice(0,420),impact:f.impact,sol:f.sol,owner:f.owner})),W:W.map(w=>({item:w.item,ev:w.ev.slice(0,220)})),U}));
-files.forEach(f=>process.stdout.write("@@FILE@@"+f.path+"\n"+f.c))})();
