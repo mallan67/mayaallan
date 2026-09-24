@@ -43,3 +43,21 @@
 1. **The niche is small, and Maya already ranks in it.** An Amazon Books search for *psilocybin integration* returns **85 results**, and Maya's book appears **organically at #5** on page 1 (logged-out US view, 18:43Z). *Psychedelic integration* returns **255 results**; Maya is not on page 1, and page 1 carries **5 sponsored slots**. *Ego death*, a core chapter topic, returns **89 results**; Maya is not on page 1, and page 1 carries **6 sponsored slots**. *Psilocybin book* returns **over 1,000 results**; Maya is not on page 1 (S44). The book should rank for the topics it covers: ego death, challenging experiences, entities, inner child.
 2. **Competitors advertise now, so Amazon ads work in this niche.** Live sponsored results for *psychedelic integration* include *THE LAST ILLUSION: Psychedelic Integration…*, *Breaking Family Curses: Psychedelic Integration…* and *Psychedelics and the Soul…* (S44). This is observed practice. The written Amazon Ads book policy page renders only via JS (UNVERIFIED, S52).
 3. **Workbooks and journals crowd the results.** 6 of the top 16 results for *psilocybin integration* are journals or workbooks (S44). Maya already has a free /integration-journal tool. The pioneer move is a companion print **"Integration Journal"** that links the Guide to the site. Publish it on KDP only: D2D refuses "low-content books" (S24).
+4. **No Goodreads list exists for the category.** Goodreads list searches for *psilocybin*, *psychedelic integration* and *plant medicine* return **no lists**. Adjacent lists are small: *Best Psychedelic Knowledge* (92 books, **52 voters**), *Best books about psychedelic drugs* (29 books, **25 voters**), *Best Altered States and More* (71 books, 62 voters) (S45).
+5. **A German-language wave is visible.** An Apple Books search for *psilocybin integration* (40 results) includes **8 German psychedelic titles dated 2026-08-21 to 2026-09-03** (S8). The site already serves /de, /es, /pt, /fr and /he. Translated editions are a first-mover opening.
+6. **Libraries are an unused free channel.** D2D delivers to **OverDrive, cloudLibrary, BorrowBox, Hoopla, Vivlio** (S24). Nothing of Maya's is in any library today.
+7. **Money pool:** KDP Select paid **$69.4M in August 2026** (S20). It does not apply here, because Select forbids selling the ebook on the website (part 2, section 5).
+
+## 2. Venue map
+
+Column key:
+- **Link-back:** whether the venue shows a URL to mayaallan.com. The *rel* attribute (nofollow/dofollow) was not observable while logged out, so it is UNVERIFIED unless stated.
+- **Lead value:** likelihood of creating email leads on mayaallan.com.
+
+### 2A. Identifiers and metadata
+
+| id | Venue | Status | Mechanics (live) | Link-back | Tagging | Cost | Effort | Lead value |
+|---|---|---|---|---|---|---|---|---|
+| book-bowker-isbn | Bowker ISBN (myidentifiers) | live | "Each format of your book requires its own ISBN". Prices: 1 for **$125**, 10 for **$295**, 100 for **$575**, 1,000 for **$1,500** (S34). Maya's ISBNs sit in a 979-8-9941488 block, so spare numbers may already exist. | none (data feed) | Same title, subtitle, contributor and BISAC data in every system | $0 if spares exist | 1 h | high (foundation) |
+| book-books-in-print | Bowker Books in Print | UNVERIFIED | Bowker lists "Get Into Books In Print" with ISBN purchase. The edit screens sit behind login. | none | same metadata | incl. | 1 h | medium |
+| book-isni | ISNI via Bowker | live | "Each successful ISNI registration has a one-time fee of **$5**". ISNI holds "16.5 million" identity records (S34). Open Library and Wikidata carry ISNI IDs (example: the Pollan record has `remote_ids` isni/wikidata/viaf, S51). | none | add to `sameAs`/`identifier` | **$5** | 20 min | medium (entity/AI graph) |
