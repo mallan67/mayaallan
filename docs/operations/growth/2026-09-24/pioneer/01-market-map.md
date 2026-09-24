@@ -245,3 +245,19 @@ Other books in the space (Open Library, read 18:32:47Z): Aixalà, *Psychedelic I
 | S12 | Psychedelic Alpha, OPS Tracker (secondary): https://psychedelicalpha.com/resources/the-oregon-psilocybin-services-tracker/ ; Q1 2026 update https://psychedelicalpha.com/news/q1-2026-oregon-psilocybin-services-update/ | "as of Q1 2026 (June 2026)"; update published 2026-07-27 | about 18:36Z; about 18:25Z |
 | S13 | NM DOH Medical Psilocybin Program: https://www.nmhealth.org/about/mcpp/mpp/ | undated page | 18:37:55Z |
 | S14 | KUNM, NM medical psilocybin equity fund: https://www.kunm.org/local-news/2026-03-17/new-mexico-creates-first-ever-medical-psilocybin-fund-for-low-income-patients | 2026-03-17 | about 18:43Z |
+| S15 | Compass Pathways 8-K Ex-99.1 (COMP006 review): https://www.sec.gov/Archives/edgar/data/1816590/000181659026000047/a8-kdated7july2026ex991.htm ; filings index https://data.sec.gov/submissions/CIK0001816590.json | filed 2026-07-07 | 18:35:06Z, 18:35:23Z |
+| S16 | Fireside Project: https://firesideproject.org/ | © 2026 | about 18:35Z |
+| S17 | Bing results (unauthenticated HTML) for "psilocybin integration guide", "psilocybin integration workbook", and related phrases: https://www.bing.com/search?q=psilocybin+integration+guide | live | 18:38:32Z, 18:38:52Z |
+| S18 | Challenging Psychedelic Experiences Project: https://www.challengingpsychedelicexperiences.com/ | © 2024; 2025 outcome report linked | about 18:36Z |
+| S19 | Retreat Guru psilocybin listings: https://retreat.guru/be/psilocybin-retreats | live (dates listed Oct–Nov 2026) | about 18:37Z |
+| S20 | Psychedelic Beacon, Colorado (secondary): https://psychedelicbeacon.com/psilocybin-therapy/colorado | "by February 2026" | about 18:42Z |
+| S21 | Psychedelic Beacon, Oregon (secondary): https://psychedelicbeacon.com/psilocybin-therapy/oregon | early 2026 | about 18:42Z |
+| S22 | Psychedelic Support: https://psychedelic.support/ | latest article 2026-09-08 | about 18:37Z |
+| S23 | Google Ads policy, Dangerous products or services: https://support.google.com/adspolicy/answer/6014299 | no date shown | about 18:41Z |
+| S24 | YouTube search results: https://www.youtube.com/results?search_query=psychedelic+integration (and "psilocybin integration", "bad trip help"); channels https://www.youtube.com/@PsychedelicsToday , https://www.youtube.com/@thethirdwave | live | 18:35:59Z, 18:36:13Z |
+| S25 | iTunes Search API (podcasts): https://itunes.apple.com/search?media=podcast&term=psychedelic+integration | live | 18:36:40Z |
+| S26 | Wikimedia Pageviews API: https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Psilocybin_mushroom/monthly/2024090100/2026083100 | live | 18:40:21Z, 18:41:42Z |
+| S27 | Open Library search: https://openlibrary.org/search.json?q=psychedelic+integration ; work https://openlibrary.org/works/OL45177926W | live | 18:32:47Z, 18:42:22Z |
+| S28 | www.mayaallan.com /books and /books/psilocybin-integration-guide (title, description, Book JSON-LD sameAs to 7 retailers; Person sameAs = Instagram only) | live | 18:33:06Z, 18:42:22Z |
+
+*Read-only research. Nothing was posted, signed up for, or logged into. The only write is this file, saved through the GitHub API in successive commits that each read the live file first and changed only this path.*
