@@ -21,3 +21,22 @@
 5. **Her public GitHub repo leaks into search.** Eight PR/issue pages of `mallan67/mayaallan` (public repo) are indexed. PR #54 ranks **above the site** for "Psilocybin Integration Guide Maya Allan" on WS (#4 vs #5).
 6. **Her name results are shared.** On Bing, positions 3-10 for "Maya Allan" are real-estate broker profiles (LinkedIn "Licensed Real Estate Broker | Founder, MAllan", Zillow, realtor.com, StreetEasy, ...). On WS, other people take the top slots: Maya Alden (romance author), Maya Allen (The Cut), Rosetta Allan and Wikipedia "Maya ..." pages.
 7. **What was not measured:** Google, DuckDuckGo, and Bing beyond page 1. The number of people who actually see or click her in search cannot be observed from outside; it needs Search Console / Bing Webmaster Tools.
+
+## 1. Position matrix (mayaallan-domain positions only)
+
+Bing shows 7-10 organic results on page 1. WS returns 9-10. "none" = no mayaallan.com / psilowire.com / psilocybinintegrationguide.com URL in the list. "decoy" = Bing returned an off-topic set (see section 5), so the row proves nothing.
+
+| Group | Query | Bing B1 (UTC) | Bing B2 (UTC) | WS (UTC batch) | Who holds #1 |
+|---|---|---|---|---|---|
+| brand | Maya Allan | #1 `/`, #2 `/books` of 10 (18:19:46Z) | #1, #2 (18:24:16Z) | #5 `/`, #6 `/about` of 10 (18:21:35Z-51Z) | Bing: mayaallan.com. WS: facebook.com/maya.allan.100483 |
+| brand | Maya Allan author | #1 `/`, #2 `/books` of 7 (18:19:47Z) | #1, #2 (18:24:17Z) | #6 `/`, #7 `/about` of 9 | Bing: site. WS: en.wikipedia.org/wiki/Maya_S |
+| brand | Maya Allan psilocybin | #1 `/`, #2 `/books/psilocybin-integration-guide` of 7 (18:19:49Z) | #1, #2 (18:24:18Z) | #4 `/`, #5 `/about` of 9 | Bing: site. WS: Amazon paperback B0G91GZMLT |
+| brand | Maya Allan book | #1 `/books`, #2 `/` of 7 (18:19:50Z) | #1, #2 (18:24:19Z) | #6 `/` of 9 | Bing: site. WS: bibliovault.org (Allan Burns, "Maya in Exile") |
+| nav | mayaallan (one word) | decoy (google.com set, 18:20:33Z) | decoy (tankless water heaters, 18:23:42Z) | not run | UNVERIFIED |
+| nav | mayaallan.com | not run | decoy (microsoft.com set, 18:24:31Z) | #5 `/` of 9 (18:22:36Z-52Z) | WS: in.pinterest.com/mayaallan2 |
+| nav | psilowire | none of 7 (18:20:34Z) | none (`psilowire.com`, 18:24:32Z) | none of 9 | psilowave.com (record label) |
+| book | Psilocybin Integration Guide | **#1** `/books/psilocybin-integration-guide` of 7 (18:20:34Z) | #1 (18:24:20Z) | **none** of 9 (18:21:51Z-22:03Z) | Bing: site. WS: Amazon Kindle B0G765BZDL |
+| book | Psilocybin Integration Guide Maya Allan | #1 book page, #2 `/` of 7 (18:20:35Z) | #1, #2 (18:24:21Z) | #5 `/`, #6 `/about` of 9; **github.com/mallan67/mayaallan/pull/54 at #4** | Bing: site. WS: Amazon Kindle |
+| book | psilocybin integration guide book | #7 `/` of 7 (18:20:35Z) | #7 (18:24:21Z) | **none** of 9 | Amazon B0G7JWDJYQ (Bing), Amazon B0G91GZMLT (WS) |
+| book | full title "Psilocybin Integration Guide: 40 Real Scenarios for Navigating What You See, Feel & Experience" | decoy (short form "...40 real scenarios", 18:20:36Z and 18:23:44Z) | - | **none** of 9 (18:22:36Z-52Z) | WS: Amazon Kindle |
+| topic x10 | see part 2 | none on 8 valid queries (2 decoys) | none on 8 valid | none on all 10 | retreat blogs, journals, Amazon, MAPS PDF (part 2) |
