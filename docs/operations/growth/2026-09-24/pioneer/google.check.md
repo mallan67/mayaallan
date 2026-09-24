@@ -228,3 +228,62 @@
 - "An 'About Me' page on a blog site" is a valid use (doc updated 2026-09-08).
 - The doc now ties ProfilePage to the Discussions and Forums feature.
 - /about has no ProfilePage.
+
+**goog-25 DROP as a build target, status partly wrong.**
+- **FAQ is dead:** "will no longer appear in Google Search starting May 7, 2026" (changelog 2026-05-08). The FAQ doc URL now 301s to `/search/updates#removing-faq-rich-result` (19:08:06Z).
+- **Other retirements:**
+  - practice problems deprecated 2025-11-05, docs removed 2026-01-06
+  - special announcements deprecated from 2025-07-31
+  - course info, estimated salary, learning video and vehicle listing docs removed
+- **Correction:** changelog 2025-11-05 says "Removed the deprecation banner from Book actions documentation, as there's still a feature using the markup in Google Search."
+  - Book Actions is live but limited to "book providers with a wide selection" by interest form (doc updated 2025-12-10; 19:07:54Z).
+- **Correction:** the search gallery (updated 2026-06-15; 19:08:17Z) says "A review snippet can be about Book" (M4).
+
+**goog-26 KEEP (low).**
+- The guidance is confirmed (primaryImageOfPage or og:image, image sitemaps, `<img>`).
+- The posts have no images yet.
+
+**goog-27 KEEP, lead medium near-term.**
+- Confirmed:
+  - "must be indexed and eligible to be shown in Google Search with a snippet"
+  - "no additional requirements"
+  - "You don't need to create new machine readable files, AI text files, or markup"
+  - the optimization guide (200 at 19:10:06Z) says "non-commodity content" and warns against "Seeking inauthentic 'mentions'"
+- The non-commodity asset is still offline: 1 of 40 scenarios is on the web.
+- Check the AI-features inclusion setting.
+- **Source:** ai-features doc (updated 2025-12-10; 19:10:03Z).
+
+**goog-28 DROP.** The changelog (entry beside 2024-08-20) says: "Perspectives was renamed to Forums in Google Search." See M3.
+
+**goog-29 KEEP (low).**
+- The Trends API alpha page is live, "accepting applications for alpha testers".
+- The explore endpoint returned 429 again at 19:10:23Z, so there are no Trends numbers (UNVERIFIED).
+
+**goog-30 KEEP (low).**
+- "You must complete your account setup by entering your billing information".
+- The old URL 301s to business.google.com/us/ad-tools/keyword-planner/ (19:10:35Z).
+
+**goog-31 KEEP.** google.com/alerts returns 200 (19:10:36Z).
+
+**goog-32 DROP.**
+- "Ads for substances that alter mental state ... are not allowed"; "Ads for instructional content about producing, purchasing, or using recreational drugs are not allowed". The CBD exception covers CA, CO and PR only.
+- "speculative and/or experimental medical treatments" is also not allowed.
+- **Sources:** adspolicy/answer/6014299, /16489299, /176031, /2423645 (19:10:46Z-19:11:25Z).
+
+**goog-33 DROP.** "Your organization must hold valid charity status" (19:10:37Z).
+
+**goog-34 KEEP.**
+- Confirmed: "always use utm_source, utm_medium, and utm_campaign"; values are case-sensitive, "Use lowercase"; utm_creative_format and utm_marketing_tactic are not reported (analytics/answer/10917952, 19:11:40Z).
+- lookerstudio.google.com 301s to datastudio.google.com.
+
+**goog-37 DROP.** Spam policies (updated 2026-08-28) name "Low-quality directory or bookmark site links" and cross-link partner pages.
+
+**goog-38 DROP.** Scholar says "book reviews, and editorials is not appropriate for Google Scholar" (19:11:44Z).
+
+**goog-39 DROP (dead).**
+- podcasts.google.com 301s to music.youtube.com/googlepodcasts (19:11:59Z).
+- Shutdown dates from a secondary source, Wikipedia "Google Podcasts" (19:12:19Z): announced 2023-09-28; US shutdown 2024-04-02; elsewhere 2024-06-24.
+
+**goog-40 DROP (dead).**
+- Changelog November 19 (2025 block): "The Follow feature is no longer shown in Google Discover".
+- The Discover policies page (websearch/answer/9982767) still has stale "Following" feed text. It is not a revival.
