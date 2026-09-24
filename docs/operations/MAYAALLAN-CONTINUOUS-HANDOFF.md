@@ -5,7 +5,7 @@
 > scratch files, old handoffs or memory; anything not re-read live is marked **UNVERIFIED**; the
 > **Not done** list is always current.
 
-**Last updated:** 2026-09-24T18:36:27Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
+**Last updated:** 2026-09-24T19:01:54Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
 
 ## Owner goals (2026-09-24)
 1. **Leads.** One month in, zero leads — the only measure of success is leads (newsletter signups, inquiries, book purchases, event registrations, tool users who leave an email).
@@ -13,7 +13,7 @@
 3. **Every live failure** reported with a concrete solution; an in-depth report.
 4. **No dead information, no rehash.** What was done before did not produce leads; use what is new (2025-2026) and what top engineers/developers actually do, with evidence of results.
 5. Everything saved directly to git, with this continuous handoff. Nothing read from or written to local/scratch files.
-6. **Audiobook** organized so it can be properly set up, distributed and sold. — **PAUSED by owner 2026-09-24T18:36:27Z: audiobook not finished; other work first.**
+6. **Audiobook** organized so it can be properly set up, distributed and sold. — **PAUSED by owner 2026-09-24T18:36:27Z: audiobook not finished; other work first.** Audiobook is **LAST**.
 7. **See every visitor and every action**; what works, what tracks, what fails — and an **always-on automatic system** that re-checks, updates and reports results when something fails. **One living system, not dead dashboards across endless sites.**
 8. Every agent works as a **senior engineer/developer with market understanding**; the site must be clean and top-notch.
 
@@ -39,6 +39,7 @@ UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots ind
 - Stopped (not used): official-docs SEO research `wf_dbb8efd1-bbd` — stopped 2026-09-24T18:21:58Z on owner instruction (generic checklist = rehash).
 
 ## Not done
+- [ ] **Owner:** run `docs/operations/setup-mayaallan-ops.ps1` in PowerShell (creates `mayaallan-ops`; PowerShell auto-lands there; `mayaallan` / `mallan` shortcuts). The agent was blocked by the Claude Code permission classifier from reading or editing the local PowerShell profile, so this step is done by the owner.
 - [ ] Audiobook launch plan — paused by owner until the audiobook is finished.
 - [ ] Always-on ops + analytics blueprint (running), then build it as PRs.
 - [ ] Pioneer playbook + idea bank (running).
@@ -58,3 +59,4 @@ UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots ind
 - 2026-09-24T18:24:29Z — Owner: "what would a pioneer do… use all search engines, sites, venues to tag and link… Google networks… so much information and ideas". Launched pioneer playbook `wf_f2bd1f48-544` (all output to git).
 - 2026-09-24T18:31:00Z — Owner: audiobook must be organized and sold; every agent a senior engineer/developer; see every visitor and action; auto program that re-checks and reports failures; no dead system. Launched `wf_a255d729-1d6`.
 - 2026-09-24T18:36:27Z — Owner: "the audiobook is not finished, focus on the other stuff first". Stopped audiobook lenses; resumed always-on ops lenses only.
+- 2026-09-24T19:01:54Z — Owner: audiobook is last; all information live; a mayaallan ops folder locally so PowerShell goes into it automatically. Added `docs/operations/OPS-SESSION-BOOTSTRAP.md` (canonical live-read instructions) and `docs/operations/setup-mayaallan-ops.ps1` (owner-run setup). Local profile edit by the agent was blocked by the permission classifier and not attempted further.
