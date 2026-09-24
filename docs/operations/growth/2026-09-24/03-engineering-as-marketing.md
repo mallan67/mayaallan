@@ -252,3 +252,21 @@ The table orders tactics by build priority, not by id. Owner: **code-pr** = a Gi
 | 13 | https://ahrefs.com/blog/ai-search-traffic-conversions-ahrefs/ | Practitioner first-party data (P. Stox) | 2025-06-16 | 2026-09-24T18:33:30Z |
 | 14 | https://www.semrush.com/blog/ai-search-seo-traffic-study/ | [vendor] study | 2025-07-21 | 2026-09-24T18:33:31Z |
 | 15 | https://www.tryprofound.com/blog/ai-platform-citation-patterns | [vendor] citation analysis | 2025-06-05, upd. Aug 2025 | 2026-09-24T18:33:31Z |
+| 16 | https://vercel.com/blog/how-were-adapting-seo-for-llms-and-ai-search | Engineering blog (Corbett, Ubl) | 2025-06-10 | 2026-09-24T18:33:33Z |
+| 17 | https://www.growthunhinged.com/p/hubspot-ai-search-experiments | Practitioner write-up (Aja Frost) | 2026-09-16 | 2026-09-24T18:33:33Z |
+| 18 | https://www.growthunhinged.com/p/how-to-measure-the-impact-of-ai-search-the-right-way | Practitioner (K. Indig / K. Poyar) | 2026-07-15 | 2026-09-24T18:33:35Z |
+| 19 | https://www.growth-memo.com/p/ai-halftime-report-h1-2026 | Practitioner (K. Indig), partly paywalled | 2026-07-27 | 2026-09-24T18:33:36Z |
+| 20 | https://www.tryinteract.com/blog/quiz-conversion-rate-report/ | [vendor] benchmark | updated 2026-09-08 | 2026-09-24T18:33:36Z |
+| 21 | https://www.riddle.com/blog/use-cases/data-collection/lead-generation-quizzes-zero-party-data/ | [vendor] benchmark + A/B | undated (cites 2025 report) | 2026-09-24T18:33:37Z |
+| 22 | https://www.hubspot.com/ai-search-grader | Live tool page | live, undated | 2026-09-24T18:33:39Z |
+| 23 | https://growthmethod.com/engineering-as-marketing/ | Practitioner (S. Brameld) | 2026-02-13 | 2026-09-24T18:33:40Z |
+| 24 | https://blog.hubspot.com/marketing/free-saas-mini-tool-marketing | [vendor] blog | updated 2025-01-03 | 2026-09-24T18:33:40Z |
+| 25 | https://www.omnius.so/blog/programmatic-seo-case-study | [agency] case study | 2026-08-19 | 2026-09-24T18:33:41Z |
+| 26 | https://thestacc.com/blog/programmatic-seo-case-study/ | [vendor] case study | May 2026, upd. 2026-07-10 | 2026-09-24T18:33:42Z |
+| 27 | https://www.digitalapplied.com/blog/programmatic-seo-after-march-2026-surviving-scaled-content-ban | [agency], flagged unreliable | 2026-03-18 | 2026-09-24T18:33:42Z |
+| 28 | https://nextjs.org/docs/app/api-reference/file-conventions/metadata/opengraph-image | Framework docs | last updated 2026-07-09 | 2026-09-24T18:33:43Z |
+| 29 | https://www.atg.wa.gov/protecting-washingtonians-personal-health-data-and-privacy | State AG guidance | not dated on page | 2026-09-24T18:33:44Z |
+| 30 | https://boilerplatehub.com/blog/engineering-as-marketing-free-tools | Blog, unsourced claims (cited only as a caution) | 2026-06-01 | 2026-09-24T18:33:45Z |
+| L1 | https://www.mayaallan.com (/, 4 tools, /scenarios, /glossary, book page, sitemap.xml, robots.txt) | Live site GET | live | 18:24:13Z-18:35:02Z |
+| L2 | `gh api repos/mallan67/mayaallan` pulls/issues (#45, #46, #57, #58 bodies) | Live GitHub metadata | live | 18:23:51Z-18:24:00Z |
+| L3 | psilowire.com, psilocybinintegrationguide.com (HEAD/GET) | Live DNS/redirect | live | 18:31:19Z |
