@@ -70,3 +70,26 @@ WS-site (restricted to mayaallan.com) returned only `/` and `/about` for every q
 - B1 18:20:53Z (7): 1 gaiacounselling.com/best-questions-for-psychedelic-integration/ ("15 Best Questions") | 2 blog.mylifenote.ai/psychedelic-integration-journaling/ ("50 Prompts") | 3 ketaminetherapyformentalhealth.com/wp-content/uploads/2023/03/Integration-Guide.pdf | 4 thebuenavida.net/psychedelic-integration-journaling-prompts/ ("25 Prompts") | 5 pivotpsychedelics.com/learn/psychedelic-integration-journaling-prompts | 6 spectrumpsychwa.com MAPS-Integration-Workbook.pdf | 7 beautifulspace.org/blog/how-to-journal-for-psychedelic-integration
 - B2 18:24:28Z (7): top 3 identical; MA none.
 - WS (9): 1 psychologytoday.com/sg/blog/between-insight-and-instinct/202607/... | 2 unlimitedsciences.org/4-methods-of-psychedelic-integration/ | 3 frontiersin.org (fpsyg.2022.824077) | 4 psychedelic.support/resources/are-psychedelics-for-me-20-self-reflection-questions/ | 5 pratigroup.org/... | 6 truenorth-psychology.com | 7 gaiacounselling.com | 8 pivotpsychedelics.com | 9 spectrumpsychwa.com MAPS PDF
+
+### T9 psychedelic integration book
+- B1 18:20:53Z: decoy. 10 generic "psychedelic" results (en.wikipedia.org/wiki/Psychedelic_drug, verywellmind.com, merriam-webster.com ...). WebFetch of the same Bing URL (18:23:44Z-18:24:16Z) returned the same decoy, and so did B2 for the variant "psychedelic integration books" (18:24:29Z). UNVERIFIED on Bing.
+- WS (9): 1 goodreads.com/book/show/51048694-the-psychedelics-integration-handbook (Westrum) | 2 iceers.org/psychedelic-integration-new-book/ | 3 goodreads.com/book/show/62064624-psychedelic-integration (Aixala) | 4 amazon.com/Psychedelic-Integration-Psychotherapy-Non-Ordinary-Consciousness/dp/0907791395 | 5 goodreads.com/shelf/show/psychedelic-integration | 6 ecstaticintegration.org/p/book-review-psychedelic-integration | 7 synergeticpress.com/products/psychedelic-integration-... | 8 nectara.org/post/navigating-psychedelic-experience-12-books | 9 goodreads.com/book/show/62064624
+
+### T10 what to do after a mushroom trip
+- B1 18:20:54Z: decoy. 10 dictionary pages for the word "do" (merriam-webster, cambridge, youtube grammar ...). Same decoy on the recheck at 18:23:43Z and through WebFetch. The variant "after a mushroom trip integration" (B2 18:24:30Z) was also a decoy (wikipedia, justwatch, movieweb). UNVERIFIED on Bing.
+- WS (9): 1 discoverynj.org/what-do-shrooms-feel-like/ | 2 psychedelic.support/resources/now-that-its-over-what-to-do-after-youve-taken-psychedelics/ | 3 heretohelp.bc.ca/infosheet/safer-tripping-... | 4 psychable.com/guides/what-to-do-after-a-psychedelic-experience | 5 villawellnesscenter.com/recovering-after-a-shroom-trip/ | 6 healthline.com/health/how-long-do-shrooms-stay-in-your-system | 7 zamnesia.com/us/blog-sober-up-mushroom-trip-n1861 | 8 avens.substack.com | 9 tripsitter.substack.com
+
+## Title gaps on her own live pages
+
+GET https://www.mayaallan.com/<path>, 2026-09-24T18:26:10Z-18:26:26Z. Every page returned HTTP 200, `meta robots = index, follow`, no X-Robots-Tag header, and a self-referencing canonical. Noindex or canonical problems therefore do not explain why these pages don't rank.
+
+| Path | Live title (read 18:26Z) | Words the winning results use that this title lacks |
+|---|---|---|
+| /nervous-system-reset | Free Nervous System Reset - Calm Anxiety, Release Tension & Regulate Your Body | "psychedelic", "after", "session/trip" (winner: "Nervous System Regulation: After Psychedelic Session Guide") |
+| /integration-journal | Free Integration Journal - 7-Day PDF Template | "psilocybin" / "psychedelic" (winners: Amazon "Psilocybin Integration Journal ...") |
+| /integration-reflection | Integration Tool - Help a New Insight or Experience Land | "questions", "prompts", "psychedelic", a number (winners: "15 Best Questions for Psychedelic Integration", "50 Prompts") |
+| /belief-inquiry | Belief Inquiry - A Curious Exploration of Limiting Beliefs | the bare term is held by philosophy literature (T5); intent mismatch |
+| /scenarios/ego-dissolution | What does ego dissolution feel like during a psilocybin journey? | "integration"/"integrate" (winners pair ego dissolution with integrating it) |
+| /blog/psilocybin-integration-research | Integration after psilocybin: what the memory research supports, and what it doesn't | competes with PMC/Nature/Frontiers on T1 |
+| /practices | Practices - Belief Inquiry, Nervous System Reset, Integration Reflection, Integration Journal | hub page, no query words |
+| /books/psilocybin-integration-guide | Psilocybin Integration Guide - 40 Real Psychedelic Experiences | ranks #1 on Bing for the title (see main file) |
