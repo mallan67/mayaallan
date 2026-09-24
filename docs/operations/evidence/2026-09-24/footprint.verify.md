@@ -5,7 +5,7 @@
 - **Live sources used:** curl GET/HEAD from this machine to amazon.com/.co.uk/.ca/.de/.com.au, goodreads.com, play.google.com, books.google.com, barnesandnoble.com, thriftbooks.com, abebooks.com, bokus.com, itunes.apple.com (Search and Lookup APIs), openlibrary.org, wikidata.org API, loc.gov / lx2.loc.gov SRU / id.loc.gov, web.archive.org CDX, bing.com, pinterest.com, youtube.com, public.api.bsky.app, linktr.ee, substack, medium, tiktok, threads, instagram, reddit, api.pullpush.io, listennotes, barwebooks.com, www.mayaallan.com and the extra domains. WebFetch (a separate network path) for Bing, Instagram and Medium. Vercel MCP `list_project_domains` (project prj_CkwsvLxnWkKGJlyAA93lRVxAOQ9Y, team team_kZQh5NYLyrOKqffK0r9EXf4E). GitHub API for repo metadata.
 - **Not used:** no repository source files, no local files, no Playwright, no logins, no POST requests (apart from the gitsave git API calls), no /api/cron, /api/admin or /api/indexnow calls.
 - **Limits of this run:** the WebSearch tool budget was used up (it refused queries at about 18:58Z), so the WebSearch-only observations in the input could not be re-run with WebSearch. DuckDuckGo HTML answered 202 (anomaly page) and Mojeek blocked automated requests (18:58:54Z to 18:59:13Z). Bing (curl, plus WebFetch) was the only search engine that answered. Goodreads `/book/show/*` pages answered 202 with an AWS WAF challenge to curl (18:53:07Z and 18:53:16Z), so book-level facts were re-read from the Goodreads author page and the `/work/editions/*` pages, which answered 200.
-- **How this file was written:** in 5 appended parts, because the shell command-length limit rejected a single save. Each part was appended to the live GitHub copy of this file.
+- **How this file was written:** in 6 appended parts, because the shell command-length limit rejected a single save. Each part was appended to the live GitHub copy of this file.
 
 ## Verdict table
 
@@ -26,3 +26,40 @@
 | foot-13 | confirmed | low | Open Library author OL16288546A.json 19:02:02Z: keys name, key, type, revision fields only (no bio, links or photos). works.json: 1 work, OL45177926W. search.json: the book has edition_count 1, isbn 9798994148839 only. isbn/9798994148839 302 to OL61601841M; isbn/9798994148853 and isbn/9798994148891 **404** (19:02:06Z-19:02:09Z). Wikidata wbsearchentities "Maya Allan" 0; full-text "Psilocybin Integration Guide" 0 (19:02:10Z-19:02:11Z). LoC: loc.gov/books answered 403 (Cloudflare "Just a moment", 19:02:12Z); lx2.loc.gov SRU isbn=9798994148839 gave numberOfRecords 0 (19:02:28Z); id.loc.gov name suggest "Allan, Maya" count 0 (19:02:27Z). | Reproduced; for LoC via alternative official endpoints because the main site challenged the request. | Valid for Open Library (anyone can edit it). Wikidata: items for a self-published author with no independent sources risk deletion under notability rules, so treat it as optional and do it only after press or library coverage exists. |
 | foot-14 | uncertain | info | barwebooks.com WooCommerce store API `?search=psilocybin integration` 19:03:08Z: 0 products. Two guessed product slugs: 404 (19:03:18Z-19:03:20Z). Bing "barwebooks Psilocybin Integration Guide" 19:02:50Z: unrelated Reddit/StackExchange pages; `site:barwebooks.com psilocybin integration guide` 19:02:53Z: no barwebooks result. | The listing is gone from the store, which is consistent with the finding. The "still indexed" part **was not reproduced**, and the input's URL is truncated ("...-paperback/"), so the exact URL cannot be re-fetched. | No action needed; agreed. |
 | foot-15 | confirmed | info | Site book page 18:52:53Z: `href="https://www.paypal.com/signout"` with text "Sign out of PayPal", placed inside the note "Using a shared computer? Make sure you're signed into your own PayPal account before purchasing. Need to switch accounts?". | Reproduced. The context shows it is a **deliberate account-switch helper, not a defect**. | Handing it to the on-site lens is fine; no fix is implied. |
+
+## "Works" spot-checks
+
+| item | holds | live re-check (UTC) |
+|---|---|---|
+| Amazon US lists all three formats under one author | yes | /dp/B0G765BZDL, B0G91GZMLT, B0G7JWDJYQ 200, byline "by Maya Allan (Author)" (18:52:09Z, 19:04:34Z, 19:04:36Z) |
+| Amazon author page live with bio; /e/ URL 404 | yes (bio verified; photo not re-checked) | /stores/author/B0G76975ST 200 and /about 200 with bio text (18:55:26Z-18:55:37Z); /e/B0G76975ST 404 (18:55:27Z) |
+| Kindle sold in UK, CA, DE, AU; paperback in UK | yes | amazon.co.uk, .ca, .de, .com.au /dp/B0G765BZDL 200, no captcha; co.uk /dp/B0G91GZMLT 200 (19:03:56Z-19:04:05Z) |
+| Google Play sells the ebook at $9.99 with ISBN 9798994148891; Google Books has the record | yes | play.google.com 200, ISBN 9798994148891, $9.99 (18:54:08Z); books.google.com 200 (19:04:07Z). The Google Books API gave 429 (quota), which says nothing about the book. |
+| Goodreads has the book (3 editions) and an author page | yes | author page 200 (18:53:16Z-18:53:35Z); editions 245299940, 245505700 and 245349971 across two works (18:53:44Z-18:53:46Z). Book pages gave WAF 202 to curl. |
+| B&N, ThriftBooks, AbeBooks, Bokus list the paperback | yes | all 200 (18:54:21Z-18:54:23Z) |
+| Open Library has the paperback and an author record | yes | isbn/9798994148839 302 to OL61601841M; author JSON 200 (19:02:02Z-19:02:06Z) |
+| www.mayaallan.com #1 and /books #2 on Bing for "Maya Allan" | yes | curl 18:58:35Z and WebFetch about 18:58Z agree |
+| All extra domains 308 to www.mayaallan.com and keep the path | yes | HEAD 19:00:24Z-19:00:27Z; Vercel list_project_domains confirms domain-level 308 redirects. The *-mallan.vercel.app aliases answer 302 to Vercel SSO (protected), 19:00:27Z-19:00:28Z. |
+| Instagram @maya.allan66 exists as Maya Allan | yes, and better than stated | WebFetch about 18:58Z (2 reads): title "Maya Allan (@maya.allan66)", bio "Author", link "mayaallan.com and 1 more", 18 followers, 1 following |
+
+## New observations from this pass (not in the input)
+
+| observation | evidence (UTC) |
+|---|---|
+| The Instagram bio already links mayaallan.com. This weakens foot-02 and foot-07 and removes one proposed action. | WebFetch instagram.com/maya.allan66 about 18:58Z ×2 |
+| The site's own book page uses the "Heal Traumas" tagline, the same as retail. | curl /books/psilocybin-integration-guide 18:56:27Z |
+| The Kindle page shows no Kindle Unlimited badge, so the ebook is probably not KDP Select-exclusive and Apple/Kobo distribution is open. | amazon.com/dp/B0G765BZDL 18:55:11Z |
+| The site's Amazon link a.co/d/hRppkCZ answers HEAD 404 but GET 301 to the Kindle page, so HEAD-based link checkers report it falsely. | 19:04:07Z (HEAD), 19:04:15Z ×3 (GET) |
+| A second, dormant Pinterest profile "mayaallan" (2014, 0 pins) and a dormant TikTok @mayaallan (0 videos) exist; ownership is unknown. | 18:57:30Z, 18:57:47Z |
+| Open Library has no hardcover or ebook edition (ISBN lookups 404). | 19:02:07Z-19:02:09Z |
+
+## Unverified / needs outside-source check
+
+- Google web index and Google backlinks: Google cannot be queried with GET here, and the WebSearch budget is used up. **Needs outside-source check:** Google Search Console (Links and Performance reports), or a backlink tool (Ahrefs/Semrush).
+- Kobo (bot wall), Medium @mayaallan (403 or no data), reddit.com and listennotes.com (403): unverified.
+- KDP dashboard facts (ebook ISBN field, KDP Select enrolment, print contributor list), Goodreads Author Program status, and who owns the Pinterest "mayaallan" and TikTok "@mayaallan" accounts: **needs owner-account check**.
+- foot-09 search appearance of GitHub PR #54 and foot-14 Bing indexing of the barwebooks URL: not reproducible in this pass (see the table).
+
+## Tally
+
+15 findings: 12 confirmed (4 of them with corrections: foot-02, foot-07, foot-12, plus a changed solution owner on foot-10), 0 refuted, 3 uncertain (foot-09, foot-14; foot-07's Medium sub-claim only). Severity changes: foot-03 high→medium, foot-04 medium→low. Main correction: the Instagram bio already links mayaallan.com.
