@@ -5,7 +5,7 @@
 > scratch files, old handoffs or memory; anything not re-read live is marked **UNVERIFIED**; the
 > **Not done** list is always current.
 
-**Last updated:** 2026-09-24T18:21:58Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
+**Last updated:** 2026-09-24T18:24:29Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
 
 ## Owner goals (2026-09-24)
 1. **Leads.** One month in, zero leads — the only measure of success is leads (newsletter signups, inquiries, book purchases, event registrations, tool users who leave an email).
@@ -28,11 +28,13 @@
 UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots index, follow`, canonical `https://www.mayaallan.com`, and **no analytics script** (curl at 2026-09-24T17:48Z — that capture passed through a local scratch file, so it is being re-read git-direct).
 
 ## In progress
+- **Pioneer playbook** — workflow `wf_f2bd1f48-544` (started 2026-09-24T18:24:29Z): market map with live numbers; the whole Google network; all web + vertical search engines + AI answer engines; book ecosystem (ebook + audiobook); psychedelic-niche venues; open-web entity/profile/link venues with a tag/link (UTM + sameAs) matrix → 5 pioneer strategies (category creator, ecosystem/B2B, search-everywhere, data/PR, community) → 3 judges → **playbook + idea bank + first 14 days**. Output commits to `docs/operations/growth/2026-09-24/pioneer/`.
 - **Live site audit** — workflow `wf_c925e59f-494` (started ~2026-09-24T18:17Z): 9 live checks (crawl, real browser + console, crawler access, errors/ops/SEO-cron, visitors/clicks, index presence, rankings, off-site footprint, crawl/archive datasets). Each check and each adversarial re-check commits to `docs/operations/evidence/2026-09-24/`.
 - **Leads growth research** — workflow `wf_d03eba2c-a01` (started 2026-09-24T18:21:58Z): what top engineers/developers do now (2025-2026) — prior-efforts diagnosis (from live GitHub history), live lead-path audit, engineering-as-marketing, AI-assistant citation practice, niche landscape + channels, measurement engineering → **30-day lead plan**. Output commits to `docs/operations/growth/2026-09-24/`.
 - Stopped (not used): official-docs SEO research `wf_dbb8efd1-bbd` — stopped 2026-09-24T18:21:58Z on owner instruction (generic checklist = rehash).
 
 ## Not done
+- [ ] Pioneer playbook + idea bank (running).
 - [ ] Live audit results + adversarial verdicts (running).
 - [ ] 30-day lead plan (running).
 - [ ] In-depth report: all live failures + solutions, ranked by effect on leads.
@@ -46,3 +48,4 @@ UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots ind
 - 2026-09-24T18:16:09Z — Handoff started. Branch `work/site-visibility` created from main `ed7461a07e499694eba25ada437817c35983bd87`.
 - 2026-09-24 (earlier this session) — First audit run was stopped after it went outside the requested scope (4 metadata-only Gmail searches, provider/Vercel documentation fetches); its results were discarded. Later runs that wrote captures to a local scratch folder were stopped on the owner's instruction; nothing from those runs is used.
 - 2026-09-24T18:21:58Z — Owner: "do not use dead information… what they have done did not work… zero leads… read what savvy top engineers and developers do". Refocused on leads; stopped generic docs research; launched leads growth research `wf_d03eba2c-a01`. Live audit `wf_c925e59f-494` continues (current live state, not old advice). Draft PR #58 holds this handoff.
+- 2026-09-24T18:24:29Z — Owner: "what would a pioneer do… use all search engines, sites, venues to tag and link… Google networks… so much information and ideas". Launched pioneer playbook `wf_f2bd1f48-544` (all output to git).
