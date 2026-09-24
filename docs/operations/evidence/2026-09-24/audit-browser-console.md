@@ -49,3 +49,46 @@ Console = errors/warnings (level debug) since navigation. Failed = requests with
 | 26 | /this-page-does-not-exist-xyz | 404 | 1/0 (the 404 document) | - | 0 | none | - | friendly 404; robots metas conflict (index,follow + googlebot index + noindex) | 18:29:21Z |
 
 Cart/checkout/shop: none. `/cart /checkout /shop /store /buy` -> 404 (curl 18:28:57Z). Purchase happens only on the book page.
+
+## 2. Mobile 390x844 — page matrix
+
+Broken = visible images only (see ui-09 for the hidden hero). scrollW 375 = 390 minus scrollbar; 390 on full-height tool pages.
+
+| URL | Console | scrollW/innerW | Broken/noAlt | Observations | Read UTC |
+|---|---|---|---|---|---|
+| / | 0 err / 1 warn (cover w=384 preloaded, not used) | 375/390 | 0/0 | banner 375x287 = 34% of viewport; buttons 343x41 / 343x40 | 18:30:17Z |
+| mobile menu | 0 err / +1 warn (same) | - | - | aria-expanded=true, aria-controls=mobile-menu-panel; 9 links 268x52; tapping Books navigates and closes panel | 18:30:55Z-18:31:14Z |
+| /books | 0 err / 1 warn (same) | 375/390 | 0/0 | Reject clicked here | 18:31:14Z |
+| /books/psilocybin-integration-guide | 0 err / 1 warn (same) | 375/390 | 0/0 | Buy y=4778 of 7307 (265x40); retailers y=5118-5663 (292x47); small targets "Back to Books" 115x20, "Sign out of PayPal" 97x14 | 18:31:30Z |
+| /blog | 0/0 | 375/390 | 0/0 | - | 18:31:53Z |
+| /blog/psilocybin-integration-research | 0/0 | 375/390 | 0/0 | docH 16089 | 18:32:10Z |
+| /events | 0/0 | 375/390 | 0/0 | - | 18:32:23Z |
+| /about | 0/0 | 375/390 | 0/0 | - | 18:32:35Z |
+| /contact | 0/0 | 375/390 | 0/0 | inputs font 14px; honeypot offscreen (-9999px, aria-hidden, tabindex -1) | 18:32:47Z |
+| /faq | 0/0 | 375/390 | 0/0 | - | 18:33:09Z |
+| /glossary | 0/0 | 375/390 | 0/0 | - | 18:33:21Z |
+| /media | 0/0 | 375/390 | 0/0 | - | 18:33:35Z |
+| /methods | 0/0 | 375/390 | 0/0 | - | 18:33:47Z |
+| /scenarios | 0/0 | 375/390 | 0/0 | - | 18:33:59Z |
+| /scenarios/ego-dissolution | 0/0 | 375/390 | 0/0 | - | 18:34:11Z |
+| /belief-inquiry | 0/0 | 390/390 | 0/0 | textarea in view (font 15.2px); Send 44x44 disabled; chips 334x71 | 18:34:23Z |
+| /nervous-system-reset | 0/0 | 390/390 | 0/0 | textarea in view | 18:34:36Z |
+| /integration-reflection | 0/0 | 390/390 | 0/0 | textarea in view | 18:34:46Z |
+| /integration-journal | 0/0 | 375/390 | 0/0 | radios 294x61; Download y=1095 (167x40) | 18:34:55Z |
+| /privacy | 0/0 | 375/390 | 0/0 | - | 18:35:06Z |
+| /terms | 0/0 | 375/390 | 0/0 | - | 18:35:15Z |
+| /refunds | 0/0 | 375/390 | 0/0 | - | 18:35:26Z |
+| /he | 0/0 | 375/390 | 0/0 | nothing off-screen (RTL) | 18:35:36Z |
+| /practices | 0/0 | 375/390 | 0/0 | not in header/footer on mobile either | 18:35:47Z |
+
+## 3. Header, footer and mobile-menu links
+
+Header (10): `/ /books /belief-inquiry /nervous-system-reset /integration-reflection /media /events /about /contact`. Footer (17): `/books /events /media /about /belief-inquiry /nervous-system-reset /integration-reflection /integration-journal /methods /blog /scenarios /glossary /faq /contact /privacy /terms /refunds`. Mobile menu (9) = the header set. All returned **200** in the browser and via curl GET (18:28:57Z). The curl pass also covered all sitemap URLs, `/es /pt /de /fr /he /es/about /he/about /robots.txt /llms.txt` and the book OG image (200, 219 KB).
+
+| Host (curl GET /, 18:29:14Z) | Result |
+|---|---|
+| mayaallan.com | 308 -> https://www.mayaallan.com/ |
+| psilowire.com, www.psilowire.com | 308 -> www.mayaallan.com |
+| psilocybinintegrationguide.com, www. | 308 -> www.mayaallan.com |
+| mayaallan.vercel.app | 308 -> www.mayaallan.com |
+| mayaallan-mallan.vercel.app, mayaallan-git-main-mallan.vercel.app | 302 -> vercel.com/sso-api (get_project: ssoProtection all_except_custom_domains) |
