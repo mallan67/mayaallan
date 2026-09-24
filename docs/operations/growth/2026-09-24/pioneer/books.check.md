@@ -183,3 +183,33 @@
 
 **book-google-autonarration**
 - 10013009 (WebFetch ~22:22Z): "[Beta]", *"no program fee"*; the audiobook may be sold elsewhere if it is available on Google Play in every country where it is sold elsewhere, at a Play price no higher than elsewhere.
+
+**book-open-library**
+- JSON (22:32:02-22:32:20Z): edition OL61601841M (ISBN ...839, work OL45177926W, created 2026-04-20). Author OL16288546A has no `links`.
+- Pollan's record has a `links` entry for michaelpollan.com plus viaf, wikidata and isni IDs. His HTML page renders `<a href="https://michaelpollan.com/">` with **no rel** (22:33:15Z).
+- ISBNs ...891 and ...853 return 404, so the ebook and hardcover editions can be added now.
+
+**book-wikidata**
+- wbsearchentities returns no results for "Maya Allan" or the title (22:32:53Z). SPARQL finds no P212 match for ...839, ...891 or ...853.
+- Notability was last revised 2026-09-12T01:29:24Z and contains the quoted criterion.
+- Wikidata:Autobiography (revised 2025-03-30): *"you should not create an item about yourself unless you are sure that it fulfils the notability criteria."*
+- On Q1138996, the official-website link renders `rel="nofollow"` (22:33:14Z).
+
+**book-google-books-actions**
+- developers.google.com book page (22:33:25Z, "Last updated 2025-12-10 UTC"): *"limited to book providers with a wide selection of available books"* and *"limited to book providers that have filled out the interest form and have been onboarded."*
+
+**book-goodreads-author**
+- Book JSON (22:23:37-22:23:38Z): 245299940 is "Kindle Edition", isbn13 9798994148839, 281 pp, ratingsCount 0. 245349971 is "Hardcover", 9798994148853, 289 pp, 0 ratings. isGrAuthor is false.
+- Author page (22:23:47Z): "0 ratings · 0 reviews · 2 distinct works"; "Maya Allan's Followers None yet".
+- Program page (WebFetch ~22:23Z): free; "Is this you? Let us know!"; approval "within 2 business days"; blog, giveaways, Ask the Author.
+- Adding the paperback needs its own ISBN record, so it waits on D1.
+
+**book-goodreads-listopia** — see correction 6.
+
+**book-bookbub**
+- Pricing (WebFetch ~22:33Z) matches the map exactly:
+  - Advice and How-To: 650,000+ subscribers, $784 at $0.99, 2,000-3,500 clicks.
+  - Religion and Spirituality: 470,000+, $439.
+  - General Nonfiction: 1,070,000+, $621.
+- Requirements (WebFetch ~22:33Z): "Free or discounted by at least 50%"; no better price "in the last 30 days"; nonfiction "100 pages"; available on Amazon, Kobo, B&N, Google Play or Apple Books; the same book no more than once every 6 months; *"does not guarantee that it will be chosen"*.
+- curl to other BookBub partner pages returns 403, so author-profile link mechanics are UNVERIFIED.
