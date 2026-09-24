@@ -198,3 +198,23 @@ Ranked by leads per hour **at today's baseline** (0 Goodreads ratings, 0 Amazon 
 | P7 | https://podcasters.apple.com/support/897-submit-a-show | — | 18:57:47–18:58:02Z |
 | P8 | https://creators.spotify.com/ | — | 18:57:47–18:58:02Z |
 | P10 | https://on.substack.com/p/shea-serrano-podcast | — | 18:55:27–18:55:38Z |
+| O1 | https://developers.openai.com/api/docs/bots | — | 18:58:02–18:58:42Z |
+| O2 | https://openai.com/policies/ad-policies/ | upd. 2026-09-10 | 18:59:11Z |
+| O3 | https://help.openai.com/en/articles/8554407-gpts-faq | "Updated 7 days ago" | 19:01:58Z |
+| O4 | https://developers.openai.com/apps-sdk/deploy/submission | — | 19:01:41–19:02:00Z |
+| O5 | https://help.openai.com/en/articles/9237897-chatgpt-search | — | 18:59:11Z |
+| O6 | https://docs.perplexity.ai/guides/bots | — | 18:58:02–18:58:42Z |
+| O7 | https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler ; https://trust.anthropic.com/subprocessors | upd. 2026-04-07 | 18:58:02–19:04:16Z |
+| O8 | https://developers.facebook.com/docs/sharing/webmasters/web-crawlers/ | — | 18:58:02–18:58:42Z |
+| L1 | https://www.ftc.gov/news-events/news/press-releases/2024/08/federal-trade-commission-announces-final-rule-banning-fake-reviews-testimonials | 2024-08-14 | 18:59:11–18:59:14Z |
+| M1 | https://www.bookbub.com/partners/pricing (403 with partial body) ; https://insights.bookbub.com/ | — | 19:00:01–19:00:08Z |
+| M2 | https://www.wikidata.org/wiki/Wikidata:Notability | — | 18:59:14–19:00:01Z |
+| M3 | https://openlibrary.org/about | — | 19:01:10–19:01:19Z |
+| M4 | https://www.eventbrite.com/d/online/psychedelic-integration/ | — | 19:01:10–19:01:31Z |
+| M5 | https://www.listennotes.com/about/ | — | 19:01:10–19:01:19Z |
+| M6 | https://podcastindex.org/ | — | 19:01:10–19:01:19Z |
+| M7 | https://psychedelic.support/ | — | 19:01:10–19:01:19Z |
+
+---
+
+*Save note:* the Windows command line cuts commands at about 8 KB, so this file was built on the live branch in 12 guarded appends. Each step fetched the live file from GitHub, checked its last line, appended in memory, and wrote back through gitsave (non-force ref update). This commit carries the final, complete file.
