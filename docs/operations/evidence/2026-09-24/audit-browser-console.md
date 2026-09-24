@@ -122,3 +122,24 @@ The Playwright profile arrived with `localStorage.mayaallan_consent_v1="rejected
 | Home newsletter | Email + honeypot + "Subscribe" (y~4452) | "Subscribe" |
 | Buy Ebook with PayPal · $9.99 | Rendered, visible, enabled, type=submit. Desktop 265x40 at y=2962; mobile y=4778. No paypal.com request before click (SDK not preloaded). | Click (payment) |
 | Retailer links | 9 visible (Amazon x3, Google Play, Barnes & Noble, Bookshop, Waterstones, bokus, AbeBooks), target=_blank rel="noopener noreferrer nofollow sponsored" | Opening them |
+
+## 6. Findings
+
+| id | Severity | Finding | Evidence (live, UTC) | Fix owner |
+|---|---|---|---|---|
+| ui-01 | high | Measurement depends on consent. Visitors who reject or ignore the banner produce 0 pageviews and 0 visitor records. The cookieless counting fix (PR #57) is still unmerged. | Section 4, 18:19:29Z and 18:20:24Z; PR #57 open/unmerged at 18:38:14Z | code-pr + owner-account |
+| ui-02 | medium | Analytics beacons get HTTP 200 (/9de18cd67c0a6252/view), but the project reports Web Analytics as not enabled. The browser appears to send data that may never be stored. | response headers 18:19:46Z; orchestrator fact 17:48Z | vercel-setting |
+| ui-03 | medium | Book page: price and Buy are far below the fold. Desktop Buy at y=2962 of 4270 (3.3 screens). Mobile Buy at y=4778 of 7307 (5.7 screens); first retailer link at y=5118. Above the fold on desktop: back link, H1, byline, subtitles, "About This Book" only. | 18:20:57Z desktop; 18:31:30Z mobile | code-pr |
+| ui-04 | low | A visible "Sign out of PayPal" link (https://www.paypal.com/signout) sits beside the Buy button, 97x14 on mobile. Trust/UX noise. | 18:20:57Z, 18:31:30Z | code-pr |
+| ui-05 | medium | Thin or empty indexed pages linked from main nav. /events says "No events are currently scheduled". /media has 1 unlinked item under a "Music, Guides & Videos" H1. /media/Mushroom-Healing (sitemap-only) is an image + title. /scenarios lists 1 scenario. | 18:22:35Z, 18:24:20Z, 18:24:49Z, 18:25:23Z | content |
+| ui-06 | low | No language switcher. /es /pt /de /fr /he (+ /about) return 200 and sit in hreflang/sitemap, but the EN home has 0 links to them. On /he the header nav is still English. | 18:29:53Z, 18:29:38Z | code-pr |
+| ui-07 | low | /practices (in sitemap; overview of the 4 tools) is not linked from header or footer (desktop and mobile) | 18:28:27Z, 18:35:47Z | code-pr |
+| ui-08 | low | /about and /contact show 0 outbound profile links (no author page, Goodreads, social) and no contact email | 18:22:54Z, 18:23:13Z | content |
+| ui-09 | low | Mobile: console warning "cover w=384 preloaded but not used" on /, /books and the book page, followed by a second download at w=640. The hidden desktop hero (sizes "(max-width: 768px) 0px, 45vw", parent display:none) is still fetched at w=384 and w=640. Wasted bytes on phones. | 18:30:17Z-18:31:30Z | code-pr |
+| ui-10 | low | 404 page emits conflicting robots metas (index,follow; googlebot index; noindex). The HTTP 404 status governs, so impact is minor. | 18:29:21Z | code-pr |
+| ui-11 | low | Mobile input font-size under 16px (contact 14px, tool textareas 15.2px), so iOS Safari will zoom on focus | 18:32:47Z, 18:34:23Z | code-pr |
+| ui-12 | info | book_viewed is sent regardless of consent (undecided or rejected), cookieless, once per session. It is the only first-party signal from non-consenting visitors. Keep it; the privacy text should cover it. | 18:20:59Z, 18:37:11Z | content |
+| ui-13 | low (plausible) | Accept -> cookies removed -> "Cookie preferences" -> Accept in the same tab session: the analytics script and /view resumed, but no ma_* cookies or /api/marketing/visitor came back, because the ma_bootstrapped sessionStorage flag was still set. My manual cookie clearing induced this; whether "Reject analytics" itself deletes the cookies was not verified. | 18:36:06Z-18:36:32Z vs fresh flow 18:37:21Z | code-pr |
+| ui-14 | low | Retailer URLs carry stale or foreign tracking: B&N ";jsessionid=...", AbeBooks third-party affiliate click IDs (clickid, afn_sr=impact, ref_=aff_ir_...), Bookshop "ref=https://www.google.com/&source=IndieBound", bokus "srsltid". | 18:20:57Z | content |
+| ui-15 | low | Privacy policy (May 20, 2026) does not name Vercel Web Analytics, which loads after Accept | 18:27:44Z | content |
+| ui-16 | low | Blog post title tag is 102 characters and will be truncated in results | curl 18:37:49Z | content |
