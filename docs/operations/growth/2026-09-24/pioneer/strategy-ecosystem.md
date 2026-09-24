@@ -157,3 +157,21 @@ Owners: CODE = pull request on mallan67/mayaallan; OWNER = Maya's own accounts; 
 - **Steps:** (1) Cut the 40 scenarios into 3-6 minute episodes and publish an "Integration Scenarios" RSS feed (YouTube, Apple, Spotify: [goog-17], [vert-apple-podcasts], [vert-spotify-podcasts]). (2) Partners embed single episodes in aftercare emails; /p/<slug> gets a player. (3) The Center 100 pack (M5) includes audiobook codes.
 - **Effort:** 2 days once the master is final. **First lead:** month 2-3.
 - **Measure:** utm_source=<slug>&utm_medium=audio-embed&utm_campaign=scenario-audio; host play counts; audio code redemptions.
+
+### M13. Coaches, therapists and ketamine clinics: the practitioner bundle (OUTREACH; month 2-6)
+- **Why:** Psychable lists 855+ practitioners [niche-dir-psychable]. Fireside-Certified coaching is already used in an MGH ketamine-clinic study (F10). 8,000+ interventional-psychiatry centers are the likely future COMP360 sites [market map missing item]. [mkt-11], [mkt-12], [mkt-04].
+- **Steps:** (1) Bundle = M5 Practice pack + casebook cards (M4) + a co-branded journal page. (2) Month 2: pitch 20 integration coaches with public profiles; they sell integration sessions, so a hand-out that sends clients back to them is welcome. (3) Month 3-4: a non-clinical "between sessions" one-pager for ketamine clinics, reviewed by a clinician partner before use.
+- **Effort:** 2 days. **First lead:** day 35-60.
+- **Measure:** utm_source=coach-<slug>|clinic-<slug>&utm_medium=b2b&utm_campaign=practitioner-bundle; bulk_licence_request {type}.
+
+### M14. New Mexico and the FDA wave: be in the binder before launch (CONTENT + OUTREACH; month 3-6)
+- **Why:** New Mexico's program is due by 2026-12-31 [niche map]; COMP360 launch is expected H1 2027 if approved [market map, SEC 8-K]; New Jersey funded a hospital pilot [market map missing item]. End of life is a New Mexico qualifying condition and an Oregon visit reason (17 in Q2 2026, F5), so end-of-life doulas (NEDA) are partners [market map missing item]. [mkt-03], [mkt-ws-05], [mkt-ws-06], [niche-dir-nm-mpp].
+- **Steps:** (1) Month 3: an "After your New Mexico session" partner-page template and a non-clinical handout, sent to the program's public contact and to the first licensed providers once they are named. (2) Month 3-4: offer the free kit to 5 end-of-life doula trainers (NEDA directory access UNVERIFIED). (3) Month 5-6: a clinician one-pager for COMP360 sites, ready before the launch window.
+- **Effort:** 3 days across months 3-6. **First lead:** month 3-4.
+- **Measure:** utm_source=nm-clinic-<slug>|doula-<slug>&utm_medium=b2b&utm_campaign=nm-launch; partner_form_submit {state=NM}.
+
+### M15. Close the loop: partner reports + a "Find integration support" directory (CODE; from day 30)
+- **Why:** partners keep sharing what they can see working. Self-guided visitors, the unregulated majority (7.89M past-year users [market map]), ask for a person. A two-way loop compounds both sides.
+- **Steps:** (1) A monthly email to each partner with counts only from their slug: scans, journal downloads, opt-ins (data from the measurement workflow's GA4). (2) /support: an editorial directory of partners who want to be listed (centers, coaches, circles). No payment and no required link back, per the link-scheme red lines [web-spam-redlines]; licensed facilitators are described only from public licence data. (3) Outbound directory links carry utm_source=mayaallan&utm_medium=referral, so partners see Maya as a source of clients, not only a supplier.
+- **Effort:** 2 developer days. **First lead:** month 2 (renewals and partner-to-partner referrals).
+- **Measure:** partner_report_open; directory_click {partner}; active partner slugs month over month; partner-sourced share of all opt-ins.
