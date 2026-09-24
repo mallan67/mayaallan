@@ -61,3 +61,16 @@ Column key:
 | book-bowker-isbn | Bowker ISBN (myidentifiers) | live | "Each format of your book requires its own ISBN". Prices: 1 for **$125**, 10 for **$295**, 100 for **$575**, 1,000 for **$1,500** (S34). Maya's ISBNs sit in a 979-8-9941488 block, so spare numbers may already exist. | none (data feed) | Same title, subtitle, contributor and BISAC data in every system | $0 if spares exist | 1 h | high (foundation) |
 | book-books-in-print | Bowker Books in Print | UNVERIFIED | Bowker lists "Get Into Books In Print" with ISBN purchase. The edit screens sit behind login. | none | same metadata | incl. | 1 h | medium |
 | book-isni | ISNI via Bowker | live | "Each successful ISNI registration has a one-time fee of **$5**". ISNI holds "16.5 million" identity records (S34). Open Library and Wikidata carry ISNI IDs (example: the Pollan record has `remote_ids` isni/wikidata/viaf, S51). | none | add to `sameAs`/`identifier` | **$5** | 20 min | medium (entity/AI graph) |
+| book-bisac | BISAC 2025 (BISG) | live | See D2. **OCC039000**. Also available: SEL031000, SEL042000 Emotions, SEL045000 Journaling (for the companion journal), PSY075000, PSY073000 Psychotherapy / Spiritually Integrated, HEA032000 (S35). | none | same codes in every feed | $0 | 30 min | high |
+| book-kdp-categories | KDP categories | live | "select **3** categories"; changes take "up to **72 hours**" (S12) | none | n/a | $0 | 30 min | high |
+| book-kdp-keywords | KDP keywords | live | "up to **seven** keywords or short phrases". Prohibited: repeating the title or category, quality claims, program names such as "Kindle Unlimited" (S13). Test list (hypotheses; measure with the S44 method): *ego death, bad trip help, challenging psychedelic experience, mushroom journey integration, psychedelic integration, psilocybin retreat aftercare, entity encounters*. | none | n/a | $0 | 30 min | high |
+| book-lccn | Library of Congress PCN/CIP | **UNVERIFIED** | loc.gov returned 403 (S36) | none | n/a | n/a | n/a | low |
+
+### 2B. Retailers
+
+| id | Venue | Status | Mechanics (live) | Link-back | Tagging | Cost | Effort | Lead value |
+|---|---|---|---|---|---|---|---|---|
+| book-kdp-ebook | Amazon KDP Kindle | live | $9.99. Not in Select. Fix D1. | No links on the product page. The ebook's own back matter can carry a URL (KDP rule on links inside the ebook not re-read today, **UNVERIFIED**). | `mayaallan.com/integration-journal?utm_source=kindle&utm_medium=ebook-backmatter&utm_campaign=pig-ed1` | royalty 30-70% | 2 h | **high** (every reader sees the call to action) |
+| book-kdp-print | KDP paperback and hardcover | live | Fix D1 and D3. Print back matter: a short URL plus a QR code. | QR/URL in print | `utm_source=paperback&utm_medium=print-qr&utm_campaign=pig-ed1` | $0 | 1 h | high |
+| book-amazon-author | Amazon author page ("Amazon Author", formerly Author Central) | live (B0G76975ST) | The bio is live. Editing needs a login (UNVERIFIED). The A+ guideline points editorial reviews to Author Central (S16). | none observed | add the page URL to site `sameAs` | $0 | 30 min | low-medium |
+| book-a-plus | KDP A+ Content | live | No pricing, promotions, "buy now", customer reviews or time-sensitive words. "A maximum of four quotes". Images: jpg/png, RGB, <2 MB, alt-text required (S16). | none (URL rule only partly read) | n/a | $0 | 3 h | medium (conversion) |
