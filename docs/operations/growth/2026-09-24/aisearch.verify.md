@@ -66,3 +66,35 @@ The lens's own conclusion is that off-site mentions matter and on-site markup ba
 | ai-11 | Republish on LinkedIn and Medium | OK. Semrush 2025-11-10 | Weak. Vendor data at domain level; prompt categories not disclosed; no data for this niche | **YES for Medium.** `91c8f5d1` (2026-04-20) built a Medium API script. Medium archived that API on 2023-03-02 and says it allows no new integrations | Poor fit. She has no LinkedIn network, and LinkedIn citations are likely driven by B2B queries | **NO** |
 | ai-12 | Monthly prompt panel; move the tracker to search modes | OK. 2026-05-11 and 2026-03-13 | Real (3.7M citations; SparkToro) | **YES for the tracker.** Built 2026-05-19 (PR F) and fixed 2026-09-05 (PR #46, issue #44). The manual logged-out panel is materially different | 15 prompts × 3 runs × 6 engines = 270 runs a month is too heavy for a solo author | **YES, reduced and manual only.** Drop the tracker PR |
 | ai-13 | Consistent identity: sameAs and ISBN | OK | **Weak.** The lens says so itself, and Google says no special schema is needed | **YES.** Identity layer, sameAs and ISBN/ASIN identifiers already shipped (`b7a0f8a6`, `ea9c7231`, PR #50) | Hygiene only | **NO.** The missing ISBN is a data bug for another PR, not a tactic |
+
+## Kept tactics: corrected steps and evidence notes
+
+### ai-01: Measurement. Keep, with a smaller build
+- **Evidence read:**
+  - OpenAI's publisher FAQ says "ChatGPT automatically includes the UTM parameter utm_source=chatgpt.com in referral URLs" (curl 18:49:21Z; the page showed "Updated: 27 days ago").
+  - SEJ, 2026-05-14: GA4 has a built-in AI Assistant channel.
+  - Vercel docs (last_updated 2026-09-16): UTM filtering needs "Web Analytics Plus and Enterprise".
+  - Clickport (updated 2026-09-18) is a vendor with self-selected samples: 87 sites for the 35.7% figure, Loamly's customers for the 70.6% figure.
+- **Live check, 18:50:43Z:** no analytics script appears in the homepage server HTML. PR #57 is still open (last updated 2026-09-07).
+- **Corrected steps:**
+  1. Owner: Vercel → project `mayaallan` → Analytics → Enable, then merge PR #57.
+  2. Code PR (S): add AI host mapping and `utm_source=chatgpt.com` to the referrer helper that PR #57 introduces. Do not build new first-touch storage for orders: PR #12 (2026-05-13) already writes `utm_*` and `visitor_id` onto orders. Whether subscribers carry attribution is UNVERIFIED.
+  3. Do not add GA4 just to get the AI channel. GA4 is not on the live site, and adding it brings extra consent work.
+- **Measure:** the Vercel Referrers panel (everyone, cookieless) and the admin acquisition panels (consented visitors only, per the PR #57 body).
+
+### ai-02: Bing AI Performance. Keep the owner step; drop the IndexNow PR
+- **Evidence read:** Bing, 2026-02-10 (read 18:49:06Z). The report shows total citations, average cited pages, grounding queries and page-level citations across Copilot, Bing AI summaries and partners. It is a public preview; whether every site can use it is not stated.
+- **Rehash:** IndexNow already exists: `b7a0f8a6` (2026-05-19) added a client lib, key file and submit API, and `2cb9afd6` / `5cadd779` (2026-07-08) maintained it. The live key file returned 200 (32 bytes) and `/api/indexnow/submit` returned 405 to GET (18:50:43Z). No `msvalidate` meta tag appears on the live homepage.
+- **Corrected steps (owner, about 20 minutes):**
+  1. Verify the site in Bing Webmaster Tools by importing from Search Console.
+  2. Submit `/sitemap.xml`.
+  3. Open AI Performance.
+  4. Open the IndexNow report to confirm the existing integration's submissions actually arrive.
+  - Only if none arrive: a small fix PR to the existing route, not a new integration.
+
+### ai-03: Indexing readout. Keep, run in the same owner session
+- **Evidence read:**
+  - Google, updated 2025-12-10: a page must be "indexed and eligible to be shown in Google Search with a snippet". No special files or schema are needed. AI features are counted in Search Console under the "Web" search type.
+  - Ahrefs, 2026-03-02: 37.9% of AIO citations are in the top 10 (down from about 76% in July 2025). 31.0% are beyond the top 100. Of those, 18.2% are YouTube.
+- **Rehash:** these steps are PR #45's own post-merge plan (merged 2026-09-05): verify indexability, request indexing once, monitor without resubmitting. Nothing in the live metadata records that the readout was done.
+- **Step:** URL Inspection on the book page, `/faq`, `/glossary`, `/blog/psilocybin-integration-research` and `/scenarios/ego-dissolution`. Record status and date in the PR #58 handoff. **This result gates ai-08.**
