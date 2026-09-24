@@ -63,3 +63,38 @@ Day 1 = Fri 2026-09-25. Day 14 = Thu 2026-10-08, the first circle and the Colora
 | max-image-preview:large as a to-do | already done | Live googlebot meta tag [S7] |
 | Survey questions on setting, dose or location below state level | legal exposure for respondents | Judge 3 |
 | Kindle Translate (German) | UNVERIFIED | Invite-only beta; Judge 2 got a 404 on the help page |
+
+## 7. Sources
+
+### 7.1 Live reads made for this playbook (2026-09-24, UTC; plain GETs, no logins)
+
+- **S1** https://api.github.com/repos/mallan67/mayaallan/contents/docs/operations/growth/2026-09-24/pioneer?ref=work/site-visibility - 20 files listed; branch head b88d6ec03c179b059753a14ea94009c259a39fae. Read 23:18:40Z.
+- **S2** https://www.mayaallan.com/sitemap.xml - 38 `<loc>` entries, 1 of them under /scenarios/. Read 23:18:49Z.
+- **S3** https://www.mayaallan.com/events - HTTP 200, "No events are currently scheduled. Check back soon for upcoming talks, readings, and workshops." Read 23:18:50Z-23:18:54Z.
+- **S4** https://www.mayaallan.com/partners, /press, /kit, /circles, /arc, /stories, /support, /free-copy - all HTTP 404. Read 23:18:51Z-23:18:54Z.
+- **S5** Email inputs (`type="email"`): / = 1; /events, /integration-journal, /integration-reflection, /belief-inquiry, /nervous-system-reset, /books = 0 each. Read 23:18:55Z-23:18:58Z.
+- **S6** https://psilocybinintegrationguide.com/kit/test?utm_source=x -> 308 https://www.mayaallan.com/kit/test?utm_source=x; https://psilowire.com/a/b?q=1 -> 308 https://www.mayaallan.com/a/b?q=1. Read 23:18:58Z.
+- **S7** https://www.mayaallan.com/books/psilocybin-integration-guide - HTTP 200; og:image:alt includes "Heal Traumas"; googlebot meta includes max-image-preview:large; 0 `isbn` keys in JSON-LD; links Google Play id=HvafEQAAQBAJ; 0 mentions of Fireside. Read 23:19:09Z.
+- **S8** https://www.mayaallan.com/ - JSON-LD `sameAs` = ["https://www.instagram.com/maya.allan66/"] only. Read 23:19:10Z.
+- **S9** https://www.mayaallan.com/integration-journal - "no email required, no login."; 0 mentions of Fireside. Read 23:19:11Z.
+- **S10** https://www.mayaallan.com/scenarios - links only /scenarios/ego-dissolution. Read 23:19:11Z.
+- **S11** https://www.mayaallan.com/feed.xml, /rss.xml, /blog/rss.xml - HTTP 404. Read 23:19:12Z.
+- **S12** https://www.mayaallan.com/robots.txt - 200 lines. Read 23:19:13Z.
+- **S13** https://data.colorado.gov/resource/7s5z-vewr.json (active licences grouped by type) - NMF 86, NMCF 94, NMIT 691, NMTP 11. Read 23:19:25Z (dataset rows updated 2026-09-24T10:35Z per ECO and DATA).
+- **S14** https://secure.sos.state.or.us/oard/displayDivisionRules.action?selectedDivision=7102 - OAR chapter 333 division 333; contains the 333-333-5260(4) text quoted in 1.2. Read 23:19:31Z. Judge 3 read 5120(3), 5120(12) and 5260(2) on the same page at 23:13:38Z-23:13:43Z.
+- **S15** https://horizonsconference.org/ - "October 15 - 17, 2026 in New York City". Read 23:19:32Z.
+- **S16** https://developers.google.com/search/docs/appearance/structured-data/faqpage - HTTP 301 to https://developers.google.com/search/updates#removing-faq-rich-result. Read 23:19:32Z.
+- **S17** https://www.reddit.com/r/PsychedelicTherapy/about.json and https://www.reddit.com/r/microdosing/about.json - HTTP 403 (subscriber counts UNVERIFIED). Read 23:19:32Z.
+- **S18** https://www.klcc.org/health-medicine/2026-09-23/oregon-walks-back-fee-hikes-for-psilocybin-therapy-providers - title "Oregon abandons proposed fee hikes for psilocybin therapy industry" (published 2026-09-23). Read 23:19:34Z.
+- **S19** https://booksirens.com/pricing - "Author Plan" present; $10, $2 and $100 prices on the page. Read 23:19:35Z.
+
+### 7.2 Inputs (folder `docs/operations/growth/2026-09-24/pioneer/` on `work/site-visibility`, listed at 23:18:40Z [S1])
+
+- **IN-01** `01-market-map.md` (blob 85d917ad, 36,478 B; sources read 18:25Z-19:19Z).
+- **IN-02** `02-google-network.md` + `-part2.md` (blobs 3741d27a, 3a49b43a; read 18:25Z-19:16Z).
+- **IN-03** `03-all-search-engines.md` (blob db33f315; read 18:25Z-19:02Z).
+- **IN-04** `04-book-ecosystem.md` + `-part2.md` (blobs b5b8537d, 27623cf4; read 18:25Z-22:38Z).
+- **IN-05** `05-psychedelic-niche-venues.md` (blob 0b9551f1; read 18:24Z-22:21Z).
+- **IN-06** `06-open-web-entity-links.md` + `-part2.md` (blobs f2beedbc, e2d5f448; read 18:24Z-19:08Z).
+- **IN-07** Strategies: `strategy-everywhere.md` (419b0974), `strategy-community.md` (93b45738), `strategy-ecosystem.md` (503732e7), `strategy-data.md` (5453a087), `strategy-category.md` (12dda03d); their live reads 22:52Z-23:08Z.
+- **IN-08** Judges 1-3: scores and verdicts relayed to this synthesis (their live checks 23:09:48Z-23:13:43Z); not saved as a file in this folder. The six `*.check.md` files in the folder were not read by this synthesis.
