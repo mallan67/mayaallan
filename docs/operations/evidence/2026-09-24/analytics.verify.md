@@ -137,3 +137,19 @@ No finding was refuted. Five severities were lowered: ana-02, ana-03, ana-04, an
 | production | list_deployments target=production, limit 3 | ~18:54:20Z | dpl_5ug8W5ASgWuKHpxSYScqtAH1q9Q4 (READY, sha ed7461a). The two production deployments before it are the same sha |
 
 - **Solution check:** Merge and turn on the toggle, as proposed. Then confirm that the production deployment's `githubCommitSha` is the merge commit, and that count_pageviews returns a number.
+
+### ana-09: Automated traffic inflates request counts (CONFIRMED, low)
+- **Health checks:** gh api actions/runs created 2026-09-23T18:00Z to 09-24T17:30Z, read 18:52:34Z. total_count is 6, all "Health check", event schedule, conclusion success, at 19:59:56Z, 22:54:01Z, 01:13:13Z, 06:12:58Z, 11:54:20Z and 16:44:18Z. That equals /api/health 6.
+- **Sweep 1:** get_runtime_logs 2026-09-23T20:12:30Z to 20:14:30Z (~18:52:45Z) shows 31 lines. About 22 distinct pages were fetched between 20:13:26Z and 20:13:41Z, and / plus the book page at 20:13:07Z–20:13:08Z.
+- **Sweep 2:** get_runtime_logs 23:31Z to 23:34Z shows about 60 lines. The same 13 to 14 pages were fetched about 4 times between 23:32:36Z and 23:32:42Z.
+- **Source:** No repo workflow ran at 20:13Z or 23:32Z (only the Health check runs above), so the source is unknown and outside this repo's own workflows.
+- **Solution:** correct.
+
+### ana-10: The audit polluted the logs (CONFIRMED, info; the window is longer)
+- **Log lines with a status code, by window (get_runtime_logs grouped by status, read ~18:53Z):**
+  - 2026-09-24T12:00Z to 17:30Z: 75 (200×72, 404×3).
+  - 17:30Z to 18:00Z: 2,107 (200×2,029, 404×76, 304×2).
+  - Since 18:00Z: 7,386+ (200×7,139, 404×233, 405×11, 307×3).
+- **405 responses between 18:10Z and 18:40Z:** on /api/checkout/paypal, /api/checkout/paypal/capture-order, /api/subscribe and /api/marketing/*. These are GET probes by audit agents, **not purchases or sign-ups**.
+- **Correction:** This verifier also made about 60 GETs between 18:46Z and 18:58Z. Treat logs as polluted until **at least about 2026-09-25T19:00Z**, which is 24 hours after the last audit or verification request.
+- **Solution:** correct.
