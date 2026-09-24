@@ -98,3 +98,50 @@ The claim is **refuted for Google**. A Google Search Console domain token is pub
 | lastmod and cache | GET /sitemap.xml | 18:42:58 | 200, 10027 B, 38 URLs, 8 with lastmod (book 2026-01-22T11:34:05Z, media 2026-01-22T14:19:20Z, 5 posts all 2026-04-19T00:00:00Z, scenario 2026-09-05). X-Vercel-Cache HIT, Age 1412102 s |
 
 **Confirmed**, severity **low**. Regeneration only on deploy is still an inference; it cannot be proven without publishing content. The identical post dates look like a template.
+
+### vis-09: title and description lengths
+| check | source | UTC | result |
+|---|---|---|---|
+| Decoded lengths for 38 URLs | same pass as vis-03 | 18:42:58-18:43:01 | Titles: /practices 106, /es 104, /fr 98 (input 103), research post 97 (input 102), IFS post 96, /pt 92, /nervous-system-reset 91 (input 95), affirmations post 90. Descriptions: book 369, /faq 364, /glossary 340 (input 349). /books and /about titles are 18 characters. |
+
+**Confirmed.** The input counted `&#x27;` and `&amp;` in raw form. Severity **low**: Google rewrites long titles, but specific titles of 50-60 characters still help clicks.
+
+### vis-10: robots.txt Host line and /api/
+| check | source | UTC | result |
+|---|---|---|---|
+| robots.txt | GET /robots.txt | 18:46:04 | 200, 2990 B, HIT. 1 `Host:` line, 1 Sitemap line, 33 User-Agent groups (including `*`), each with Allow `/` and Disallow `/admin/`, `/api/` and `/download/` |
+| Does content depend on /api/? | HTML of 38 pages; 15 client JS bundles from /, the book page, a post and /media | 18:45:41-18:46:10 | 0 `/api/` strings in HTML. The JS references only /api/marketing/visitor, /api/marketing/event and /api/subscribe |
+
+The facts are **confirmed**, but the conditional impact is refuted: no indexable content comes from /api/. Severity lowered to **info**. Keep `Disallow: /api/`; removing the Host line is cosmetic.
+
+### vis-11: book page links
+| check | source | UTC | result |
+|---|---|---|---|
+| Anchors on the book page, plus the 38-page crawl | GET /books/psilocybin-integration-guide | 18:45:41-18:46:35 | `https://www.paypal.com/signout`; B&N `;jsessionid=<redacted>?ean=9798994148839`; bokus `?srsltid=<redacted>`; Bookshop `ref=https...`; AbeBooks `clickid=<redacted>`; Amazon via the `a.co/d/...` shortener. Present on this page only. |
+
+**Confirmed**, severity **low**. A click on the signout anchor signs a visitor out of PayPal, which is a UX defect. The fix works as proposed; also prefer amazon.com/dp/ URLs over a.co.
+
+### vis-12: no feed
+| check | source | UTC | result |
+|---|---|---|---|
+| 7 paths, 2 rounds | GET /feed.xml, /rss.xml, /blog/rss.xml, /feed, /atom.xml, /blog/feed.xml, /index.xml | 18:46:28-18:46:35 | all 404 |
+| Feed `<link>` in HTML | 38-page crawl | 18:45:41-18:45:44 | 0 pages |
+| Demand | get_runtime_logs 404 by path, before the audit and over 24 h | ~18:47-18:48 | 0 feed requests before 17:00Z. The 24 h counts (/rss.xml 17, /feed.xml 17, and so on) are all audit probes. |
+
+**Confirmed**, severity **info**. The log-based evidence reflects the audit, not real demand.
+
+## 3. "Works" spot-checks
+| item | holds | live re-check (UTC) |
+|---|---|---|
+| Evidence commits changed only the one file | yes | 1778a314 added and 01eab334 modified `audit-crawler-access.md`, nothing else; these are the only 2 commits on that path; now 7102 B (gh api, 18:48:47-18:48:58) |
+| No user-agent blocking or challenge | yes | 60 GETs (15 user agents x /, the book page, a post, the sitemap): 60/60 200, 0 challenge text, 0 x-vercel-mitigated, challenge-token or X-Robots-Tag headers (18:47:05-18:47:10) |
+| robots.txt allows all bots except 3 paths and declares the sitemap | yes (minor correction) | 2990 B; 33 groups **including** `*` (32 named, not "* plus 33"); all Allow `/`; Sitemap present; Claude-SearchBot and Claude-User fall back to `*` (18:46:04) |
+| Sitemap valid; 38 URLs return 200, index,follow and are self-canonical | yes | 38/38 200, robots "index, follow", canonical equal to loc, no X-Robots-Tag (18:42:58-18:43:01) |
+| No noindex | yes | same pass, plus 0 X-Robots-Tag in the 60-GET pass |
+| Alternate hosts 308 to www keeping path and query; preview hosts on SSO with noindex | yes | 6 hosts return 308 to https://www.mayaallan.com/books?x=1; the 2 preview hosts return 302 to vercel.com/sso-api with X-Robots-Tag (18:46:36-18:46:38) |
+| Slash, query and 404 handling | yes | /books/, /about/ and the post with a slash return 308 to the no-slash URL; /Books, /index.html, /en, /es/books and a nonexistent path return 404; canonical of /books?utm_source=test is /books (18:46:39-18:46:41) |
+| Substantial text on the core pages | yes | / 636, book page 706, posts 1256-2891, /faq 2420, /glossary 2594, scenario 3207, /privacy 1188 (18:42:58-18:43:01) |
+| JSON-LD parseable | yes | 6 pages, 0 errors (18:43:43-18:43:45) |
+| llms.txt, llms-full.txt, security.txt, og images | yes | 200 5651 B; 200 109820 B; 200, Expires 2027-05-18; 3 opengraph-image URLs return 200 image/png (18:46:43-18:46:45) |
+| No 5xx in 24 h | yes | 5xx grouped by path: 0 rows; by status: 0 rows. All codes: 200 8399, 404 305, 405 10, 304 3, 307 3 (~18:47) |
+| Custom domains public; no firewall config | yes | get_project: password off, SSO all_except_custom_domains, trustedIps off. get_firewall_config(active): 404 "Seawall Config not found." (~18:47) |
