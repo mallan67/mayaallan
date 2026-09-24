@@ -60,3 +60,48 @@ All times are UTC on 2026-09-24. No app source files, local files, forms or logi
 | eam-10 glossary anchors and links | OK | UNVERIFIED: HubSpot's "glossary for bots" detail is paywalled (read ~18:49Z) | **Yes, already live:** 30 anchors and 7 tool/scenario links (18:48:23Z); glossary shipped in `f5514ac` (2026-05-19) | Negligible | **false** | Nothing to do |
 | eam-08 share cards | Next.js docs updated 2026-07-09 (v16.3.6) | **None**; the lens marks the lift UNVERIFIED | **Yes** for share buttons (2026-01-22); page OG images were done 2026-01-24 and 2026-02-02 | Near-zero users means near-zero shares | **false** | Keep one piece: add `opengraph-image` to the 3 AI tool routes inside the eam-07 PR, so eam-06 link previews show an image |
 | eam-09 embeddable widget | Spam policy 2026-08-28 | **None**; the only source cited is a risk, not a benefit | No | No demand; risk under the widget-link spam policy | **false** | Drop |
+
+## Kept tactics: what to do instead of the lens text
+
+### eam-00: measure first (mixed, S)
+
+**Owner, today:**
+- Merge PR #57. It was mergeable with state clean at 18:53:02Z.
+- Turn on Vercel -> mayaallan -> Analytics.
+
+PR #58 (read 18:46:45Z) lists both as open owner decisions. On Hobby, only page views are needed from Vercel.
+
+**Code PR:**
+1. Before adding anything, check which of the existing PR #12 and `2e559a0` events actually fire in production.
+2. Send tool events through the first-party `/api/marketing/event` endpoint (PR #12), not through Vercel custom events. Hobby has no custom events, and the project's plan is UNVERIFIED.
+3. Add only what is missing: `tool_complete`, `capture_view`, `capture_submit` and `journal_pdf_download`.
+4. Count `tool_complete` and `capture_submit` **server-side with no identifier**, so visitors who decline consent still appear in the totals. Attach `visitor_id` only after consent, which is the same split PR #57 uses. The PR #57 dashboard itself warns that its panels "count consented visitors only".
+5. Keep the optional "Where did you hear about me?" select.
+
+**Done when:** page views and `tool_complete` both show non-zero counts for two weeks in a row.
+
+**Why this is not a rehash:** the earlier work built the pipes, but they were never switched on and read.
+
+### eam-01: capture at tool completion (code PR, M; legal review first)
+
+**Offer:** "Get 7 short follow-up prompts for this practice by email." The prompts are Maya's own fixed content. They are **not** the user's conversation, which is the $9.99 product (error 2) and is health data. Store only the email, the consent flags, a timestamp and a coarse tool id.
+
+**Legal:** a tool id stored next to an email can itself count as consumer health data. According to the WA Attorney General's MHMDA page (read ~18:52Z):
+- the definition covers data "derived or extrapolated from nonhealth data";
+- the law applies to anyone who provides "services or products to Washington";
+- a violation is a per se CPA violation, and individuals can sue.
+
+Legal review before launch stays mandatory.
+
+**Flow:** the tool stays ungated. The PR #36 crisis layer runs first, and the card appears only after the closing step.
+
+**One component in three places:**
+- tool completion (eam-01);
+- the book page sample offer (taken from eam-03);
+- `/integration-journal`, added later (taken from eam-02).
+
+All three feed one Resend sequence (PR #42).
+
+**Expected:** the capture rate is UNVERIFIED. The 40.1% and 44.9% figures come from quiz funnels, and they mix optional and gated forms. Leads ≈ completions × rate. Completions are unknown and probably near zero until eam-06 is running.
+
+**Measure:** `capture_submit / tool_complete` per tool, unsubscribes, and the Day-3 click rate.
