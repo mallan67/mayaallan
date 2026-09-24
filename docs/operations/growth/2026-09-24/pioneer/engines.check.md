@@ -153,3 +153,24 @@ Ranked by leads per hour **at today's baseline** (0 Goodreads ratings, 0 Amazon 
 | G9 | https://support.google.com/knowledgepanel/answer/7534902 | — | 18:53:06–18:53:48Z |
 | G10 | https://ai.google.dev/gemini-api/docs/google-search | upd. 2026-09-23 | 18:58:02–18:58:42Z |
 | G11 | https://developers.google.com/search/docs/appearance/structured-data/event | upd. 2026-09-08 | 18:59:14–19:00:01Z |
+| K3 | https://developers.google.com/search/blog/2026/06/gen-ai-performance-reports | 2026-06-03 (note: all sites 2026-08-31) | 19:02:52–19:02:56Z |
+| K4 | https://developers.google.com/search/blog/2026/09/web-multimodal-in-sc | 2026-09-24 | 19:02:52–19:02:56Z |
+| K5 | https://developers.google.com/search/blog/2026/07/search-console-social-video-platforms | 2026-07-07 | 19:02:52–19:02:56Z |
+| B1 | https://blogs.bing.com/webmaster/February-2026/Introducing-AI-Performance-in-Bing-Webmaster-Tools-Public-Preview | 2026-02-10 | 18:53:06–18:53:48Z |
+| B2 | https://blogs.bing.com/search/2026/6/New-AI-Visibility-Insights-in-Bing-Webmaster-Tools-Intents-Topics-Citation-Share-Compare | 2026-06-16 | 18:53:06–18:53:48Z |
+| B3 | https://learn.microsoft.com/en-us/lifecycle/announcements/bing-search-api-retirement | ms.date 2025-05-15 | 18:53:06–18:53:48Z |
+| B4 | https://www.indexnow.org/ | — | 18:53:06–18:54:05Z |
+| B5 | https://www.indexnow.org/documentation | — | 18:53:06–18:53:48Z |
+| B6 | https://www.indexnow.org/faq | — | 18:54:05–18:54:15Z |
+| E1 | https://duckduckgo.com/duckduckgo-help-pages/results/sources | — | 18:53:48–18:54:05Z |
+| E2 | https://en.wikipedia.org/wiki/Yahoo_Search (secondary) | — | 18:54:15–18:54:52Z |
+| E3 | https://en.wikipedia.org/wiki/Ecosia (secondary) | — | 18:54:15–18:54:52Z |
+| E4 | https://en.wikipedia.org/wiki/Qwant (secondary) | — | 18:54:15–18:54:52Z |
+| E5 | https://en.wikipedia.org/wiki/Startpage (secondary) | — | 18:54:15–18:54:52Z |
+| E6 | https://brave.com/search/api/ ; https://en.wikipedia.org/wiki/Brave_Search | — | 18:54:15–18:55:14Z |
+| E7 | https://github.com/kagisearch/smallweb (README via GitHub API; pushed 2026-09-23T21:30:09Z) ; https://help.kagi.com/kagi/search-details/search-sources.html | — | 18:54:15–18:54:53Z |
+| E8 | https://www.mojeek.com/about/ ; https://www.mojeek.com/bot.html | 2025 figure | 18:54:15–18:55:14Z |
+| E9 | https://ahrefs.com/robot ; https://yep.com/ (403 challenge) | — | 18:55:14–18:55:19Z |
+| E10 | https://en.wikipedia.org/wiki/You.com (secondary) | — | 18:54:15–18:54:52Z |
+| E11 | https://support.apple.com/en-us/119829 | 2026-09-04 | 18:53:48–18:54:05Z |
+| E12 | https://ziyuan.baidu.com/ (302) | — | 18:55:19Z |
