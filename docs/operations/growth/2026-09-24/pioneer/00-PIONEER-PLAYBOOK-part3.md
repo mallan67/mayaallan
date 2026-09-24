@@ -24,3 +24,42 @@ Day 1 = Fri 2026-09-25. Day 14 = Thu 2026-10-08, the first circle and the Colora
 | 14 | Thu 10-08 | [MAYA] Colorado hearing, 9:00 AM MDT (listen, or speak if registered). [MAYA] Back Home Circle #1 at 5:00 PM PT; a recap the next morning with the journal and the next date. [MAYA] 14-day review: registrations and opt-ins by source, ARC readers, center and program replies, pages live; choose the mix for weeks 3-4. | First circle; opt-ins from attendees |
 
 **Day-14 check (planning targets, not forecasts):** 15+ circle registrations; 10+ ARC readers requested; 20 Oregon centers and 10+ program directors contacted; capture live on 8+ pages; 10 scenario pages live; 5 podcast pitches sent; 1 newsjack sent. **Weeks 3-4:** circle #2 (Oct 25), Horizons week (Oct 15-17), Colorado centers, scenario pages 16-20, the Integration Gap page, podcast pitches 6-10, and the first Goodreads and Amazon reviews.
+
+## 6. Dead ends (do not spend time here)
+
+| Item | Status | Why, with source |
+|---|---|---|
+| Google FAQ rich results | DEAD | The FAQPage docs now 301 to the changelog entry `#removing-faq-rich-result` (re-read 23:19:32Z [S16]); removed effective 2026-05-07 [IN-02] |
+| Google Podcasts / Podcasts Manager | DEAD | Closed [IN-02, IN-06]; use YouTube RSS podcasts instead |
+| Google Discover "Follow" | DEAD | [IN-02] |
+| Google Book Actions | not for single authors | [IN-02] |
+| Google Indexing API for blog or scenario pages | not eligible | [IN-02] |
+| Google Business Profile | not eligible for an online-only author | [IN-02] |
+| Merchant Center for ebooks | not eligible | [IN-02] |
+| Google Ad Grants | nonprofits only | [IN-02] |
+| Google Ads for this topic | RESTRICTED | Drug-adjacent content and services that facilitate recreational drug use [IN-01 mkt-x-01, IN-05]; do not test until the policy is re-read |
+| Google Search profile (profile.google.com) | not eligible now | Needs 10,000 followers on one platform, age 18+, US; Instagram has 18 [S73] |
+| Knowledge Graph Search API | low value | Needs an API key; migrating to Cloud Enterprise Knowledge Graph [S72] |
+| MAPS Integration List (integration.maps.org) | DEAD | Timed out; Fireside still links it [IN-01, BHC] |
+| Findaway Voices (brand) | DEAD | Redirects to Voices by INaudio [IN-04] |
+| Shepherd | DEAD as a destination | shepherd.com is a domain-for-sale page; use Book DNA [S54] |
+| subredditstats.com | DEAD as a data source | [IN-01] |
+| Custom GPTs | retiring | Replaced by the OpenAI Apps directory; psilocybin policy fit UNVERIFIED [S48] |
+| HARO (direct) | UNVERIFIED | helpareporter.com returned 429; Featured carries HARO queries [S61] |
+| Third Wave directory and paid guest slot | not for authors / skip | Providers-only listing at $49-99 a month [S67]; $1,500 podcast guest fee [IN-05] |
+| Psychedelic Passage | exclude | Its site offers a "Psilocybin Sourcing Guide" [S74] |
+| KDP Select / Kindle Unlimited | conflict | Exclusivity vs the direct PDF and the Google Play listing [S7]; check the status first |
+| BookBub Featured Deal now | premature | Needs reviews; nonfiction acceptance is selective (Judge 2) |
+| Bulk licences and casebook sales now | premature | 0 ratings; curricula do not change within 30 days (Judges 1-3) |
+| Commissions or referral fees to licensed facilitators | policy risk | OAR 333-333-5120(12) bars financial transactions that put the facilitator's interest above the client's (read by Judge 3, 23:13:38-43Z, same page as [S14]) |
+| Zoom Basic's 40-minute cap for a sharing circle | safety risk | Cutting someone off mid-disclosure (Judge 3) |
+| YouTube dosing or sourcing content | policy risk | Psilocybin is on YouTube's hard-drug list [IN-02]; education only |
+| Reddit self-promotion; r/shrooms | removal and brand risk | Subreddit rules; sourcing talk [IN-05]; sizes UNVERIFIED (403 [S17]) |
+| Paid links and link schemes | spam-policy risk | Paid links must be `rel=sponsored` [IN-06] |
+| Category launch: MITRE/CVE framing, "creator of the Index" claims, a Zenodo DOI for book summaries, Show HN | judged low value / risky | Lowest-scored strategy (76/150); DOI revocation risk; wrong audience for Show HN [S77] |
+| A separate psilowire.com site in the first 30 days | splits a young entity | Keep it a tracked 308 [SE, S6] |
+| "71% out of state" without its denominator | credibility risk | Use 545 of 1,220 = 44.7% [S21] |
+| "Heal Traumas" and other therapeutic wording | trust and policy risk | Live in the book page og:image:alt [S7] |
+| max-image-preview:large as a to-do | already done | Live googlebot meta tag [S7] |
+| Survey questions on setting, dose or location below state level | legal exposure for respondents | Judge 3 |
+| Kindle Translate (German) | UNVERIFIED | Invite-only beta; Judge 2 got a 404 on the help page |
