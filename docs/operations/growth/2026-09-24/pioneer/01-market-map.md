@@ -17,3 +17,24 @@
 5. **B2B is where the leads concentrate.** Oregon has **383** licensed facilitators, Colorado has **118** approved facilitator licenses plus **501** people holding facilitator-training licenses, and there are about **31** active training programs across the two states. A casebook of 40 real scenarios is teaching material. One program adoption means a new cohort every term.
 
 ---
+
+## 1. Market size (live numbers)
+
+| Metric | Value | Source (see §9) |
+|---|---|---|
+| US past-year **psilocybin** use, age 12+ (2024) | **7,890,000** (2.7%); lifetime 35,347,000 (12.3%); past-month 1,749,000 (0.6%) | S5 NSDUH 2024 Table 1.1A |
+| US past-year **hallucinogen** use, 12+ (2024) | 10.4M (3.6%), up from 7.6M (2.7%) in 2021 | S4 NSDUH 2024 report |
+| Hallucinogen growth by age | adults **26+: 4.7M (2021) → 7.7M (2024)**; ages 18–25 flat at 6.8% | S4 |
+| US adults using psilocybin in the past year (Sept 2025) | **about 11M**; about 10M microdosed psilocybin, LSD or MDMA; **69%** of past-year psilocybin users microdosed at least once; more than 200M psilocybin use-days, nearly half of them microdoses | S6 RAND RRA4334-1 |
+| Lifetime psilocybin microdosing, US adults | 13.7M (5.3%); 66.6% did it mainly for recreational reasons | S9 Am J Prev Med 2026 |
+| Oregon clients served | **2025: 5,935** (Q1 1,509 / Q2 1,758 / Q3 1,310 / Q4 1,358). **2026 H1: 2,172** (Q1 952 / Q2 1,220), down **34%** from H1 2025 (3,267). About 20,000 since 2023 (secondary) | S1 OPS CSVs; S12 |
+| Oregon infrastructure | 22 operating service centers out of 35 approved; **383** licensed facilitators (542 at the end of 2025); 8 manufacturers; 15 active training programs out of 32 authorized, "as of Q1 2026" (secondary) | S12 Psychedelic Alpha tracker |
+| Oregon prices | individual session "$1,500–$3,500 (most common range)" (secondary) | S21 |
+| Colorado facilitators (official, "updated monthly", last update **02/02/2026**) | Facilitator 77 approved; Clinical Facilitator 41; Distinguished Educator 6; **Facilitator Training License 501**; Training Program License 16 | S3 DORA/DPO |
+| Colorado healing centers | 34 licensed (9 standard, 25 micro) plus 18 pending by Feb 2026 (secondary). Official NMD page gives no count | S20; S2 |
+| Colorado prices | $1,000–4,500 per session; full programs $3,500–9,500 (secondary) | S20 |
+| New Mexico medical program | SB 219 signed April 2025. Qualifying conditions: treatment-resistant depression, PTSD, substance use disorder, end-of-life. **Launch "at the end of this year" (2026)**; $630,000 equity fund; $300,000 to UNM for end-of-life therapy | S13 NM DOH; S14 KUNM |
+| FDA pathway (COMP360, TRD) | rolling NDA plus a National Priority Voucher; "final submission expected to be completed in Q4"; "**launch expected in first half of 2027**"; the company cites 4M US TRD patients and 13M PTSD patients | S15 SEC 8-K Ex-99.1, 2026-07-07 |
+| Psilocybin clinical trials (ClinicalTrials.gov) | 305 total; **99 recruiting** (63 with US sites); 35 not yet recruiting; 34 active but not recruiting; 90 completed; planned enrollment across recruiting trials **6,512** | S7 |
+| Psilocybin retreats listed on Retreat Guru | **738+**: Netherlands 257, Spain 173, Mexico 61, Portugal 41, US 35; about $200–900 per day (secondary, marketplace self-report) | S19 |
+| Peer support volume (Fireside Project) | 40,000 conversations since 2021; about 1,100 calls a month; 700+ trained volunteers; 1,200+ coaching sessions (self-reported) | S16 |
