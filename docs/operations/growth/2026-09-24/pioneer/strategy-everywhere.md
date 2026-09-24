@@ -129,3 +129,24 @@ The engineer's rule throughout: every venue gets its own tracked door, every new
 - Owner: outreach + content. Effort: 3 days, then 2 hours a week. First lead: day 10-30 (estimate).
 - Measure: utm_source=trainer-<program>&utm_medium=b2b&utm_campaign=casebook; casebook_request.
 - Evidence: mkt-10, mkt-ws-04, niche-edu-or-programs, web-edu-ops; DORA live read.
+
+### Move 9 - Official and gatekeeper listings, plus Colorado's public record
+- Venues: Colorado NMD Third-Party Educational Resources, an official state page with a public recommendation form and plain followed links that already lists Fireside, Zendo, Unlimited Sciences and Michael Pollan's page (map 01 missing); Colorado DPO stakeholder meeting 2026-10-02 and rulemaking hearing 2026-10-08 with written comments (map 05 missing); Fireside Ambassador Kit (niche-npo-fireside); Zendo Project resources; Psychedelics.com Contribute page, which asks for "Tool Builders", and its Psybrary AI corpus (map 05 missing).
+- Steps: (1) Submit the free tools (journal, nervous-system reset, integration reflection), not the store page, through Colorado NMD's form. (2) File a short written comment by 2026-10-08 on take-home integration education for clients who travel home, citing Oregon's official numbers; it becomes public record and introduces Maya to the regulator. (3) Put 62-FIRESIDE on every tool page first, then request the Ambassador Kit and propose one tool for Fireside's resources. (4) Offer the tools to Psychedelics.com as a tool builder.
+- Owner: outreach. Effort: 1 day. First lead: day 14-45 (estimate; review times UNVERIFIED).
+- Measure: referrer sessions from nmd.colorado.gov, firesideproject.org and psychedelics.com; submit clean URLs, no UTMs.
+- Evidence: map 01 and 05 missing items above; mkt-07; mkt-ws-09.
+
+### Move 10 - Scenario Circles: a free weekly online event, listed wherever events are searched
+- Venues: Eventbrite online discovery (30 listings on page 1 for online psychedelic integration; free events cost nothing to publish) (niche-com-eventbrite; maps 03 and 06 missing); MAPS event calendar (niche-evt-maps-calendar); Luma; Meetup (fee UNVERIFIED); the site's /events page (empty, 22:54:05Z); Horizons week in NYC, 2026-10-15 to 10-17, with a Community Ally such as Brooklyn Psychedelic Society, which already runs integration circles (niche-evt-horizons; map 05 missing).
+- Steps: (1) Format: 60 minutes, one scenario a week, peer education only (no substances, not therapy), 25 seats, Fireside line and referral box. (2) List every session on Eventbrite, the MAPS form and Luma as "Psilocybin Integration Circle: <scenario>". (3) Registration carries a separate optional newsletter opt-in; nobody is added without it. (4) Event JSON-LD on /events is for people, not rich results: Google excludes online-only events (map 03 missing); an in-person NYC session in Horizons week would qualify (goog-23). (5) Each session's theme becomes a solo recap for move 11.
+- Owner: Maya hosts; owner account lists. Effort: 2 hours a week. First lead: day 5-10 (estimate; a registration is an email).
+- Measure: utm_source=eventbrite|maps-calendar|luma|meetup&utm_medium=event&utm_campaign=scenario-circle; event_register; opt-in rate.
+- Evidence: items above; /events live read.
+
+### Move 11 - The 40 scenarios as audio and video (with the audiobook in production)
+- Venues: YouTube long-form and Shorts (goog-15, goog-16); YouTube Music via podcast RSS (goog-17, web-g-ytrss); Spotify for Creators and Apple Podcasts (vert-spotify-podcasts, vert-apple-podcasts); watch pages on the site.
+- Steps: (1) Create the channel; use the 14 profile links for vanity URLs. (2) "Integration Scenarios" podcast feed: one scenario per 6-10 minute episode in Maya's voice; submit the RSS to YouTube Studio, Spotify for Creators and Apple Podcasts. (3) One 45-second Short per scenario: what it feels like plus one prompt. (4) Embed each video on its scenario page with VideoObject, so video results land on the site (the watch page must be indexed; map 02 missing). (5) Educational framing only: YouTube lists psilocybin as a hard drug (map 02). (6) Before any exclusive audiobook deal, confirm the right to use its audio as podcast excerpts (book-acx).
+- Owner: content + owner account + code PR (VideoObject). Effort: 3-4 hours a week. First lead: day 14-30 (estimate).
+- Measure: utm_source=youtube&utm_medium=video&utm_campaign=scenario-<n>; utm_source=podcast-rss&utm_medium=audio; spoken psilocybinintegrationguide.com/listen; Search Console YouTube property.
+- Evidence: map 01 (integration videos 2-9 years old, at most 34K views; scenario video 152,568); mkt-ws-02; YouTube autocomplete has no long tail for "psilocybin integration" (22:55:36Z), an open lane.
