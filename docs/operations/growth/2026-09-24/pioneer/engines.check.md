@@ -99,7 +99,7 @@
 | **KDP audiobooks with virtual voice** | Free AI narration straight into Amazon's audio store. | Invite-only beta; free "at this time"; US marketplace; EN/ES/IT/FR; not if an Audible audiobook exists; KDP Select terms apply if enrolled. | none | A12, A13 |
 | **Draft2Digital (wide distribution)** | One upload reaches stores and libraries the map lists as gaps. | Partners: Amazon, Apple Books, B&N, Kobo, Everand, Smashwords, Tolino, **OverDrive, cloudLibrary, BorrowBox, Hoopla**, Vivlio, Gardners, Fable, Bookshop; takes "approximately 10% of the retail price". | none (retailer pages) | A14 |
 | **Library discovery (OverDrive/Libby, Hoopla, BorrowBox, cloudLibrary)** | Librarians and patrons search these catalogues. It is a no-audience discovery path. | Via Draft2Digital (above). Direct terms UNVERIFIED. | none | A14 |
-| **BookBub** | The largest deal-alert audience for books. Author Profiles let readers follow for new releases. | Featured Deals (paid; "Fees reflect recent click ranges and partner demand for the category"), BookBub Ads, Preorder Alerts, New Releases for Less, Author Profiles. Prices UNVERIFIED (pricing page 403). | profile link rel UNVERIFIED; `utm_source=bookbub` | M1 |
+| **BookBub** | Book deal-alert and new-release service (audience size not verified here). Author Profiles let readers follow for new releases. | Featured Deals (paid; "Fees reflect recent click ranges and partner demand for the category"), BookBub Ads, Preorder Alerts, New Releases for Less, Author Profiles. Prices UNVERIFIED (pricing page 403). | profile link rel UNVERIFIED; `utm_source=bookbub` | M1 |
 | **Wikidata item (author and book)** | Feeds knowledge graphs, which leads to a knowledge panel, which leads to a claim. | Notability: "clearly identifiable conceptual or material entity that can be described using serious and publicly available references". ISBNs and retail listings help; independent press or reviews are still needed. | sameAs target | M2 |
 | **Open Library (Internet Archive)** | Open book and author catalogue with author pages. | "Add a Book" in site navigation (HTTP 200). Edit rules not read. | author links (rel UNVERIFIED) | M3 |
 | **Eventbrite online-event search** | There is a live "Psychedelic Integration Events Online" search page (30 listings on page 1, e.g. a PsyCare integration circle). Future talks or readings get found there. | Create the event on Eventbrite; there are no events today [S2]. Note that Google's event rich results **exclude online-only events**: "Events must take place in a physical location" (doc upd. 2026-09-08). | event page link; `utm_source=eventbrite&utm_medium=event` | M4, G11 |
@@ -108,3 +108,48 @@
 | **OpenAI Plugins directory (replaces GPTs)** | A new AI surface; the GPT Store is being retired. | Submission portal collects "listing information … country availability, and policy attestations"; skills-only plugins allowed. Policy fit for psilocybin content is **UNVERIFIED**. | in-plugin links | O3, O4 |
 
 Not added: Kobo Writing Life direct (kobo.com returned 403, so mechanics are UNVERIFIED; it is reachable via Draft2Digital anyway). LibraryThing Early Reviewers (403, UNVERIFIED). Meetup (topic page rendered "0 members 0 groups" statically, which is unreliable). Reddit communities (blocked).
+
+---
+
+## 3. Lead-value reality check (solo author, near-zero audience)
+
+Ranked by leads per hour **at today's baseline** (0 Goodreads ratings, 0 Amazon reviews, Bing about 36 pages indexed, not on Apple Books):
+1. **Retail entity fixes**: Amazon categories and keywords per format; claim Goodreads; publish on Apple Books or go wide via Draft2Digital. Readers already search here.
+2. **Audiobook channel decision**: Play auto-narration vs Spotify vs ACX vs Virtual Voice. The exclusivity rules interlock (§0 #7), and the wrong first move closes doors.
+3. **Borrowed audiences**: podcast guesting (Listen Notes), niche directories, and BookBub once reviews exist.
+4. **Measurement wiring**: GSC Generative AI reports, platform properties, Bing AI Performance. These make leads visible but don't create them.
+5. Engines with no submission path (Brave, Mojeek, Apple, DDG, Yahoo, Ecosia, Qwant, Startpage) respond only to **links**. Their lead value follows item 3, not separate work.
+
+## 4. Still UNVERIFIED after this check
+
+- Reddit subscriber counts (all Reddit hosts blocked, 18:55:22–18:55:37Z). TikTok drug-content rules (page body empty).
+- Goodreads giveaway pricing. BookBub prices and audience size. Kobo Writing Life and LibraryThing ER terms (403).
+- ACX's own policy on AI or digital narration (JavaScript-only pages). Spotify for Authors royalty and distribution terms.
+- Amazon Community Guidelines on book reviews (503). Whether "Amazon ignores UTM" (never sourced).
+- ChatGPT's own UTM parameter. Claude's search provider. Brave and Mojeek coverage of mayaallan.com (unparseable; control test failed).
+- Bing WMT ownership status. Whether the site shows a cookie popup (a footer link exists).
+- Brave or Mojeek submission paths (no search budget left to look).
+
+---
+
+## Sources (all read live 2026-09-24, UTC)
+
+| ID | URL | Page date | Read (UTC) |
+|---|---|---|---|
+| S1 | https://dns.google/resolve?name=mayaallan.com&type=TXT ; https://www.mayaallan.com/ (robots meta, feeds 404, BingSiteAuth 404) | — | 18:53:02–18:53:06Z |
+| S2 | https://www.mayaallan.com/books/psilocybin-integration-guide (sameAs; Play link 200) ; https://www.mayaallan.com/events | — | 19:03:58–19:04:02Z |
+| S3 | https://www.mayaallan.com/ (no msvalidate / p:domain_verify; "Cookie preferences") | — | 19:05:16–19:05:25Z |
+| S4 | https://www.bing.com/search?q=site%3Amayaallan.com ; https://html.duckduckgo.com/html/?q=site%3Amayaallan.com ; search.brave.com / mojeek.com (unparseable, control 0) | — | 19:03:20–19:03:47Z |
+| S6 | https://www.instagram.com/maya.allan66/ (200) | — | 19:03:26Z |
+| S7 | https://www.reddit.com/r/microdosing/about.json (+old., api.) blocked | — | 18:55:22–18:55:37Z |
+| S8 | https://www.mayaallan.com/about | — | 18:58:42–18:58:48Z |
+| G1 | https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl | upd. 2025-12-10 | 18:53:02–18:53:48Z |
+| G2 | https://developers.google.com/search/docs/appearance/ai-features | upd. 2025-12-10 | 18:53:02–18:53:48Z |
+| G3 | https://developers.google.com/search/docs/appearance/google-discover | upd. 2026-03-09 | 18:53:02–18:53:48Z |
+| G5 | https://developers.google.com/search/apis/indexing-api/v3/quickstart | upd. 2026-07-16 | 18:53:02–18:53:48Z |
+| G6 | https://developers.google.com/search/docs/appearance/structured-data/faqpage | May 2026 / 2026-06-15 | 18:53:02–18:53:48Z |
+| G7 | https://developers.google.com/search/blog/2023/06/sitemaps-lastmod-ping | 2023-06-26 | 18:54:05–18:54:15Z |
+| G8 | https://support.google.com/business/answer/3038177 | — | 18:53:06–18:53:48Z |
+| G9 | https://support.google.com/knowledgepanel/answer/7534902 | — | 18:53:06–18:53:48Z |
+| G10 | https://ai.google.dev/gemini-api/docs/google-search | upd. 2026-09-23 | 18:58:02–18:58:42Z |
+| G11 | https://developers.google.com/search/docs/appearance/structured-data/event | upd. 2026-09-08 | 18:59:14–19:00:01Z |
