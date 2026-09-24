@@ -232,3 +232,23 @@ The table orders tactics by build priority, not by id. Owner: **code-pr** = a Gi
 - **Nothing in this document has been built.** No code, form, or account setting was changed. Only this file was committed.
 
 ---
+
+## 7. Sources (all fetched live 2026-09-24; "Re-check" = HTTP 200 confirmation time, UTC)
+
+| # | Source | Type | Published / updated | Re-check (UTC) |
+|---|---|---|---|---|
+| 1 | https://developers.google.com/search/docs/essentials/spam-policies | Google policy | last updated 2026-08-28 | 2026-09-24T18:33:16Z |
+| 2 | https://status.search.google.com/incidents.json | Google dashboard | Dec 2025-Sep 24 2026 entries | 2026-09-24T18:33:17Z |
+| 3 | https://developers.google.com/search/blog/2024/03/core-update-spam-policies | Google blog | 2024-03-05 (older, still current policy) | 2026-09-24T18:33:17Z |
+| 4 | https://developers.google.com/search/blog/2025/05/succeeding-in-ai-search | Google blog (J. Mueller) | 2025-05-21 | 2026-09-24T18:33:18Z |
+| 5 | https://developers.google.com/search/docs/fundamentals/using-gen-ai-content | Google docs | last updated 2025-12-10 | 2026-09-24T18:33:22Z |
+| 6 | https://developers.google.com/search/docs/fundamentals/creating-helpful-content | Google docs | last updated 2025-12-10 | 2026-09-24T18:33:23Z |
+| 7 | https://developers.google.com/search/docs/appearance/ai-features | Google docs | last updated 2025-12-10 | 2026-09-24T18:33:24Z |
+| 8 | https://developers.google.com/search/blog/2025/06/simplifying-search-results | Google blog | 2025-06-12 (update 2025-09-08) | 2026-09-24T18:33:25Z |
+| 9 | https://support.google.com/webmasters/answer/7440203 | GSC Help | not dated on page | 2026-09-24T18:33:26Z |
+| 10 | https://www.pewresearch.org/short-reads/2025/07/22/google-users-are-less-likely-to-click-on-links-when-an-ai-summary-appears-in-the-results/ | Independent study | 2025-07-22 | 2026-09-24T18:33:28Z |
+| 11 | https://ahrefs.com/blog/ai-overviews-reduce-clicks-update/ | Practitioner study (R. Law) | 2026-02-04 | 2026-09-24T18:33:29Z |
+| 12 | https://ahrefs.com/blog/ai-overview-brand-correlation/ | Practitioner study (L. Linehan) | 2025-05-26 | 2026-09-24T18:33:30Z |
+| 13 | https://ahrefs.com/blog/ai-search-traffic-conversions-ahrefs/ | Practitioner first-party data (P. Stox) | 2025-06-16 | 2026-09-24T18:33:30Z |
+| 14 | https://www.semrush.com/blog/ai-search-seo-traffic-study/ | [vendor] study | 2025-07-21 | 2026-09-24T18:33:31Z |
+| 15 | https://www.tryprofound.com/blog/ai-platform-citation-patterns | [vendor] citation analysis | 2025-06-05, upd. Aug 2025 | 2026-09-24T18:33:31Z |
