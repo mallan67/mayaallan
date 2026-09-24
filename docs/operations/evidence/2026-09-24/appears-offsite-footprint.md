@@ -54,3 +54,24 @@
 | 12 | https://www.thriftbooks.com/w/.../57728042/ | ThriftBooks | yes, 200 | **no** | "0 rating"; ISBN 9798994148839 | 18:25:04Z |
 | 13 | https://www.abebooks.com/9798994148839/.../plp | AbeBooks | yes, 200 | **no** | author "Allan, Maya" | 18:25:06Z |
 | 14 | https://www.bokus.com/bok/9798994148839/psilocybin-integration-guide/ | Bokus (Sweden) | yes, 200 | **no** | Maya Allan, paperback (Häftad) | 18:25:06Z |
+| 15 | https://bookshop.org/p/books/...maya-allan/3c9390316323761a | Bookshop.org | **unverified**: 403 bot wall on curl and WebFetch | unverified | linked from the site | 18:25:04Z; WebFetch 18:25:06Z-18:25:34Z |
+| 16 | https://www.waterstones.com/book/.../9798994148839 | Waterstones | **unverified**: 403 on curl and WebFetch | unverified | linked from the site | 18:25:04Z; WebFetch same bracket |
+| 17 | https://openlibrary.org/works/OL45177926W | Open Library | yes: 1 edition (paperback only); 979...853 and 979...891 return 404 | **no** | author record OL16288546A has name only: no bio, photo or links | 18:26:26Z, 18:26:41Z, 18:34:30Z |
+| 18 | Apple Books | ebook store | **no**: iTunes Search "Psilocybin Integration Guide Maya Allan" returns 0; "Psilocybin Integration Guide" returns 21 results, none by Maya Allan; lookup isbn 9798994148891 returns 0 | n/a | n/a | 18:26:08Z, 18:26:40Z |
+| 19 | Apple Books audiobook | audiobook | **no**: iTunes audiobook search, 10 results, none hers | n/a | n/a | 18:26:08Z |
+| 20 | Kobo | ebook store | **unverified**: curl "Challenged" 403; WebFetch 403 | n/a | n/a | 18:26:26Z; WebFetch 18:32:38Z-18:32:56Z |
+| 21 | StoryGraph | reader catalogue | **no (probable)**: the title search shows only a Kyle Woodruff book; the "Maya Allan" search shows none of her books | n/a | n/a | 18:36:43Z, 18:36:53Z |
+| 22 | https://barwebooks.com/product/psilocybin-integration-guide-...-paperback/ | reseller listing (indexed on Bing) | **dead**: 404 | n/a | n/a | Bing 18:27:09Z; curl 18:33:05Z |
+| 23 | https://www.instagram.com/maya.allan66/ | Instagram | yes: WebFetch title "Maya Allan (@maya.allan66) • Instagram photos and videos" | **unverified**: login wall, bio link not readable | display name matches | curl 18:30:44Z (title "Instagram" only); WebFetch 18:30:44Z-18:31:04Z; embed 18:35:28Z |
+| 24 | https://www.pinterest.com/mayaallan2/ | Pinterest "Maya Allan (mayaallan2)" | yes | **no**: website_url null, domain_verified false, about empty | boards are clothes / hair / nails. **Not an author presence**, and ownership is unverified. It ranks on the WebSearch "mayaallan.com" query | WebSearch 18:19:09Z-18:19:42Z; curl 18:30:44Z-18:31:16Z |
+| 25 | https://mayaallan.substack.com/ | Substack "Maya Allan" | exists; og says "Launched 2 years ago"; archive API returns an empty list (0 posts) | **no** | ownership unverified | 18:31:36Z, 18:32:01Z |
+| 26 | https://medium.com/@mayaallan | Medium "Maya Allan" | exists; RSS feed has 0 items | **no** | ownership unverified | 18:31:38Z, 18:32:01Z |
+| 27 | https://www.linkedin.com/in/mayaallan | LinkedIn "Maya Allan - Licensed Real Estate Broker / Founder, MAllan" (Bing title) | yes (from Bing SERP) | unverified (login wall) | real-estate identity; the author role is not shown in the title | Bing curl 18:27:27Z; Bing WebFetch 18:35:50Z-18:36:06Z |
+| 28 | YouTube | video | **no**: /@mayaallan 404, /@maya.allan66 404; 2 result-page searches return 16 videos, 0 from a "Maya Allan" channel | n/a | n/a | 18:31:35Z, 18:36:06Z-18:36:07Z |
+| 29 | Bluesky | social | **no**: getProfile actor=mayaallan.com returns "Profile not found"; searchActors "Maya Allan" returns 10 other people | n/a | n/a | 18:32:00Z |
+| 30 | Linktree | link hub | **no**: /mayaallan 404, /maya.allan66 404 | n/a | n/a | 18:31:40Z-18:31:41Z |
+| 31 | X, TikTok, Threads, Facebook | social | **unverified**: X is an SPA and syndication returned 429; TikTok and Threads are generic JS shells; Facebook curl returned 400 | n/a | n/a | 18:31:31Z-18:31:43Z, 18:32:18Z |
+| 32 | Podcasts | media | **none found**: iTunes podcastEpisode "Maya Allan" has 22 results, 0 mention her; "Psilocybin Integration Guide Maya Allan" has 0; podcast search has 0. Listen Notes returned 403 | n/a | n/a | 18:26:08Z, 18:32:17Z, 18:32:36Z |
+| 33 | Reddit | community | **unverified**: search.json returned 403 twice | n/a | n/a | 18:32:38Z |
+| 34 | Wikidata / Library of Congress | knowledge graph / catalogue | **none**: Wikidata "Maya Allan" 0 entities, "Psilocybin Integration Guide" 0; LoC ISBN 9798994148839 0 results | n/a | n/a | 18:34:18Z-18:34:29Z |
+| 35 | https://github.com/mallan67/mayaallan/pull/54 | public dev PR, surfaced by WebSearch for the book + author query | yes (anonymous GET 200) | links to the repo, not the site | internal dev text appears in the book SERP | WebSearch 18:19:09Z-18:19:42Z (2 queries); gh api 18:33:19Z |
