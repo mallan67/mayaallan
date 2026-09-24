@@ -43,3 +43,14 @@ The lens's own conclusion is that off-site mentions matter and on-site markup ba
 - off-site: ai-04, ai-05, ai-06
 - the one direct lead-capture build: ai-10
 - measurement needed to see any result: ai-01, ai-02, ai-03, ai-12
+
+## Review table: ai-01 to ai-06
+
+| id | Tactic | (a) Recency | (b) Evidence | (c) Rehash of prior work? | (d) Fit (solo author, no audience, psychedelic restrictions) | Keep |
+|---|---|---|---|---|---|---|
+| ai-01 | Measurement and AI-referral classification | OK. OpenAI FAQ updated about 2026-08-28; SEJ 2026-05-14; Vercel docs 2026-09-16 | Real, first-party docs. The 35.7% and 70.6% no-referrer figures come from vendors (Clickport, Loamly) with self-selected samples | Partly. Vercel Web Analytics was added 2026-04-20 (`ff0028c4`) but never enabled. PR #12 (2026-05-13) already stores `utm_*` on orders. New work: enabling it and mapping AI hosts | Fits. S effort | **YES** (a prerequisite; produces no leads by itself) |
+| ai-02 | Bing Webmaster Tools AI Performance, plus IndexNow | OK. Bing 2026-02-10 | Real first-party feature. It is a product launch, not a results study | **YES for IndexNow.** Built 2026-05-19 (`b7a0f8a6`: lib, key file, submit API); the key file returns 200 live. The AI Performance report is new | Fits. Owner, S effort | **YES, owner step only.** Drop the code PR |
+| ai-03 | Check Google indexing | OK. Google 2025-12-10; Ahrefs 2026-03-02 | Real. Google docs; Ahrefs: 863k SERPs, 4M URLs (vendor data) | **YES.** This is the post-merge plan already written in PR #45 (2026-09-05) | Fits. Owner, S effort | **YES**, as the readout that decides whether any more on-site work happens |
+| ai-04 | YouTube: own channel plus podcast guest spots | OK. 2025-12-12 to 2026-03-13 | Correlation only, and the lens left out two key caveats (see details) | No | Own channel: poor fit (L effort, zero subscribers). Guest spots: good fit. YouTube allows educational content that gives no use, making or sourcing instructions | **YES, narrowed to guest spots** |
+| ai-05 | Reddit answers | Mixed. Profound's data runs Aug 2024 to Jun 2025, before ChatGPT's Reddit drop; Semrush 2025-11-10; Ahrefs 2026-03-13 | Real but conflicting. Vercel's "seed community mentions" is advice, not a measured result | No | Good fit: the audience is there. Subreddit rules are UNVERIFIED because Reddit returned 403 | **YES** |
+| ai-06 | Earned media and third-party book lists | OK. 2025-09-10 to 2026-06-17 | Real but indirect. arXiv preprint, not peer reviewed. Lily Ray's data is B2B SaaS only | No | Good fit. Earned media is not subject to ad restrictions | **YES, primary tactic** |
