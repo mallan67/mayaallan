@@ -112,3 +112,44 @@
 **Missed:**
 - Fireside also sells "Psychedelic Coaching — scheduled, long-term prep and integration by video". That makes it a partial competitor for integration buyers.
 - Adding 62-FIRESIDE to the tool pages is still good harm-reduction practice, whatever the lead value.
+
+### niche-evt-maps-calendar: KEEP. Link-back is better than claimed.
+
+**Verified:**
+- Form at https://maps.org/event-calendar-submission/ (~22:13:20Z). It says: "All events are considered in accordance with MAPS values, principles, ethics, and strategic priorities"; "generally will not contact you about your submission".
+- It collects the Ticketing URL, anticipated attendance and audience. No fee is mentioned.
+
+**Link-back:**
+- Listings link to MAPS-hosted event pages, and those pages carry a button to the organizer.
+- 2 of 2 sampled had no `rel` attribute, so they are **followed**:
+  - https://maps.org/event/half-day-transpersonal-breathwork-workshop/
+  - https://maps.org/event/the-microdosing-summit/
+  - Read at 22:13:41Z.
+
+**Lead value:**
+- A small breathwork workshop was accepted, so small organizers do get listed.
+- Still, the listing is curated and not guaranteed, so lead value is medium, not high.
+
+### niche-com-eventbrite: KEEP
+
+**Verified:**
+- "Publish unlimited free events at no cost". Paid events cost 3.7% + $1.79 per ticket plus 2.9% processing. Source: https://www.eventbrite.com/organizer/pricing/ (~22:13:55Z).
+- The search page shows about 500 results, including several free "Psychedelic Integration Circle" listings in Oct 2026. Source: https://www.eventbrite.com/d/online/psychedelic-integration/ (~22:13:50Z).
+
+**UNVERIFIED:**
+- Eventbrite prohibited-content rules; the guessed help URL returned 404. Read them before publishing. Frame the event as a peer or educational circle with no substances.
+- Organizer-link `rel`.
+
+### niche-evt-horizons: KEEP. Correct the ally mechanics.
+
+**Verified:**
+- "Join us on October 15 - 17, 2026 in New York City for our 19th conference". Source: https://horizonsconference.org/ (22:14:24Z).
+- Community 2-Day (Fri+Sat) is $300 and Community 3-Day is $775. These are "late September rates", valid through 2026-09-30, and scholarships are available. Source: https://horizonsconference.org/register (~22:14:00Z).
+- The partners page lists 20 Community Allies, not 21, and 60 external links with 0 nofollow. Source: https://horizonsconference.org/partners (22:14:24Z).
+
+**Correction:**
+- Community Allies are "mission-aligned organizations who contribute… by promoting it to their audience", which is not a slot for a solo author.
+- The page also says "More information about the Community Allies program will be available shortly". Source: https://horizonsconference.org/partner-interest (~22:14:05Z).
+- Horizons week also includes off-site events "created by community allies" (see M7).
+
+**Lead value:** medium. It is a networking channel, not a direct lead source.
