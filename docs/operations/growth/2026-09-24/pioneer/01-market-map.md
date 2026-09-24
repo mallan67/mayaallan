@@ -38,3 +38,44 @@
 | Psilocybin clinical trials (ClinicalTrials.gov) | 305 total; **99 recruiting** (63 with US sites); 35 not yet recruiting; 34 active but not recruiting; 90 completed; planned enrollment across recruiting trials **6,512** | S7 |
 | Psilocybin retreats listed on Retreat Guru | **738+**: Netherlands 257, Spain 173, Mexico 61, Portugal 41, US 35; about $200–900 per day (secondary, marketplace self-report) | S19 |
 | Peer support volume (Fireside Project) | 40,000 conversations since 2021; about 1,100 calls a month; 700+ trained volunteers; 1,200+ coaching sessions (self-reported) | S16 |
+
+**Oregon client profile, Q2 2026.** Taken from the official CSV (S1): 1,220 clients served, of whom 291 opted out of data collection, leaving 929 respondents. Visit reasons are multi-select, so percentages add to more than 100.
+
+| Visit reason | n | % of 929 |
+|---|---|---|
+| Change of perspective | 444 | 48% |
+| General health | 423 | 46% |
+| Expanded consciousness | 403 | 43% |
+| Anxiety | 383 | 41% |
+| Depression | 358 | 39% |
+| PTSD | 204 | 22% |
+| Spirituality | 198 | 21% |
+| Enhanced creativity | 192 | 21% |
+| Mental or physical exhaustion | 186 | 20% |
+| Other trauma / domestic-violence trauma | 126 / 82 | 14% / 9% |
+| Chronic pain / substance use | 71 / 65 | 8% / 7% |
+
+Other Q2 2026 facts from the same file:
+- **Age:** 84% were 35+ and 59% were 45+ (of 834 age answers). The largest single band was 45–49 (116). Nobody under 21.
+- **Gender:** 441 women, 366 men.
+- **Veterans:** 41 (a field newly required in 2026).
+- **Safety:** 5 adverse behavioral reactions, 3 severe behavioral, 1 adverse medical, 1 severe medical. 48 people were denied services. Average dose 28.14 mg.
+
+**Out-of-state share by quarter.** The figure is the share of clients who answered the county question and live outside Oregon (S1). Oregon counties with suppressed small counts (`-99`) are left out, so these shares run slightly high.
+
+| Quarter | Q1-25 | Q2-25 | Q3-25 | Q4-25 | Q1-26 | Q2-26 |
+|---|---|---|---|---|---|---|
+| Out-of-state | 46% | 65% | 70% | 63% | 58% | **71%** |
+
+---
+
+## 2. Segments: who needs integration help, where they are, and how to reach them
+
+UTM convention for every link: `utm_source=<venue>&utm_medium=<type>&utm_campaign=<name>`. Lead value means expected qualified leads per unit of effort.
+
+| id | Segment | Size (live) | Job to be done | What they search (live autocomplete, §4) | Where they are | What they pay | How to reach them | Lead value |
+|---|---|---|---|---|---|---|---|---|
+| mkt-01 | **Oregon "returners"**: licensed-session clients who go home to other states | 5,935 (2025); 2,172 (H1 2026); 58–71% from out of state | Make sense of the session once home, with no local facilitator | "oregon psilocybin therapy / center / retreat / clinic"; "psilocybin integration guide / questions / journal" | Service-center intake and aftercare email, facilitator referrals, travel planning pages | Session $1,500–3,500 (secondary) | Through service centers and facilitators: printed QR card or aftercare-email insert (`utm_source=or-svc-<slug>&utm_medium=print-qr&utm_campaign=take-home-kit`); state-by-state "back home in <state>" pages | **high** |
+| mkt-02 | **Colorado healing-center clients** | 34 centers (Feb 2026, secondary); client counts UNVERIFIED | Same as mkt-01 | "colorado psilocybin therapy / healing center / retreat" | Healing centers, micro-centers, facilitators | $1,000–4,500 per session (secondary) | Same take-home-kit play (`utm_source=co-hc-<slug>`); facilitators with approved licenses (77 + 41) | **medium-high** |
+| mkt-03 | **New Mexico medical patients** (launch end of 2026) | 0 enrolled today; four qualifying conditions | Non-clinical reflection between clinical sessions | (new; no terms yet) | Clinics, the NM DOH "Psilocybin Learning Lounge" and provider pages, UNM | Equity fund $630K (subsidized) | Clinician-facing handout (non-clinical), offered to providers as program starts; content on "after your New Mexico medical psilocybin session" (`utm_source=nm-clinic-<slug>&utm_medium=b2b`) | **medium** (timing) |
+| mkt-04 | **FDA-era COMP360 patients** (TRD) | Company says 4M US TRD patients; launch H1 2027 if approved | What happens between dosing days, and after | "psilocybin therapy for depression / anxiety / ptsd" (live suggestions) | Psychiatrists, treatment centers, patient forums | Covered or reimbursed care (UNVERIFIED) | Prepare a non-clinical "companion for reflection" edition and clinician one-pager now; publish before launch | **medium** (2027) |
