@@ -56,3 +56,45 @@ The claim is **refuted for Google**. A Google Search Console domain token is pub
 
 **Confirmed**, and wider than reported (19 of 38 URLs). Severity stays **medium**. Short /contact and /books pages are normal for their type. The risk is /events (soft-404 candidate), /media and the media item, the 10 localized pages and 4 tool pages with little server-rendered text.
 **Solution note:** noindex plus sitemap removal fixes /events and the media item. Noindex on localized pages would break the sitemap hreflang cluster, so expanding them, or removing both the pages and their hreflang entries, is safer. Tool pages need server-rendered explanatory copy.
+
+### vis-04: structured data
+| check | source | UTC | result |
+|---|---|---|---|
+| JSON-LD on /, /about, the book page, /blog/affirmations-vs-integration, /books and /blog (Bingbot user agent) | GET + JSON.parse | 18:43:43-18:43:45 | 0 parse errors. Book keys: name, alternativeHeadline, description, identifier (ASIN B0G7JWDJYQ), image, author, publisher, inLanguage, keywords, genre, audience, about, url, sameAs. **Missing:** isbn (9798994148839 is in the page), datePublished, numberOfPages, bookFormat, workExample, offers. keywords holds "readers exploring post-experience integration and self-inquiry". Article: no image and no dateModified (datePublished 2026-04-19). No `@id` on any entity. Person.sameAs is Instagram only. Person.description differs between / and /about. /books and /blog have no ItemList. |
+
+**Confirmed.** Severity lowered to **low**: structured data does not decide indexing, Book rich results rely on partner feeds, and Article image is only recommended.
+**Solution note:** correct. Only add sameAs for profiles that exist and are claimed (needs outside-source check).
+
+### vis-05: Open Graph
+| check | source | UTC | result |
+|---|---|---|---|
+| og and twitter tags on 10 pages (Bingbot user agent, so tags are in the head) | GET | 18:43:45-18:43:46 | /books: og:url https://www.mayaallan.com, og:title "Maya Allan". No og:image on /blog, 2 posts, /scenarios/ego-dissolution, /faq or /glossary. No twitter:image on 2 posts, the scenario or /glossary (present on /blog and /faq). /media/Mushroom-Healing: og:type music.song, but the page has 0 `<audio>` and 1 `<img>`, and its JSON-LD is ImageObject. |
+
+**Confirmed**, severity **low**. The fix works as proposed; set the media item's og:type to website.
+
+### vis-06: no CDN caching of HTML
+| check | source | UTC | result |
+|---|---|---|---|
+| 5 pages x 3 rounds (/, the book page, a post, /faq, /books) | curl -D - | 18:44:06-18:44:31 | 15 of 15 `X-Vercel-Cache: MISS`, `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate`, 0 ETag, 0 Last-Modified. TTFB 0.526-1.123 s |
+| Conditional GET / with If-Modified-Since | curl | 18:44:33 | 200 |
+| Cold-start attempt on rarely visited pages (/he/about, the media item, /legal, /refunds, /scenarios, /methods) | curl | 18:49:06-18:49:11 | TTFB 0.71-0.85 s (warmed by audit traffic) |
+
+**Confirmed.** The 6.42 s first-hit TTFB is a single earlier observation and was not reproduced (uncertain). Severity **low**.
+**Solution note:** ISR or static rendering works only if the content pages stop using request-time APIs such as cookies or headers, which the `private, no-store` header suggests they do (inferred). It also fixes vis-02.
+
+### vis-07: orphans and hreflang
+| check | source | UTC | result |
+|---|---|---|---|
+| hreflang `<link>` tags, case-insensitive, Googlebot and Bingbot user agents | GET /, /about, /es, /es/about, /de | 18:45:07-18:45:22 | / 0, /about 0 (both user agents). /es, /es/about and /de have 7 each (`hrefLang`) |
+| Sitemap hreflang | GET /sitemap.xml | 18:44:48 | 84 `xhtml:link` entries |
+| Inbound `<a>` links from all 38 sitemap pages | GET each | 18:45:41-18:45:44 | **0 inbound:** /es, /pt, /de, /fr, /he and /media/Mushroom-Healing. /practices is linked only from /methods. /pt/about, /de/about, /fr/about, /he/about and /legal DO have inbound links, so the input over-listed them. /media reaches the item only through third-party share URLs. / has no link text for any other language. |
+
+**Confirmed**, list corrected. Severity **low**. Google accepts hreflang declared in the sitemap, so no HTML hreflang on the English pages is acceptable while the sitemap has it.
+**Solution note:** a language switcher with real `<a href>` links plus links from /media to its items fixes it.
+
+### vis-08: sitemap freshness
+| check | source | UTC | result |
+|---|---|---|---|
+| lastmod and cache | GET /sitemap.xml | 18:42:58 | 200, 10027 B, 38 URLs, 8 with lastmod (book 2026-01-22T11:34:05Z, media 2026-01-22T14:19:20Z, 5 posts all 2026-04-19T00:00:00Z, scenario 2026-09-05). X-Vercel-Cache HIT, Age 1412102 s |
+
+**Confirmed**, severity **low**. Regeneration only on deploy is still an inference; it cannot be proven without publishing content. The identical post dates look like a template.
