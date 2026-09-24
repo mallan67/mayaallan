@@ -5,7 +5,7 @@
 > scratch files, old handoffs or memory; anything not re-read live is marked **UNVERIFIED**; the
 > **Not done** list is always current.
 
-**Last updated:** 2026-09-24T20:33:18Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
+**Last updated:** 2026-09-24T22:30:28Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
 
 ## Owner goals (2026-09-24)
 1. **Leads.** One month in, zero leads — the only measure of success is leads (newsletter signups, inquiries, book purchases, event registrations, tool users who leave an email).
@@ -39,7 +39,7 @@
 UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots index, follow`, canonical `https://www.mayaallan.com`, and **no analytics script** (curl at 2026-09-24T17:48Z — that capture passed through a local scratch file, so it is being re-read git-direct).
 
 ## In progress
-- **Always-on ops + analytics** — workflow `wf_a255d729-1d6` (resumed 2026-09-24T18:36:27Z without audiobook lenses): every-visitor/every-action analytics + always-on self-checking "site doctor" with auto-issues, alerts, weekly digest and an auto-fix routine (PRs only) → **always-on ops blueprint** (`docs/operations/monitoring/2026-09-24/`).
+- **Always-on ops + analytics** — DONE: blueprint `docs/operations/monitoring/2026-09-24/00-ALWAYS-ON-OPS-BLUEPRINT.md` (+ `-part2.md`, ordered PR-0…PR-9).
 - Audiobook lenses — **paused** by owner (not finished). Files already committed before the pause: none.
 - **Pioneer playbook** — workflow `wf_f2bd1f48-544` (started 2026-09-24T18:24:29Z): market map with live numbers; the whole Google network; all web + vertical search engines + AI answer engines; book ecosystem (ebook + audiobook); psychedelic-niche venues; open-web entity/profile/link venues with a tag/link (UTM + sameAs) matrix → 5 pioneer strategies (category creator, ecosystem/B2B, search-everywhere, data/PR, community) → 3 judges → **playbook + idea bank + first 14 days**. Output commits to `docs/operations/growth/2026-09-24/pioneer/`.
 - **Live site audit** — DONE (2026-09-24T19:27:44Z): 19/19 agents; evidence + verifiers + critic in `docs/operations/evidence/2026-09-24/`. Open gaps G1–G18 listed in `critic.md` §4.
@@ -52,7 +52,7 @@ UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots ind
 - [ ] Confirm cron status live 2026-09-28T09:00Z–09-29T09:00Z (runtime logs scoped to the production deployment, query `aeo-track`).
 - [ ] **Owner:** close this Claude Code session, then run `docs/operations/setup-mayaallan-ops.ps1` in PowerShell. It creates `mayaallan-ops` (bootstrap only; PowerShell auto-lands there; `mayaallan` / `mallan` shortcuts) and **removes the old Desktop checkout `C:UsersMayaAllanDesktopmayaallan`** (only if every local commit is on GitHub). Lost with it (never in git, not read by the agent): untracked `AUDIOBOOK-ERROR-AUDIT.md`, `HANDOFF-2026-07-14.md`, `HANDOFF-2026-09-20.md`, any local `.env*` files, and the `.playwright-mcp` folder.
 - [ ] Audiobook launch plan — paused by owner until the audiobook is finished.
-- [ ] Always-on ops + analytics blueprint (running), then build it as PRs.
+- [ ] Build the always-on system as PRs PR-0…PR-9 (blueprint part 2 §6); PR-1 = amend #57 before merge (consent/GPC + privacy text).
 - [ ] Pioneer playbook + idea bank (running).
 - [ ] 30-day lead plan (running).
 - [ ] In-depth report: all live failures + solutions, ranked by effect on leads.
@@ -72,3 +72,4 @@ UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots ind
 - 2026-09-24T19:01:54Z — Owner: audiobook is last; all information live; a mayaallan ops folder locally so PowerShell goes into it automatically. Added `docs/operations/OPS-SESSION-BOOTSTRAP.md` (canonical live-read instructions) and `docs/operations/setup-mayaallan-ops.ps1` (owner-run setup). Local profile edit by the agent was blocked by the permission classifier and not attempted further.
 - 2026-09-24T19:27:44Z — Live audit complete (19 agents). Key: nothing technical blocks indexing; the problem is discovery/authority (0 off-site links, crawlers absent since Jan), no social proof, measurement blind, cron refused (CRON_SECRET missing), nothing shipped since 09-06. Incident: Playwright MCP wrote `.playwright-mcp` into the Desktop checkout — reported to owner.
 - 2026-09-24T20:33:18Z — Owner: remove the Desktop checkout; only an ops folder for bootstrap; everything else direct from the repo. Verified live that the checkout's HEAD `2bdaf24` is on GitHub (contained in remote `audiobook-approved-manifest`, which is 10 ahead). Removal added to the owner-run setup script (it cannot run from inside this session, whose working directory is that folder). Also: the owner's `claude` command failed (`bin/claude.exe` missing after a broken auto-update at ~20:26Z); restored by copying the working 2.1.282 binary from the second npm install — `claude --version` = 2.1.282 at 2026-09-24T20:33:18Z.
+- 2026-09-24T22:30:28Z — Side effect found (blueprint §1): commits to this work branch triggered ~235 Vercel Preview builds and ~225 Quality-gates runs today. Mitigation: `vercel.json` on `work/site-visibility` now sets `git.deploymentEnabled["work/**"]=false` (PR-0 part A, branch-only; not on main). Verify: no new Preview for this commit. Also: owner's `claude` CLI restored and confirmed latest (npm latest 2.1.282 = installed, 20:33:37Z).
