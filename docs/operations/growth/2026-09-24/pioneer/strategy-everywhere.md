@@ -178,3 +178,32 @@ The engineer's rule throughout: every venue gets its own tracked door, every new
 - Owner: Maya. Effort: 30 minutes a day. First lead: day 3-14 (estimate; small).
 - Measure: utm_source=reddit&utm_medium=community&utm_campaign=<sub>; generate_lead.
 - Evidence: niche-com-r-psychedelictherapy; map 05 numbers; map 02 missing.
+
+## 5. Tag and link matrix
+
+| Venue | Listed or claimed by | Link back (rel) | Tag | sameAs | Map id |
+|---|---|---|---|---|---|
+| Google, AI Overviews, AI Mode | Search Console Domain property | organic | none | n/a | eng-google |
+| Bing, Copilot, DuckDuckGo, Yahoo | Bing Webmaster Tools + IndexNow | organic | none | n/a | eng-bing |
+| Naver, Seznam, Yandex, Yep | IndexNow ping | organic | none | n/a | eng-indexnow |
+| Google Play Books | Partner Center | none | /free-copy/<campaign>, promo-code | Book | goog-10 |
+| Google Books | Partner Center | none; site links to it | front-matter vanity URL | Book | goog-09 |
+| Amazon | KDP (Author Central UNVERIFIED) | none | back matter /book | Person | vert-amazon |
+| Goodreads | Author Program claim | website field, noopener noreferrer, no nofollow seen | goodreads / profile | yes, after claim | web-goodreads |
+| Open Library | wiki edit | links field, rel UNVERIFIED | none | yes | web-openlibrary |
+| Wikidata | after an independent reference | P856 | none | yes | web-wikidata |
+| YouTube | channel, 14 profile links | clickable, rel UNVERIFIED | youtube / video | yes | goog-15 |
+| Podcast RSS (YouTube Music, Spotify, Apple) | submit feed | show notes, rel UNVERIFIED | podcast-rss / audio | yes | goog-17 |
+| Guest show notes | pitch | followed (2 of 2 samples) | clean URL + spoken /pod/<show> | no | web-pod-showsnotes |
+| Colorado NMD resources | public form | plain followed link | clean URL, referrer | no | map 01 missing |
+| Fireside, Zendo | ambassador kit, resource request | rel UNVERIFIED | clean URL | no | niche-npo-fireside |
+| MAPS event calendar | submission form | article sample: 1 of 6 nofollow | maps-calendar / event | no | niche-evt-maps-calendar |
+| Eventbrite, Luma, Meetup | free listing | organizer link, rel UNVERIFIED | <venue> / event | no | niche-com-eventbrite |
+| Horizons Community Ally | apply | partners page: 60 links, 0 nofollow | clean URL | no | niche-evt-horizons |
+| Chacruna, Lucid News, Psychedelics Today | pitch | followed in samples | clean URL | no | niche-pub-* |
+| Source of Sources, Qwoted, Featured | free account | depends on outlet | clean URL | no | niche-pr-* |
+| Center QR cards | print | n/a | psilowire.com/kit/<center>, print-qr | no | mkt-ws-01 |
+| Book back matter | every edition | n/a | psilocybinintegrationguide.com/book | no | book-kdp-ebook-backmatter |
+| BookSirens, Hidden Gems | paid listing | UNVERIFIED; paid links rel=sponsored | <service> / arc | no | book-arc-engine |
+| Reddit | own disclosed account | rel UNVERIFIED | reddit / community | no | niche-com-r-psychedelictherapy |
+| Substack, Pinterest, Bluesky (later) | publication; claim by tag or DNS; DNS handle | Substack followed in body; others UNVERIFIED | <venue> / newsletter or profile | yes if used | web-substack, web-pinterest, web-bluesky |
