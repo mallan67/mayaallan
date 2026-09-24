@@ -167,3 +167,23 @@ No finding was refuted. Five severities were lowered: ana-02, ana-03, ana-04, an
 | No runtime errors in 7 days | yes | get_runtime_errors 7d and 24h (~18:55:30Z): "No runtime errors found". get_runtime_logs statusCode=5xx since 2026-09-23T19:00Z: 0 rows. 404s exist (scanner paths) but are not errors |
 | Health check workflow succeeds and matches /api/health | yes | See ana-09 (18:52:34Z) |
 | PR #57 ready to merge | yes | See ana-08 (18:53:58Z–18:54:20Z) |
+
+## Other live observations (outside the findings under test)
+| observation | source | UTC read |
+|---|---|---|
+| Each evidence commit to `work/site-visibility` starts a Vercel preview build. Example: dpl_9iDvqesfhnfwr5CwBaFHoxGq6BuK for commit 527f58ab ("evidence(crawl) … part2") was BUILDING at 18:46:22Z. The commits for this file will start more. It does not touch production but uses build minutes. An ignored-build rule for this branch is an owner decision. | get_project, get_deployment | ~18:46:20Z |
+| The book page's Barnes & Noble link contains a stale `jsessionid=…` session id. The Bookshop.org link carries `ref=https://www.google.com/` and a repeated `next=t`. These belong to the links lens and were not checked further. | GET /books/psilocybin-integration-guide | 18:56:56Z |
+| get_runtime_logs grouped by `level` returned empty rows, so level does not seem to be filled in. I did not rely on it. | get_runtime_logs | ~18:55:30Z |
+| This file was saved through several small appends. Each one fetched the live file first and changed only this path. A single large save failed twice with a shell-parsing error; nothing was committed by the failed attempts. | gitsave compare output | 19:02Z–19:07Z |
+
+## Unverified / needs an outside-source check
+- **Vercel plan** (whether custom events are available). This needs a team-level tool, which is out of scope.
+- **Dashboard log detail fields** (user agent, referrer). This needs a dashboard login, which is not allowed.
+- **PR #57 preview behaviour:** whether page views are ungated and what the privacy text says. web_fetch_vercel_url on the preview returned a 302 redirect to Vercel SSO at 18:57:45Z, and I did not follow it.
+- **Consent acceptance rate:** not observable.
+- **Privacy blockers:** whether blockers stop the `/api/marketing/event` beacon. Not observable.
+
+## What is not done
+- This is verification only. No fix was applied.
+- ana-01 (the Web Analytics toggle) and ana-08 (merging PR #57) are still owner actions. Web Analytics is still off, as of 2026-09-24T18:46Z.
+- ana-03 (click tracking for retailer and outbound links) and ana-06 (Speed Insights) have no PR yet.
