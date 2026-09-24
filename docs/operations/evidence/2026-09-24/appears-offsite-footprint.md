@@ -154,3 +154,28 @@
 | Wikidata / library records | foot-13 | Open Library edits; optional Wikidata items |
 | A book-domain landing page | foot-10 | Redirect the root to the book page |
 | Visible social links and a full sameAs on the site | foot-07 | Footer/About links; sameAs: Amazon author, Goodreads author, OL author, Google Books, Instagram |
+
+## 8. Unverified (needs an outside-source check)
+
+| Item | Why unverified | What would verify it |
+|---|---|---|
+| Google (google.com) positions and impressions for the name, book and domains | Google blocks scripted queries; the WebSearch engine identity is not stated | Google Search Console (owner login) |
+| Instagram bio link, followers, posts | login wall (curl title "Instagram" only; the embed has no bio) | Owner view of the profile |
+| X, TikTok, Threads, Facebook, LinkedIn content | JS shells / 400 / 429 / login walls | Owner view, or logged-in check by the owner |
+| Kobo, Bookshop.org, Waterstones, BookBub, LibraryThing, Books-A-Million, Walmart listings | 403 / Cloudflare / "Robot or human" on curl and WebFetch (18:25:04Z-18:36:34Z) | Manual browser check by the owner |
+| Whether Substack mayaallan and Medium @mayaallan belong to the author | no identifying content (0 posts) | Owner confirmation |
+| Whether Pinterest mayaallan2 belongs to the author | name matches, content is personal | Owner confirmation |
+| Author photo consistency (site vs Amazon) | a visual comparison would need image files saved locally, which is forbidden here | Owner side-by-side view |
+| Whether the printed book contains mayaallan.com | book interior not publicly readable | Owner check of the manuscript/PDF |
+| KDP Select enrollment (limits Apple/Kobo) | KDP dashboard is private | Owner KDP dashboard |
+| Reddit mentions | reddit.com search.json 403 (2 reads, 18:32:38Z) | Manual Reddit search |
+| Google Books API record details | API returned 429 (daily anonymous quota) at 18:24:25Z | Retry later, or the browser page (partly done) |
+| Amazon KDP policy on URLs in author bio or description | policy page not fetched | KDP help pages |
+
+## 9. Not exercised
+
+- WebSearch: only 8 queries ran before the session-wide 200-query budget was hit (18:26:59Z bracket). Bing (curl + WebFetch) was used as the second engine; DuckDuckGo, Mojeek, Brave and Yahoo gave no usable data.
+- The Playwright MCP was not used (this lens does not call for it).
+- No Vercel MCP calls (not needed for the off-site footprint).
+- Referral or click data from off-site sources could not be measured: Vercel Web Analytics is not enabled (per task context) and runtime logs keep only about 1 day. That belongs to the traffic lens.
+- Save method: the file was written in 9 appended commits on work/site-visibility, all with the same subject. Before each append the current file was read live from the branch head. Each compare listed only this path.
