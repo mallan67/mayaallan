@@ -287,3 +287,54 @@
 **goog-40 DROP (dead).**
 - Changelog November 19 (2025 block): "The Follow feature is no longer shown in Google Discover".
 - The Discover policies page (websearch/answer/9982767) still has stale "Following" feed text. It is not a revival.
+
+## 4. Missing venues and tools (Google network)
+
+**M1. Search Console platform properties (Instagram, TikTok, X, YouTube). Do now.**
+- Shows the Google queries, countries and devices that surface Maya's social posts and videos. No follower threshold is stated. It is "rolling out ... gradually".
+- **Sources:** webmasters/answer/17148418 (19:13:54Z); developers.google.com/search/docs/monitor-debug/analyze-social-video-content (updated 2026-07-29).
+
+**M2. Reader Revenue Manager newsletter sign-up.**
+- Google's "privacy-safe, 1-click forms to gather reader email addresses", plus surveys.
+- Requires a publication in Publisher Center and a code snippet. The 5% fee applies to paid transactions.
+- It is a direct lead-capture tool the map missed.
+- **Sources:** news/publisher-center/answer/11449914 (19:14:32Z); newsinitiative.withgoogle.com/subscriptions/ (19:14:06Z).
+
+**M3. The Search "Forums" filter and Discussions and Forums feature (ex-Perspectives).**
+- Google surfaces forum threads, so genuine, disclosed answers in threads that already rank are a Google-mediated venue.
+- **Sources:** developers.google.com/search/updates; structured-data/profile-page (updated 2026-09-08).
+
+**M4. Review snippets (stars) for the Book page.**
+- Supported for Book, but only with genuine on-page reviews: "Don't aggregate reviews or ratings from other websites". Incentives must be disclosed (rule added 2026-07-24).
+- **Sources:** search-gallery (updated 2026-06-15); structured-data/review-snippet (19:13:11Z).
+
+**M5. Video results that land on Maya's own pages.**
+- Build a dedicated watch page per scenario video, with VideoObject. The doc says "The watch page must be indexed" and "create a dedicated watch page for each video".
+- **Source:** developers.google.com/search/docs/appearance/video (19:14:46Z).
+
+**M6. YouTube Posts, live streams and the Shorts Related Video link.**
+- Posts' external links are clickable once Advanced features are unlocked. Live streaming is an Intermediate feature (phone verification).
+- **Sources:** youtube/answer/13748639 and /9890437 (19:03:50Z-19:04:19Z).
+
+**M7. Search Console inclusion setting for Search generative AI features.**
+- A prerequisite for goog-02 data and for preferred-source badges in AI Mode and AI Overviews.
+- **Sources:** webmasters/answer/16984139; preferred-sources doc.
+
+**M8. Knowledge Graph Search API (low).**
+- An entity check for "Maya Allan" and the book, using Maya's own API key.
+- The page says it is migrating to Cloud Enterprise Knowledge Graph and new users should use that.
+- **Source:** developers.google.com/knowledge-graph (updated 2024-04-26; 19:16:48Z).
+
+## 5. Not done / UNVERIFIED
+
+- **Not queried:** the Google SERP, so indexation, Knowledge Panel existence and AI Overview appearance are unknown.
+- **Needs a login:**
+  - Search Console verification and the AI-features setting
+  - whether the Play ebook file is an EPUB
+- **Not reachable or not checked:**
+  - Google Trends numbers (429)
+  - YouTube description-link `rel` (JS-rendered page)
+  - the FTC 16 CFR 465 text
+- **Open questions:**
+  - the audiobook distributor and exclusivity terms (these affect goog-11, goog-12 and goog-17)
+  - Merchant Center eligibility for a directly sold audiobook
