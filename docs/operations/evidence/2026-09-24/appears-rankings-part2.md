@@ -93,3 +93,21 @@ GET https://www.mayaallan.com/<path>, 2026-09-24T18:26:10Z-18:26:26Z. Every page
 | /blog/psilocybin-integration-research | Integration after psilocybin: what the memory research supports, and what it doesn't | competes with PMC/Nature/Frontiers on T1 |
 | /practices | Practices - Belief Inquiry, Nervous System Reset, Integration Reflection, Integration Journal | hub page, no query words |
 | /books/psilocybin-integration-guide | Psilocybin Integration Guide - 40 Real Psychedelic Experiences | ranks #1 on Bing for the title (see main file) |
+
+## The competition set (visible from the result pages only)
+
+| Competitor type | Examples (from the SERPs above) | Topics they win | What they have that mayaallan.com does not show in these results |
+|---|---|---|---|
+| Retreat / clinic operators' blogs | beckleyretreats.com, oneretreatsjamaica.com, odysseypbc.com, changainstitute.com, behrpsychology.com, paththerapy.ca, reflectivehealing.com | T1, T2 | Titles that repeat the query ("How to Integrate Your Psilocybin Retreat Experience...", "Your 90-Day Psilocybin Integration Roadmap"); organisation brand; roadmap / time-boxed formats |
+| Training / professional bodies | entheotraining.com, maps.org (Integration Station), adaa.org, pratigroup.org, psychiatryinstitute.com | T1, T2, T6, T8 | Institutional authority; credentialed bylines in titles (MA, LPC, MD, PhD) |
+| Academic / government | sciencedirect, nature, frontiersin, pmc.ncbi, thelancet, akjournals, oregon.gov PDF, nih.gov, jstor, wiley | T1, T3, T4, T5 | Peer-reviewed / .gov domains; on Bing, "journal" is read as an academic journal |
+| Directly indexed PDFs | MAPS Integration Workbook PDF (spectrumpsychwa.com, ranks on T2, T7 and T8), ketamine clinic Integration-Guide.pdf, Psychedelic-Prep-Packet PDF, medicinalmindfulness guidebook PDF (book query, main file) | T2, T7, T8 | The PDF itself ranks. Her journal page's HTML contains no PDF URL (GET 18:28:07Z), and robots.txt disallows `/download/` (GET 18:25:25Z), so her free journal cannot compete this way (inference, not tested further) |
+| Marketplace products | Amazon (Vaillant, Morgan and Soulsprout journals; Jussila, Lepisto, THRIVE and Nielson & Gorman workbooks), Etsy printable, bluesoulspace.com product page, Goodreads book pages + shelf | T3, T7, T9 | Listings titled with the exact category words ("Psilocybin Integration Journal", "... Workbook"). Her book shows up on Amazon only for title searches, not for these category searches, and is not in the Goodreads "psychedelic-integration" shelf result |
+| Numbered question / prompt lists | gaiacounselling.com "15 Best Questions", mylifenote.ai "50 Prompts", thebuenavida.net "25 Prompts", psychedelic.support "20 Questions" | T8 | A number plus "questions/prompts" in the title; her /integration-reflection is an AI tool titled "Integration Tool - Help a New Insight or Experience Land" |
+| Harm-reduction & rehab sites | psychedelic.support, heretohelp.bc.ca, psychable.com, discoverynj.org, villawellnesscenter.com, opustreatment.com, visaliarecoverycenter.com | T6, T10 | Plain-language "what to do after" / "what it feels like" titles |
+| Niche psychedelic publishers | psychedelicwellnesshub.com, healingdose.com, psychedelicsphere.com, unlimitedsciences.org, thethirdwave.co, learnshrooms.com, shroombros.co | T1, T4, T6 | Exact-match titles ("Nervous System Regulation: After Psychedelic Session Guide", "Ego Dissolution: What It Means and How People Integrate") |
+| Philosophy literature | Friedman "Inquiry and Belief" (Nous), Clifford "The Ethics of Belief", Peirce | T5 | Owns the term "belief inquiry" completely. Her page is a self-inquiry tool, so it answers a different search intent |
+
+Things the result pages do NOT show (so they are not claimed here): backlink counts, domain authority, traffic, and Google positions. Those need an outside-source check (Google Search Console / Bing Webmaster Tools for mayaallan.com, or a backlink tool).
+
+End of part 2.
