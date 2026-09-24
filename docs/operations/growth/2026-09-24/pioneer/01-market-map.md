@@ -108,3 +108,42 @@ UTM convention for every link: `utm_source=<venue>&utm_medium=<type>&utm_campaig
 These studies describe exactly what the product offers: scenario-based meaning-making plus journaling. They are also useful as citations on the site's /methods and /faq pages.
 
 ---
+
+## 4. Demand signals (live)
+
+**Google Autocomplete** (suggestqueries.google.com, `client=firefox`, read 18:31:23Z and 18:31:38Z).
+
+| Seed | Live suggestions (verbatim, trimmed) |
+|---|---|
+| psilocybin integration | psilocybin integration **guide** · therapy · coach · **workbook** · therapist · **questions** · **journal** · reddit · post psilocybin integration |
+| psychedelic integration | therapy · coach · therapist · **coach jobs · coaching certification · coach training** · training · coach salary · book |
+| how to integrate a psychedelic | …experience · integration psychedelics · …experience reddit · how to integrate after psychedelics · psychedelic integration meaning |
+| challenging psychedelic experience | challenging psychedelic experiences project · difficult psychedelic experience · jules evans … |
+| ontological shock | meaning · tracker · examples · ufo · **treatment** · reddit · **symptoms** |
+| derealization after mushrooms | depersonalization after mushrooms · can i recover from derealization · how long does … last |
+| after psilocybin | after psilocybin trip · after effects · **after care** · after stroke/surgery/concussion/tbi |
+| psilocybin therapy for | depression · **dementia** · anxiety · **alzheimer's** · ptsd · alcoholism · ocd · addiction · adhd · bpd |
+| psilocybin retreat | colorado · oregon · near me · **texas** · california · usa · mexico · jamaica · costa rica |
+| psilocybin facilitator | training · training oregon · oregon · near me · training colorado · jobs · license · portland · colorado |
+| psychedelic integration circle | london · near me · brighton · dc · tacoma psychedelic society |
+
+The book's exact title is already Google's second suggestion for "psilocybin integration". The phrase is recognized, and Maya's book page ranks **#1 on Bing** for it (S17, read 18:38:52Z), ahead of Amazon, Google Books and Barnes & Noble.
+
+**YouTube and Amazon autocomplete** (read 18:31:58Z).
+- YouTube, "psychedelic integration": meditation · coach · therapy.
+- YouTube, **"microdosing"**: tirzepatide · trt · ozempic · semaglutide · … The word has been taken over by GLP-1 drugs on YouTube.
+- YouTube, "psilocybin therapy": session · experience · **music · playlist** · testimonial.
+- Amazon, "psychedelic integration": book · **workbook** · coaching.
+
+**YouTube results are old and small for explainers but large for scenario videos** (youtube.com/results, read 18:36:13Z).
+- "psychedelic integration" and "psilocybin integration": the top 10 videos are **2–9 years old** with **≤34K views**. Examples: Julianne Keu 33,659 views (5y); Psychedelic Scientist 22,065 (2y); Numinus 12,588 (2y).
+- Scenario and challenge videos do far better: Tracy Townsend MD, "10 Challenging Psychedelic Experiences Explained", **152,568 views in 10 months**; "Doctor Explains Psilocybin Therapy", 892,085 (1y); SciShow bad trips, 531,577 (1y); Big Think / Dr. Matthew Johnson, 2,752,164 (3y).
+- **Conclusion:** the "40 real scenarios" format fits what currently gets watched.
+
+**Podcasts** (iTunes Search API, US, read 18:36:40Z; "active" means an episode in the last 90 days).
+
+| Query | Shows found | Active | Reachable integration hosts (episodes, last episode) |
+|---|---|---|---|
+| psychedelic integration | 9 | 7 | The Psychedelic Integration Compass (8, 2026-09-21); The Psychedelic Integration Podcast (136, 2026-06-15); Unjourneying / Mira Funk LCSW (9, 2026-08-03); The Integration Session / Centre for Psychedelics Health and Research (36, 2026-09-17); Hope for Humanity (43, 2026-09-08); Psychedelic Passage (83, 2026-09-09) |
+| microdosing | 42 | 12 | Third Wave "The Psychedelic Podcast" (376, 2026-09-23); many microdosing shows went quiet in 2025 (Microdosing Institute Table Talk, last 2025-04-12) |
+| psychedelic therapy | 15 | 4 | Beyond the Trip (25, 2026-06-21); Psychedelics Then and Now / Psychedelics Today (92, 2026-06-04); Secret Wilderness (34, 2026-08-17) |
