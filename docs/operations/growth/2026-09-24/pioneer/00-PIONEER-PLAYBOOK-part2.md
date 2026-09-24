@@ -59,3 +59,24 @@ Continues `00-PIONEER-PLAYBOOK.md` (sections 1, 2, 3A-3C). Sections 5-7 (first 1
 | E20 | Veterans only with a trauma-informed partner (Heroic Hearts is on Oregon's approved training-program list) | Heroic Hearts Project, VETS, Reason for Hope | `utm_source=vet-<org>&utm_medium=b2b` | MAYA | - | M (month 3+) | mkt-16, [S65] |
 | E21 | End-of-life doula trainers (17 end-of-life visits in Oregon's Q2; a New Mexico qualifying condition) | NEDA | `utm_source=doula-<slug>&utm_medium=b2b` | MAYA | - | L-M (month 3+) | [S65] |
 | E22 | Coach certifications as curriculum venues (the Third Wave directory is providers-only at $49-99 a month, so not for authors) | Third Wave Coaching Certification, Fireside-Certified Coaching | `utm_source=trainer-<program>&utm_medium=b2b` | MAYA | - | M | [S67], [S56] |
+
+### 3F. Partnerships / B2B
+
+| # | Action | Venue | Link / tag | Owner | Effort | Lead | Source |
+|---|---|---|---|---|---|---|---|
+| F1 | Free take-home card (circle + journal + Fireside line), a QR per center, no fees; cite OAR 333-333-5260(4) | Oregon: 22 operating service centers (OPS directory, copied by hand; no export) | `/kit/<slug>` -> `utm_source=or-svc-<slug>&utm_medium=print-qr&utm_campaign=take-home-kit` | MAYA | 2d + 20m per yes | H | mkt-01, niche-b2b-or-centers, [S14], [S21] |
+| F2 | Reach facilitators through their centers and programs, not with cold personal emails | Oregon: 383 facilitators | `utm_source=or-fac-<slug>&utm_medium=email&utm_campaign=take-home-kit` | MAYA | - | M | ECO M2 |
+| F3 | The same card | Colorado: 46 healing centers (NMD map and look-up) | `utm_source=co-hc-<slug>&utm_medium=print-qr&utm_campaign=take-home-kit` | MAYA | 1d | H | mkt-02, [S24] |
+| F4 | Use the public roster for counts and program targeting only (it holds no emails; never scrape personal emails; follow CAN-SPAM) | Colorado DORA open data (86 / 94 / 691 / 11 active) | - | MAYA | 1h | M | [S13] |
+| F5 | Free 45-minute guest session, "The 40 things clients bring home" | ~22 programs from Oregon's list and Colorado's NMTP licences (e.g. CIIS, UC Denver CLAS, Numinus, InnerTrek, Fluence, Elemental Psychedelics, Heroic Hearts) | `utm_source=trainer-<program>&utm_medium=b2b&utm_campaign=casebook` | MAYA | 1d + 45m a session | H | mkt-10, ECO M4, [S23], [S28] |
+| F6 | Monthly Scenario Case Circle, invited through program directors | facilitators and trainees | `utm_campaign=case-circle` | MAYA | 2h a month | M | BHC M5 |
+| F7 | Casebook / cohort licence priced against the MAPS practitioner 20-pack ($60), month 3+ after adoption | training programs | `utm_medium=b2b&utm_campaign=casebook` | CONTENT | 3-4d | M | mkt-ws-04, [S29] |
+| F8 | Bulk ebook codes (test prices: 10 for $59, 25 for $129, 100 for $399) only after reviews exist | centers, podcasts, nonprofits | `utm_medium=b2b&utm_campaign=bulk` | MAYA | 1d | L now | ECO M5 |
+| F9 | Lean partner rails: a JSON registry + `/kit/<slug>`; co-branded per-partner pages only after 3 yeses | site | `utm_source=<slug>&utm_medium=print-qr` | PR | 1d | H | ECO M1 |
+| F10 | Monthly partner report (scans, downloads, opt-ins by slug; no client data); a `/support` editorial list of willing partners | partners | outbound links tagged `utm_source=mayaallan` | PR | 2d | M | ECO M15 |
+| F11 | Post-retreat packs (month 3+) | retreats listed on Retreat Guru (738+ psilocybin retreats) | `utm_source=retreat-<slug>&utm_medium=partner&utm_campaign=post-retreat` | MAYA | 2d | M | mkt-08, IN-01 |
+| F12 | Prospect list for integration coaches (practitioner bundle, month 2+) | Psychable (855+ practitioners) | `utm_source=coach-<slug>&utm_medium=b2b` | MAYA | - | M | niche-dir-psychable, IN-05 |
+| F13 | Clinician-reviewed "between sessions" one-pager (month 3+) | ketamine and interventional-psychiatry clinics (8,000+ centers; Osmind is a Compass collaborator) | `utm_source=clinic-<slug>&utm_medium=b2b` | CONTENT | 2d | M (2027) | [S26], [S66] |
+| F14 | "After your New Mexico session" handout for the program contact and the first named providers | New Mexico Medical Psilocybin Program (start by 2026-12-31) | `utm_source=nm-clinic-<slug>&utm_medium=b2b&utm_campaign=nm-launch` | CONTENT | 1d | M | mkt-03, [S25] |
+| F15 | A non-clinical companion ready before the COMP360 launch window | future COMP360 treatment sites | - | CONTENT | 3d | M (2027) | mkt-04, [S26] |
+| F16 | Watch the Department of Health request for proposals | New Jersey $6M pilot (3 hospitals) | - | MAYA | - | L | [S27] |
