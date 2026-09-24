@@ -98,3 +98,26 @@ Subreddit counts come from GummySearch public pages (third party), each marked "
 | niche-pub-thirdwave | Third Wave blog | live but slow (latest 2026-06-18; the one before 2024-03-09) | The podcast is the active channel (section D) | UNVERIFIED | low | https://thethirdwave.co/feed/ (18:32:18Z) |
 | niche-pub-microdose-buzz | Microdose (microdose.buzz) industry news | live (items dated Aug 2026; runs ads) | Advertising or industry news; not a consumer venue | UNVERIFIED | low | https://microdose.buzz/ (18:42:25Z) |
 | niche-pub-psymposia | Psymposia | live (2026-03-23); critical watchdog | Not a promotional venue | n/a | none | https://www.psymposia.com/feed/ (18:32:18Z) |
+
+### D. Podcasts that interview authors
+
+Episode counts and last-episode dates come from the Apple Podcasts lookup API (https://itunes.apple.com/search and /lookup, 18:35:04Z). Website links come from each RSS channel link (18:35:31Z). Most feeds publish an `itunes:email` owner contact, which is a legitimate pitch channel. Show-notes link `rel` is **UNVERIFIED** for every show, so ask for a dedicated landing path that carries the UTM.
+
+| id | Show (host) | Eps / last ep | Guest path | Lead value |
+|---|---|---|---|---|
+| niche-pod-integration-session | The Integration Session (Centre for Psychedelics Health and Research) | 36 / 2026-09-17 | Feed owner email | **high** (fit, reachable) |
+| niche-pod-integration-compass | The Psychedelic Integration Compass (Clara Parati) | 8 / 2026-09-21 | Buzzsprout site; no owner email in feed; path **UNVERIFIED** | high |
+| niche-pod-hope-for-humanity | Hope for Humanity: Healing, Trauma and Psychedelic Integration (Julian Bermudez) | 43 / 2026-09-08 | psychedelic-integration.net; feed email | high |
+| niche-pod-unjourneying | Unjourneying (Mira Funk, LCSW) | 9 / 2026-08-03 | unjourneying.com; feed email | high |
+| niche-pod-sinclair | The Psychedelic Integration Podcast (Sinclair Fleetwood) | 136 / 2026-06-15 | sinclairfleetwood.com; feed email | medium |
+| niche-pod-beyond-the-trip | Beyond the Trip (Dr Esme Dark) | 25 / 2026-06-21 | Zencastr page; feed email | medium |
+| niche-pod-psychedelic-conversations | Psychedelic Conversations (Susan Guner) | 224 / 2026-09-06 | Feed email | medium |
+| niche-pod-psychedelic-report | The Psychedelic Report (Dr Dave Rabin) | 58 / 2026-09-10 | thepsychedelic.report; path **UNVERIFIED** | medium |
+| niche-pod-pma | Psychedelic Medicine Podcast (Dr Lynn Marie Morski) | 207 / 2026-09-09 | psychedelicmedicineassociation.org/podcasts; path **UNVERIFIED** | medium |
+| niche-pod-atm | Adventures Through The Mind (James W. Jesso) | 248 / 2026-09-18 | jameswjesso.com shows no guest link; feed email | medium |
+| niche-pod-mycopreneur | Mycopreneur (Dennis Walker) | 267 / 2026-09-18 | mycopreneur.com. Walker also has author pages at Lucid News and Chacruna, so he connects several venues. | medium |
+| niche-pod-christian | The Psychedelic Christian Podcast | 42 / 2026-09-21 | Feed email; faith audience | low-medium |
+| niche-pod-scene | The Psychedelic Scene Podcast (Jason LeValley) | 24 / 2026-09-16 | psychedelicscene.com | low-medium |
+| niche-pod-psychedelicstoday | Psychedelics Today | 776 / 2026-08-12 | **Guest pitch form** on /contact ("guests that bring a new or unique perspective") | medium (competitive) |
+| niche-pod-thirdwave | The Psychedelic Podcast (Third Wave, Paul F. Austin) | 376 / 2026-09-23 | Free application (https://thethirdwave.co/new-podcast-guest/). If accepted, a **$1,500** "investment" covers the episode, 3 social clips and a newsletter mention to 45,000+. Treat it as sponsored and disclose it. | unknown (paid) |
+| niche-pod-stale | Psychedelic Therapy Frontiers (Numinus) 220 / **2025-10-14**; Psychedelic Salon 790 / 2026-08-17 (archival talks); Mind and Matter 311 / 2026-08-28 (neuroscience) | as listed | Low fit or dormant | low |
