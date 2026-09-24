@@ -181,3 +181,45 @@ The book's exact title is already Google's second suggestion for "psilocybin int
 Other books in the space (Open Library, read 18:32:47Z): Aixalà, *Psychedelic Integration* (2022); Graham, *Psychedelic Integration Workbook* (2023); Westrum, *Psychedelics Integration Handbook* (2024); Pennington, *Sacred Experiences … Journal* (2024); Zemon, *Earth Dream Guide* (2025); Zemon & Hildreth, ***Seniors on Psychedelics* (2026)**. Maya's book appears as work OL45177926W, author OL16288546A, ISBN 9798994148839.
 
 ---
+
+## 6. Whitespace a pioneer could own (ranked)
+
+| id | Whitespace | Why it is open (evidence) | First move | Lead value |
+|---|---|---|---|---|
+| mkt-ws-01 | **"Back home after your Oregon/Colorado session" take-home integration kit** | 58–71% of Oregon clients are from out of state; the integration session is optional (ORS 475A.360); Oregon volume is down 34% year on year, so centers need differentiation and aftercare to stand out | A one-page QR card and free kit (scenario index + journal link) offered to 22 Oregon service centers and 34 Colorado healing centers; state landing pages; UTM per center | **high** |
+| mkt-ws-02 | **Scenario video series** (40 scenarios → 40 shorts plus long-form) | Integration explainers on YouTube are 2–9 years old with ≤34K views, while a doctor's "10 challenging experiences" drew 152K in 10 months | One scenario per week, each linking to its /scenarios page (`utm_source=youtube&utm_medium=video&utm_campaign=scenario-<n>`) | **high** |
+| mkt-ws-03 | **Own the query family "psilocybin integration questions / journal / after care / guide"** | Google suggests these long-tail phrases, and Bing's results for the journal and "what to do after" variants returned no dedicated integration page (S17) | Pages answering "psilocybin integration questions", "psilocybin after care", and "psilocybin integration journal" (the site already has /integration-journal) | **high** |
+| mkt-ws-04 | **Facilitator casebook and bulk license** | 383 Oregon facilitators, 501 Colorado trainees, about 31 active programs; incumbent workbooks are clinical or generic | Facilitator edition with discussion prompts; bulk and wholesale pricing; outreach to the 15 Colorado program domains above plus Oregon programs | **high** |
+| mkt-ws-05 | **FDA-era non-clinical companion (2027)** | COMP360 launch expected H1 2027 if approved; no patient-facing integration companion found | Draft a "between sessions" companion and a clinician one-pager in Q4 2026 | **medium** |
+| mkt-ws-06 | **New Mexico launch** | Launch at end of 2026, $630K equity fund; DOH runs a "Psilocybin Learning Lounge" | Offer free educational material to the program and clinics at launch | **medium** |
+| mkt-ws-07 | **Midlife and older-adult integration** | Hallucinogen users aged 26+ grew from 4.7M to 7.7M; 59% of Oregon clients are 45+; *Seniors on Psychedelics* (2026) shows publishers see it | Midlife-framed landing page and podcast pitch | **medium-high** |
+| mkt-ws-08 | **Integration for microdosers** | 69% of past-year users microdose, yet microdosing podcasts are going quiet and the YouTube term has drifted to GLP-1 drugs | A microdosing reflection track in the journal tool; always use "psilocybin microdosing" wording | **medium** |
+| mkt-ws-09 | **Difficult-experience referral loop** | People cope by reading and journaling; CPEP and Fireside are free, partner-shaped resources | Ask for resource listings; add clear "when to seek help" boxes pointing to Fireside and CPEP | **high** |
+
+---
+
+## 7. Constraints and dead ends (so the same things are not tried twice)
+
+| id | Item | Status | Evidence |
+|---|---|---|---|
+| mkt-x-01 | Google Ads for this topic | **RESTRICTED.** The policy says: "Ads for substances that alter mental state for the purpose of recreation or otherwise induce 'highs' are not allowed" and "Ads for instructional content about producing, purchasing, or using recreational drugs are not allowed." Any paid Google test must stay strictly about post-experience reflection and expect review | S23, read about 18:41Z |
+| mkt-x-02 | Reddit community sizing | **UNVERIFIED.** Reddit blocked the live reads (see §4) | 18:24:30Z |
+| mkt-x-03 | subredditstats.com as a data source | **DEAD**: data last checked 2023-12-17 | read 18:25Z |
+| mkt-x-04 | Google Trends | **UNVERIFIED** (HTTP 429) | 18:31:23Z |
+| mkt-x-05 | Meetup topic counts | **UNVERIFIED**: the page returned 0 groups and 0 members, which is implausible and treated as a rendering artifact | 18:40:10Z |
+| mkt-x-06 | Oregon licensee directory and Power BI dashboards | **UNVERIFIED** (a JavaScript app that plain GET cannot read); counts come only from the secondary tracker | 18:31:08Z |
+
+---
+
+## 8. Not done / UNVERIFIED (as rule 7 requires)
+
+- Reddit subscriber counts; Google Trends indices; YouTube channel subscriber counts beyond Psychedelics Today (10.7K subscribers, 1.1K videos) and Third Wave (1.32K).
+- Official Colorado client counts and healing-center counts. The NMD page lists none, and the numbers here are secondary.
+- Oregon licensee and service-center counts from the official dashboard (Power BI), which could not be read by plain GET.
+- Whether venue links are dofollow or nofollow. No venue listing pages were fetched in this map; that belongs to the venue workflow.
+- Pricing of integration coaching and training tuition.
+- Veteran-organization venues.
+- psilowire.com and psilocybinintegrationguide.com were not fetched, because the scope allows GET only on www.mayaallan.com.
+- The official Oregon 2025 Year-End Data Summary PDF could not be parsed (binary). The 2025 total of 5,935 was instead computed from the four official quarterly CSVs.
+
+---
