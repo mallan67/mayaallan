@@ -24,3 +24,35 @@
 | vis-10 | facts **confirmed**; the conditional risk is refuted | low -> info | Host line and `Disallow: /api/` in all 33 groups. 0 `/api/` strings in the HTML of 38 pages. Client JS calls only /api/marketing/visitor, /api/marketing/event and /api/subscribe, so no indexable content depends on /api/. |
 | vis-11 | **confirmed** | low -> low | The book page links paypal.com/signout, B&N `;jsessionid=`, bokus `srsltid=`, Bookshop `ref=https`, AbeBooks `clickid=`, and the a.co shortener. |
 | vis-12 | **confirmed**; no demand shown | info -> info | 7 feed paths returned 404 in each of 2 rounds, and 0 pages advertise a feed. All log hits come from the audit: 0 feed requests before 17:00Z. |
+
+## 2. Per-finding re-checks (live source, UTC, result)
+
+### vis-01: ownership verification
+| check | source | UTC | result |
+|---|---|---|---|
+| Verification meta tags, 9 GETs (Chrome, Bingbot and Googlebot x 3) | GET https://www.mayaallan.com/ | 18:40:56-18:41:06 | 0 matches for google-site-verification, msvalidate.01, yandex-verification, p:domain_verify or facebook-domain-verification |
+| Verification files, 3 rounds | GET /BingSiteAuth.xml, /bingsiteauth.xml, /google-site-verification.html, /.well-known/brave-search-verification | 18:41:07-18:41:14 | all 404 |
+| **DNS TXT via 8.8.8.8** | `nslookup -type=TXT mayaallan.com 8.8.8.8` | 18:41:14 | **`google-site-verification=VQFv...` (truncated)** and `v=spf1 include:_spf.porkbun.com ~all`. No Bing (`msvalidate`) TXT. |
+| **DNS TXT via 1.1.1.1** | `nslookup -type=TXT mayaallan.com 1.1.1.1` | 18:41:15 | the same 2 records (independent second observation) |
+| Log baseline before the audit | get_runtime_logs, production, 404, group_by requestPath, 2026-09-23T18:48Z to 2026-09-24T17:00Z | ~18:48 | 12 rows, all vulnerability scanners (xmlrpc.php 4, sftp-config 2+2, wp-login 1, assetlinks 1, ads.txt 1, apple-app-site-association 1). **0 BingSiteAuth.xml** |
+| Same, last 24 h | get_runtime_logs, 404, group_by requestPath, since 24h | ~18:47 | /BingSiteAuth.xml 14, /bingsiteauth.xml 3, /google-site-verification.html 4. All after 17:00Z, so all are audit probes. |
+
+The claim is **refuted for Google**. A Google Search Console domain token is published, which means verification was at least started. The token does not prove that the property is still verified, that the sitemap was submitted, or what the indexing report says. The Bing part is **uncertain**.
+**Solution note:** the owner opens Google Search Console and checks that the `mayaallan.com` Domain property is verified, that /sitemap.xml is submitted with status Success, and what the Page indexing report says. That report is the most useful single fact for "not seen anywhere". For Bing, use Bing Webmaster Tools "Import from Google Search Console"; no change to the site is needed. The proposed meta tag is unnecessary.
+
+### vis-02: metadata after `</head>`
+| check | source | UTC | result |
+|---|---|---|---|
+| 144 GETs: 9 user agents x 4 pages (/, the book page, /about, /blog/affirmations-vs-integration) x 4 repetitions. Position of `<title>`, canonical, description, robots and og:title relative to the first `</head>` | Node fetch | 18:42:06-18:42:17 | Responses with the tags in the body: Bingbot 0/16, GPTBot 3/16, ClaudeBot 5/16, ChatGPT-User 6/16, Googlebot-desktop 3/16, Googlebot-smartphone 4/16, Claude-SearchBot 3/16, PerplexityBot 5/16, Chrome 5/16. **34/128 (27%)** of non-Bingbot responses. The 5 tags always move together; all responses 200. |
+
+**Confirmed** and non-deterministic: the same user agent and URL flips between head and body. Severity lowered to **low**. Googlebot renders JavaScript, and React is expected to hoist the tags into the head; this is not browser-checked because Playwright was not allowed. Bing always gets the head, and most parsers find `<title>` anywhere. It is not a reason the site is not seen.
+**Solution note:** `htmlLimitedBots` covering these bots (or all user agents) fixes it. Static or ISR rendering (vis-06) should also put metadata in the head. Afterwards, re-run the same 144-GET check live.
+
+### vis-03: thin server-rendered pages
+| check | source | UTC | result |
+|---|---|---|---|
+| Words in `<main>` (scripts removed, entities decoded), Googlebot user agent, all 38 sitemap URLs | GET each sitemap `<loc>` | 18:42:58-18:43:01 | /media/Mushroom-Healing 7, /media 9, /events 15, /contact 23, /books 52; /he 91, /he/about 95, /de 100, /de/about 101, /pt 122, /pt/about 124, /fr 126, /es 129, /fr/about 132, /es/about 132; **also** /nervous-system-reset 111, /belief-inquiry 118, /scenarios 121, /integration-reflection 131 |
+| Artefact check: streamed hidden `S:` content outside `<main>` | whole-body word count compared with `<main>` | same | The body has only 72-92 more words (navigation and footer), so the low counts are not an artefact. |
+
+**Confirmed**, and wider than reported (19 of 38 URLs). Severity stays **medium**. Short /contact and /books pages are normal for their type. The risk is /events (soft-404 candidate), /media and the media item, the 10 localized pages and 4 tool pages with little server-rendered text.
+**Solution note:** noindex plus sitemap removal fixes /events and the media item. Noindex on localized pages would break the sitemap hreflang cluster, so expanding them, or removing both the pages and their hreflang entries, is safer. Tool pages need server-rendered explanatory copy.
