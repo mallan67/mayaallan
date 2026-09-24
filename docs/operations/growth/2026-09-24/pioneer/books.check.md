@@ -262,3 +262,35 @@
   - LibraryThing: 403.
   - search.worldcat.org: 200, but no record content (JS).
   - loc.gov PCN: 403.
+
+## 4. Missing venues
+
+| venue | why it matters | live mechanics (source, read time) | link-back / tag | lead value |
+|---|---|---|---|---|
+| **IngramSpark** (print and ebook wide) | This is the channel where BISAC codes can be set, which KDP does not allow (correction 4), and it reaches bookstores and libraries for events and consignment | "It costs you nothing to sign up… and to upload your print or ebook"; ebook "85% of the net revenue"; "Global book distribution" (ingramspark.com/pricing, 22:37:10Z). Whether the same ISBN can be used while KDP Expanded Distribution is on is UNVERIFIED; check before moving. | none; set BISAC OCC039000 here | low-medium |
+| **Kindle Translate** (beta) | German and other translations. The map saw a German-title wave on Apple but not this tool. | *"invite-only beta for eligible KDP eBooks… AI-powered translation"*; English → French, German, Italian, Portuguese (Brazil), Spanish (Spain) (KDP G3BC6VBB6GMZKSBJ and G9LWBTHMUDT8EQPK, 22:37:03Z). Cost not shown. | none; translated back matter should point to /de, /es and the other language pages | low-medium (invite only) |
+| **Book DNA** (formerly Shepherd) | The author pairs the book with 5 books they love, which places it in reader discovery | "Pair your book with 5 books you love… for free"; membership "Starting at $50 a year" (building.bookdna.com, 22:38:08Z); "I created Book DNA (formerly Shepherd)" (bookdna.com/about/our-story, 22:37:49Z). **shepherd.com is now a domain-for-sale page (brannans.com, 22:37:32Z), so treat "Shepherd" as DEAD as a destination.** | UNVERIFIED | low-medium |
+| **The Fussy Librarian** (bargain promo) | A low-cost promo that does **not require reviews**, unlike BookBub | "Bargain promotions are for ebooks priced from $0.99 to $5.99"; "120,000 subscribers"; "Reviews are recommended but not required"; extra exposure for wide titles (thefussylibrarian.com/advertising, 22:38:37Z). Price per genre not captured (UNVERIFIED). | retailer links only | low |
+| **ElevenReader Publishing** (ElevenLabs) | An audiobook outlet that pays per hour streamed and is non-exclusive | *"earn 60% on direct sales, and $0.20 per hour streamed… with no exclusivity required"*; distributes to "Spotify, InAudio" (elevenreader.io/publishing redirects to elevenlabs.io/audiobooks, 22:38:47Z). Whether it accepts a human-narrated master is UNVERIFIED. | UNVERIFIED | low |
+| **BookLife** (Publishers Weekly) | Indie review, prize and profile venue linked to PW; IAP lists "BookLife Elite" as a partner | booklife.com/reviews is live with "Publishers Weekly Reviewed Projects", Reviews, Prize and Self-Pub 101 (22:38:28Z). Prices and free-submission terms were not in the HTML (UNVERIFIED). | UNVERIFIED | low |
+
+Not added (no live source today): Reedsy Discovery (JS-only, /discovery/authors 404), Erowid book reviews (401), BookBub Ads (403), Libro.fm, Edelweiss (JS shell), LibraryThing Early Reviewers (403).
+
+## 5. What stays UNVERIFIED after this check
+
+- Amazon Ads book policy.
+- Voices by INaudio fees.
+- Spotify for Authors royalty %.
+- NetGalley per-title price.
+- Bookshop affiliate % and today's Bookshop shelving (403).
+- Kobo and NOOK presence of the ebook.
+- WorldCat, LibraryThing, LoC PCN.
+- Goodreads, BookBub and Spotify profile link `rel`. The Open Library example is followed; Wikidata is nofollow.
+- Whether Maya holds the Google Play Partner Center account.
+- Bowker record contents for ...891.
+- KDP rules for low-content journals.
+- The BISAC heading rename note.
+- IngramSpark ISBN coexistence with KDP Expanded Distribution.
+- Kindle Translate cost.
+
+This file was built in 8 commits on `work/site-visibility`. Each append was made to the live GitHub file fetched at push time, and each compare listed only this path.
