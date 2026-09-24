@@ -148,3 +148,38 @@
 - 9358246: *"earn 7% commission"*, **"currently available for active Play Books partners"**, signup through Partnerize.
 - **The promotions source is wrong:** 3474239 is "How to link to individual titles on Google Books". The promotions evidence is topic/11098072, which lists "Use promo codes to offer free or discounted ebooks & audiobooks", "Create bundle discounts…" and "Offer a discount to users who subscribe to your series".
 - Whether Maya holds the Partner Center account is UNVERIFIED; "accept the updated terms" assumes she does.
+
+**book-d2d**
+- The partners page (22:28:18Z) lists Amazon, Apple Books, B&N, Kobo, Everand, Smashwords, Tolino, OverDrive, cloudLibrary, BorrowBox, Hoopla, Vivlio, Gardners, Fable and Bookshop.org.
+- FAQ (22:28:28Z): "$20 (USD)" activation; "$12 (USD)" a year under $100 in sales; "approximately 10%". A D2D free ISBN *"can not"* be used at KDP or anywhere outside D2D.
+- Content guidelines: "Oversaturated Subject Content" includes Mindfulness, Meditation, CBT, Narcissism and Gaslighting; D2D *"may require further documentation of subject matter expertise"*; it refuses "low-content books".
+
+**book-books2read**
+- books2read.com (22:28:36Z): "the service is free". The menu shows AFFILIATE CODES, AUTHOR PAGE, CUSTOM URLS, READING LISTS and "Add additional Stores".
+- Whether an own-site link can be added is UNVERIFIED.
+
+**book-publishdrive**
+- WebFetch ~22:28Z: "1 ebook absolutely free" to Apple Books, B&N and Kobo, "No subscription. No commission"; paid tiers have no public prices; "Over 50 retailers & 240K libraries".
+
+**book-libraries**
+- Covered by the D2D partner list. D2D sends one EPUB to all channels, so the map's `utm_source=overdrive` would need a separate file per channel. Use one tag instead: `utm_source=ebook-wide&utm_medium=ebook-backmatter`.
+
+**book-indie-author-project** — see correction 5. The contest genres (22:28:55Z) are Mystery/Thrillers, Romance, SF, Fantasy, Historical Fiction, General/Contemporary Fiction, Memoir, YA and Children's Picture Books.
+
+**book-voices-inaudio**
+- findawayvoices.com returns "Redirecting…" with a JS redirect to voicesbyinaudio.com (22:29:32Z). voicesbyinaudio.com returns 301 to www.
+- The www page says *"Non-exclusive distribution gets your titles published on major retail platforms as well as library and educational channels"*. Its footer still reads "©2023 Findaway Voices by Spotify".
+- /faq and /pricing return 404, so fees are UNVERIFIED.
+
+**book-spotify-authors**
+- Blog post (22:29:52Z) dated "August 1, 2025": *"you can publish your audiobooks directly to Spotify through Spotify for Authors"*; the page also covers the "partnering with INaudio" wide option.
+- Home page: "author profiles", "redemption codes", "aggregated demographic data like age and gender". There is also a free "natural-sounding audiobook" creation tool.
+- Royalty is still UNVERIFIED.
+
+**book-acx** — see correction 3.
+
+**book-kdp-virtual-voice**
+- GFAQU3LUEHCRB8KD and GHJW2N8GLTQLK9TY (22:30:04-22:30:14Z): "invite-only beta"; "free at this time"; list price "$3.99 and $14.99"; *"For beta, you will be paid a 40% royalty"*; "only available for books to be distributed in the US marketplace"; an NCX table of contents is required.
+
+**book-google-autonarration**
+- 10013009 (WebFetch ~22:22Z): "[Beta]", *"no program fee"*; the audiobook may be sold elsewhere if it is available on Google Play in every country where it is sold elsewhere, at a Play price no higher than elsewhere.
