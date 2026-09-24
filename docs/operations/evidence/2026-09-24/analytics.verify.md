@@ -73,3 +73,24 @@ No finding was refuted. Five severities were lowered: ana-02, ana-03, ana-04, an
 - **Solution check:** Vercel `track()` custom events need a paid Vercel plan. I could not check the plan here (that needs a team-level tool, which is out of scope), so it **needs an outside-source check**. Also, PR #57 deliberately keeps `track()` behind consent (PR comment, 2026-09-07T03:10:00Z), so adding an ungated `track()` would contradict that design.
 - **Better fix:** reuse the existing first-party pattern that book_viewed uses (`/api/marketing/event`: no cookie, no identifier). Send `retailer_click {retailer, book}` with `navigator.sendBeacon` on click. This does not depend on the Vercel plan and counts every visitor.
 - **Side note:** `rel=noreferrer` hides mayaallan.com as the referrer from the retailers.
+
+### ana-04: ~24-hour log retention (CONFIRMED, severity lowered to medium)
+| check | source | UTC read | result |
+|---|---|---|---|
+| older window | get_runtime_logs 2026-09-17T00:00Z to 09-23T12:00Z | ~18:49:40Z | 400 `ExceedsBillingLimitError` |
+| boundary | get_runtime_logs 2026-09-23T12:00Z to 19:00Z | ~18:50Z | Only 2 entries: 2026-09-23T18:54:30Z `GET /` and 18:55:10Z `GET /contact`. That is a rolling ~24 hours; the boundary moved about 30 minutes later than at the audit's 18:21Z read, as expected |
+| fields | the same entries | ~18:50Z | Only method, path, status, source, deployment, branch and cache are returned. There is no user agent, referrer, country or IP *in the MCP output* |
+| observability | get_observability_schema; create_observability_query (metric `vercel.request.count`, project scope) | ~18:49:40Z, ~18:56Z | 404 "Observability Data not found" on both. **Weak evidence:** the schema tool takes no team parameter, and the metric id was my guess, so this could be an artefact |
+| drains | list_drains (team + project) | ~18:49:40Z | 404 "Not Found" was reproduced. It is ambiguous: it could mean no drains exist or no access |
+
+- **Why medium:** The loss is in the past and no fix can bring it back. The need going forward is covered by ana-01. A log drain or Observability Plus is extra cost this site does not need.
+- **Solution check:** "Enable Web Analytics now" is correct. The optional paid add-ons are not recommended for this purpose.
+- **Needs outside-source check:** whether the dashboard's log detail view shows the user agent or referrer. That needs a dashboard login, which is not allowed here.
+
+### ana-05: No sign of a real human in the retained day (CONFIRMED, high)
+| check | source | UTC read | result |
+|---|---|---|---|
+| totals | get_runtime_logs baseline 2026-09-23T18:00Z to 09-24T17:30Z, grouped by status | ~18:50Z | 200=414, 404=13, 304=1, plus 1 unlisted group, so 428+ status lines |
+| sources | the same window, grouped by source | ~18:52Z | function 377, middleware 359, cache 55, redirect 3. One page request can log both a middleware line and a function line, so there are roughly half as many real requests as log lines |
+| API calls | the same window: query `/api/` grouped by path; `marketing` grouped by status; `checkout` and `tools` grouped by path | ~18:50Z to ~18:57Z | only /api/health 6; `marketing` 0; `checkout` 0; `tools` 0 |
+| positive control | 18:10Z to 18:40Z, the same queries | ~18:51Z–18:52Z | /api/marketing/event 2 and /api/marketing/visitor 6 were logged (the audit's own browser) |
