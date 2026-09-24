@@ -22,3 +22,28 @@ A pioneer does not chase those clients one search at a time. She becomes the def
 | F6 | Oregon OPS Licensee Directory | Page is live; its HTML has no downloadable CSV or PDF, so the list must be copied from the interactive view (size UNVERIFIED) | https://www.oregon.gov/oha/PH/PREVENTIONWELLNESS/Pages/Psilocybin-Licensee-Directory.aspx | 22:56:02Z |
 | F7 | Colorado NMD Third-Party Educational Resources | Public recommendation form (Google Form). Six criteria: Credibility & Authority; Accuracy & Evidence-Based Content; Transparency & Objectivity; Compliance with Regulations & Standards; Accessibility & Inclusivity; Positive Reputation & Peer Endorsement. Lists Fireside, Zendo, Unlimited Sciences, MAPS, Chacruna, Erowid, ICEERS, Healing Advocacy Fund and Michael Pollan's resource page | https://nmd.colorado.gov/third-party-educational-resources ; form https://docs.google.com/forms/d/e/1FAIpQLSdV2922gOavNx8cn-c6NgncfzbBzSLHjso4jBRneMBLIx6nRA/viewform | 22:55:07Z |
 | F8 | MAPS Integration Workbook Bundle (20-Pack) | $60.00, print, for "clinicians, therapists, and healing practitioners", "provided for direct client use only". Practitioners already buy client hand-out packs; price anchor $3 per client | https://virtualtrip.maps.org/product/maps-integration-workbook-bundle-20-pack/ | about 22:55Z |
+| F9 | BookFunnel author plans | First-Time Author $30/yr (500 downloads a month). Mid-List $200/yr (5,000 downloads a month; collect reader email addresses; up to 4 mailing lists; direct sales delivery; audiobook add-on; watermarked files). Bestseller $300/yr (unlimited) | https://bookfunnel.com/pricing/ | 22:55:32Z |
+| F10 | Fireside Project | "Fireside Ambassador Kit ... All are welcome!" (/spread-the-word). /resources links to outside resources: 32 external links, rel="noopener", no nofollow. Fireside-Certified Coaching is used at the Massachusetts General Hospital Ketamine Clinic in a Harvard Medical School study (/coaching). Volunteer training about 50 hours; applications closed, waitlist open (/training) | https://www.firesideproject.org/spread-the-word , /resources , /coaching , /training | 22:56:37Z-22:56:45Z |
+| F11 | Horizons 2026 | "October 15 - 17, 2026 in New York City for our 19th conference". Thursday industry forum, Friday science and medicine, Saturday policy and culture; Community Allies section | https://horizonsconference.org/ | 22:55:45Z |
+| F12 | MAPS event calendar submission | Form live: "unable to accept incomplete submissions and generally will not contact you about your submission" | https://maps.org/event-calendar-submission/ | 22:55:45Z |
+| F13 | Apple Podcasts search API | "psychedelic integration": 9 shows, 7 with an episode in the last 90 days: Psychedelic Medicine Podcast (207 episodes, last 2026-09-09), The Microdose (94, 06-29), Psychedelic Passage (83, 09-09), Hope for Humanity (43, 09-08), The Integration Session (36, 09-17), Unjourneying (9, 08-03), The Psychedelic Integration Compass (8, 09-21). "psychedelic facilitator": 92 shows, 47 active in 90 days (e.g. Psychedelics Today, 776 episodes, last 08-12) | https://itunes.apple.com/search?media=podcast&limit=200&term=psychedelic%20integration | 22:54:47Z |
+| F14 | Site state | Ebook $9.99 via PayPal. /contact has 3 fields. /events: "No events are currently scheduled." /integration-journal: 4 versions (Preparation, Journey companion, Integration, Shadow work); "The PDF is generated server-side"; optional intention and date print on the cover; no email. /scenarios links 1 scenario page of the book's 40. /partners, /press, /bulk, /for-facilitators return 404 | https://www.mayaallan.com/ (pages named) | 22:53:19Z-22:58:39Z |
+| F15 | Owned domains | psilocybinintegrationguide.com and psilowire.com return 308 to www.mayaallan.com and keep path and query (/or-test?x=1 arrives as www.mayaallan.com/or-test?x=1): usable as short printable QR domains with one path per partner | curl GET | 22:58:39Z |
+
+Not read in this run (this session's web-search budget was used up): the Oregon and Colorado facilitator conduct rules on selling products or accepting referral fees, and any facilitator continuing-education requirement. Both are UNVERIFIED; no move below depends on either.
+
+## 2. The partner universe (who already holds the audience)
+
+| Segment | Size | Source | Map ids |
+|---|---|---|---|
+| Oregon service centers | 22 operating of 35 approved (secondary, Q1 2026) | market map | mkt-01, niche-b2b-or-centers |
+| Oregon licensed facilitators | 383 (secondary, Q1 2026) | market map | mkt-01, mkt-09 |
+| Colorado healing centers | 46 (11 standard + 35 micro) as of 9-18-26 | niche map | mkt-02, niche-b2b-co-centers |
+| Colorado facilitators, active | 86 + 94 clinical = 180 | F1 | mkt-02, mkt-09 |
+| Colorado facilitators in training | 691 | F1 | mkt-10 |
+| Training programs, unique | 22 (14 OR + 11 CO - 3 overlap) | F2, F3 | mkt-10, niche-edu-or-programs, niche-edu-ciis |
+| Psilocybin retreats on Retreat Guru | 738+ (NL 257, ES 173, MX 61, PT 41, US 35) | market map | mkt-08, niche-b2b-retreats |
+| Practitioners on Psychable | 855+ | niche map | niche-dir-psychable, mkt-11 |
+| Support and harm-reduction nonprofits | Fireside (40,000 conversations; about 1,100 calls a month), Zendo (10,000+ trained peers), Unlimited Sciences info line | market + niche maps, F7, F10 | mkt-07, niche-npo-fireside |
+| Integration podcasts, active | 7 of 9 | F13 | mkt-05, niche-pod-integration-small |
+| Clinical wave | New Mexico program by 2026-12-31; COMP360 launch H1 2027 if approved; 8,000+ interventional-psychiatry centers | market + niche maps | mkt-03, mkt-04, mkt-ws-05, mkt-ws-06 |
