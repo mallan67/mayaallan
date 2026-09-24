@@ -124,3 +124,33 @@
 | foot-13 | low | Library and knowledge-graph records thin or absent | Open Library: paperback only; author has name only (18:26:41Z, 18:34:30Z). Wikidata 0; LoC 0 (18:34:29Z) | Fewer structured sources for search and AI entity recognition | Add the hardcover and ebook editions plus bio and website to Open Library (free account). Optionally create Wikidata items for the author and book with their ISBNs and Goodreads/OL/Amazon identifiers | owner-account |
 | foot-14 | info | A dead reseller listing is still indexed | barwebooks.com product URL: Bing result (18:27:09Z), 404 on fetch (18:33:05Z) | A small dead end for searchers | None needed. It will drop out of the index | none |
 | foot-15 | info | Incidental on-site observation (for the site-errors lens) | The book page HTML contains a link to https://www.paypal.com/signout (18:19:09Z) | Out of this lens scope; noted for cross-check | Hand to the on-site audit lens | code-pr |
+
+## 6. What works
+
+| Item | Evidence (live, UTC) |
+|---|---|
+| Amazon US listings live for Kindle, paperback and hardcover under one author (B0G76975ST) | 200 on all three /dp/ pages, byline "Maya Allan (Author)", 18:19:52Z-18:23:24Z |
+| Amazon author page live with photo and bio | /stores/author/B0G76975ST 200, author-media image present, 18:23:41Z |
+| International Kindle availability (UK, CA, DE, AU) and UK paperback | all 200, 18:32:56Z-18:33:03Z |
+| Google Play sells the ebook ($9.99), and Google Books has the record | 200, 18:24:40Z-18:24:47Z |
+| Goodreads has the book (3 editions) and an author page | 200, 18:23:56Z-18:24:12Z |
+| B&N, ThriftBooks, AbeBooks and Bokus list the paperback | 200, 18:25:02Z-18:25:06Z |
+| Open Library has the paperback edition and an author record | 18:26:26Z-18:26:41Z |
+| The site ranks #1 and #2 on Bing for "Maya Allan", and is in WebSearch results for name + topic queries | Bing 18:27:27Z and 18:35:50Z-18:36:06Z; WebSearch 18:19Z bracket |
+| All extra domains send users and crawlers to the canonical host with path kept (308) | 18:19:42Z-18:19:45Z, 18:35:49Z-18:35:50Z |
+| The site book page offers 7 retailer links and share buttons | 18:19:09Z |
+| Instagram @maya.allan66 exists under the name Maya Allan | WebFetch title, 18:30:44Z-18:31:04Z |
+
+## 7. Conspicuously missing, with a solution for each
+
+| Missing | Proven by | Solution |
+|---|---|---|
+| Any rating or review | foot-01 | Review drive plus a back-matter call to action |
+| Any off-site link to www.mayaallan.com | foot-02 | Goodreads/OL website fields, Instagram bio, the URL in the book, podcast show notes |
+| Claimed Goodreads author profile | foot-03 | Goodreads Author Program |
+| Apple Books, Kobo (unverified), NOOK ebook, audiobook | foot-05 | Wide distribution if not in KDP Select |
+| YouTube, Bluesky, Linktree; author Pinterest; active Substack/Medium | foot-07 | Choose 1-2 channels, link both ways |
+| Podcasts, interviews, press | foot-08 | Media kit plus outreach |
+| Wikidata / library records | foot-13 | Open Library edits; optional Wikidata items |
+| A book-domain landing page | foot-10 | Redirect the root to the book page |
+| Visible social links and a full sameAs on the site | foot-07 | Footer/About links; sameAs: Amazon author, Goodreads author, OL author, Google Books, Instagram |
