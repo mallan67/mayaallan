@@ -210,3 +210,25 @@ The table orders tactics by build priority, not by id. Owner: **code-pr** = a Gi
 - **Steps if demand appears:** an iframe "integration prompt of the day" with one visible, branded `rel="nofollow"` attribution link.
 
 ---
+
+## 5. Suggested order for the next 30 days
+1. **Week 1:** eam-00. Merge #57, enable analytics, add events. In parallel, draft the eam-01 and eam-02 email copy.
+2. **Week 2:** eam-01 and eam-07 in one PR, and eam-03 in a second PR, after the privacy review.
+3. **Week 3:** eam-02 (journal by email). eam-06 starts (videos, community answers).
+4. **Week 4:** eam-05 answer blocks on existing pages. The first eam-04 batch of 3 scenarios goes out, then the 28-day indexing gate starts.
+5. **Day 30 review:** leads per tool, capture rate per page, purchases by `ref`. Keep what converts and drop what doesn't.
+
+---
+
+## 6. Not done, UNVERIFIED, gaps
+- **Tool traffic, completions and conversion today: UNKNOWN.** Analytics are disabled (PR #57, live). All impact numbers are planning assumptions or vendor benchmarks, not forecasts.
+- **Email-course, building-in-public, embeddable-widget and share-card results from 2025-2026: no practitioner numbers found.** The web-search budget ran out mid-session, and the remaining sources were fetched from known URLs.
+- **"Originality.ai 2,600 programmatic sites" study, and the law-site "42,000 pages, 96% drop" story:** seen only in secondary snippets. No primary source was found.
+- **theStacc's "November 2025 helpful content refresh":** not on Google's status dashboard.
+- **Ahrefs "97% of llms.txt get zero requests":** read second-hand through Growth Unhinged. The primary Ahrefs page was not fetched.
+- **HubSpot's glossary-for-bots and pricing experiments:** paywalled beyond the first sections.
+- **Legal applicability of WA MHMDA or other health-data laws to this site:** not assessed. Legal review required before eam-01 or eam-02 stores any email linked to tool use.
+- **GSC indexing status of current pages:** not read. It needs Maya's account, and it is required for the eam-04 gate.
+- **Nothing in this document has been built.** No code, form, or account setting was changed. Only this file was committed.
+
+---
