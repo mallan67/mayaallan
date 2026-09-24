@@ -134,3 +134,37 @@
 - **Owner:** owner-account. **Effort:** S.
 - **Expected impact:** Google requires a page to be "indexed and eligible … with a snippet". Since 2026 AIO takes 62% of its citations from outside the top 10 (Ahrefs, 2026-03-02), so indexed pages that answer narrow sub-questions can be cited without ranking top 10.
 - **Measure:** Indexed count, and Search Console "Web" impressions per page (AI features are counted there).
+
+### ai-04: YouTube presence (strongest single measured correlation)
+- **Steps:**
+  1. Create a YouTube channel under "Maya Allan".
+  2. Publish 2–5 minute answer-first videos, one question each. Take the questions from /faq and the 40 scenarios, for example "What does integration mean after a difficult psilocybin experience?". Say her name and the book title in the first 20 seconds, keep them in title and description, and add accurate captions.
+  3. Link each video to the matching site page.
+  4. Stay inside the site's existing non-clinical rules: no dosing, sourcing or medical claims.
+  5. Separately, pitch **guest appearances on psychedelic-integration podcasts that publish on YouTube**, so her name appears in other channels' titles and descriptions.
+- **Owner:** content + owner-account. **Effort:** L (ongoing, about 1 video/week).
+- **Expected impact:** YouTube mentions ~0.737 correlation with AI visibility (Ahrefs, 2025-12-12). YouTube is the most-cited AIO source for health queries (SE Ranking, 2026-01-14) and 18.2% of AIO's unranked citations (Ahrefs, 2026-03-02). These are correlations, not proof of cause. Nothing measured is specific to solo authors.
+- **Measure:**
+  - Videos and other channels' videos mentioning "Maya Allan" or "Psilocybin Integration Guide".
+  - `youtube.com` referrals.
+  - Brand mentions in the `ai-12` prompt panel for AIO, AI Mode and Perplexity.
+
+### ai-05: Reddit, with disclosed and useful participation
+- **Steps:**
+  1. Maya reads each subreddit's self-promotion rules before posting. Candidate subreddits are psychedelic-integration and psilocybin communities; the Reddit API returned 403, so names and rules are **UNVERIFIED**.
+  2. Answer integration questions in full inside the comment, with no link-dropping. Disclose "I wrote a book on this" only where it is relevant and the rules allow it.
+  3. Never give dosing or sourcing advice (same boundary as the site).
+  4. Aim for 3–5 substantive answers a week.
+- **Owner:** owner-account + content. **Effort:** M (ongoing).
+- **Expected impact:** Reddit is a top source for Perplexity (6.6%) and AIO (2.2%) (Profound, 2025-06-05), and Ahrefs (2026-03-13) calls it ChatGPT's #1 cited domain. ChatGPT's use of Reddit is **volatile** (~60%→~10% share in Sept 2025, Semrush 2025-11-10), so do not rely on it alone. Vercel reports the same "authentic community mentions" practice (2025-06-10).
+- **Measure:** Threads where her answer is cited or upvoted, `reddit.com` referrals, and Perplexity / AI Mode mentions in `ai-12`.
+
+### ai-06: Earned media and third-party book lists (not self-made lists)
+- **Steps:**
+  1. Maya builds a list of existing third-party pages that answer "books on psilocybin / psychedelic integration": publisher blogs, psychedelic media, Goodreads lists, newsletters. The fastest way is the domains cited in the `ai-12` prompt panel.
+  2. Pitch the list authors with a short note and a review copy.
+  3. Pitch guest essays or interviews to psychedelic-culture publications.
+  4. **Do not** publish a "best integration books" list on her own site that ranks her own book #1.
+- **Owner:** owner-account + content. **Effort:** M–L.
+- **Expected impact:** Earned-media bias (Chen et al., 2025-09-10). "Best of" pages make up 43.83% of the pages ChatGPT uses for product/service queries (Allsopp via Ahrefs, 2026-03-13). Self-promotional lists lost 29–49% visibility and push recommendations to competitors (Lily Ray, 2026-02-03 and 2026-06-17).
+- **Measure:** Count of third-party pages naming the book (log the URLs), referrals from them, and `ai-12` mentions.
