@@ -77,3 +77,41 @@
    - *Microdosing Psilocybin: An Integration Journal*
 
    The only differentiator is the tie-in to the Guide and to the free web tool.
+
+## 3. Item-by-item evidence
+
+**book-isbn-defect**
+- **Kindle** B0G765BZDL (22:12:44Z): "ISBN-13 : 979-8994148839", "Print length : 281 pages", "Publication date : December 15, 2025", rank #3,146,610 Kindle Store. The review histogram shows 0% in every star band.
+- **Paperback** B0G91GZMLT (22:13:14Z): "ISBN-13 : 979-8994148839", **289 pages** (the map said 290), #971,568 Books. The title still shows the duplicate "Allan, Maya, Allan, Maya" (D3 confirmed).
+- **Hardcover** B0G7JWDJYQ (22:13:38Z): "ISBN-13 : 979-8994148853", #3,964,590.
+- **KDP rules:** *"The same ISBN cannot be reused across multiple book formats"* (G201834170). *"ISBNs cannot be changed if your book is published… unpublish the book and then publish a new edition"* (G8BYTM8CVK74676V, 22:14:50Z).
+- **Bowker** (22:15:09Z): *"Each format of your book requires its own ISBN"*; 1 ISBN for $125, 10 for $295, 100 for $575, 1,000 for $1,500.
+- **Side effects the map missed:**
+  - A new Kindle edition gets a new ASIN, so the Kindle Deals "90 days" recommendation restarts.
+  - Goodreads 245299940 ("Kindle Edition", ISBN ...839) and Open Library OL61601841M (...839) must be corrected to the paperback.
+
+**book-bisac**
+- BISG (22:15:20Z) lists "OCC039000 MIND, BODY, SPIRIT / Entheogens & Visionary Substances". The complete list page says "2025 Edition" (22:16:00Z).
+- Also listed: SEL031000 Personal Growth / General, SEL045000 Journaling, SEL042000, PSY075000 Trauma Psychology, PSY073000 Psychotherapy / Spiritually Integrated, HEA032000 Alternative Therapies.
+- **Not shown:** any statement that the heading was renamed from "BODY, MIND & SPIRIT" (UNVERIFIED).
+- **Now blocked:** the Bookshop page returns 403 to curl and to WebFetch (22:31:33Z), so the Bookshop shelving evidence is UNVERIFIED today.
+- **Verified instead:** Amazon places the book in Inner Child, Alternative Holistic Medicine, Emotional Self Help, Healthy Relationships and Personal Transformation (22:12-22:13Z).
+
+**book-kdp-categories-keywords**
+- G200652170: "select 3 categories"; "up to 72 hours".
+- G201298500 (22:41:20Z): "Use up to seven keywords or short phrases". Avoid "Information covered elsewhere in your book's metadata (title, contributors, etc.)", "Words already mentioned in your book categories" and "Subjective claims about quality". KDP has *"zero tolerance policy for metadata that is meant to advertise, promote, or mislead"*.
+- The "program names (Kindle Unlimited)" ban was **not visible** in this read.
+- Amazon search re-read:
+  - *psychedelic integration*: "1-16 of 254 results", no Maya edition on page 1 (22:17:02Z).
+  - *ego death*: "1-24 of 92 results", no Maya edition on page 1 (22:17:39Z).
+  - *psilocybin integration*: 85 results, paperback on page 1 (22:18:10Z).
+- The Amazon category name for "entheogens" is still UNVERIFIED.
+
+**book-isni**
+- myidentifiers (22:15:02Z): "Complete and submit the ISNI Assignment Form… one-time fee of $5"; "over 16.5 million identities".
+- Pollan's Open Library record has `remote_ids.isni` 000000011449365X (22:32:14Z).
+- It gives no route to email leads, so lead value is low.
+
+**book-kdp-ebook-backmatter** — see correction 2.
+- The print QR/URL is not governed by the Kindle hyperlink page. Print-specific KDP rules were not read (UNVERIFIED).
+- Apple, D2D and library ebook link rules were not read (UNVERIFIED).
