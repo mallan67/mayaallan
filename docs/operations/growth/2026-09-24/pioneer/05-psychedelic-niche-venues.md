@@ -144,3 +144,30 @@ Episode counts and last-episode dates come from the Apple Podcasts lookup API (h
 | niche-edu-vital | Vital (Psychedelics Today) | live. "Applications now open for our October 2026 cohort" | Affiliate form (Psychedelics Today contact page) | medium | https://www.vitalpsychedelictraining.com/ (18:46:54Z) |
 | niche-edu-fluence | Fluence | live. "Pre-enrollment is now open" for a COMP360 psilocybin certificate, described as a "post-approval training program" | Clinician audience; resource partnership | medium | https://www.fluencetraining.com/ (18:46:54Z) |
 | niche-edu-naropa | Naropa | **UNVERIFIED** (no psychedelic program link found on the homepage) | n/a | unknown | https://www.naropa.edu/ (18:46:54Z) |
+
+### G. Nonprofits and peer support
+
+| id | Org | Status | Way in (give first) | Link back | Lead value | Source (read UTC) |
+|---|---|---|---|---|---|---|
+| niche-npo-fireside | Fireside Project: free support line 62-FIRESIDE (opens 11 a.m. Pacific), TripCheck, Fireside-Certified Coaching | live | "Spread the Word" kits: Clinic Partner Folder (ketamine clinics), Community Spark Kit, Fireside Ambassador Kit ("All are welcome!"). The /resources page links out to external communities. | rel UNVERIFIED | medium-high (trust) | https://www.firesideproject.org/ ; /spread-the-word ; /resources (18:39:36Z to 18:39:46Z) |
+| niche-npo-maps | MAPS | live | Event submission form, speaker request, community events calendar | 1 of 6 nofollow (article sample) | medium | https://maps.org/take-action/events/ (18:39:03Z) |
+| niche-npo-others | Zendo Project, DanceSafe, Heroic Hearts Project, Reason for Hope, Heffter, Psychedelic Medicine Coalition | homepages live (HTTP 200) | Contact-level partnerships only; programs **UNVERIFIED** | UNVERIFIED | low-medium | status checks (18:28:04Z, 18:39:12Z) |
+
+### H. Retreats and service centers (B2B)
+
+| id | Target | Evidence (read UTC) | Offer | Lead value |
+|---|---|---|---|---|
+| niche-b2b-or-centers | Oregon licensed service centers | 1,220 clients in Q2 2026, 43% from other states (section 0) | Aftercare kit, bulk codes, per-center UTM | **high** |
+| niche-b2b-co-centers | Colorado healing centers | 46 licensed as of 9-18-26 (section 0) | same | **high** |
+| niche-b2b-retreats | Retreats on Retreat Guru (839 upcoming), e.g. Beckley Retreats ("prep and integration curriculum"; private programs for 1 to 18 people) and MycoMeditations (about 20 hrs of group prep and integration; "The Bridge" for practitioners) | https://www.beckleyretreats.com/ ; https://mycomeditations.com/ (18:44:48Z) | Take-home journal or aftercare licensing for guests | medium-high |
+| niche-b2b-networks | Psychedelic Passage (guide network with free matchmaking) | https://www.psychedelicpassage.com/ (18:42:06Z) | Partner **with caution**: the site offers a "Free Psilocybin Sourcing Guide", which carries legal risk by association | low-medium |
+
+### I. Journalist-request platforms
+
+| id | Platform | Status | Mechanics / cost | Lead value | Source (read UTC) |
+|---|---|---|---|---|---|
+| niche-pr-sos | Source of Sources (Peter Shankman) | live | Free; queries "Up to three times a day". "If you pitch a reporter off topic even once ... you are gone." | medium | https://www.sourceofsources.com/ (18:40:17Z) |
+| niche-pr-qwoted | Qwoted | live | Basic **Free**: 2 pitches/mo with a 2-hour delay. Pro $149/mo: 35 pitches/mo. | medium | https://www.qwoted.com/pricing/ (18:40:17Z) |
+| niche-pr-featured | Featured (terkel.io now redirects here) | live | Free $0 tier; Lite $29/mo billed annually ($348); "Monitor HARO and similar feeds" | medium | https://featured.com/pricing (18:40:17Z) |
+| niche-pr-hb2bw | Help a B2B Writer | **dead / in transition**: helpab2bwriter.com redirects to mentionmatch.com, which says "We are launching soon" | n/a | low | https://helpab2bwriter.com/ redirects to https://mentionmatch.com/ (18:39:57Z, ~18:40:30Z) |
+| niche-pr-haro | HARO / Connectively | **UNVERIFIED** (HTTP 429 on both) | n/a | unknown | https://www.helpareporter.com/ ; https://connectively.us/ (18:39:57Z) |
