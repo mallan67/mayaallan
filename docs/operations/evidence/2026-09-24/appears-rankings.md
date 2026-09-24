@@ -113,3 +113,28 @@ Bing shows 7-10 organic results on page 1. WS returns 9-10. "none" = no mayaalla
 **"mayaallan.com"** WS 18:22:36Z-52Z (9): 1 in.pinterest.com/mayaallan2/ | 2 wiki/Mayajaal | 3 wiki/Maya_S | 4 wiki/Maya | 5 mayaallan.com/ | 6 wiki/Mayan | 7 wiki/Maya_Jayapal | 8 wiki/Maya_S._Krishnan | 9 wiki/Maya_Penn. Bing: decoy.
 
 **"psilowire"** Bing 18:20:34Z (7): psilowave.com/, psilovibe.org/, psilowave.com/about, psychwire.com/, app.psychwire.com/notifications, instagram.com/psilo.delic/, instagram.com/psychwire__/ . WS (9): facebook.com/Psilowave, psilowave.com, psilosiren.com, dungeonsdragons.fandom.com (Psilofyr), wiki/Psi_wheel, wiki/Psi, mimir.net, dandwiki.com, wiki/Psilate.
+
+## 7. Book-title SERPs (raw)
+
+**"Psilocybin Integration Guide"**
+- Bing B1 18:20:34Z (7): 1 mayaallan.com/books/psilocybin-integration-guide "Psilocybin Integration Guide - 40 Real Psychedelic ..." | 2 amazon.com/Psilocybin-Integration-Guide-Navigating-Experience/dp/B0G7JWDJYQ | 3 books.google.com (HvafEQAAQBAJ) | 4 amazon.com/...-ebook/dp/B0G765BZDL | 5 psychedelicstoday.com/2024/03/27/the-practitioners-guide-to-psychedelic-integration-t... | 6 barnesandnoble.com/w/psilocybin-integration-guide-maya-allan/1148993659 | 7 learnshrooms.com/news/integration-guide-after-psilocybin-2026/ . B2 18:24:20Z: #1 identical.
+- WS 18:21:51Z-22:03Z (9): 1 amazon Kindle B0G765BZDL | 2 amazon B0G7JWDJYQ | 3 frontiersin.org (fpsyg.2022.824077) | 4 psychedelicstoday.com (practitioner's guide) | 5 adaa.org | 6 mindbloom.com/blog/psychedelic-integration-complete-guide | 7 shroombros.co/psilocybin-integration-guide-first-72-hours/ | 8 spectrumpsychwa.com MAPS-Integration-Workbook.pdf | 9 alicemicrodoses.substack.com. **mayaallan: none.**
+
+**"Psilocybin Integration Guide Maya Allan"**
+- Bing B1 18:20:35Z (7): 1 mayaallan.com/books/psilocybin-integration-guide | 2 mayaallan.com/ | 3 amazon B0G7JWDJYQ | 4 books.google.com | 5 amazon Kindle B0G765BZDL | 6 barnesandnoble.com | 7 amazon.ca Kindle. B2 18:24:21Z: #1-#2 identical.
+- WS (9): 1 amazon Kindle B0G765BZDL | 2 amazon B0G91GZMLT | 3 amazon B0G7JWDJYQ | 4 **github.com/mallan67/mayaallan/pull/54** | 5 mayaallan.com/ | 6 mayaallan.com/about | 7 shroombros.co | 8 mindbloom.com | 9 josephdana.substack.com
+- WS restricted to github.com (~18:25Z): pull/54, pull/45, pull/52, pull/43, issues/44, pull/53, pull/51, pull/47 (all mallan67/mayaallan), then 2 unrelated repos. `gh api repos/mallan67/mayaallan/issues/{n}` 18:28:25Z: all 8 exist and are closed, created 2026-09-05..06.
+
+**"psilocybin integration guide book"**
+- Bing B1 18:20:35Z (7): 1 amazon B0G7JWDJYQ | 2 books.google.com | 3 amazon Kindle B0G765BZDL | 4 barnesandnoble.com | 5 thriftbooks.com | 6 play.google.com/store/books/details/Psilocybin_Integration_Guide_40_Real_Scenarios_fo... | 7 mayaallan.com/ . B2 18:24:21Z: site again #7.
+- WS (9): 1 amazon B0G91GZMLT | 2 amazon Kindle | 3 amazon B0G7JWDJYQ | 4 amazon.com/Your-Psilocybin-Mushroom-Companion-Easy/dp/1612439470 (Janikian) | 5 medicinalmindfulness.org/wp-content/uploads/2020/11/Psychedelic_Integration_Guidebook_FinalKMv4_1_.pdf | 6 getsetset.com/products/ultimate-psilocybin-guide | 7 goodreads.com/shelf/show/psychedelic-integration | 8 cdn.prod.website-files.com/.../Psilocybin 101 ... .pdf | 9 psychedelicpassage.com/product/our-psychedelic-integration-guide/ . **mayaallan: none.**
+
+**Full title "Psilocybin Integration Guide 40 Real Scenarios for Navigating What You See, Feel & Experience"**
+- Bing (short form "Psilocybin Integration Guide 40 real scenarios") 18:20:36Z and 18:23:44Z: decoy (generic psilocybin pages: wikipedia, webmd, nida ...). UNVERIFIED.
+- WS 18:22:36Z-52Z (9): 1 amazon Kindle B0G765BZDL | 2 amazon B0G91GZMLT | 3 amazon B0G7JWDJYQ | 4 getsetset.com | 5 psychedelicstoday.com | 6 frontiersin.org | 7 mindbloom.com | 8 walmart.com/c/kp/psilocybin | 9 alicemicrodoses.substack.com. **mayaallan: none.**
+
+## 8. Handoff
+
+- Status: this lens is complete for Bing page 1 and WS. Google, DuckDuckGo, Bing positions 8-20 and alias-domain indexing are **not done** (section 4).
+- Next actions, in order: (1) owner verifies mayaallan.com in Google Search Console and Bing Webmaster Tools and submits the sitemap (rank-02, rank-10); (2) owner decides on repo visibility (rank-04); (3) content PR to retitle the 3 topic pages (rank-06); (4) re-run this lens after reindexing: same 21 queries, two observations each.
+- Evidence files: this file + `appears-rankings-part2.md`, both on branch `work/site-visibility`. Each commit's compare lists only its own file.
