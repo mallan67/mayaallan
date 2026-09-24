@@ -145,3 +145,21 @@ The facts are **confirmed**, but the conditional impact is refuted: no indexable
 | llms.txt, llms-full.txt, security.txt, og images | yes | 200 5651 B; 200 109820 B; 200, Expires 2027-05-18; 3 opengraph-image URLs return 200 image/png (18:46:43-18:46:45) |
 | No 5xx in 24 h | yes | 5xx grouped by path: 0 rows; by status: 0 rows. All codes: 200 8399, 404 305, 405 10, 304 3, 307 3 (~18:47) |
 | Custom domains public; no firewall config | yes | get_project: password off, SSO all_except_custom_domains, trustedIps off. get_firewall_config(active): 404 "Seawall Config not found." (~18:47) |
+
+## 4. New observations from this verification
+| observation | source | UTC |
+|---|---|---|
+| **Traffic baseline before the audit** (2026-09-23T18:48Z to 2026-09-24T17:00Z): function responses 200 = 391, 404 = 12, 304 = 1. The only 404s are vulnerability scanners (xmlrpc.php, sftp-config.json, wp-login.php). No crawler requested verification files or feeds. Runtime logs count function invocations only; CDN-cached hits such as the sitemap and robots.txt are not included. | get_runtime_logs group_by statusCode and requestPath | ~18:48 |
+| 4 interactive tool pages are thin in raw HTML: /nervous-system-reset 111, /belief-inquiry 118, /scenarios 121, /integration-reflection 131 words (added to vis-03) | 38-URL pass | 18:42:58-18:43:01 |
+| Preview deployment `dpl_nrDX7fT8omrNVLm8qtoXUunVcum7` (target null, BUILDING) was created 2026-09-24T18:47:18Z. It was probably triggered by evidence commits to `work/site-visibility` (inference). Preview hosts are SSO-protected, so there is no indexing risk, but each evidence commit may start a build. | get_project latestDeployment | ~18:47 |
+| The 24 h 404s also include /media/mushroom-healing (lowercase) 6, /manifest.webmanifest 9 and /apple-touch-icon.png 6. None appear before 17:00Z, so they are most likely audit or browser probes (not established). | get_runtime_logs | ~18:47 |
+
+## 5. Unverified: needs an outside-source or owner-account check
+- Google Search Console: is the Domain property verified (the DNS token exists), was the sitemap submitted, and what do the Page indexing, Sitemaps and Crawl stats reports say? This is the most important open item for "not seen anywhere".
+- Bing Webmaster Tools: whether the site is verified or imported.
+- vis-02 rendered DOM: whether streamed tags are hoisted into `<head>` (Search Console URL Inspection, "View crawled page"). The browser was not used here.
+- vis-04: whether Amazon author, Goodreads and Google Books author pages exist before they are added to sameAs.
+- vis-06: real cold-start TTFB under normal low traffic (needs Speed Insights or observability).
+
+## 6. Save trail
+This file was saved through the gitsave recipe in 5 commits, each changing only this path: fd99df82 (part 1), f1e6d59a (part 2), 890134ff (part 3), 007598e6 (part 4), and this commit (part 5). The file was split into several commits because one shell command could not carry the full text. Each append re-read the file live from the branch head before writing.
