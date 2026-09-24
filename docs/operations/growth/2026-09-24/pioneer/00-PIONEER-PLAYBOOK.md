@@ -42,3 +42,37 @@ A pioneer does not fight for the word "psilocybin" or buy ads (Google restricts 
 > "Maya Allan, author of *The Psilocybin Integration Guide* (40 real scenarios), runs free Back Home Circles and free integration tools for people in the weeks after a psilocybin experience."
 
 Use that one sentence on every profile (3 different bios are live today [IN-06]). Quote numbers with their denominators: **44.7% (545 of 1,220) of Oregon's Q2 2026 clients lived outside Oregon**. "71%" is only the share of *county responders*, and two judges flagged it. Do not claim a new category, "treatment" or "healing": the live book page's og:image:alt still says "Heal Traumas" [S7].
+
+## 2. The winning strategy: "Back Home" (Circles on the Search-Everywhere spine)
+
+### 2.1 How the judges scored the five strategies
+
+| Strategy | Judge 1 | Judge 2 | Judge 3 | Total /150 | leads_30d (sum) | compounding_6m (sum) |
+|---|---|---|---|---|---|---|
+| Back Home Circles (BHC) | 31 | 28 | 31 | **90** | **19** | 19 |
+| Search-Everywhere: Doors, Surface, Plumbing (SE) | 32 | 29 | 29 | **90** | 18 | 23 |
+| Ecosystem / B2B take-home layer (ECO) | 32 | 27 | 30 | 89 | 13 | 23 |
+| Data & PR: own the after-session dataset (DATA) | 30 | 26 | 28 | 84 | 10 | 20 |
+| Category Creator: Journey Scenario Index (CAT) | 28 | 23 | 25 | 76 | 9 | 19 |
+
+BHC and SE tie at 90. The tie-break is 30-day leads, because the owner's problem is zero leads in month one: BHC 19, SE 18. So the lead engine is BHC, and it runs on SE's plumbing and doors, with the best moves grafted from ECO, DATA and CAT. The three judges converged on this same stack independently (Judge 3 wrote it out as a "synthesis stack").
+
+### 2.2 Thesis
+
+Be the free, trusted next step for the weeks after a psilocybin experience, on every surface where that person searches, listens or is handed a card.
+
+- **Lead engine:** free circles and a 7-day email cohort. A registration is a consented contact within days.
+- **Doors:** search and AI answers, book retail, licensed centers and training programs, the press.
+- **Surface:** the book's 40 scenarios as answer pages.
+- **Plumbing:** one entity and a tracked vanity router, so that at day 30 every lead has a known source and month two is decided on data.
+
+Why it should work: (1) it is the only plan all three judges rated as able to produce counted leads before day 30; (2) Oregon's rules explicitly let facilitators point clients to peer support groups and community resources [S14], so centers can distribute it with no payment involved; (3) the niche is small enough that one author can become the most visible, most useful free option within a quarter.
+
+### 2.3 Ordered moves
+
+| # | Move (grafted from) | What exactly | Owner / effort | First lead |
+|---|---|---|---|---|
+| M0 | **Capture + safety PR** (BHC M2, DATA M4, ECO M7) | Optional email with a `source` value on /events, the 4 tools, /scenarios, /glossary and /books (audiobook early-listener list). "Email me this reflection" on the tools: the user's text is sent, not stored; the newsletter is a separate unticked box. The journal PDF stays "no email required" [S9]. A 62-FIRESIDE / 988 / 911 box on every tool, scenario and event page. Replace "Heal Traumas" in the book page og:image:alt [S7]. | PR; ~2 dev days | the day it deploys |
+| M1 | **Plumbing PR** (SE 1-2) | Vanity router on www.mayaallan.com: `/pod/<show>`, `/kit/<slug>`, `/book`, `/free-copy/<campaign>`, `/listen`, `/arc` -> 307 with UTMs appended, `vanity_hit` logged, `noindex`; both spare domains already 308 with path and query kept [S6]. IndexNow key + ping per deploy; Bing Webmaster Tools; Search Console sitemap and generative-AI inclusion; one Person `@id`; RSS for /blog and /scenarios [S11]. (max-image-preview:large is already live [S7]: no work.) | PR + MAYA; 1-1.5 days | enabler |
+| M2 | **Back Home Circle** (BHC M1) | A free 60-minute online reading-and-reflection hour, twice a month, one book scenario per session, peer and educational only. Listed on Luma, Eventbrite, /events and the MAPS calendar, with an unticked newsletter question. First dates: **Thu 2026-10-08 5pm PT** and **Sun 2026-10-25 11am PT** (moved from BHC's 10am so that Fireside's hours, stated by BHC as from 11am PT, cover it; hours UNVERIFIED here). Use a paid meeting plan: do not cut a sharing circle off at Zoom Basic's 40 minutes (Judge 3; plan price UNVERIFIED). | MAYA; 5h setup + 2h per session | day 1-5 (registrations) |
+| M3 | **7-Day Integration Cohort** (BHC M8) | Starts on the 1st of each month (first: 2026-10-01). Seven opt-in daily emails, one prompt + one scenario each, ending at the next circle. Built on the existing free journal PDF. | CONTENT + PR; 1.5 days | day 7 |
