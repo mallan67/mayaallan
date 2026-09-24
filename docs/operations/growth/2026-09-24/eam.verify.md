@@ -30,3 +30,17 @@ All times are UTC on 2026-09-24. No app source files, local files, forms or logi
    - PR #12 (merged 2026-05-13) already records `book_viewed`, `checkout_started`, `purchase_completed`, `newsletter_subscribed` and `contact_submitted`, and writes attribution to `orders`.
    - Commit `2e559a0` (2026-04-20), "Wire analytics events into three chat components", already added tool events.
    - Vercel's pricing doc (last_updated 2026-08-25, read ~18:52Z) shows Custom Events as **"-" on Hobby** (Pro includes them, with 2 properties). UTM parameters are **only on Pro with Web Analytics Plus**. If the April tool events call `@vercel/analytics` `track()` on a Hobby team, they record nothing. The project's plan was not read (UNVERIFIED).
+5. **eam-10's anchors are already live.** `/glossary` (18:48:23Z) has 30 term `id`s, 30 in-page `#anchor` links, and 7 links to tools and the scenario.
+6. **eam-08's share buttons already exist** (commits `d500614` and `46ad44f`, 2026-01-22). The real gap is that the three AI tool pages have **0 `og:image` and 0 `twitter:image`** (18:48:23Z), while `/` has 10 and the book page has 18. A shared tool link therefore previews without an image.
+7. **eam-04 and eam-05 repeat work done in May 2026**, and the lens does not say so. Details are in the table below.
+8. **Evidence strength is overstated:**
+   - The Growth Method "~65,000 visits/month" figure has no source, and the article advertises Growth Method's own platform (read ~18:49Z).
+   - HubSpot's 2025-01-03 mini-tools post is founder anecdotes with no numbers (read ~18:49Z).
+   - Interact's 40.1% "start-to-lead" rate does not separate optional from gated email (read ~18:49Z).
+   - Riddle's 34.25% vs 24.07% A/B test states no sample size, significance or duration, and it is vendor content written by Riddle's co-founder (read ~18:49Z).
+   - theStacc's data is one client's 512 pages, and theStacc itself says: "Programmatic SEO is a scale tool. It is not a starting point." (read ~18:51Z).
+9. **Transferability.** The AI-referral conversion figures come from brands with huge mention volume:
+   - Ahrefs: 0.5% of traffic produced 12.1% of signups (2025-06-16, "last 30 days").
+   - Vercel: ChatGPT brings ~10% of signups (2025-06-10).
+
+   Ahrefs' own 75k-brand study (2025-05-26, updated 2026-04-27, read ~18:51Z) found that brands in the bottom 50% by web mentions average 0-3 AI Overview mentions, and 26% of brands have none. A new author is in that bottom half, so off-site mentions have to come before on-site AEO polish.
