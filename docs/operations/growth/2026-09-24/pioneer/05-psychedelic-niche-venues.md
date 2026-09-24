@@ -45,3 +45,20 @@
 | 8 | **Training programs (the next practitioners)** | Send desk copies and free student access to CIIS CPTR (2027-28 applications open Jan 15, 2027), Vital (October 2026 cohort), the Berkeley BCSP facilitation certificate and the Oregon-approved programs. Ask to be listed as a supplemental or aftercare resource. | `utm_source=<program>&utm_medium=b2b-partner` | Programs listing the book or tools |
 
 **Not a rehash, and why:** each play is picked from mechanics that are live today: submission forms, ally programs, current data and current events. Paid ads and cold self-promotion are left out because the policies in section 3 close them off.
+
+---
+
+## 2. Venue map
+
+Link-back evidence comes from a sampled external-link `rel` check on one current article or page per site (18:34:48Z and 18:43:38Z). "Followed" means no `nofollow`, `ugc` or `sponsored` on the sampled links. That is not a promise for every future link.
+
+### A. Integration directories and provider listings
+
+| id | Venue | Status | How to get in | Link back | Lead value | Source (read UTC) |
+|---|---|---|---|---|---|---|
+| niche-dir-psychedelic-support | Psychedelic Support (provider network + community directory; the MAPS "Psychedelic Integration List" points here) | **restricted** | Providers must hold a health license. Community groups must "host regular online or in-person events" and "can not offer illegal substances". The page says "We are not accepting new applications at this time" for both. Free. | Profile page; rel UNVERIFIED | medium (once reopened) | https://psychedelic.support/join/ (18:28:39Z); https://maps.org/take-action/resources/ (18:38:15Z) |
+| niche-dir-psychable | Psychable (practitioners, clinics, retreats; 855+ practitioners; claimed profiles) | live | Listing types shown are Practitioners, Clinics and Retreats; whether an author can list is **UNVERIFIED**. Better used as a **B2B prospect list**. | UNVERIFIED | high as a prospect list | https://psychable.com/ (18:42:06Z) |
+| niche-dir-or-ops | Oregon OPS Licensee Directory | live (licensees only) | Cannot list the book here. Use it to find service centers: filter by "license type". Count **UNVERIFIED** (list renders client-side). | n/a | **high** (B2B, play 1) | https://www.oregon.gov/oha/PH/PREVENTIONWELLNESS/Pages/Psilocybin-Licensee-Directory.aspx (18:29:07Z) |
+| niche-dir-co-nmd | Colorado Natural Medicine Division: healing-center map + Licensee Look-up; DORA facilitator lookup and roster | live (licensees only) | Prospect list: 46 healing centers as of 9-18-26. Facilitator count **UNVERIFIED** (roster needs a form). | n/a | **high** (B2B) | https://nmd.colorado.gov/ (18:30:16Z); https://dpo.colorado.gov/NaturalMedicine (18:43:50Z) |
+| niche-dir-nm-mpp | New Mexico Medical Psilocybin Program | live (pre-launch) | Watch the Psilocybin Advisory Board materials (July 17, 2026 meeting posted). Build provider relationships before the Dec 31, 2026 launch. | n/a | high (first mover) | https://www.nmhealth.org/about/mcpp/ (18:30:38Z) |
+| niche-dir-retreatguru | Retreat Guru (839 upcoming plant-medicine retreats) | live | Prospect list for retreat partnerships. Listing as an author: **UNVERIFIED**. | UNVERIFIED | high (B2B list) | https://retreat.guru/be/psychedelic-retreats (18:44:48Z) |
