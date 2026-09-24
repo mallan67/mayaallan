@@ -90,3 +90,49 @@
 - **Live preconditions:** robots.txt allows GPTBot, OAI-SearchBot, ChatGPT-User, PerplexityBot, ClaudeBot and Google-Extended (18:55:44Z). DNS TXT for mayaallan.com contains a `google-site-verification` record (dns.google, 18:53:59Z; value withheld), so a Google Search Console domain property probably exists. No `msvalidate.01` meta tag on the homepage and `/BingSiteAuth.xml` returns 404 (18:53:49Z). **Bing verification is UNVERIFIED.** Bing can import from GSC, which leaves no public trace.
 - **Rehash check:** the AEO tracker (PR F 2026-05-19; #46 2026-09-05) sends paid probes to LLM APIs. Bing AI Performance is Microsoft's own citation data, free. **Materially different.** The referral classifier is a small extension of PR #57's `analytics-acquisition.ts`.
 - **Priority:** the owner's Bing Webmaster Tools step first. The referral channel is a cheap add-on and will read close to 0 at this scale.
+
+### meas-08: "How did you find me?" on the lead forms. KEEP
+- **Ahrefs 2025-02-06** (curl 18:52:20Z): "we collect qualitative feedback on registration, and to date we've seen 14K+ self-attributed new users from ChatGPT." Confirmed.
+- **Ahrefs 2025-03-26** (https://ahrefs.com/blog/ai-traffic-research/, read 18:52Z): "approximately 3% of our own conversions have come from AI over the last year, based on registration data, and qualitative 'how did you hear about us?' responses", with AI at 0.1% of referral traffic across about 35,000 sites. Confirmed. This is real first-party data, from a large SaaS company about itself.
+- **Rehash:** no PR or commit title mentions found_via or "how did you hear". **New.**
+- **Build note:** store the answer in `marketing_events.properties` (no migration) rather than in a new column. Keep it optional, with one select field.
+- **Fit:** S, no device storage, so no consent issue. With 0 leads it gives 0 answers. Its value is that the first real leads explain where they came from.
+
+### meas-09: Weekly digest, snapshot table and daily heartbeat. REJECT (keep=false); keep one S step
+- **Sources check out:** Web Analytics API public 2026-05-18 (changelog, read 18:52Z); docs last_updated 2026-06-26 list `referrerHostname`, `requestPath`, UTM and `eventData/<property>` dimensions. Cron doc (last_updated 2026-07-15): Hobby "Once per day", "Per-hour (±59 min)".
+- **Why it is rejected:**
+  - It is M effort for a weekly email of zeros.
+  - It is the same "more dashboards and alerts" pattern as PR #12, PR #57 and the May monitoring stack (`ae9e9e98` scheduled GH Actions, alertAdmin `835ec51b`/`478f6663`), which did not change results.
+  - The owner already gets an email for every signup and contact (#47, #49).
+  - A "0 page views in 24h" alert will fire falsely at almost zero traffic.
+  - UTM grouping in the Vercel API needs Web Analytics Plus (see meas-02).
+- **Salvage (S, code PR):** add one check to the **existing** scheduled health workflow. It fails if production HTML stops mounting the page-view component, or if `marketing_events` records no rows in 7 days. That catches the "analytics silently off for months" failure with no new cron, token or table.
+
+### meas-10: Consent banner only in EEA, UK and CH. REJECT (keep=false)
+- **Live privacy page** (GET https://www.mayaallan.com/privacy, 18:51:13Z): "If you are in the EU, the UK, or any other jurisdiction where consent is required for non-essential cookies, these are set only after you accept". Confirmed.
+- **Clarity consent doc** (https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-consent-api-v2, ms.date 2025-08-28, updated_at 2025-12-05): "Starting October 31, 2025, Clarity begins enforcing consent signal requirements for page visits originating from the … EEA, UK, and Switzerland." This is **Microsoft's policy for its own product**. It does not show that other jurisdictions need no consent.
+- **Vercel request headers** (last_updated 2025-12-13): `x-vercel-ip-country` exists. The mechanism works.
+- **Why it is rejected:**
+  - (d) Default-on identifiers that link a visit on a psilocybin and mental-health site to later actions carry legal risk. Examples: WA My Health My Data Act (see meas-06), and the ICO statement that the statistical exemption does not cover tracking individuals.
+  - It is M effort.
+  - At near-zero traffic the gain is a handful of extra first-touch rows. The leads themselves are already recorded on the server whatever the consent state.
+  - It also weakens the site's privacy-first positioning.
+- **Cheaper fix for the mismatch:** leave the code alone and change the privacy wording to say the choice is offered to every visitor. That is a content edit, not a build.
+
+---
+
+## Recommended order (kept items only)
+1. Owner, minutes: **meas-01** (merge #57, confirm the deploy), then **meas-02** (Analytics enabled? plan tier? note the Hobby commercial-use rule).
+2. One code PR, S: **meas-03** and **meas-06** together (one shared cookieless beacon, no visitor ID on tool events), **meas-05**, **meas-08**, the classifier part of **meas-07**, and the salvage monitor check from **meas-09**.
+3. Owner, about 15 minutes: Bing Webmaster Tools, imported from GSC, with AI Performance on (**meas-07**).
+4. Later, only when data justifies it: **meas-04** Amazon Attribution.
+5. Stop measurement work there. The next effort should go to lead-generating tactics from the other lenses.
+
+## Not verified in this review (open items)
+- Whether Vercel Web Analytics is enabled, and the plan tier. No Vercel read was done; the owner must check.
+- The EU Art. 5(3) position for cookieless request-hash analytics. The EDPB 2/2023 v2 text could not be retrieved.
+- Whether retailer URLs are stored in code or in admin book data.
+- Whether creating Amazon Attribution tags triggers an ad-policy review for this book.
+- Bookshop.org affiliate programme terms (pages returned 404).
+- Bing Webmaster Tools verification state.
+- Whether either owned domain gets any traffic. The only evidence is 0 Wayback captures.
