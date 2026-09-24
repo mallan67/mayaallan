@@ -119,3 +119,30 @@ The table orders tactics by build priority, not by id. Owner: **code-pr** = a Gi
 | eam-10 | Glossary: enrich and link; do not split into thin pages | code-pr | S | none |
 | eam-08 | Privacy-safe share cards (not indexed result pages) | code-pr | S | eam-00 |
 | eam-09 | Embeddable widget (deferred) | code-pr | M | proven demand |
+
+### eam-00: Measure before building
+- **Why:** the live body of PR #57 says the site "measures **nothing**" and that Vercel Web Analytics is disabled. Indig (2026-07-15) recommends freezing 20-50 prompts for at least 4 weeks. HubSpot's lesson is "Run your own tests" (2026-09-16).
+- **Steps:**
+  1. Maya reviews and merges PR #57, then enables Web Analytics (Vercel → mayaallan → Analytics → Enable).
+  2. A code PR adds first-party events through the existing conversion-analytics tables from PR #12: `tool_start`, `tool_complete`, `capture_view`, `capture_submit`, `journal_pdf_download`, `book_view`, `checkout_start`, `purchase`, each with `tool`/`page` and `ref`.
+  3. Add an optional "Where did you hear about me?" select to the subscribe and contact forms.
+  4. Keep the AEO tracker's prompt set frozen for 4 weeks.
+- **Measure:** an `/admin/analytics` funnel per tool per week. **Expected impact:** none on its own, but without it no other tactic can be judged.
+
+### eam-01: "Keep this" capture at the end of each AI tool
+- **Why:** quiz vendors report 40.1% start-to-lead overall, 44.9% for coaching/courses, and 41.4% vs 1.9% for pop-ups **[vendor]**. In Riddle's A/B test, a mandatory form beat a skippable one (34.25% vs 24.07%) at the same lead quality **[vendor]**. HubSpot's 2025-26 tool shows its result with no account and then makes an offer (live page).
+- **Steps:**
+  1. At each tool's closing step (belief inquiry, nervous-system reset, integration reflection), show a card: *"Keep this: email me a copy of this reflection and three short follow-up prompts over the next week."* It has one email field and a **separate, unchecked** newsletter consent.
+  2. A server action sends one email through Resend (integrated in PR #42) with the user's summary and schedules three follow-ups. **Store only** the email, tool slug, consent flags and timestamp. **Do not persist the conversation text.**
+  3. The tool stays usable with no email, and the crisis layer (PR #36) runs first.
+  4. Update the privacy page. Get a legal check on "consumer health data" rules before launch: Washington's My Health My Data Act covers mental-health data and data inferred from non-health data, and gives a private right of action (WA AG). This is flagged for review, not a legal conclusion.
+- **Expected impact:** leads = tool completions × capture rate. Vendor benchmarks (34-45%) are for **gated** quizzes. For an **optional** offer after a sensitive AI conversation, plan on **10-20% of completions**. That figure is an inference and **UNVERIFIED** until 4 weeks of data exist. Baseline completions are unknown because analytics are off.
+- **Measure:** `capture_submit / tool_complete` per tool, unsubscribe rate, and the Day-3 email click rate.
+
+### eam-07: Tool → book bridge
+- **Why:** HubSpot's tool ends with "Your grade is a starting point. HubSpot AEO is what comes next" (live). On the live site, the three AI tool pages have no `/books` link in their server-rendered HTML (18:35:02Z), and the ebook is $9.99 direct.
+- **Steps:**
+  1. At tool completion, show the **one** most relevant book scenario or chapter title, with the line "Read how the book handles this, instant PDF, $9.99".
+  2. Link to `/books/psilocybin-integration-guide?ref=tool-<slug>` and carry `ref` into the checkout attribution.
+  3. The follow-up emails from eam-01 include the same link on Day 3.
+- **Measure:** `tool_complete → book_view → checkout_start → purchase`, filtered by `ref`.
