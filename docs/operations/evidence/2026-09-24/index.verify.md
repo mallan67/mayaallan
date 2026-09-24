@@ -32,3 +32,32 @@
 | idx-08 | **confirmed** | low → medium | Repo `visibility=public`; issues #13 and #38, titled "Deploy failure — <sha>", are closed (gh api 18:47:30Z). None of the 4 listings contains "mayaallan.com": Amazon paperback B0G7JWDJYQ and Google Books id=HvafEQAAQBAJ (18:47:50Z–18:47:52Z), B&N 1148993659 (18:47:51Z), Amazon Kindle B0G765BZDL (18:53:42Z). Bing domain-mention queries returned only noise (18:47:27Z–18:47:28Z). | The GitHub facts reproduce, and the main book listings do not link to the site. Together with the lens's WebSearch result, that makes two independent observations. A full backlink list needs an outside-source check (Bing WMT or GSC Links). Raised to medium: having no referring domains is a main reason a young site is crawled and ranked so rarely, which bears directly on "not seen anywhere". |
 | idx-09 | **confirmed** | low → low | Common Crawl "No Captures found for: mayaallan.com" in CC-MAIN-2026-39 (18:48:13Z), -30 (18:48:27Z), -25 (18:48:29Z), -17 (18:48:54Z), -12 (18:49:03Z), and on retry in -34, -08 and -21 (18:49:54Z–18:50:03Z). Positive control: psychedelicstoday.com in CC-MAIN-2026-39 has 3 captures (18:49:51Z). -04 and 2025-51 timed out with 504. Wayback CDX (18:50:05Z): 89 unique URLs (53 on 20260130, 36 on 20260131), latest 20260131124458; CDX with `from=20260201` returns `[]` (18:50:06Z). | Reproduced and stronger: 8 of the 8 reachable recent crawls have no captures (the lens found 5 of 8). One correction: the availability API returns `{}` for the apex but a snapshot `20260131005213` for www.mayaallan.com (18:50:16Z–18:50:23Z), which still means nothing after 2026-01-31. CCBot is allowed in robots.txt and gets 200 with its UA (18:50:43Z–18:50:45Z), so the site is not blocking it. |
 | idx-10 | **confirmed** | info → info | `/`: 0 google-site-verification or msvalidate.01 tags (18:42:51Z, 18:51:16Z). `/BingSiteAuth.xml` returns 404 (18:51:15Z). No Google tag (gtag or GTM) on `/` (18:51:16Z). | Reproduced. Three of the four ways to verify ownership are absent on the page (meta tag, Bing auth file, Google tag). Only DNS verification could exist, and a DNS TXT lookup is an outside-source check. |
+
+## 3. Solution checks
+
+| id | Would the proposed fix work? |
+|---|---|
+| idx-01 | Yes for the core step: verifying the site in GSC and Bing WMT, submitting the sitemap and using URL Inspection is also the only way to measure true coverage. Drop the hreflang sub-step (idx-06 is refuted). Fixing lastmod helps only a little (idx-05). Bing WMT can also turn on IndexNow. |
+| idx-02 | Yes. Only the owner can see this data. A verified property must exist first; with no on-page verification (idx-10), use a Domain property verified by DNS TXT. |
+| idx-03 | Requesting indexing: yes. "Link the book page from the retailer listings" is mostly not possible: the live Amazon, Google Books and B&N pages carry no author-site link, and retailer product pages generally do not allow external URLs. Use the Goodreads author profile's website field, Amazon Author Central, the Google Books publisher page and social bios instead. |
+| idx-04 | The proposed fix, IndexNow or a Bing recrawl, would not change the snippets, because Bing is quoting live content. The right fix is a code PR that gives `/books`, `/blog` and `/contact` their own og:title, og:description, twitter:title and twitter:description, matching each page's meta description (see N1). |
+| idx-05 | Yes, if lastmod comes from the same `dateModified` already in the JSON-LD. Never use build time, which would make lastmod untrustworthy. A modest help, mainly on Bing. |
+| idx-06 | No fix needed. Optionally add hreflang tags to the head of `/` and `/about` for consistency with the sitemap. |
+| idx-07 | Yes. The live Person sameAs lists only instagram.com/maya.allan66 (18:46:39Z). Add the Amazon author page, Goodreads, Google Books and the Facebook author page, plus LinkedIn if it is the same person. |
+| idx-08 | Yes, building real citations is the fix. Making the ops repo private removes the only off-site references, which carry no ranking value anyway, so that is a hygiene choice, not a ranking fix. |
+| idx-09 | Links drive crawl, so the fix follows idx-08. "Save Page Now" is an owner action on the Wayback Machine. Nothing on the site blocks CCBot. |
+| idx-10 | Yes. Confirm verification in GSC and Bing WMT; if it is missing, use DNS TXT. |
+
+## 4. Works spot-checks
+
+| Item | Holds? | Live re-check (UTC) |
+|---|---|---|
+| Bing "Maya Allan": homepage #1, /books #2 | yes | Curl twice (18:46:25Z) and RSS (18:44:46Z). |
+| Book page #1 on Bing for "psilocybin integration guide", ahead of Amazon, Google Books and B&N | yes | RSS 18:44:46Z and 18:47:41Z. B&N is #6. |
+| Bing `site:mayaallan.com` is stable at about 36 results and 7 URLs | yes | 18:43:13Z, 18:43:14Z, 18:43:33Z, 18:43:34Z (paged) and RSS 18:44:28Z, same 7 URLs each time. The list omits the indexed book page (M3). |
+| robots.txt allows all crawlers and declares the sitemap | yes | 18:50:38Z: 200, 33 user-agent groups (including CCBot, GPTBot, Googlebot and Bingbot); Disallow only /admin/, /api/, /download/; Sitemap line present. Crawler UAs get 200 on /, a post and a scenario (18:50:38Z–18:50:47Z). |
+| All 38 sitemap URLs return 200, `index, follow`, no X-Robots-Tag, self canonical on www | yes | Every URL checked, 18:51:30Z–18:52:03Z. |
+| Alternate hosts 308 to www and keep the path | yes | 18:52:11Z–18:52:15Z. http://mayaallan.com/about takes two hops: http to https on the apex, then to www. The rest take one. |
+| No wrong host appears in any engine | yes (Bing only) | Bing RSS `site:psilowire.com`, `site:psilocybinintegrationguide.com`, `site:mayaallan.vercel.app` and `psilowire` return 0 alternate-host URLs (18:52:25Z–18:52:26Z). The WebSearch half could not be re-run. |
+| Preview and branch hosts return 302 to Vercel SSO with X-Robots-Tag noindex | yes | mayaallan-mallan.vercel.app and mayaallan-git-main-mallan.vercel.app (18:52:11Z–18:52:15Z). |
+| /tools returns 308 to /practices; /integration returns 308 to /integration-reflection | yes | 18:52:11Z–18:52:15Z. |
