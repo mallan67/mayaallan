@@ -97,3 +97,26 @@ Owners: CODE = pull request on mallan67/mayaallan; OWNER = Maya's own accounts; 
 - **Owner:** CONTENT (pack), OUTREACH. **Effort:** 3-4 days pack, 1 day outreach.
 - **First lead:** day 10-18 (a guest-session yes); first order at the next cohort start (month 2-3).
 - **Measure:** partner_form_submit {interest=casebook}; casebook_request; licences sold; seats reached.
+
+### M5. Bulk ebook licences that capture the reader (OWNER + CODE)
+- **Why:** MAPS sells practitioners a 20-pack of client workbooks for $60, "for direct client use only" (F8): the buying habit exists. BookFunnel Mid-List ($200/yr) delivers ebooks, collects reader emails and connects mailing lists (F9). Google Play promo codes allow 3 campaigns a month, 5,000 codes each [goog-10], [book-google-play]. [mkt-09], [mkt-11].
+- **Steps:**
+  1. Packs (price test): Starter 10 codes $59; Practice 25 codes $129; Center 100 codes $399. Each code redeems the ebook (later also the audiobook, M12) on a partner-branded page.
+  2. Delivery A, week 1: one BookFunnel landing page per partner, with an optional reader email opt-in (the reader chooses).
+  3. Delivery B, month 2: single-use codes in the site's own download flow (the /download/ path exists and is blocked in robots.txt [engines map]); CODE PR.
+  4. Free variant for podcasts and nonprofits: one Play promo-code campaign per partner [goog-10].
+  5. Fix the shared-ISBN defect before any print bulk [book-isbn-defect]; ebook bulk is not affected.
+- **Owner:** OWNER (BookFunnel, Play Partner Center, PayPal invoices); CODE (delivery B). **Effort:** 1 day for A; 2-3 developer days for B.
+- **First lead:** day 14-21 (first center or coach asking for codes after M2, M3 or M13).
+- **Measure:** bulk_licence_request {type}; codes issued and redeemed per slug; email_optin {source=bookfunnel|site, slug}; revenue per partner; utm_medium=b2b&utm_campaign=bulk.
+
+### M6. Podcast circuit with a listener page per show (OUTREACH)
+- **Why:** 7 of 9 integration shows are active (F13); show-note links were followed in 2 of 2 samples [web-pod-showsnotes]; their listeners are the self-guided majority [mkt-05], [niche-pod-integration-small]. Small shows answer faster.
+- **Venues, wave 1 (F13):** The Integration Session (36 episodes, last 2026-09-17), The Psychedelic Integration Compass (8, 09-21), Hope for Humanity (43, 09-08), Unjourneying (9, 08-03), Psychedelic Medicine Podcast (207, 09-09). **Wave 2:** Psychedelics Today (guest pitch form, [niche-pub-psychedelicstoday]); The Microdose newsletter tips [niche-pub-microdose]. **Excluded:** Psychedelic Passage (its site offers a sourcing guide: brand and legal risk, niche-map caution); paid slots (Third Wave guest fee $1,500 [niche map]) in month 1.
+- **Steps:**
+  1. Pitch one scenario the host's audience asks about, plus a listener gift: psilocybinintegrationguide.com/k/<show> leading to /p/podcast-<show> (co-branded journal, first 3 scenario pages, opt-in).
+  2. Use the owner email in each RSS feed (feed URLs are in the F13 API output). 5 pitches in week 1, 5 in week 2.
+  3. Ask for two show-note links, both with UTM: the listener page and the book page.
+- **Owner:** OUTREACH. **Effort:** 30 minutes per pitch, 1 hour per recording.
+- **First lead:** booking reply day 7-14; listener opt-ins from release, about day 25-60 (show backlogs UNVERIFIED).
+- **Measure:** utm_source=podcast-<show>&utm_medium=audio&utm_campaign=guest-2026q4; kit_scan {slug}; email_optin {slug}; purchase {utm_source}.
