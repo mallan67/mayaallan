@@ -314,3 +314,25 @@ Source: Apple Podcasts search API, https://itunes.apple.com/search?media=podcast
 | M10 | **Psychedelic Passage podcast** (83 episodes, last 2026-09-09): **caution** | An active integration-adjacent show, but the site offers a "Psilocybin Sourcing Guide" and a nationwide facilitator network outside state programs | Brand and legal risk: consider only if Maya accepts that association | Apple API (22:15:16Z); https://www.psychedelicpassage.com/ (22:21:45Z) |
 
 Also checked and **not usable yet:** `integrationcircles.org` shows only "Launching Soon" (~22:17:40Z).
+
+## Cross-cutting issues the map missed
+
+1. **CAN-SPAM** covers all B2B outreach to centers, programs and facilitators. Every email needs a postal address and an opt-out, and opt-outs must be honored within 10 business days (FTC guide above).
+2. **Paid placements** (Third Wave, any sponsored slot) must be disclosed as ads.
+3. **Do not promise clinical outcomes.** New Mexico's program is medical, and Oregon and Colorado are regulated. Write "integration education" and "peer circle", and never "therapy" or "treatment".
+4. **Out-of-state client line:** do not claim these clients get "no licensed integration support" until the OAR 333-333 integration-session rules are read (UNVERIFIED here).
+5. **Link equity:** confirmed followed links at MAPS event pages (2/2), the Fireside resources page (0/40 nofollow) and the Horizons partners page (0/60 nofollow). Every other rel claim is UNVERIFIED.
+
+## Not done / UNVERIFIED
+
+- Live subreddit subscriber counts (Reddit 403).
+- DoubleBlind site content.
+- PS2027 dates, city and CFP.
+- Spirit Plant Medicine vendor fee.
+- Eventbrite prohibited-content rules and link rel.
+- Meetup organizer fee.
+- The Oregon integration-session location rule.
+- Beckley and MycoMeditations integration claims.
+- Link rel in podcast show notes.
+- The Colorado 7/6/26 sales-prohibition bulletin text.
+- New keyword discovery (WebSearch budget exhausted this session).
