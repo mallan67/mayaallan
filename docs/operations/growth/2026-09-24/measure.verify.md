@@ -35,3 +35,21 @@
 | meas-10 | **no** | ok | the Clarity policy does not show consent is unneeded elsewhere | no | **poor**: legal risk on a mental-health topic, M effort, only a handful of rows gained | Leave consent as is |
 
 ---
+
+## Per-tactic findings
+
+### meas-01: Merge PR #57 (cookieless page views for everyone). KEEP as a prerequisite, not as growth
+- **Live site** (GET https://www.mayaallan.com/, 2026-09-24T18:50:02Z): the RSC payload references `GatedAnalytics` 1× and `CookielessAnalytics` 0×. The claim is confirmed: the page-view component is still gated on consent.
+- **PR #57** (GitHub API, 18:48:52Z): state=open, mergeable=true, mergeable_state=clean, head `fa5d59b3`, last updated 2026-09-07T03:49:42Z.
+- **Vercel Web Analytics privacy doc** (https://vercel.com/docs/analytics/privacy-policy, last_updated 2026-06-26, read 18:51Z): "without using any third-party cookies, instead end users are identified by a hash created from the incoming request… automatically discarded after 24 hours." Confirmed.
+- **ICO DUAA page** (updated 19 June 2026, read 18:51Z): organisations may "set some types of cookies without having to get consent, such as those you may use to collect information for statistical purposes." **ICO exceptions page** (no date shown, read 18:51Z): the exception requires clear information and a simple, free way to object, and **does not cover tracking individual visitors**. Confirmed, and this supports keeping `ma_*` behind consent.
+- **Correction:** the "5–25% missed without a proxy" figure (https://plausible.io/docs/proxy/introduction, last updated 2026-05-29) cites no study. It is an **uncited vendor estimate**, not evidence.
+- **EU position UNVERIFIED:** EDPB Guidelines 2/2023 on Art. 5(3) scope, final v2 adopted 2024-10-16 (EDPB landing page, read 18:56Z). The guideline text could not be retrieved in this review. Treat "no consent needed in the EU" as unverified, and let owner or counsel decide.
+- **Rehash check:** this is the work of PR #57 (2026-09-07), finished rather than new. It stays because every other visitor number depends on it.
+- **Impact:** 0 leads. Owner action takes about 5 minutes. **Measure:** a curl of the homepage shows `CookielessAnalytics` and no `GatedAnalytics`, and Vercel shows visitors above 0 within 24h.
+
+### meas-02: Confirm Web Analytics is enabled and record the plan. KEEP, with a new finding
+- **Live** (GET https://www.mayaallan.com/_vercel/insights/script.js, 18:50:02Z): 200, `application/javascript`, 4,469 bytes. The troubleshooting doc (last_updated 2026-06-26) links a **404** to "deploying the tracking code before enabling Web Analytics". It does **not** say a 200 proves the feature is enabled. **Status: UNVERIFIED.** This review did not read the Vercel project. The owner has to look at Vercel → mayaallan → Analytics.
+- **Plan limits** (https://vercel.com/docs/analytics/limits-and-pricing, last_updated 2026-08-25, read 18:51Z): on Hobby, Custom Events "-", Reporting Window 1 Month, UTM Parameters "-". On Pro, UTM Parameters is "N/A" (only Web Analytics Plus, $10/mo, includes UTM). **Correction to the lens:** Vercel-side UTM reporting needs Pro plus Plus. Until then the site's own table (utm_* since PR #12) is the only UTM source.
+- **New finding** (https://vercel.com/docs/plans/hobby, last_updated 2026-09-14, read 18:54Z): "the Hobby plan restricts users to non-commercial, personal use only." The site sells ebooks through PayPal. If the project is on Hobby, that terms issue matters more than analytics. Pro would also bring custom events (2 properties) and a 12-month window. The plan tier is **UNVERIFIED** here.
+- **Measure:** the owner records the plan tier and enabled state, with a screenshot date, in the continuous handoff.
