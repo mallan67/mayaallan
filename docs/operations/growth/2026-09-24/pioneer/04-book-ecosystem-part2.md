@@ -26,3 +26,14 @@ Continues `04-book-ecosystem.md`, which has the baseline, defects D1-D8, the mar
 | book-google-books | Google Books | live (Play listing) | Book actions ("Buy" rich results) are **"limited to book providers that have filled out the interest form and have been onboarded"** (S43), so they are not available to an author site. The Google Books Preview Program shows "the links of major book retailers" (S23). | Google Books page | medium |
 | book-storygraph | The StoryGraph | live; **book absent** (S39) | Add the book via a reader account. The author-claim page is Cloudflare-blocked (UNVERIFIED). | UNVERIFIED | low-medium |
 | book-librarything | LibraryThing | **UNVERIFIED** (Cloudflare 403, S38) | n/a | n/a | n/a |
+
+### 2G. Reader discovery, reviews and newsletter swaps
+
+| id | Venue | Status | Mechanics (live) | Cost (live) | Link-back | Lead value |
+|---|---|---|---|---|---|---|
+| book-goodreads-author | Goodreads Author Program | live | "Any author… can join… for free". "claim their profile page". "Run a giveaway, connect your blog, advertise your books". Also Ask the Author (S29). | $0 | Site/blog link on the profile (rel UNVERIFIED): `?utm_source=goodreads&utm_medium=profile&utm_campaign=author-profile` | **high** |
+| book-goodreads-giveaways | Goodreads Giveaways | live; price **UNVERIFIED** (behind login) | "People who mark your book as Want to Read are automatically notified of future Giveaways" (S29) | UNVERIFIED | via the book page | medium |
+| book-goodreads-listopia | Goodreads Listopia | live | No list exists for psilocybin or psychedelic integration (S45). A reader or partner should create a list of genuine integration books, including other authors. Author self-voting rules UNVERIFIED. | $0 | n/a | medium |
+| book-bookbub-profile | BookBub author profile | live | The Partners site offers "Claim an Author Profile" and "Create a Free Author Website" (S30). | $0 | UNVERIFIED | medium |
+| book-bookbub-deal | BookBub Featured Deal | live | **Advice and How-To:** $629 free / **$784 at $0.99** / $1,454 $1-2 / $2,115 $2-3 / $2,958 $3+. **650,000+** subscribers. **2,000-3,500** clicks at $0.99-$3+. **Religion and Spirituality:** $353 / $439 / $820 / $1,190 / $1,664; 470,000+; 1,375-2,200 clicks. **General Nonfiction:** $457 / $621 / $1,135 / $1,639 / $2,293; 1,070,000+; 2,000-3,500 (S30). Acceptance criteria not read (UNVERIFIED). | as listed | none | high **after** reviews exist |
+| book-netgalley | NetGalley | live | "A per-title listing fee, available for self-published authors". Backlist is allowed ("already been published"). Also offered through the IBPA member program. Price: "Reach out" (UNVERIFIED). Reaches reviewers, librarians, booksellers, educators and media (S33). | contact | none | medium-high (librarians + media) |
