@@ -63,3 +63,28 @@ Correction (~1 hour, same PR):
 5. Then Maya merges → Vercel → project → Analytics → **Enable** → live check: `count_pageviews` returns a number, and a `/download/...` visit never appears raw in WA.
 
 Cost line: the relevant plan is almost certainly Pro (M1): $0.03 per 1k events (= $3 per 100k), drawn from the $20 monthly usage credit (vercel.com/pricing, read ~19:05Z).
+
+### ana-2 — "every-action capture" → **REJECT as written; replace with a slim business-actions PR**
+
+Why:
+- **Consent contradictions.** `consent_decided` with choice=rejected fires exactly when a visitor refuses analytics, which breaks the lens’s own "skip on reject" rule. Mirroring tool-funnel events for **undecided** visitors breaks #57’s promise ("only sent for visitors who explicitly accepted"); these come from reflection tools about nervous-system states and beliefs — the inferred-health class MHMDA covers.
+- **Dead-dashboard risk.** nav_click, menu_open, outbound DOI/PubMed clicks and a `client_error` beacon produce rows nobody reads at today’s traffic. `client_error` would also pollute a marketing table; `src/app/error.tsx` and `global-error.tsx` already exist, and server failures already email via `alertAdmin`.
+- **Client events are not results.** `/api/marketing/event` has an origin check and a rate limit but no bot filter, and non-browser clients can send any Origin header. Treat client events as **intent signals** only.
+
+Correction (S–M):
+- **Client** (one delegated listener, `sendBeacon`, no IDs unless consent is accepted, skipped on Reject/GPC): `retailer_click` (host map for the 7 retailers), `buy_click` (PayPal button), `share_click` (method = instagram, copy, facebook, x, linkedin, reddit, pinterest, whatsapp, telegram, tiktok).
+- **Server** (no browser beacon): `journal_downloaded` (phase + booleans only), `download_started` (download route), `export_purchased` (export webhook, with amount — also fixes M6), `not_found_view` (logged server-side from `not-found.tsx`, path sanitized).
+- **Tool funnel: do not mirror.** On Pro (M1), #57’s consent-gated `track()` works. If an ungated count is wanted, keep a per-tool, per-day counter on the server in the chat route, with no visitor or session ID.
+- **Drop:** nav_click, menu_open, outbound_click, client_error, consent_decided.
+- **Add** a known-bot user-agent filter to `/api/marketing/event`.
+- **Tests:** keep the contract test (every emitted name is allowlisted) and the sanitizer test; drop the size budget (~1 KB of code).
+
+### ana-3 — Instant sale and lead alerts → **KEEP, simplified**
+
+Why keep: a sale is the one event Maya must hear about at once; today 23 alerts cover failures and 0 cover success.
+
+Correction (S) — no new helper, no new Upstash key, no rewrite of the contact/newsletter notices:
+- **PayPal webhook:** after the delivery email succeeds inside the branch that won `claim_download_email_send`, call the existing `alertAdmin({ severity: "info", subject: "SALE $9.99 — <title> (utm_source=…)", dedupKey: "sale:<order id>" })`. The atomic claim already guarantees one worker per order, and `alertAdmin` already dedups through Upstash.
+- **Export webhook:** same call after `renderAndEmailSessionPdf` succeeds, `dedupKey: "export-sale:<sessionId>"`.
+- **Phone push:** not in v1; email reaches the phone. If added later, a public ntfy.sh topic is readable by anyone who knows its name, so send no buyer data.
+- PayPal may already email the seller for each payment (**UNVERIFIED** this run); the site alert still adds attribution (UTM, landing page).
