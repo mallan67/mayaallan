@@ -139,3 +139,34 @@ Correction: the ana-4 daily check plus the Monday digest is the primary liveness
 **M6. Export ($9.99 PDF) revenue is invisible.** `src/app/api/export/webhook/route.ts` (main@ed7461a) writes no `orders` row and no `marketing_events` row; the session is deleted after delivery and the Upstash TTL is 24 h. Export sales exist only in PayPal. The lens had this UNVERIFIED; it is now confirmed. Fix: the `export_purchased` server row in ana-2, with the amount.
 
 **M7. No analytics retention period.** /privacy says only "Analytics events are retained for current product analysis". Pick one (13 months matches the CNIL sheet the lens cites), purge in the daily check, and state it on /privacy.
+
+**M8. Google Search Console is not mentioned.** It is the free, cookieless, script-free source for "how do people find the book": Google Search clicks, impressions, CTR and average position (support.google.com/webmasters/answer/7576553). The homepage has no `google-site-verification` meta tag; DNS verification cannot be checked from the allowed sources, so whether a property exists is **UNVERIFIED**. Owner action (S): verify the property and submit `/sitemap.xml` (200). The Monday digest links to it.
+
+**M9. Existing parts to reuse, not rebuild.** `/admin/aeo` plus the Monday `aeo-track` cron (AI-answer visibility) already exist — the digest should report their result. `alertAdmin` already supports `severity: "info"` and Upstash dedup. The health check already alerts via GitHub issues. The lens designed beside these parts instead of plugging into them.
+
+**M10. The live book page offers an audiobook nobody can buy.** A format card shows "Audiobook $15.99", and the copy says "Paperback, hardcover and audiobook via retailers below", but there is no audiobook retailer link (19:12:38Z). This is a site-copy fix, not audiobook work: hide the card until release, or label it "Coming soon" with a notify-me form that feeds the existing newsletter (`location=audiobook`), which turns it into a lead source. Owner decision (S).
+
+**M11. Share inventory is incomplete.** The page also links Facebook, X, LinkedIn, Reddit, Pinterest, WhatsApp, Telegram and TikTok; `share_click` must map them.
+
+**M12. Client events are intent only.** The event endpoint accepts any caller that sends an allowed Origin header (rate-limited per IP) and has no bot filter. Never alarm on client-event counts alone; count results only from verified webhooks and database inserts.
+
+**M13. Server logs do not last.** Runtime logs are kept 1 hour on Hobby and 1 day on Pro (Vercel limits page). A server error is only seen if it calls `alertAdmin`. The daily check should report "alerts sent in the last 24 h", and any new catch that matters must call `alertAdmin`.
+
+**M14. Out of lens, reliability note.** The homepage is rendered per request (`Cache-Control: private, no-store`, `X-Vercel-Cache: MISS`), and the layout reads Supabase: a Supabase outage takes the homepage down, and every visit is a function call. Hand this to the performance/reliability lens.
+
+**M15. This repo is public.** Monitoring docs describe alert logic, webhook guards and project IDs. Low risk, but keep exploit-level detail (endpoint weaknesses, bypass steps) out of `docs/` on this branch.
+
+---
+
+## 5. Revised plan — one living system, in order
+
+| Step | What | Owner | Effort |
+|---|---|---|---|
+| 0 | Confirm the plan in Billing (M1); clean the retailer URLs (M5); hide or relabel the audiobook card (M10); set the Ignored Build Step for docs-only commits (M2); verify Search Console (M8) | Maya (dashboard/admin only) | S |
+| 1 | Amend PR #57: Reject/GPC gate, `sanitizePath` + `beforeSend`, privacy wording + retention, tests. Merge, then **Enable** WA; live check | code-pr, then Maya | S |
+| 2 | Sale alerts through the existing `alertAdmin` (PayPal + export) and a durable `export_purchased` row | code-pr | S |
+| 3 | Slim action capture: `retailer_click`, `buy_click`, `share_click` (client); `journal_downloaded`, `download_started`, `not_found_view` (server); bot filter | code-pr | S–M |
+| 4 | One daily-check cron: synthetic probe, retention purge, Monday digest email (server events + AEO + alert count + WA link); one status card | code-pr | S–M |
+| — | PostHog: deferred (ana-7 conditions). External uptime vendor: not needed | — | — |
+
+Result: one inbox (alerts + Monday digest), one admin screen (`/admin/analytics` with a status card), one data store (Supabase), plus Vercel WA for page views. No new vendor, cookie or CSP host.
