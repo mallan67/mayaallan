@@ -7,7 +7,9 @@
 #       * a new PowerShell window that opens in your home folder lands in mayaallan-ops automatically
 #       * "mayaallan" jumps to mayaallan-ops, "mallan" jumps to mallan-ops
 #     Windows opened in a specific folder (for example VS Code terminals) stay where they are.
-#   - Changes nothing else. Delete the block between the markers to undo.
+#   - Removes the old local checkout Desktopmayaallan, only if every local commit is already on GitHub.
+#     Run this AFTER closing any Claude Code / VS Code session that is using that folder.
+#   - Changes nothing else. Delete the profile block between the markers to undo it.
 
 $ErrorActionPreference = "Stop"
 $Ops = Join-Path $HOME "mayaallan-ops"
@@ -56,6 +58,27 @@ if ($Current -match $Pattern) {
 }
 Set-Content -Path $PROFILE -Value $New -Encoding UTF8
 
+# --- Remove the old local checkout (owner request 2026-09-24): everything is read directly from the repo ---
+$OldCheckout = Join-Path $HOME "Desktop\mayaallan"
+if (Test-Path $OldCheckout) {
+    if ((Get-Location).Path -like "$OldCheckout*") { Set-Location $HOME }
+    $Unpushed = $null
+    if (Test-Path (Join-Path $OldCheckout ".git")) {
+        git -C $OldCheckout fetch --quiet origin 2>$null
+        $Unpushed = git -C $OldCheckout log --branches --not --remotes --oneline 2>$null
+    }
+    if ($Unpushed) {
+        Write-Warning "NOT removing $OldCheckout - these local commits are not on GitHub:"
+        $Unpushed | ForEach-Object { Write-Warning "  $_" }
+    } else {
+        try {
+            Remove-Item -Recurse -Force $OldCheckout -ErrorAction Stop
+            Write-Host "Removed old local checkout: $OldCheckout" -ForegroundColor Green
+        } catch {
+            Write-Warning "Could not remove $OldCheckout (a program is still using it). Close Claude Code, VS Code and any terminal opened there, then run this script again."
+        }
+    }
+}
 $Policy = Get-ExecutionPolicy
 Write-Host "Ops folder : $Ops"
 Write-Host "Profile    : $PROFILE"

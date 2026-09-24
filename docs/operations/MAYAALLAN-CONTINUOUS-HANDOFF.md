@@ -5,7 +5,7 @@
 > scratch files, old handoffs or memory; anything not re-read live is marked **UNVERIFIED**; the
 > **Not done** list is always current.
 
-**Last updated:** 2026-09-24T19:27:44Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
+**Last updated:** 2026-09-24T20:33:18Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
 
 ## Owner goals (2026-09-24)
 1. **Leads.** One month in, zero leads — the only measure of success is leads (newsletter signups, inquiries, book purchases, event registrations, tool users who leave an email).
@@ -50,7 +50,7 @@ UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots ind
 - [ ] **Owner decision (incident):** the Playwright browser tool wrote a `.playwright-mcp` folder into the local Desktop checkout (`Desktopmayaallan.playwright-mcp`) during the 18:18Z–18:38Z browser pass, against the no-local-files rule. Not opened or deleted by the agent. Owner: delete it, and Playwright stays unused until its output folder is set outside any repo copy.
 - [ ] **Owner/Vercel:** add `CRON_SECRET` (or retire the AEO cron) — the weekly job is refused with 401 while it is missing.
 - [ ] Confirm cron status live 2026-09-28T09:00Z–09-29T09:00Z (runtime logs scoped to the production deployment, query `aeo-track`).
-- [ ] **Owner:** run `docs/operations/setup-mayaallan-ops.ps1` in PowerShell (creates `mayaallan-ops`; PowerShell auto-lands there; `mayaallan` / `mallan` shortcuts). The agent was blocked by the Claude Code permission classifier from reading or editing the local PowerShell profile, so this step is done by the owner.
+- [ ] **Owner:** close this Claude Code session, then run `docs/operations/setup-mayaallan-ops.ps1` in PowerShell. It creates `mayaallan-ops` (bootstrap only; PowerShell auto-lands there; `mayaallan` / `mallan` shortcuts) and **removes the old Desktop checkout `C:UsersMayaAllanDesktopmayaallan`** (only if every local commit is on GitHub). Lost with it (never in git, not read by the agent): untracked `AUDIOBOOK-ERROR-AUDIT.md`, `HANDOFF-2026-07-14.md`, `HANDOFF-2026-09-20.md`, any local `.env*` files, and the `.playwright-mcp` folder.
 - [ ] Audiobook launch plan — paused by owner until the audiobook is finished.
 - [ ] Always-on ops + analytics blueprint (running), then build it as PRs.
 - [ ] Pioneer playbook + idea bank (running).
@@ -71,3 +71,4 @@ UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots ind
 - 2026-09-24T18:36:27Z — Owner: "the audiobook is not finished, focus on the other stuff first". Stopped audiobook lenses; resumed always-on ops lenses only.
 - 2026-09-24T19:01:54Z — Owner: audiobook is last; all information live; a mayaallan ops folder locally so PowerShell goes into it automatically. Added `docs/operations/OPS-SESSION-BOOTSTRAP.md` (canonical live-read instructions) and `docs/operations/setup-mayaallan-ops.ps1` (owner-run setup). Local profile edit by the agent was blocked by the permission classifier and not attempted further.
 - 2026-09-24T19:27:44Z — Live audit complete (19 agents). Key: nothing technical blocks indexing; the problem is discovery/authority (0 off-site links, crawlers absent since Jan), no social proof, measurement blind, cron refused (CRON_SECRET missing), nothing shipped since 09-06. Incident: Playwright MCP wrote `.playwright-mcp` into the Desktop checkout — reported to owner.
+- 2026-09-24T20:33:18Z — Owner: remove the Desktop checkout; only an ops folder for bootstrap; everything else direct from the repo. Verified live that the checkout's HEAD `2bdaf24` is on GitHub (contained in remote `audiobook-approved-manifest`, which is 10 ahead). Removal added to the owner-run setup script (it cannot run from inside this session, whose working directory is that folder). Also: the owner's `claude` command failed (`bin/claude.exe` missing after a broken auto-update at ~20:26Z); restored by copying the working 2.1.282 binary from the second npm install — `claude --version` = 2.1.282 at 2026-09-24T20:33:18Z.
