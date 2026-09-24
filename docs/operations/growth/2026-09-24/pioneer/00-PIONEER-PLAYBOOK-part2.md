@@ -135,3 +135,31 @@ Continues `00-PIONEER-PLAYBOOK.md` (sections 1, 2, 3A-3C). Sections 5-7 (first 1
 | I15 | A "back home after Oregon or Colorado" section written for readers aged 45+ | site | - | CONTENT | 0.5d | M | mkt-ws-07, mkt-14 |
 | I16 | "Invite a companion" and "Bring a friend to the circle" after a tool is completed | the 4 tools | `utm_source=tool-<name>&utm_medium=share&utm_campaign=invite` | PR | 0.5-1d | M | BHC M13 |
 | I17 | Circle page strings in Spanish and Portuguese later (es and pt-BR hreflang already exist) | site | - | CONTENT | 1d | L | ECO M10 |
+
+## 4. The TAG / LINK MATRIX
+
+**Rules.** Tag only links placed off-site; never tag internal links. Lowercase with hyphens. Date the campaigns (`-2026-10`, `-2026q4`). Spoken and printed links go through the vanity router (both spare domains 308 to www.mayaallan.com with path and query kept [S6]), so the URL stays short and every hit is counted as `vanity_hit`. Where a gatekeeper prefers clean URLs, give the clean URL and measure by referrer. Paid placements carry `rel=sponsored`. `sameAs` lists only profiles Maya controls that describe her (Person) or the book (Book).
+
+| Venue | Link type back to the site | rel observed | UTM / vanity path | sameAs |
+|---|---|---|---|---|
+| Goodreads author profile | website field | noopener noreferrer, no nofollow (sample) | `utm_source=goodreads&utm_medium=profile&utm_campaign=author` | Person: yes, after the claim |
+| Amazon Author Central | UNVERIFIED | UNVERIFIED | - | Person: yes (author page B0G76975ST) |
+| Google Books / Play | none | - | front matter `/book` | Book: yes (already listed) |
+| Open Library | links field | UNVERIFIED | - | Person + Book: yes |
+| Instagram @maya.allan66 | bio link | - | `/ig` -> `utm_source=instagram&utm_medium=social` | Person: yes (the only one today) |
+| YouTube (month 2) | 14 profile links + descriptions | UNVERIFIED | `/yt/<n>` -> `utm_source=youtube&utm_medium=video&utm_campaign=scenario-<n>` | Person: yes |
+| Pinterest | claimed website | UNVERIFIED | `utm_source=pinterest&utm_medium=social` | Person: yes |
+| Bluesky | domain handle through DNS | identity | - | Person: yes |
+| Mastodon | `rel=me` + fediverse:creator | identity | - | Person: yes |
+| Substack (only if used) | post links | followed (observed) | `utm_source=substack&utm_medium=email` | Person: yes |
+| Wikidata (later) | P856 official website | identity | - | Person + Book: yes |
+| ORCID (only if created) | profile link | identity | - | Person: yes |
+| Eventbrite | event description | UNVERIFIED | `utm_source=eventbrite&utm_medium=event-listing&utm_campaign=back-home-circle-<yyyy-mm>` | no |
+| Luma | event page | UNVERIFIED | `utm_source=luma&utm_medium=event-listing&utm_campaign=back-home-circle-<yyyy-mm>` | no |
+| Meetup | event page | UNVERIFIED | `utm_source=meetup&utm_medium=event-listing` | no |
+| MAPS community calendar | event link | MAPS article sample: 1 of 6 nofollow | `utm_source=maps-calendar&utm_medium=event-listing` | no |
+| Horizons partners page | partner link | 0 of 60 nofollow | `/kit/horizons` -> `utm_source=horizons-2026&utm_medium=event-qr&utm_campaign=nyc-oct` | no |
+| Fireside /resources | resource link | noopener, no nofollow (32 links) | clean URL (measure by referrer) | no |
+| Colorado NMD third-party resources | plain `<a>` | followed | clean URL (measure by referrer) | no |
+| Zendo, Unlimited Sciences | resource link | UNVERIFIED | clean URL | no |
+| Psychedelics.com | tool or book listing | UNVERIFIED | `utm_source=psychedelics-com&utm_medium=directory` | no |
