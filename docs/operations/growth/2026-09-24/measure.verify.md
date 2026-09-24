@@ -53,3 +53,24 @@
 - **Plan limits** (https://vercel.com/docs/analytics/limits-and-pricing, last_updated 2026-08-25, read 18:51Z): on Hobby, Custom Events "-", Reporting Window 1 Month, UTM Parameters "-". On Pro, UTM Parameters is "N/A" (only Web Analytics Plus, $10/mo, includes UTM). **Correction to the lens:** Vercel-side UTM reporting needs Pro plus Plus. Until then the site's own table (utm_* since PR #12) is the only UTM source.
 - **New finding** (https://vercel.com/docs/plans/hobby, last_updated 2026-09-14, read 18:54Z): "the Hobby plan restricts users to non-commercial, personal use only." The site sells ebooks through PayPal. If the project is on Hobby, that terms issue matters more than analytics. Pro would also bring custom events (2 properties) and a 12-month window. The plan tier is **UNVERIFIED** here.
 - **Measure:** the owner records the plan tier and enabled state, with a screenshot date, in the continuous handoff.
+
+### meas-03: Retailer, button and share click events in the site's own table, plus cleaned retailer URLs. KEEP
+- **Live book page** (GET https://www.mayaallan.com/books/psilocybin-integration-guide, 18:50:31Z): outbound hosts are a.co, bookshop.org, play.google.com, abebooks.com, barnesandnoble.com, bokus.com, waterstones.com (7), plus PayPal. The strings `retailer_click` and `cta_click` are absent. The AbeBooks URL carries `cm_mmc=aff-_-ir-_-353196-_-77798` and `ref_=aff_ir_353196_77798`, which is **someone else's affiliate tag**. B&N carries `jsessionid=…`, Bokus carries `srsltid=…`, and Bookshop carries `source=IndieBound&ref=https://www.google.com/`. All confirmed.
+- **Evidence nuance:** the Vercel custom-events doc (last_updated 2026-06-26) says server-side tracking is "more useful" for sign-ups and purchases. It says nothing about outbound clicks, which can only be caught in the browser. The beacon approach is sound, but the lens cites no source for it.
+- **Rehash check:** no PR or commit title mentions retailer or outbound-click tracking. Closed PR #4 (retailer layout, unmerged) and commit `d1053bd6` (2026-01-22, "Show all retailers") only changed layout. **New.**
+- **Build notes:** the beacon must not attach `ma_visitor_id` unless consent was given, and must stay cookieless. Retailer URLs may live in admin book data (`e61f0843` "BOOK-METADATA.md", `ff328383`/`2c8dffbc` admin commits). Whether step 3 is a code change or an owner edit in /admin is **UNVERIFIED**.
+- **Impact:** shows purchase intent, not leads. **Measure:** retailer_click by retailer; retailer_click ÷ book_viewed.
+
+### meas-04: Amazon Attribution tags. KEEP, deferred; drop the Bookshop sub-step
+- **Live** (GET https://advertising.amazon.com/solutions/products/amazon-attribution, undated, read 18:53:06Z): "Amazon Attribution is a free measurement solution"; usable by "Kindle Direct Publishing (KDP) authors that are part of the advertising console"; "reports have a 14-day attribution window." Confirmed.
+- **Live** (GET https://a.co/d/hRppkCZ, 18:50:40Z): 301 to `amazon.com/dp/B0G765BZDL?ref=cm_sw_r_ffobk…&social_share=…`, a share link with no attribution tag. Confirmed.
+- **Evidence type:** a vendor capability page with no outcome data. The product has existed for years and the page is still current.
+- **Fit:** free, and tags do not run ads. Whether creating tags triggers any Amazon Ads policy review for psilocybin content is **UNVERIFIED**.
+- **Bookshop.org affiliate sub-step:** the lens gives no source. https://bookshop.org/info/affiliates and https://bookshop.org/pages/affiliates both returned **404** (18:54:28Z). **UNVERIFIED**, and it is about earning money, not measurement, so remove it from this tactic.
+- **Deferral rule:** start only when meas-03 shows about 5 or more Amazon retailer clicks a week. Before then, KDP's own sales report already shows every sale, so attribution adds almost nothing.
+
+### meas-05: UTM tags on the redirects from the owned domains. KEEP (tiny)
+- **Live** (HEAD, 18:50:40Z and 18:54:53Z): apex and www of psilocybinintegrationguide.com and psilowire.com return **308** to `https://www.mayaallan.com/…` with path and query **preserved** (`Server: Vercel`). Confirmed.
+- **Adversarial finding:** the Wayback CDX query (https://web.archive.org/cdx/search/cdx?url=…, 18:54:53Z) returned **0 captures for both domains**. Nothing shows either domain has ever been linked or visited. Expect about 0 rows unless the domain is printed in the book, a bio or an interview.
+- **Material improvement:** send psilocybinintegrationguide.com to `/books/psilocybin-integration-guide?utm_source=psilocybinintegrationguide.com&utm_medium=domain_redirect`, since someone typing the book's name wants the book. Keep path passthrough for deep links.
+- **Rehash:** no.
