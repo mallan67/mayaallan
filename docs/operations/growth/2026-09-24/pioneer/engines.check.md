@@ -78,3 +78,18 @@
 
 | id | keep | status✓ | Live re-read | Correction | Src |
 |---|---|---|---|---|---|
+| ai-chatgpt | **yes** | yes | "OAI-SearchBot is used to surface websites in search results in ChatGPT's search features"; "~24 hours" after robots changes; OAI-AdsBot validates "web pages submitted as ads on ChatGPT". Help centre: allow OAI-SearchBot and the published searchbot IPs. | Ads: **not eligible** (§0 #3). The ChatGPT UTM convention was not stated on the help page read (UNVERIFIED). Lead value high is plausible (growth channel) but unmeasurable beyond the `chatgpt.com` referrer. | O1, O2, O5 |
+| ai-perplexity | yes | yes | PerplexityBot "designed to surface and link websites in search results on Perplexity. It is not used to crawl content for AI foundation models". Perplexity-User generally ignores robots.txt for user-initiated fetches (WebFetch summary; exact wording should be re-quoted). IP JSON endpoints are published. | OK. | O6 |
+| ai-claude | yes | yes | Three bots: ClaudeBot (training), Claude-User (user fetches), Claude-SearchBot (search quality); blocking "may reduce your site's visibility"; **Last updated April 7, 2026**. | The search provider behind Claude is still UNVERIFIED: the subprocessor pages' static HTML doesn't mention a provider. | O7 |
+| ai-copilot | yes | yes | Bing AI Performance shows Copilot citations (2026-02-10; public preview). | "Answers come from the Bing index" is an **inference**; the source shows only that Copilot citations are reported in Bing WMT. | B1 |
+| ai-google-gemini | yes | yes | "Grounding with Google Search connects the Gemini model to real-time web content and works with all available languages" with inline citations; **Last updated 2026-09-23**. | Now measurable: GSC Generative AI reports (impressions). | G10, K3 |
+| ai-meta | yes | yes | Meta-WebIndexer "navigates the web to improve Meta AI search result quality"; "Allowing Meta-WebIndexer … helps us cite and link to your content". Meta-ExternalFetcher "may bypass robots.txt". | OK. | O8 |
+
+**Also in the map (not in the item list), checked in passing:** eng-google-discover is correct and now also has a Discover generative-AI view in GSC [K3]. ai-chatgpt-ads should become DEAD for this niche [O2]. ai-alexa-shopping rename is verified [A3]. ai-brave-api logos are verified [E6]. Hygiene note: the book page's Bookshop `sameAs` URL carries junk parameters (`next=t&next=t&source=IndieBound&ref=https://www.google.com/`) [S2].
+
+---
+
+## 2. Important venues the map MISSED (each with a live source)
+
+| Venue | Why it matters for leads | Mechanics (verified) | Link / tag | Src |
+|---|---|---|---|---|
