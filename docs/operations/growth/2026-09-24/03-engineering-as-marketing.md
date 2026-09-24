@@ -175,3 +175,38 @@ The table orders tactics by build priority, not by id. Owner: **code-pr** = a Gi
   3. Put these blocks on existing pages (FAQ, scenarios) rather than new thin URLs.
   4. Add one frozen prompt per question to the AEO tracker (PR #46) and hold it for 4 weeks.
 - **Measure:** `source_citation` rate on search-capable engines per prompt; referral sessions from chatgpt.com and perplexity.ai; leads from those sessions.
+
+### eam-06: Put the tools where AI engines get their citations
+- **Why:** branded mentions correlate 0.664 with AI visibility against 0.218 for backlinks (Ahrefs, 2025-05-26). Reddit, YouTube and Quora lead AI citation shares (Profound **[vendor]**). Vercel's method is to answer where the questions are asked.
+- **Steps (Maya's accounts):**
+  1. Record one 60-90 second screen video per tool on YouTube. The title is the question the tool answers, and the description links the tool with UTM tags.
+  2. Answer 2-3 real questions a week in integration communities where the rules allow. Disclose authorship and link a tool only when it actually answers the question.
+  3. On podcasts and in newsletters, offer the journal with a UTM link. Consider pointing `psilocybinintegrationguide.com` at the book page instead of the homepage (today it is a 308 to `/`), so the domain can be said aloud on podcasts.
+- **Measure:** referral sessions per source and UTM, `brand_mention` in the AEO tracker, and captures per UTM.
+
+### eam-04: Scenario library as quality-gated programmatic pages
+- **Why:** the scaled-content and doorway policies (2026-08-28) and the 2026 spam updates make volume dangerous. HubSpot's 141 pages worked because each carried first-party case-study material, and citations went from about 16% to 92%. The book's 40 scenarios are that kind of first-party dataset. Only 1 is live.
+- **Steps:**
+  1. Create a structured file (MDX or JSON) per scenario with these fields: searched question, phase, what is happening, navigation steps, afterwards, related glossary terms, related tool, `sources[]`, reviewed date.
+  2. Reuse the `/scenarios/[slug]` template.
+  3. Publish in **batches of 3-5**, each to the PR #45 standard.
+  4. Apply a **gate:** start the next batch only when at least 2 of the previous batch are indexed in GSC 28 days after publishing. Otherwise improve those pages rather than add more.
+  5. AI may draft outlines only. Maya reviews every body.
+  6. Every page ends with its tool, the eam-03 offer and a book link.
+- **Measure:** indexed pages per batch (GSC), impressions, AEO citations for scenario prompts, and captures per scenario.
+
+### eam-10: Glossary: enrich, don't split
+- **Why:** the glossary has about 24 short definitions on one page (live). Splitting it into 24 thin URLs is exactly the "many pages" pattern described in the policy. HubSpot built "a glossary for bots", but the details are paywalled (**UNVERIFIED**).
+- **Steps:** add stable `#term` anchors, and give each term links to its "related scenario" and "try this tool". A term gets its own URL only once it has a full scenario page.
+- **Measure:** internal clicks from the glossary to tools and scenarios.
+
+### eam-08: Privacy-safe share cards
+- **Why:** Google's gen-AI guidance (2025-12-10) means per-user AI result pages must never be indexable at scale. Next.js `opengraph-image` / `ImageResponse` (docs updated 2026-07-09) makes static cards per tool cheap to build. **No 2025-26 lift data was found (UNVERIFIED).**
+- **Steps:** build a static OG image per tool and a "Share this tool" button with prefilled text. If a user-authored share page is ever built, it gets `noindex` and contains only text the user wrote.
+- **Measure:** `utm_source=share` sessions and the captures that follow.
+
+### eam-09: Embeddable widget (deferred)
+- **Why deferred:** there is a policy risk for widget links (2026-08-28) and no results evidence was found (**UNVERIFIED**).
+- **Steps if demand appears:** an iframe "integration prompt of the day" with one visible, branded `rel="nofollow"` attribution link.
+
+---
