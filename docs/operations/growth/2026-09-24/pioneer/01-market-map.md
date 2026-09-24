@@ -223,3 +223,25 @@ Other books in the space (Open Library, read 18:32:47Z): Aixalà, *Psychedelic I
 - The official Oregon 2025 Year-End Data Summary PDF could not be parsed (binary). The 2025 total of 5,935 was instead computed from the four official quarterly CSVs.
 
 ---
+
+## 9. Sources (URL · published/updated · read UTC 2026-09-24)
+
+| # | Source | Published / updated | Read (UTC) |
+|---|---|---|---|
+| S1 | Oregon Psilocybin Services data files: https://www.oregon.gov/oha/PH/PREVENTIONWELLNESS/Documents/OPS-Data-File-2026-Q2.csv (plus 2025-Q1…Q4 and 2026-Q1 from https://www.oregon.gov/oha/PH/PREVENTIONWELLNESS/Pages/Psilocybin-Data-Archive.aspx); dashboard page https://www.oregon.gov/oha/ph/preventionwellness/pages/psilocybin-data-dashboard.aspx | Q2 2026 file (period 4/1–6/30/2026) | 18:26:15Z, 18:26:22Z, 18:27:00Z |
+| S2 | Colorado NMD healing centers: https://nmd.colorado.gov/healing-centers; press releases https://nmd.colorado.gov/category/press-release | latest release 2026-05-06 | 18:27:16Z, 18:27:55Z |
+| S3 | Colorado DORA/DPO Natural Medicine: https://dpo.colorado.gov/NaturalMedicine | "last update 02/02/2026" | 18:28:04Z |
+| S4 | SAMHSA 2024 NSDUH Annual National Report (HTML): https://www.samhsa.gov/data/report/2024-nsduh-annual-national-report | released 2025-07-28 | 18:33:27Z, 18:33:35Z |
+| S5 | SAMHSA 2024 NSDUH Detailed Tables, Table 1.1A: https://www.samhsa.gov/data/sites/default/files/reports/rpt56484/NSDUHDetailedTabs2024/NSDUHDetailedTabs2024/2024-nsduh-detailed-tables-sect1pe.htm | 2025 | 18:34:10Z |
+| S6 | RAND RRA4334-1, "U.S. Psychedelic Use and Microdosing in 2025": https://www.rand.org/pubs/research_reports/RRA4334-1.html | published 2026-01-21; modified 2026-06-23 | 18:37:29Z |
+| S7 | ClinicalTrials.gov API v2: https://clinicaltrials.gov/api/v2/studies?query.intr=psilocybin&countTotal=true | live | 18:32:23Z |
+| S8a | PubMed 27578767, Carbonaro et al., J Psychopharmacol: https://pubmed.ncbi.nlm.nih.gov/27578767/ | 2016-12 | 18:34:22Z |
+| S8b | PubMed 37874826, Evans et al., PLoS One: https://pubmed.ncbi.nlm.nih.gov/37874826/ | 2023-10-24 | 18:34:22Z |
+| S8c | PubMed 38863668, Robinson et al., Front Psychol: https://pubmed.ncbi.nlm.nih.gov/38863668/ | 2024-05-28 | 18:34:22Z |
+| S8d | PubMed 41366772, Argyri et al., Harm Reduct J: https://pubmed.ncbi.nlm.nih.gov/41366772/ | 2025-12-09 | 18:34:22Z |
+| S9 | PubMed 42092643, Yang et al., Am J Prev Med (microdosing prevalence): https://pubmed.ncbi.nlm.nih.gov/42092643/ ; PubMed 41795902, Priest et al., Addiction: https://pubmed.ncbi.nlm.nih.gov/41795902/ | 2026-05-04; 2026-03-08 | 18:37:06Z |
+| S10 | Google Autocomplete (Google, YouTube `ds=yt`) https://suggestqueries.google.com/complete/search ; Amazon https://completion.amazon.com/api/2017/suggestions | live | 18:31:23Z to 18:31:58Z |
+| S11 | Oregon statute ORS 475A.360 "Integration session": https://www.oregonlegislature.gov/bills_laws/ors/ors475A.html | 2025 edition | 18:39:37Z |
+| S12 | Psychedelic Alpha, OPS Tracker (secondary): https://psychedelicalpha.com/resources/the-oregon-psilocybin-services-tracker/ ; Q1 2026 update https://psychedelicalpha.com/news/q1-2026-oregon-psilocybin-services-update/ | "as of Q1 2026 (June 2026)"; update published 2026-07-27 | about 18:36Z; about 18:25Z |
+| S13 | NM DOH Medical Psilocybin Program: https://www.nmhealth.org/about/mcpp/mpp/ | undated page | 18:37:55Z |
+| S14 | KUNM, NM medical psilocybin equity fund: https://www.kunm.org/local-news/2026-03-17/new-mexico-creates-first-ever-medical-psilocybin-fund-for-low-income-patients | 2026-03-17 | about 18:43Z |
