@@ -143,3 +143,35 @@ The Playwright profile arrived with `localStorage.mayaallan_consent_v1="rejected
 | ui-14 | low | Retailer URLs carry stale or foreign tracking: B&N ";jsessionid=...", AbeBooks third-party affiliate click IDs (clickid, afn_sr=impact, ref_=aff_ir_...), Bookshop "ref=https://www.google.com/&source=IndieBound", bokus "srsltid". | 18:20:57Z | content |
 | ui-15 | low | Privacy policy (May 20, 2026) does not name Vercel Web Analytics, which loads after Accept | 18:27:44Z | content |
 | ui-16 | low | Blog post title tag is 102 characters and will be truncated in results | curl 18:37:49Z | content |
+
+## 7. What works (verified live)
+
+- All 30 sitemap URLs, the 4 other locale homes and 2 locale about pages return 200. The production deployment is serving (?dpl= on chunks).
+- Console: **0 errors / 0 warnings on every desktop page**. On mobile the only message is the preload warning (ui-09). No hydration errors, no uncaught exceptions, no CSP violations.
+- **0 failed network requests (>=400)** on every audited page and viewport.
+- **0 broken visible images, 0 images without alt** (1 decorative image with alt="").
+- **No horizontal overflow** at 1366 or 390 on any page, RTL /he included.
+- Header (10), footer (17) and mobile menu (9) links all resolve 200. The mobile menu opens, sets aria-expanded, navigates and closes.
+- The consent banner meets the basics: nothing tracks before a choice, Reject and Accept have equal size, the choice persists, and "Cookie preferences" reopens it. After Accept, client-side route changes are counted (/view per route).
+- Canonical is self-referencing with index,follow on every page. JSON-LD parses on key pages (home WebSite/Organization/Person; book Book+BreadcrumbList; blog Article; scenario Article+BreadcrumbList; FAQ FAQPage; glossary DefinedTermSet; about Person+FAQPage) — curl 18:37:49Z.
+- All secondary domains 308 to www. Preview aliases sit behind Vercel SSO.
+- The contact honeypot is correctly hidden. Tool Send buttons stay disabled while empty. The journal radio works client-side. FAQ (28) and /methods anchors resolve.
+- Speed: desktop TTFB 43-261 ms, load 190-1038 ms.
+
+## 8. Not exercised (by rule)
+
+AI submissions on the 3 tools (endpoint not observable before send). Prompt chips. Journal "Download free PDF". Contact "Send". Home "Subscribe". "Buy Ebook with PayPal" and the PayPal checkout. Opening the retailer and share links (Instagram, Copy link, Facebook, X, LinkedIn, WhatsApp, Telegram, Reddit, Pinterest, TikTok, email). The paid "Save a session as a PDF for $9.99" mentioned on /practices. Browser-level load of the other 4 blog posts and the non-Hebrew locale pages (HTTP 200 only). Safari/iOS, Firefox and real devices (Chromium only).
+
+## 9. Unverified / needs outside-source check
+
+- Whether /9de18cd67c0a6252/view beacons are stored anywhere while Web Analytics is "not enabled" (owner's Vercel Analytics dashboard).
+- Whether /api/marketing/visitor and /api/marketing/event rows are persisted and visible to the owner (needs admin/DB access; not permitted in this lens).
+- Whether "Reject analytics" deletes existing ma_* cookies (ui-13).
+- Whether the PayPal Buy flow opens checkout (not clicked).
+- Real visitor counts and click paths: no live source is available until ui-01/ui-02 are fixed.
+
+## 10. Process notes (honest disclosure)
+
+- On every navigation and click, the Playwright MCP tool **automatically wrote** accessibility-snapshot .yml and console .log files under the session working directory `.playwright-mcp\`. No filename parameter was passed. **They were never read or used as evidence.** Every value here comes from inline tool results. The owner may want those files deleted, or the MCP output directory reconfigured.
+- The Bash tool refused one large single command. This file was therefore written in 6 sequential commits to work/site-visibility. Each commit re-read the live file from the branch head and appended one section. Every compare listed only this path.
+- At 18:38:13Z, get_project showed a preview deployment dpl_7rnTwmp7mAUMRHXMmBkQ7yx4TdFm BUILDING (target null). Its source branch was not checked.
