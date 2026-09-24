@@ -94,3 +94,20 @@ No finding was refuted. Five severities were lowered: ana-02, ana-03, ana-04, an
 | sources | the same window, grouped by source | ~18:52Z | function 377, middleware 359, cache 55, redirect 3. One page request can log both a middleware line and a function line, so there are roughly half as many real requests as log lines |
 | API calls | the same window: query `/api/` grouped by path; `marketing` grouped by status; `checkout` and `tools` grouped by path | ~18:50Z to ~18:57Z | only /api/health 6; `marketing` 0; `checkout` 0; `tools` 0 |
 | positive control | 18:10Z to 18:40Z, the same queries | ~18:51Z–18:52Z | /api/marketing/event 2 and /api/marketing/visitor 6 were logged (the audit's own browser) |
+| tracker renders on the book page | GET /books/psilocybin-integration-guide | 18:56:18Z | The page data loads module `16166` (BookViewTracker) from `fc986f8dd4b371e4.js`, which sends book_viewed with no consent check, once per tab session |
+| CDN not hiding visits | response headers of /, /books/psilocybin-integration-guide and /privacy | 18:55:03Z | `Cache-Control: private, no-cache, no-store`, `X-Vercel-Cache: MISS`. Every page view reaches middleware or a function and is logged |
+| top paths | baseline grouped by path | ~18:50Z | / 82, /robots.txt 41 (the audit said 38; minor drift), book page 8, /xmlrpc.php 5, … 46 distinct paths |
+
+- **Refutation attempts:**
+  - Query artefact: ruled out by the positive control.
+  - CDN caching hiding visits: ruled out by the `no-store` headers.
+  - Visitors with JavaScript off or a privacy blocker could suppress book_viewed. I cannot rule that out.
+  - Humans who never open the book page leave no trace that can be told apart from bots.
+- **Conclusion:** "no sign" is accurate. "Zero humans" is not proven, and the evidence covers only ~23 hours.
+- **Solution check:** The direction is correct. Runtime logs cannot separate humans from bots at all, so the only reliable measure will be Web Analytics after ana-01 and PR #57.
+
+### ana-06: Speed Insights not loaded (CONFIRMED, severity lowered to low)
+- **Chunk scan:** the 23 chunks (18:48Z–18:49Z) have no `@vercel/speed-insights` SDK. The only mention is Vercel's injected config string `{"speedInsights":{"scriptSrc":"87c4d7cd412437e3/script.js","endpoint":"87c4d7cd412437e3/vitals"}}` inside `312c5210c9c35dc5.js` (read 18:53:21Z).
+- **Script URLs:** `/_vercel/speed-insights/script.js` and `/87c4d7cd412437e3/script.js` both returned 200 (12,567 B), twice each, at 18:53:21Z–18:53:25Z.
+- **Why low:** With about 0 human visitors, real-visitor speed data would be empty. Lab tools (PageSpeed Insights, Lighthouse) are enough to diagnose SEO issues now.
+- **Solution check:** `<SpeedInsights/>` plus the dashboard toggle is correct. PR #57 changes `package.json`, but I did not check whether it adds Speed Insights, because reading repository source is out of scope.
