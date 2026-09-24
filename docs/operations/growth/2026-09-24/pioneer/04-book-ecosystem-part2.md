@@ -169,3 +169,34 @@ When they exist, add ISNI, Wikidata, BookBub and the Spotify author profile. The
 ## 8. What this map does not cover
 
 Conversion on the site, AI-citation studies and measurement dashboards belong to the parallel workflow. Nothing here was posted, signed up for or purchased.
+
+## 9. Sources (all read 2026-09-24, UTC; "~" = WebFetch call without its own timestamp, bracketed by neighbouring shell reads)
+
+| # | URL | Page date (if shown) | Read (UTC) |
+|---|---|---|---|
+| S1 | https://www.mayaallan.com/books/psilocybin-integration-guide | n/a | 18:24:51Z; 18:46:39Z |
+| S2 | https://openlibrary.org/isbn/9798994148839.json ; /authors/OL16288546A.json ; /works/OL45177926W.json | created 2026-04-20 | 18:25:10Z-18:25:22Z |
+| S3 | https://www.goodreads.com/book/show/245299940 ; /book/show/245349971 ; /author/show/65134359.Maya_Allan ; /author/list/65134359 | n/a | 18:25:22Z-18:25:52Z |
+| S4 | https://www.amazon.com/dp/B0G765BZDL ; /dp/B0G91GZMLT ; /dp/B0G7JWDJYQ ; /stores/author/B0G76975ST | n/a | 18:26:05Z-18:26:41Z |
+| S5 | https://bookshop.org/p/books/psilocybin-integration-guide-40-real-scenarios-for-navigating-what-you-see-feel-experience-maya-allan/3c9390316323761a?ean=9798994148839 | n/a | 18:26:05Z; 18:45:06Z |
+| S6 | https://www.barnesandnoble.com/w/psilocybin-integration-guide-maya-allan/1148993659 | n/a | 18:26:05Z; 18:46:04Z |
+| S7 | https://play.google.com/store/books/details?id=HvafEQAAQBAJ | n/a | 18:26:05Z |
+| S8 | https://itunes.apple.com/search?term=psilocybin+integration&entity=ebook&country=us (and author/title queries) | n/a | 18:27:33Z-18:27:41Z |
+| S9 | https://www.kobo.com/us/en/search?query=9798994148839 (403) | n/a | 18:27:33Z |
+| S10 | https://kdp.amazon.com/en_US/select | n/a | 18:28:14Z |
+| S11 | https://kdp.amazon.com/en_US/terms-and-conditions | Last Updated Sept 27, 2024 | 18:28:14Z |
+| S12 | https://kdp.amazon.com/en_US/help/topic/G200652170 (categories) | n/a | ~18:28Z |
+| S13 | https://kdp.amazon.com/en_US/help/topic/G201298500 (keywords) | n/a | ~18:28Z |
+| S14 | https://kdp.amazon.com/en_US/help/topic/G200672390 (content guidelines) | n/a | ~18:28Z |
+| S15 | https://support.google.com/adspolicy/answer/6014299 | n/a | ~18:29Z |
+| S16 | https://kdp.amazon.com/en_US/help/topic/G4WB7VPPEAREHAAD (A+ guidelines) | n/a | 18:29:29Z |
+| S17 | https://kdp.amazon.com/en_US/help/topic/GFAQU3LUEHCRB8KD ; /GHJW2N8GLTQLK9TY (virtual voice) | n/a | 18:29:29Z-18:29:44Z |
+| S18 | https://kdp.amazon.com/en_US/help/topic/G201014330 (ACX) | n/a | 18:29:44Z |
+| S19 | https://kdp.amazon.com/en_US/help/topic/GHNKT7V426GVDM3G (Kindle Deals nomination) | n/a | 18:29:44Z |
+| S20 | KDP help footer "Total KDP Select Author Earnings August 2026 • $69.4 Million" | Aug 2026 | 18:29:44Z |
+| S21 | https://findawayvoices.com/ (redirect page to voicesbyinaudio.com) ; https://voicesbyinaudio.com | n/a | 18:30:30Z |
+| S22 | https://authors.spotify.com/ ; https://authors.spotify.com/blog/direct-audiobook-publishing | post 2025-08-01 | ~18:30Z |
+| S23 | https://support.google.com/books/partner/answer/10013009 ; /9331459 ; /9358246 ; /3474239 ; /1067634 ; /10010291 ; /topic/11098072 | n/a | 18:31:28Z-18:32:05Z |
+| S24 | https://draft2digital.com/partners/ ; /content-guidelines/ ; /faq/ | n/a | 18:32:44Z-18:33:03Z |
+| S25 | https://books2read.com/ | n/a | ~18:32Z |
+| S26 | https://publishdrive.com/pricing | n/a | ~18:33Z |
