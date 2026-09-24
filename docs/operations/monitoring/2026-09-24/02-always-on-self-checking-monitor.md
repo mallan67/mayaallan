@@ -1,6 +1,6 @@
 # Always-on site doctor: one self-checking, self-reporting system for mayaallan.com
 
-- Lens: `ops-` (senior SRE). Date: 2026-09-24. Analysis only: nothing on the site, in Vercel or in GitHub settings was changed; the only write is this file.
+- Lens: `ops-` (senior SRE). Date: 2026-09-24. Analysis only: nothing on the site, in Vercel or in GitHub settings was changed; the only writes are this file and its part 2 (plus unreferenced chunk blobs used to assemble them).
 - Owner's instruction for this run (2026-09-24): "the audio book is not finished, so please focus on the other stuff first". The audiobook check is designed below but **switched off** (`flow.audio-sample = disabled`), and the two audiobook workflows are left out of monitoring.
 - Live sources: GitHub API for `mallan67/mayaallan` (main = `ed7461a07e499694eba25ada437817c35983bd87`, read 18:36:35Z); Vercel API (MCP) for project `prj_CkwsvLxnWkKGJlyAA93lRVxAOQ9Y` (18:39Z-18:45Z); HTTP GET/HEAD to https://www.mayaallan.com (18:37Z-18:50Z); vendor documentation via WebFetch (18:41Z-18:48Z). All times are UTC on 2026-09-24. Nothing here comes from a local checkout, a cache or an earlier report.
 
