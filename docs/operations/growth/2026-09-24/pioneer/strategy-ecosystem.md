@@ -75,3 +75,25 @@ Owners: CODE = pull request on mallan67/mayaallan; OWNER = Maya's own accounts; 
 - **Owner:** OUTREACH; CODE for registry entries. **Effort:** 2 days to list and send, then 20 minutes per yes.
 - **First lead:** day 8-12 (first center reply); first client opt-in about day 15-25.
 - **Measure:** utm_source=or-svc-<slug> or or-fac-<slug>; utm_medium=print-qr or email; utm_campaign=take-home-kit; kit_scan, journal_pdf_generate {slug}, email_optin {slug}. Day-30 target: 30 contacted, 5 yes, 3 live pages.
+
+### M3. Colorado: the public roster + the state resource page (OUTREACH + OWNER)
+- **Why:** F1 is a live, official roster refreshed daily: 86 facilitators, 94 clinical facilitators, 691 trainees, 11 programs. F7 is a state page that links to public-education resources and takes recommendations through a public form. [mkt-02], [niche-b2b-co-centers], market-map missing item (DORA open data), niche-map missing item (DPO stakeholder meeting 2026-10-02 and rulemaking hearing 2026-10-08).
+- **Steps:**
+  1. Pull the roster with one GET, no login: https://data.colorado.gov/resource/7s5z-vewr.json?$where=licensetype in('NMF','NMCF','NMTP') AND licensestatusdescription='Active' . It returns names, cities and states, not emails; find each practice website by name.
+  2. Make the M2 kit offer to the 46 healing centers [niche map] and to facilitators with a public practice site. utm_source=co-hc-<slug> or co-fac-<slug>.
+  3. In week 4, once M2/M7 have produced at least 2 quotable endorsements (criterion "Positive Reputation & Peer Endorsement"), recommend the free tools (Integration Journal, Nervous System Reset, glossary) through the NMD form. Submitted URL: https://www.mayaallan.com/integration-journal?utm_source=co-nmd&utm_medium=referral&utm_campaign=state-resource
+  4. Join the DPO stakeholder meeting (Oct 2) and rulemaking hearing (Oct 8) as a listener: the Colorado ecosystem in one room (format UNVERIFIED).
+- **Owner:** OUTREACH; OWNER for the form. **Effort:** 1 day list, 1 hour form.
+- **First lead:** day 10-14 (facilitator replies). Listing decision: no published review time (UNVERIFIED).
+- **Measure:** the UTMs above; partner_form_submit {state=CO}; referral sessions from nmd.colorado.gov.
+
+### M4. The 40-scenario teaching casebook for training programs (CONTENT + OUTREACH)
+- **Why:** 22 unique programs train every future facilitator (F2, F3); 691 Colorado trainees are in training now (F1). One adoption reaches every cohort. The book already holds the 40 scenarios and only 1 has a public page (F14), so the casebook is repackaging, not new writing. [mkt-10], [mkt-ws-04], [niche-edu-or-programs], [niche-edu-ciis], [web-edu-ops].
+- **Steps:**
+  1. Instructor pack (PDF): 40 scenario cards (what is happening, what the client may say, what helps afterwards, when to refer out), 10 discussion prompts, 1 role-play rubric. Education only; no dosing or sourcing.
+  2. Terms: a free desk copy for instructors, then a cohort licence (student ebook + casebook) priced per student. Suggested test price $6-8 per student against $9.99 retail; the MAPS pack works out at $3 per print workbook (F8). Invoice through the existing PayPal.
+  3. Email the 22 program directors (websites in the F3 PDF, names in F2) and offer a free 45-minute Zoom guest session for the current cohort: "The 40 things clients bring home".
+  4. After each session: a feedback link with utm_source=trainer-<program>&utm_medium=b2b&utm_campaign=casebook, and the instructor-pack request (M1 form, interest=casebook).
+- **Owner:** CONTENT (pack), OUTREACH. **Effort:** 3-4 days pack, 1 day outreach.
+- **First lead:** day 10-18 (a guest-session yes); first order at the next cohort start (month 2-3).
+- **Measure:** partner_form_submit {interest=casebook}; casebook_request; licences sold; seats reached.
