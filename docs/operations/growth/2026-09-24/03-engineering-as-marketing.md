@@ -86,3 +86,36 @@ GitHub, live (`gh api`, 18:23:51Z-18:24:00Z): the 58 PRs so far are mostly harde
 - **No 2025-2026 practitioner numbers were found within this session's budget. UNVERIFIED.** The closest verified lesson is HubSpot's "**Run your own tests** … validate a play with your own data before scaling it" (2026-09-16). This lens does not recommend it as a lead channel for now.
 
 ---
+
+## 3. What practitioners say does NOT work anymore (with evidence)
+
+| Stop or avoid | Evidence |
+|---|---|
+| **llms.txt as a growth lever** | HubSpot's first AEO experiment was a failure: no bot visits, and it was paused. A cited Ahrefs analysis found "97% of llms.txt files get zero requests" (Growth Unhinged, 2026-09-16). Google: "You don't need to create new … AI text files" (AI features doc, 2025-12-10). |
+| **Mass AI-written or near-duplicate pages** (city × topic, term × modifier) | Scaled-content and doorway policies (2026-08-28); four spam updates in 2026, the latest started 2026-09-24. |
+| **Counting on Google clicks from "what is…" informational queries** | Pew: 8% vs 15% click rate, 1% on cited links (2025-07-22); Ahrefs: -58% CTR (2026-02-04). |
+| **Keyword-rich widget or badge links** | Google link-spam policy (2026-08-28). |
+| **Book Actions structured data** | Google phased out Book Actions (announced 2025-06-12; Sept 8, 2025 update lists the removed types). |
+| **Re-requesting indexing for crawled-not-indexed pages** | Google Search Console Help: "no need to resubmit this URL". |
+| **Generic "join my newsletter" as the only capture** | Interact's diagnostic: "High finish rate but low lead rate" means the opt-in offer "may not feel valuable enough" [vendor]. Live site: the homepage box is the only newsletter form. (Inference: no 2025-26 A/B numbers for generic vs specific offers were found.) |
+| **Trusting agency "update impact" statistics** | Digital Applied's March-2026 article was published before the update began (see 2.3). |
+
+---
+
+## 4. Tactics for this site
+
+The table orders tactics by build priority, not by id. Owner: **code-pr** = a GitHub PR through `work/*`, CI, then Maya merges. **owner-account** = Maya in Vercel, GSC, social accounts. **content** = writing. **mixed** = more than one of these.
+
+| id | Tactic | Owner | Effort | Depends on |
+|---|---|---|---|---|
+| eam-00 | Measure the tool → lead → purchase funnel | mixed | S | none (this is the first step) |
+| eam-01 | "Keep this" email capture at the end of each AI tool | code-pr | M | eam-00 |
+| eam-07 | Tool → book bridge with purchase attribution | code-pr | S | eam-00 |
+| eam-03 | Contextual offers on content pages instead of generic newsletter | mixed | S | eam-00 |
+| eam-02 | Integration Journal as a 7-day email version (email course) | mixed | M | eam-00 |
+| eam-05 | Answer blocks written for AI citation, each leading into a tool | content | M | eam-03 |
+| eam-06 | Put the tools where AI engines get their citations (mentions) | owner-account | M | eam-01 |
+| eam-04 | Scenario library as quality-gated programmatic pages | mixed | L | eam-03, GSC access |
+| eam-10 | Glossary: enrich and link; do not split into thin pages | code-pr | S | none |
+| eam-08 | Privacy-safe share cards (not indexed result pages) | code-pr | S | eam-00 |
+| eam-09 | Embeddable widget (deferred) | code-pr | M | proven demand |
