@@ -115,3 +115,36 @@
 **book-kdp-ebook-backmatter** — see correction 2.
 - The print QR/URL is not governed by the Kindle hyperlink page. Print-specific KDP rules were not read (UNVERIFIED).
 - Apple, D2D and library ebook link rules were not read (UNVERIFIED).
+
+**book-kindle-deals**
+- GHNKT7V426GVDM3G (22:19:36Z): *"For Kindle Deals: Your title must be enrolled in the 70% royalty option (US marketplace only)"*; *"For Prime Reading: Your title must be enrolled in KDP Select"*; recommended *"at least 90 days… not been on deal in the last 90 days… priced between $2.99 and $12.99"*.
+- Also: *"Nominations do not guarantee enrollment"*; *"Signals of reader interest include reviews, sales…"*; two Kindle Deals nominations at a time; nominations expire after 90 days.
+- With 0 ratings and rank #3,146,610, selection is improbable now.
+
+**book-kdp-select**
+- kdp.amazon.com/en_US/select (22:19:46Z): *"you cannot distribute your book digitally anywhere else, including on your website, blogs, etc."* KDP help footer: "Total KDP Select Author Earnings August 2026 • $69.4 Million".
+- The live Google Play ebook is a second conflict.
+
+**book-a-plus**
+- G4WB7VPPEAREHAAD (22:19:56Z) confirms the map's rules, including "A maximum of four quotes".
+- **Rules the map missed:**
+  - *"Web links or language attempting to redirect to other sites inside or outside of Amazon… are prohibited"*
+  - no "QR barcodes"
+  - *"No quotes or attributions may be made… to individuals, customers, or other private figures"*
+  - *"Remove any claims to cure, mitigate, treat, or prevent diseases…"*; other health claims *"require a note in the text to substantiate them"*
+- The health-claim rules are directly relevant to trauma and healing copy.
+
+**book-amazon-ads**
+- Sponsored titles live on *psychedelic integration* (22:18:42Z): *Breaking Family Curses: Psychedelic Integration…*, *THE LAST ILLUSION: Psychedelic Integration…*, *Healing the Modern Soul: Psychedelics…*, *Doorways to Transformation*, *The Hollow Bone of Healing*. *Psychedelics and the Soul* was not seen in this read.
+- advertising.amazon.com/help/G5RLASA28TP9TFXZ returns HTTP 200 but WebFetch finds no rendered policy text (22:19Z), so the policy is UNVERIFIED.
+- Ads drive Amazon sales, not site leads, and convert poorly at 0 reviews.
+
+**book-apple-books**
+- The iTunes Search API (22:20:08-22:20:11Z) returns 21 results for "psilocybin integration guide" and 40 for "psilocybin integration"; none are by Maya Allan. Three German psychedelic titles are dated 2026-08-21, 2026-08-29 and 2026-09-03.
+- authors.apple.com (WebFetch ~22:20Z): *"70% royalties on every ebook, regardless of price"*, "No file delivery fees", web EPUB upload with an iTunes Connect account, Apple Affiliate program, "digital narration".
+
+**book-google-play**
+- 9331459: *"70% revenue split on ebook sales in most Google Play Books supported countries"* for partners who accepted the updated 2019 Terms of Service, otherwise "52%".
+- 9358246: *"earn 7% commission"*, **"currently available for active Play Books partners"**, signup through Partnerize.
+- **The promotions source is wrong:** 3474239 is "How to link to individual titles on Google Books". The promotions evidence is topic/11098072, which lists "Use promo codes to offer free or discounted ebooks & audiobooks", "Create bundle discounts…" and "Offer a discount to users who subscribe to your series".
+- Whether Maya holds the Partner Center account is UNVERIFIED; "accept the updated terms" assumes she does.
