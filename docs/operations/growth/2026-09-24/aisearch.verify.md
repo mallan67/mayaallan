@@ -131,3 +131,55 @@ The lens's own conclusion is that off-site mentions matter and on-site markup ba
   - Allsopp, via Ahrefs 2026-03-13: 43.83% of citations for software, agency and product queries.
   - None of these studies covers books or health. The direction agrees with the Ahrefs mention correlations.
 - **Addition (absorbs ai-07):** send review copies to list authors, reviewers and newsletter writers, and invite an honest Goodreads or Amazon rating with no incentive. Amazon's rules on reviews from free copies are UNVERIFIED this session, so the owner checks them before asking for Amazon reviews. The target list comes from the ai-12 panel's cited domains.
+
+### ai-10: Email capture on deep pages. Keep (the only direct lead capture)
+- **Live check, 18:50:54Z to 18:51:04Z.** Server HTML fetched with the OAI-SearchBot user agent showed 0 email inputs on:
+  - `/books/psilocybin-integration-guide`
+  - `/faq`
+  - `/glossary`
+  - `/blog/psilocybin-integration-research`
+  - `/scenarios/ego-dissolution`
+  - `/integration-reflection`, `/belief-inquiry`, `/nervous-system-reset`, `/integration-journal`
+  - Only the homepage (1) and `/contact` (1) have one. The lens said "only the homepage", but `/contact` has one too.
+- **Evidence read:**
+  - SE Ranking, 2026-06-18 (101,574 sites, Jan 2025 to Apr 2026): AI visitors average 9m19s against 5m33s for organic, and AI is 0.29% of US traffic. The study has **no conversion data**.
+  - Kaiser & Schulze, reported 2025-10-24 (973 sites): ChatGPT "underperformed every traditional channel except paid social". The source does **not** say the study is peer reviewed, although the lens summary calls it that.
+  - Ahrefs, updated 2025-11-10: the 23× figure is a vendor's report on its own SaaS; the sample is not disclosed.
+  - So the case for this tactic is the measured gap on the site, not any AI-specific conversion claim.
+- **Corrected step (code PR, S):**
+  - Add one reusable email block to the pages listed above, using the existing subscribe route and the Resend flow (PR #42 and PR #49).
+  - Deliver the offer **on the page right after submit**. PR #42's merge message says the subscriber welcome email is disabled.
+  - Record the landing page for each signup.
+  - Keep the consent and unsubscribe wording consistent with PR #35 and PR #42.
+- **Expected impact:** leads grow with traffic, and traffic is unknown until ai-01 is live. Honest expectation: a few signups a month to begin with.
+
+### ai-12: Prompt panel. Keep, reduced and manual only
+- **Evidence read:**
+  - Growth Memo, 2026-05-11 (3.7M citations across ChatGPT, Perplexity and AIO): 91% of cited URLs appear in only one engine, and 2.37% in all three.
+  - SparkToro, via Ahrefs 2026-03-13: there is less than a 1 in 100 chance of getting the same brand list twice.
+- **Rehash:** the tracker (PR F, 2026-05-19; PR #46, 2026-09-05) has run for about 4 months without informing any action. Drop the "switch to web-search modes" PR.
+- **Corrected step (owner):**
+  - **First,** read the tracker data recorded since PR #46. It is the only clean data, per that PR's body.
+  - **Then, once:** 10 unbranded prompts, 2 runs each, logged out, in ChatGPT, Perplexity and Google AI Mode. Record whether she is mentioned and which domains are cited.
+  - The cited domains become the ai-06 outreach list. Repeat quarterly, not monthly.
+
+## Dropped tactics
+- **ai-07 (ratings).** There is no evidence for an AI effect. The profile-setup steps written 2026-04-20 (`1573f924`) were never acted on: Goodreads still showed 0 ratings, 0 reviews and an unclaimed-looking author profile at 18:50:26Z. Ratings are folded into ai-06's review-copy outreach, which is how ratings get produced anyway.
+- **ai-08 (more answer-first pages).** A rehash:
+  - `/faq` (`41974c97`, 2026-05-19) was built on the same "44.2% from the first 30%" reasoning.
+  - The 39 draft scenarios exist (`5be3503b`).
+  - PR #45 already applied the exact template (How to read this, About the author, Updated date) to two pages that had been "Crawled, currently not indexed".
+  - The lens's newest support (Growth Memo, 2026-04-13) is paywalled; only its headline could be read.
+  - Revisit only if ai-03 shows the PR #45 pages indexed **and** ai-02 or ai-12 show a real question to answer. Then write only those scenarios.
+- **ai-09 (server-render tool text).**
+  - The only source is Vercel/MERJ, 2024-12-17. No 2025–26 confirmation could be fetched (search budget exhausted), so current crawler behaviour is UNVERIFIED.
+  - The lens says the effect has not been measured.
+  - The measured text inside `<main>` was 618–678 characters on three tool pages and 3,916 on `/integration-journal`, not "about 1.2k".
+- **ai-11 (LinkedIn and Medium).**
+  - The Semrush data (2025-11-10, vendor) is aggregated by domain with undisclosed prompt categories.
+  - Medium cross-posting was already built (`91c8f5d1`, 2026-04-20) on the Medium API, which Medium archived on 2023-03-02 ("We don't allow any new integrations"; read 18:51:23Z). It most likely never worked.
+  - A LinkedIn article with no network behind it gets no distribution.
+- **ai-13 (identity).**
+  - A rehash of `b7a0f8a6` and `ea9c7231` (2026-05-19), which wired sameAs and ISBN plus ASIN identifiers, and of PR #50.
+  - Live at 18:50:54Z: the Book `identifier` holds only the ASIN, although `ea9c7231` says it emits the ISBN too, and Person `sameAs` lists Instagram only.
+  - Treat the missing ISBN as a one-line data fix inside another PR. Adding sameAs links for profiles that do not exist yet does nothing.
