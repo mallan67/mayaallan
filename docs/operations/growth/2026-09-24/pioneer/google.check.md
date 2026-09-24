@@ -170,3 +170,61 @@
 - The merchant-listing doc (updated 2026-09-08) applies the free listings guidelines (merchants/answer/12073010), and those exclude ebooks. The ebook's answer is effectively "no".
 - `offers` and `isbn` in the Book JSON-LD are harmless hygiene only.
 - **Read:** 19:00:30Z-19:00:52Z.
+
+**goog-15 KEEP, lead medium-high only with a steady cadence.**
+- Confirmed:
+  - The hard-drug list includes "Psilocybin & Psilocybe (magic mushrooms)".
+  - "Hard drug use or creation", selling, and links to where hard drugs can be bought are banned; such links can get a channel terminated.
+  - EDSA exceptions exist.
+  - Up to 14 channel links.
+  - Chapters: 00:00 first, at least 3 ascending, each at least 10 s.
+- **Missed gate:** "Add clickable links to your long-form video description and posts" is an **Advanced** feature, unlocked by "sufficient channel history" or ID or video verification. Intermediate features need phone verification.
+- **Sources:** youtube/answer/9229611 (19:01:16Z-19:01:34Z), /2657964, /9884579, /9890437 (19:04:04Z-19:04:19Z).
+
+**goog-16 KEEP, corrected.**
+- "URLs placed in YouTube Shorts comments and Shorts descriptions are non-clickable" (youtube/answer/13748639, 19:03:50Z).
+- Routes out of a Short: the **Related Video** link (an Advanced feature) and the channel links.
+- The cited source, answer/72851, is the YouTube Partner Program page, not Shorts (19:01:23Z).
+
+**goog-17 KEEP with a gate.**
+- Confirmed:
+  - "RSS ingestion is available in select countries/regions"
+  - episodes publish only to YouTube and YouTube Music
+  - "podcast content you upload to YouTube cannot contain advertisements"
+  - branded content must be declared
+- **Missed gate:** "RSS Upload" is an **Advanced** feature (9890437).
+- **Missed conflict:** free audiobook chapters may breach the audiobook's retail or exclusivity terms (distributor UNVERIFIED).
+- **Source:** youtube/answer/13525207 (19:04:28Z).
+
+**goog-18 DROP.**
+- Requirements: a licensed doctor, nurse, psychologist, MFT or LCSW; LegitScript verification; more than 1,500 watch hours in 12 months or 1.5M Shorts views in 90 days.
+- /about says "author and educator writing non-clinical, educational resources".
+- **Source:** youtube/answer/12796915 (19:04:38Z).
+
+**goog-20 KEEP, lead low-medium.**
+- Confirmed: automatic eligibility; at least 1200 px wide, more than 300k pixels, 16x9, with max-image-preview:large. Doc updated 2026-03-09.
+- **Gap:** the live posts have no image at all. Add `<img>`, `og:image` and `Article.image` first.
+- **Missed policy:** Discover must follow the policies for Search features:
+  - "Dangerous content ... drug abuse"
+  - "Medical content: ... contradicts or runs contrary to scientific or medical consensus"
+- The Google Books blurb uses "Heal Trauma". Keep health claims out of titles and snippets.
+- **Sources:** google-discover doc (19:08:29Z); websearch/answer/9982767 and /10622781 (19:08:31Z-19:08:45Z).
+
+**goog-21 DROP.**
+- "Publishers are automatically considered" is confirmed.
+- psilowire.com only 308s to mayaallan.com, so no news site exists.
+- The useful Publisher Center piece is Reader Revenue Manager (M2).
+- **Source:** news/publisher-center/answer/9607025 (19:09:18Z).
+
+**goog-22 DROP.**
+- Live: a single result in Search; Discover cards most likely in the US, India and Brazil (doc updated 2026-07-01).
+- A separate AMP build is not justified.
+
+**goog-23 KEEP when an in-person event exists.**
+- Confirmed: "Events must take place in a physical location"; "Virtual experiences that have no real-world component aren't supported"; public booking; Search and Maps. Doc updated 2026-09-08 (19:09:31Z).
+- **Missed route:** a ticketing site already integrated with Google (the doc cites Eventbrite) needs no markup.
+
+**goog-24 KEEP, lead low.**
+- "An 'About Me' page on a blog site" is a valid use (doc updated 2026-09-08).
+- The doc now ties ProfilePage to the Discussions and Forums feature.
+- /about has no ProfilePage.
