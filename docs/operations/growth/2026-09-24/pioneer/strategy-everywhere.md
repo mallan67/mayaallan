@@ -51,3 +51,39 @@ The engineer's rule throughout: every venue gets its own tracked door, every new
 - sameAs lists only profiles Maya has claimed and controls. Any paid placement link is rel="sponsored" (web-spam-redlines).
 - A lead is one of: newsletter opt-in, journal or prompt opt-in, event registration, ARC sign-up, B2B kit or casebook request, purchase. Proposed event names, to be aligned with the parallel measurement workflow (goog-34): generate_lead {lead_type, venue}, event_register, kit_request, casebook_request, vanity_hit {slug}, purchase.
 - Content line: educational and non-clinical. No dosing, no sourcing, no therapy claims. Every tool and scenario page carries a "when to seek help" box (mkt-ws-09).
+
+## 3. Priority (leads per hour of Maya's time, 30-day view)
+
+| Rank | Move | Owner | First lead (estimate) | Why |
+|---|---|---|---|---|
+| 1 | 10 Scenario Circles on event search | Maya + owner account | day 5-10 | a registration is an email; Eventbrite and MAPS bring discovery |
+| 2 | 5 ARC review engine | owner account + small PR | day 3-7 | reader services deliver sign-ups and fix 0 reviews |
+| 3 | 6 Google Play promo-code funnel | owner account + PR | day 5-10 | 5,000 codes per campaign, each behind an email |
+| 4 | 7 Take-home kit for OR/CO centers | outreach + PR | day 7-14 (B2B) | one center is a steady client flow |
+| 5 | 1 Vanity link router | code PR | enabler | makes spoken, printed and partner doors measurable |
+| 6 | 3 Scenario Atlas | content + PR | day 10-21 | matches the live autocomplete family |
+| 7 | 15 Disclosed forum answers | Maya | day 3-14 (small) | fast, low volume |
+| 8 | 8 Training-program casebook | outreach + content | day 10-30 | one adoption reaches every cohort |
+| 9 | 9 Official listings + Colorado comment | outreach | day 14-45 | .gov and NGO referrals compound |
+| 10 | 2 One entity, six engines | PR + owner account | enabler | faster indexing for moves 3, 11, 13 |
+| 11 | 4 Retail search repair + back matter | owner account | day 14-30 | every copy sold becomes a door |
+| 12 | 12 Podcast guest sprint | outreach | day 30-60 | air dates lag |
+| 13 | 13 Oregon Returners data report | content + PR | day 14-30 | citable by press and AI answers |
+| 14 | 11 Scenarios as YouTube + podcast | content | day 14-30 | compounds for months |
+| 15 | 14 Wide, libraries, German | owner account | day 30-60 | reach, slower |
+
+## 4. The 15 moves
+
+### Move 1 - Vanity link router on the two spare domains (one tracked door per venue)
+- Venues: psilocybinintegrationguide.com for anything spoken or printed (podcasts, book back matter, talks); psilowire.com for short QR codes; every offline and partner channel.
+- Steps: (1) Code PR: a small registry in the repo (slug -> destination path + utm_source/utm_medium/utm_campaign) and one route family on www.mayaallan.com, e.g. /pod/<show>, /kit/<center>, /yt/<n>, /book, /listen, /free-copy/<campaign>, that answers 307 to the destination with the UTMs appended; unknown slugs go to the home page with utm_source=vanity-unknown. (2) No domain change is needed: both spare domains already 308 to the same path and query on www.mayaallan.com (22:54:14Z), so psilocybinintegrationguide.com/pod/integration-session works as soon as the route ships. (3) Count each hop server-side (vanity_hit {slug}) so it is measured even when the browser blocks analytics. (4) Send X-Robots-Tag: noindex on the route; never reuse a slug.
+- Owner: code PR. Effort: half a day. First lead: enabler (day 0).
+- Measure: vanity_hit by slug, then generate_lead carrying the utm_source.
+- Evidence: live 308 test (22:54:14Z); per-venue UTM designs in mkt-01, mkt-ws-01, mkt-ws-02; show-notes links in web-pod-showsnotes.
+
+### Move 2 - One entity, six engines (one-time plumbing PR)
+- Venues: Google Search, AI Overviews, AI Mode and Discover (eng-google, goog-27); Bing and Copilot, and DuckDuckGo and Yahoo which run on Bing (eng-bing, ai-copilot, eng-duckduckgo, eng-yahoo); the IndexNow engines Bing, Naver, Seznam.cz, Yandex and Yep (eng-indexnow); Brave and Apple by links only (eng-brave, eng-apple). ChatGPT, Perplexity, Claude and Meta AI crawlers are already allowed by robots.txt (ai-*).
+- Steps: (1) IndexNow key file at the site root, and a POST of changed URLs on every production deploy (up to 10,000 URLs per POST, shared by all participants). (2) Owner account: verify Bing Webmaster Tools, submit the sitemap, open the AI Performance report. (3) Search Console Domain property (TXT token exists): submit the sitemap and switch on inclusion in Search generative AI features, which the Generative AI report and preferred-source badges require (map 02 missing). (4) JSON-LD: merge the 3 unlinked "Maya Allan" records into one Person @id; make /about a ProfilePage and point Article author.url to it (goog-24, web-schema-graph); give Book an isbn per format only after the ISBN defect is fixed (book-isbn-defect), plus workExample for ebook, paperback and the coming audiobook; grow sameAs as each profile is claimed (Goodreads, Open Library OL16288546A, Amazon author page, YouTube). (5) RSS feeds for /blog and /scenarios (0 feeds found, map 03). (6) max-image-preview:large and a 1200x675 hero per post for Discover (eng-google, goog-20). (7) Add both spare domains to Search Console to watch the redirects (goog-01).
+- Owner: code PR + owner account. Effort: 1 to 1.5 days. First lead: indirect; shortens publish-to-index time for moves 3, 11 and 13.
+- Measure: IndexNow 200/202 in deploy logs; Bing AI Performance citations; Search Console Generative AI report (goog-02).
+- Evidence: maps 03 and 06 numbers (sameAs 1, Book schema without isbn, RSS 0, 3 unlinked records); eng-bing; eng-indexnow; goog-24; goog-02.
