@@ -45,3 +45,21 @@ Method: every claim below was re-read **live on 2026-09-24 between 18:58Z and 19
 | 22 | CA AG: GPC must be honoured; >$25M threshold. WA MHMDA: no size threshold, inferred health data, private right of action | **Yes, with nuance** | oag.ca.gov/privacy/ccpa (updated 2026-08-28); atg.wa.gov MHMDA page ~19:08Z | The MHMDA page gives small businesses a **later start date** (2024-06-30), not an exemption. Private action exists because a violation is a per se violation of the WA Consumer Protection Act. |
 
 ---
+
+## 3. Recommendation verdicts
+
+### ana-1 — Merge PR #57, then enable WA → **REJECT as written; amend #57 first**
+
+Why:
+- **Consent UI contradicts behaviour.** At head fa5d59b `ConsentBanner.tsx` still renders "Reject analytics" and its header comment still says "rejected → analytics + attribution stay off", but `CookielessAnalytics` renders `<Analytics />` unconditionally. A button labelled Reject analytics that does not stop analytics is a misleading consent UI.
+- **The legal claim is wrong for EU visitors.** #57’s privacy text says the cookieless count "is not the kind of storage access that requires consent". EDPB Guidelines 2/2023 v2 (adopted 2024-10-16) ¶33: "JavaScript code, where the accessing entity instructs the browser of the user to send asynchronous requests with the targeted information. Such access clearly falls within the scope of Article 5(3) ePD". The site serves EU readers (/de, /fr, /es, /pt all 200 at 19:10:21Z; Waterstones UK and Bokus SE on the book page). Audience-measurement exemptions are national (the CNIL sheet the lens cites is French); the page should not assert a blanket no-consent rule.
+- **Bearer tokens would leak into analytics.** `src/app/download/[token]/page.tsx` puts the buyer’s download token in the URL path; the repo has no `beforeSend` (code search: 0). With WA on, live download links for paid files land in the WA dashboard. First-party data has the same flaw: `MarketingAttributionClient` stores `url.pathname + url.search` as `landing_page` (tokens, and the PayPal `orderId` on /checkout/success), and #57 adds a "Landing pages" admin panel that would display them.
+
+Correction (~1 hour, same PR):
+1. `CookielessAnalytics` returns `null` when consent is `"rejected"` or `navigator.globalPrivacyControl === true`.
+2. One `sanitizePath()` in `src/lib`: `/download/<anything>` → `/download/[token]`; drop query strings except `utm_*`. Use it in `<Analytics beforeSend>` and for `landing_page` in `MarketingAttributionClient`.
+3. Privacy text: delete the "not the kind of storage access that requires consent" sentence; state that Reject and GPC stop the count; state a retention period (M7); keep naming Vercel Web Analytics.
+4. Tests: Reject/GPC unmounts the counter; sanitizer handles a download token and an `orderId`.
+5. Then Maya merges → Vercel → project → Analytics → **Enable** → live check: `count_pageviews` returns a number, and a `/download/...` visit never appears raw in WA.
+
+Cost line: the relevant plan is almost certainly Pro (M1): $0.03 per 1k events (= $3 per 100k), drawn from the $20 monthly usage credit (vercel.com/pricing, read ~19:05Z).
