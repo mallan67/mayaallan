@@ -1,10 +1,10 @@
 # Adversarial verification: appears-index-presence (2026-09-24)
 
-> Status: this file was assembled in 4 sequential commits because of the shell's command-length limit. The final commit is the complete verdict.
+> Status: this file was assembled in 5 sequential commits because of the shell's command-length limit. The final commit is the complete verdict.
 
 - **Lens verified:** appears-index-presence. Evidence file `docs/operations/evidence/2026-09-24/appears-index-presence.md` at commit `23f8fd6a3b8b03b46f887c731fd5ef36d0c9d4f8` (confirmed with `gh api repos/mallan67/mayaallan/commits/23f8fd6…` at 2026-09-24T18:42:14Z).
 - **Branch head read at start:** `work/site-visibility` = `22613ee45358390cc08c43c872d02bc4c0e37dbb` (gh api, 2026-09-24T18:42:14Z).
-- **UTC window of live checks:** 2026-09-24T18:42:14Z to __END__.
+- **UTC window of live checks:** 2026-09-24T18:42:14Z to 2026-09-24T19:02:25Z.
 - **Sources used (all live, read-only):** curl GET to www.mayaallan.com and its alternate hosts (redirects not followed); Bing HTML via curl and Bing RSS (`format=rss`); WebFetch (Bing, Google, Brave, DuckDuckGo); curl to Google, Brave, DuckDuckGo html and lite, Mojeek, Startpage, Yahoo and Ecosia; the Common Crawl index API; the Wayback CDX and availability APIs; public book and profile pages about Maya Allan (Amazon, Google Books, Barnes & Noble, Instagram, Goodreads), GET only; Vercel MCP `get_firewall_config` (project prj_CkwsvLxnWkKGJlyAA93lRVxAOQ9Y, team team_kZQh5NYLyrOKqffK0r9EXf4E); `gh api` for repo metadata, issues, PR metadata, workflows, runs and search/issues.
 - **Not used:** repository source files, any local file or scratch directory, Playwright, logins, forms, `/api/cron/*`, `/api/admin/*`, `/api/indexnow/*`.
 - **WebSearch was unavailable for this pass.** The first call (about 18:45:20Z) returned "this session has used its web search budget (200 of 200 WebSearch calls)". So no claim that rests only on the WebSearch engine could be re-run. Those claims are marked uncertain or scoped to Bing.
@@ -61,3 +61,23 @@
 | No wrong host appears in any engine | yes (Bing only) | Bing RSS `site:psilowire.com`, `site:psilocybinintegrationguide.com`, `site:mayaallan.vercel.app` and `psilowire` return 0 alternate-host URLs (18:52:25Z–18:52:26Z). The WebSearch half could not be re-run. |
 | Preview and branch hosts return 302 to Vercel SSO with X-Robots-Tag noindex | yes | mayaallan-mallan.vercel.app and mayaallan-git-main-mallan.vercel.app (18:52:11Z–18:52:15Z). |
 | /tools returns 308 to /practices; /integration returns 308 to /integration-reflection | yes | 18:52:11Z–18:52:15Z. |
+
+## 5. New live observations (not in the lens findings)
+
+| # | Observation | Source (UTC) | Severity / owner |
+|---|---|---|---|
+| N1 | Page metadata is inconsistent. `/books`: og:title and twitter:title are "Maya Allan", and og:description and twitter:description are the homepage text. `/blog`: twitter:title is "Maya Allan", twitter:description is the homepage text, and og:description reads "Research-backed writing…". `/contact`: og:description differs from the meta description. Bing's snippets come from these tags (see idx-04). | GET /books, /blog, /contact at 18:46:59Z | low / code-pr |
+| N2 | On `/blog/psilocybin-integration-research`, a PR #45 indexing-test page, `dateModified` is 2026-09-05 but the sitemap lastmod is 2026-04-19. Neither test page is in Bing's `site:` list 19 days after the PR merged. | GET 18:54:27Z; sitemap 18:42:25Z; gh api pulls/45 18:54:12Z | low / code-pr |
+| N3 | The project has no custom Vercel firewall config: `get_firewall_config(active)` returned 404 "Seawall Config not found". Requests with crawler UAs get 200. This is a UA-spoof test only; blocking by real crawler IP can only be seen in GSC crawl stats or Bing WMT. | Vercel MCP between 18:50:47Z and 18:51:15Z | info |
+| N4 | The Person and Organization JSON-LD `sameAs` has only instagram.com/maya.allan66. | GET / and /about at 18:46:39Z | low / content (part of idx-07) |
+| N5 | The live GitHub workflows (two for Chapter 1 audio, Deploy notify, Health check, Quality gates) include no IndexNow or sitemap-ping job, and a repo search of issues and PRs for "bing webmaster" returns nothing. | gh api actions/workflows and search/issues at 18:53:53Z–18:54:01Z | info |
+| N6 | PR #57 (visitor counting) is still open and unmerged. | gh api pulls/57 at 18:54:12Z | outside this lens |
+
+## 6. Unverified / needs outside-source check
+
+- Every claim that rests only on the WebSearch engine (parts of idx-01, idx-03, idx-07 and idx-08, and one works item): the WebSearch budget was exhausted at about 18:45:20Z.
+- Google index coverage, queries and clicks: GSC (owner account).
+- Whether GSC or Bing WMT is verified by DNS TXT: a DNS lookup or the owner's accounts.
+- The full backlink list: Bing WMT Backlinks or GSC Links.
+- Whether the real-estate broker profiles named "Maya Allan" are the same person as the author: the owner.
+- Bing coverage beyond the `site:` list: Bing WMT Site Explorer or URL Inspection (see M3).
