@@ -40,3 +40,38 @@
 | rank-W6 | yes | robots.txt 18:46:35Z: 33 user-agent groups (GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot, Claude-Web, anthropic-ai, PerplexityBot, Googlebot, Google-Extended and others), each with `Allow: /` and `Disallow: /admin/`, `/api/`, `/download/`. sitemap.xml: 38 `<loc>` | Identical |
 | rank-W7 | yes (Bing part) | Bing 18:43:20Z-18:43:39Z: Amazon B0G7JWDJYQ, Kindle B0G765BZDL, amazon.ca, Google Books, Google Play, Barnes & Noble, ThriftBooks, barwebooks | The B0G91GZMLT listing and Walmart were WS-only and not re-run |
 | rank-W8 | yes | Bing 18:43:19Z "Maya Allan author": #3 "Maya Allan Author - Facebook" (facebook.com/profile.php/?id=61572138340473) | The owner should confirm it is hers |
+
+## 3. Extra live observations (not in the original findings)
+
+| observation | evidence (UTC) | relevance |
+|---|---|---|
+| The book page already carries Book JSON-LD | `@type` list on /books/psilocybin-integration-guide: WebSite, Person, Organization, ContactPoint, Book, PropertyValue, Audience, Thing, BreadcrumbList, ListItem (18:46:47Z) | Makes part of the rank-03 solution moot |
+| The home and book pages already link to the topic pages | / links to 4 of the 6 topic pages and to the book page; the book page links to all 6 (18:46:47Z) | Makes part of the rank-01 solution moot |
+| The Person `sameAs` lists only Instagram | home JSON-LD `sameAs`: ["https://www.instagram.com/maya.allan66/"] (18:49:34Z) | Cheap entity fix for rank-05 |
+| The audit evidence is public | Anonymous GET of this branch's evidence file: github.com 200 and raw.githubusercontent.com 200 (18:49:36Z-18:49:37Z) | Widens the rank-04 exposure; owner decision |
+| Bing decoys are frequent and random | Decoys at 18:44:16Z (T6 V1), 18:44:19Z and 18:44:31Z (T9, T10), 18:44:49Z-18:44:50Z (quoted titles), 18:46:00Z-18:46:01Z (GitHub probes) and 18:47:04Z-18:47:20Z (`url:` and name+topic probes) | A single Bing observation of absence needs a retry. The Bing index status of individual pages cannot be observed this way |
+
+## 4. Unverified in this pass
+
+| item | why | what would verify it |
+|---|---|---|
+| All claims that rest only on WS: the core of rank-02, the rank-03 headline, rank-04 indexing and ranking, the rank-05 WS positions, rank-W3, the WS half of rank-01, and T9/T10 absence | The WebSearch budget of 200/200 was exhausted (18:44:33Z-18:45:11Z), and every other non-Bing engine was blocked | WebSearch in a fresh session, or a manual signed-out search by the owner |
+| Google positions and indexing | Google returns a JavaScript-required page to curl (18:45:24Z) | needs outside-source check: Google Search Console (owner-account) |
+| Bing index status of each topic page | The `url:`, quoted-title and name+topic queries all returned decoys (18:44:49Z-18:47:20Z) | Bing Webmaster Tools URL Inspection (owner-account) |
+| Bing positions 8-20 | `first=11` and `count=30` were ignored (18:44:48Z) | Bing Webmaster Tools or a manual browser session |
+| Whether Amazon Author Central allows a clickable website link | Outside this lens's allowed sources | needs outside-source check |
+
+## 5. Summary
+
+- **Confirmed:** rank-01 (Bing part), rank-05 (Bing part), rank-06, rank-07, rank-08, rank-09 (an observation, not a defect), rank-10.
+- **Uncertain:** rank-02; rank-03 (Bing half confirmed); rank-04 (exposure confirmed, ranking not reproduced).
+- **Refuted:** none.
+- **Severity changes:** rank-02 high -> medium (provisional); rank-03 medium -> low; rank-05 medium -> low; rank-10 medium -> high.
+- **Solution corrections:**
+  - rank-01: the home and book pages already link to the topic pages.
+  - rank-03: the book page already has Book JSON-LD.
+  - rank-04: the audit evidence itself is public.
+  - rank-05: add the confirmed author profiles to `sameAs`.
+  - rank-07: Goodreads shelving is a weak lever.
+  - rank-09: psilowire.com is already a 308 alias.
+- **Handoff:** the next run should re-run the WS rows in a session with WebSearch budget left. The owner still needs to verify GSC and Bing WMT (a Domain property) and read the coverage and Performance reports; that is the only way to close rank-02, rank-10 and the Google half of rank-01.
