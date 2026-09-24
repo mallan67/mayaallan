@@ -47,3 +47,31 @@ Not read in this run (this session's web-search budget was used up): the Oregon 
 | Support and harm-reduction nonprofits | Fireside (40,000 conversations; about 1,100 calls a month), Zendo (10,000+ trained peers), Unlimited Sciences info line | market + niche maps, F7, F10 | mkt-07, niche-npo-fireside |
 | Integration podcasts, active | 7 of 9 | F13 | mkt-05, niche-pod-integration-small |
 | Clinical wave | New Mexico program by 2026-12-31; COMP360 launch H1 2027 if approved; 8,000+ interventional-psychiatry centers | market + niche maps | mkt-03, mkt-04, mkt-ws-05, mkt-ws-06 |
+
+## 3. The moves
+
+Owners: CODE = pull request on mallan67/mayaallan; OWNER = Maya's own accounts; CONTENT = writing or design; OUTREACH = Maya's emails and calls. Day 0 = 2026-09-24. "First lead" is the earliest day a lead (section intro definition) could plausibly arrive; targets are planning assumptions, not evidence.
+
+### M1. Partner rails: /partners, per-partner kit pages, co-branded journal, short QR domain (CODE; foundation for every other move)
+- **Why:** there is no B2B door and no capture today (F14). The journal PDF is already generated server-side (F14), so co-branding is a parameter, not a new system. The owned domains keep path and query on redirect (F15). [mkt-ws-01], [goog-34] (GA4/GTM belongs to the parallel measurement workflow: reuse it, do not duplicate it).
+- **Steps:**
+  1. /partners: who it is for (centers, facilitators, training programs, retreats, podcasts, nonprofits), what is free (the kit), what is paid (bulk licence, casebook), and a 6-field form: organisation, role, state or country, clients per month (range), interest (free kit / bulk / casebook / podcast / circle), email.
+  2. /p/[slug] pages built from a JSON registry in the repo (slug, display name, type, state, utm_source, optional logo, the partner's own integration contact). Page title: "Back home after your session with <Partner>". Content: journal (4 versions), scenario index, glossary, support lines (M7), the partner's contact, and one optional opt-in: "7 short integration letters over 30 days". Partner pages are noindex so they never compete with the main pages.
+  3. The journal generator accepts ?partner=<slug>: the cover prints "Provided by <Partner>" and every URL inside the PDF carries utm_source=<slug>&utm_medium=pdf&utm_campaign=take-home-kit.
+  4. /k/[code] on the site: 302 to /p/<slug> with utm_medium=print-qr, and a server-side kit_scan event. Printed cards then show psilocybinintegrationguide.com/k/<code> (F15 proves the domain passes the path through).
+  5. Kit print files (A6 QR card + 1-page PDF) generated from the same registry.
+- **Effort:** 2-3 developer days + 1 content day. **First lead:** day 5-7 (form live while M2/M6 outreach starts).
+- **Measure:** partner_form_submit {type, state, interest}; partner_page_view {slug}; kit_scan {slug}; journal_pdf_generate {slug, version}; email_optin {slug}; ebook_checkout_start and purchase {utm_source}.
+
+### M2. Oregon "back home" kit, center by center (OUTREACH + CONTENT)
+- **Why:** F4 (integration must be offered, need not be taken, need not be at the center) + F5 (545 of 1,220 Q2 clients live outside Oregon); 59% of Q2 clients are 45+ [market map], so print and a clear page beat an app. [mkt-01], [mkt-ws-01], [niche-b2b-or-centers], [mkt-14].
+- **Venues:** 22 operating service centers and 383 facilitators (OPS Licensee Directory, F6); the 18 Colorado-licensed facilitators with Oregon home addresses (F1, reachable by name from the public API).
+- **Steps:**
+  1. Build the list by hand from the interactive directory (no export found, F6): center, city, website, public email. Target all 22 centers + the first 60 facilitators with a public website.
+  2. First touch, one short email, no attachment: "A free take-home integration kit for your out-of-state clients: 50 QR cards with your name, a co-branded 7-day journal and a page at psilocybinintegrationguide.com/k/<code>. Nothing is sold to your clients; your integration-session contact stays on the page." One follow-up on day 5.
+  3. For each yes: registry entry (M1), 50 printed cards by mail (print and postage cost UNVERIFIED), the PDF for their aftercare email.
+  4. Ask each yes for one quotable sentence (the peer endorsement that M3 needs).
+- **Guardrail:** no commission, referral fee or revenue share to licensed facilitators or centers while conduct rules are UNVERIFIED. The kit is free; the only paid product for centers is the M5 wholesale pack.
+- **Owner:** OUTREACH; CODE for registry entries. **Effort:** 2 days to list and send, then 20 minutes per yes.
+- **First lead:** day 8-12 (first center reply); first client opt-in about day 15-25.
+- **Measure:** utm_source=or-svc-<slug> or or-fac-<slug>; utm_medium=print-qr or email; utm_campaign=take-home-kit; kit_scan, journal_pdf_generate {slug}, email_optin {slug}. Day-30 target: 30 contacted, 5 yes, 3 live pages.
