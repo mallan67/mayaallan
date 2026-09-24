@@ -98,3 +98,36 @@ The lens's own conclusion is that off-site mentions matter and on-site markup ba
   - Ahrefs, 2026-03-02: 37.9% of AIO citations are in the top 10 (down from about 76% in July 2025). 31.0% are beyond the top 100. Of those, 18.2% are YouTube.
 - **Rehash:** these steps are PR #45's own post-merge plan (merged 2026-09-05): verify indexability, request indexing once, monitor without resubmitting. Nothing in the live metadata records that the readout was done.
 - **Step:** URL Inspection on the book page, `/faq`, `/glossary`, `/blog/psilocybin-integration-research` and `/scenarios/ego-dissolution`. Record status and date in the PR #58 handoff. **This result gates ai-08.**
+
+### ai-04: YouTube. Keep, narrowed to guest spots
+- **Evidence read:**
+  - Ahrefs, 2025-12-12 (75k brands): YouTube mentions correlate 0.737 with ChatGPT visibility, 0.740 with AI Mode and 0.712 with AIO. A mention is counted when the name appears in a video title, transcript or description, **weighted by views**. Ahrefs itself says "correlation isn't causation" and notes the barriers emerging brands face.
+  - SE Ranking, 2026-01-14: the lens left out that this study used **German-language queries from Berlin**, and that **24 of the 25 most-cited videos came from medical channels** (hospitals, clinics, health organizations).
+- **Why narrow it:** a new channel with no views adds almost nothing to a view-weighted metric, and a non-clinical author does not match the profile of the cited health channels.
+- **Corrected steps:**
+  1. Pitch about 10 integration-focused podcasts that publish full episodes on YouTube. Ask the host to put "Maya Allan" and the book title in the video title or description.
+  2. Clip the episodes for Shorts only after a guest spot airs.
+  3. Stay within YouTube's educational/documentary exception (policy read 18:51:37Z): no instructions on use, making or sourcing, and nothing about sales.
+- **Effort:** M.
+
+### ai-05: Reddit. Keep
+- **Evidence read:** the sources conflict.
+  - Profound, 2025-06-05 (updated Aug 2025; data Aug 2024 to Jun 2025; vendor): Reddit is 6.6% of Perplexity citations and 2.2% of AIO citations.
+  - Semrush, 2025-11-10 (vendor; 230k prompts, Jul to Oct 2025): ChatGPT's Reddit share went from "close to 60%" to "around 10%" by mid-September.
+  - Ahrefs, 2026-03-13: Reddit is ChatGPT's #1 cited domain (847,338 mentions).
+  - Vercel, 2025-06-10: ChatGPT brings about 10% of Vercel signups. That result is measured. The Reddit and community part is advice.
+- **Adjustments:**
+  - The main value is people reading her answers directly. Whether AI engines cite individual comments is unproven.
+  - Owner checks each subreddit's rules, account-age and karma requirements before posting.
+  - No links for the first weeks.
+  - Never dosing or sourcing.
+- **Effort:** M, ongoing.
+
+### ai-06: Earned media. Keep, as the primary tactic
+- **Evidence read:**
+  - Chen et al., arXiv 2509.08919 (2025-09-10): a preprint, not peer reviewed. It reports a "systematic and overwhelming bias towards Earned media".
+  - Lily Ray, 2026-02-03: 7 SaaS/B2B sites, Sistrix data, correlation confounded by other tactics.
+  - Lily Ray, 2026-06-17: 100 B2B software queries; the brand was left out of the recommendation 69% of the time its own listicle was cited.
+  - Allsopp, via Ahrefs 2026-03-13: 43.83% of citations for software, agency and product queries.
+  - None of these studies covers books or health. The direction agrees with the Ahrefs mention correlations.
+- **Addition (absorbs ai-07):** send review copies to list authors, reviewers and newsletter writers, and invite an honest Goodreads or Amazon rating with no incentive. Amazon's rules on reviews from free copies are UNVERIFIED this session, so the owner checks them before asking for Amazon reviews. The target list comes from the ai-12 panel's cited domains.
