@@ -213,3 +213,52 @@
   - General Nonfiction: 1,070,000+, $621.
 - Requirements (WebFetch ~22:33Z): "Free or discounted by at least 50%"; no better price "in the last 30 days"; nonfiction "100 pages"; available on Amazon, Kobo, B&N, Google Play or Apple Books; the same book no more than once every 6 months; *"does not guarantee that it will be chosen"*.
 - curl to other BookBub partner pages returns 403, so author-profile link mechanics are UNVERIFIED.
+
+**book-arc-engine**
+- BookSirens (22:34:05Z): "$10 per ARC + $2 per Reader", "$100 / year", *"You are NOT paying readers for reviews"*.
+- Hidden Gems (22:34:06Z):
+  - "$20… deposit" covers 1-10 readers, then "$3 each up to 140", "MAX option is a flat $400", "50 reader minimum".
+  - Prices "updated as of Sept 20, 2018".
+  - Genres include Self-Help, General Non-Fiction and Faith/Spirituality.
+  - *"our schedule fills up months in advance"*
+- NetGalley (Zendesk API, 22:34:19Z): article updated 2026-09-22: *"A per-title listing fee, available for self-published authors"*, "or through the IBPA member program".
+- The "individual authors" article (updated 2026-07-07) says *"Reach out to us to learn more about terms and pricing"*, so the price is UNVERIFIED. The IBPA page returns 403.
+- Legal and platform rules: see correction 7.
+
+**book-bookfunnel-storyorigin**
+- BookFunnel (22:34:46Z):
+  - "$30/year": 1 pen name, 500 downloads/month, group promos, author swaps
+  - "$200/year": 5,000 downloads
+  - "$300/year": unlimited
+  - Secure ARC delivery is listed with the higher plans.
+- StoryOrigin (22:34:47Z): Basic "Free for all accounts"; Standard "$10 / month or $100 / year" with group promos, newsletter swaps and "Collect reader email addresses".
+
+**book-paid-reviews**
+- Kirkus (22:34:58Z): Traditional "STARTING AT $450", "7-9 WEEKS", "Expedited option $599". *"If it is a negative review, you can request that it never see the light of day."*
+- Readers' Favorite (22:34:59Z): "Get a Free Review"; *"Only about 65 percent of free review requests are selected for review within 3 months"*; "Express Reviews start at just $59".
+
+**book-psychedelic-media**
+- Chacruna search (22:35:14Z) shows Book Launch posts dated June 7, 2022 and May 20, 2022, plus "20 Best Books About Peyote and Mescaline" (April 6, 2021) and "The 40 Best Books About Shamanism and Plant Medicines" (Aug 14, 2019).
+- /submissions/, /submission-guidelines/ and /write-for-us/ all return 404 (22:35:25-22:35:27Z).
+- MAPS (22:35:14Z): "The MAPS Integration Workbook… Get Your Free Guide"; *"Just enter your email in order to download our Integration Guide"*; Store has a "Bookshop" section.
+
+**book-companion-journal** — see correction 8. Journal rules come from the KDP Low-Content Books page (GGE5T76TWKA85DJM), which was not read (UNVERIFIED).
+
+**book-outbound-links**
+- The mayaallan.com book page (22:30:54Z) links to:
+  - B&N `;jsessionid=E0C61A…`
+  - Bookshop `source=IndieBound&ref=https%3A%2F%2Fwww.google.com%2F`
+  - bokus `srsltid=…`
+  - AbeBooks `cm_mmc=aff-_-ir-_-353196-_-77798…afn_sr=impact`
+- The only Amazon URL is `/dp/B0G7JWDJYQ`, the **hardcover** (22:31:07Z). Canonical tag present.
+- Bookshop affiliate URLs tried (/pages/affiliates, /affiliates, /info/affiliate-program) return 404, so the commission % is UNVERIFIED.
+
+**book-kobo-bn-librarything-worldcat**
+- 22:35:50-22:36:14Z:
+  - Kobo Writing Life: 403.
+  - Kobo search for ...839: 200, "0 results" (expected for a print ISBN).
+  - Kobo search for ...891: 403.
+  - press.barnesandnoble.com: 200, but a 2 KB JS shell.
+  - LibraryThing: 403.
+  - search.worldcat.org: 200, but no record content (JS).
+  - loc.gov PCN: 403.
