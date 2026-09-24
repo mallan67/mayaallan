@@ -200,3 +200,29 @@ Conversion on the site, AI-citation studies and measurement dashboards belong to
 | S24 | https://draft2digital.com/partners/ ; /content-guidelines/ ; /faq/ | n/a | 18:32:44Z-18:33:03Z |
 | S25 | https://books2read.com/ | n/a | ~18:32Z |
 | S26 | https://publishdrive.com/pricing | n/a | ~18:33Z |
+| S27 | https://www.streetlib.com/ | n/a | 18:33:49Z |
+| S28 | https://indieauthorproject.com/ | n/a | ~18:34Z |
+| S29 | https://www.goodreads.com/author/program ; https://www.goodreads.com/giveaway/about | n/a | 18:34:49Z-18:35:09Z |
+| S30 | https://www.bookbub.com/partners/pricing | n/a | 18:36:09Z |
+| S31 | https://bookfunnel.com/pricing/ ; https://storyoriginapp.com/pricing ; https://booksirens.com/pricing | n/a | 18:36:19Z |
+| S32 | https://www.hiddengemsbooks.com/arc-program/ ; https://www.hiddengemsbooks.com/arc-faq/ | prices "updated as of Sept 20, 2018" | 18:36:47Z |
+| S33 | https://netgalley.zendesk.com/hc/en-us/articles/115003981574 ; /115003952873 ; /115003991254 | updated 2026-09-22; 2026-07-07; 2026-01-23 | 18:37:08Z |
+| S34 | https://www.myidentifiers.com/get-your-isbn-now ; https://www.myidentifiers.com/identify-protect-your-name/get-your-isni-today | n/a | 18:37:20Z; 18:48:41Z |
+| S35 | https://www.bisg.org/complete-bisac-subject-headings-list ; /mind-body-spirit ; /self-help ; /psychology ; /health-and-fitness | 2025 Edition | 18:37:35Z-18:38:46Z |
+| S36 | https://www.loc.gov/programs/preassigned-control-number/about-this-program/ (403) | n/a | 18:39:01Z |
+| S37 | https://www.worldcat.org/isbn/9798994148839 (JS page; search 429) | n/a | 18:39:09Z |
+| S38 | https://www.librarything.com/isbn/9798994148839 (403) | n/a | 18:39:21Z |
+| S39 | https://app.thestorygraph.com/browse?search_term=9798994148839 (and title search) | n/a | 18:39:41Z-18:39:48Z |
+| S40 | https://www.reddit.com/r/PsychedelicTherapy/about.json and 9 other subs (403) | n/a | 18:39:58Z-18:40:07Z |
+| S41 | https://www.kirkusreviews.com/indie-reviews/ ; https://readersfavorite.com/book-reviews.htm | n/a | 18:40:20Z |
+| S42 | https://chacruna.net/?s=book+review ; https://maps.org/integration-station/ ; https://psychedelicstoday.com/?s=book | n/a | 18:40:34Z-18:41:52Z |
+| S43 | https://developers.google.com/search/docs/appearance/structured-data/book | n/a | 18:42:19Z |
+| S44 | https://www.amazon.com/s?k=psilocybin+integration&i=stripbooks ; k=psychedelic+integration ; k=psilocybin+book ; k=mushroom+trip+guide ; k=ego+death | n/a | 18:43:27Z-18:44:08Z |
+| S45 | https://www.goodreads.com/search?q=psychedelic&search_type=lists ; q=psilocybin ; q=psychedelic+integration ; q=plant+medicine | n/a | 18:44:24Z-18:44:34Z |
+| S46 | https://www.wikidata.org/w/api.php (wbsearchentities) ; https://query.wikidata.org/sparql (P212) ; Wikidata:Notability | Notability rev. 2026-09-12 | 18:44:43Z-18:44:50Z |
+| S47 | https://kdp.amazon.com/en_US/help/topic/G8BYTM8CVK74676V ; /G201834170 (ISBN rules) | n/a | 18:45:47Z |
+| S48 | https://authors.apple.com/ | n/a | ~18:42Z |
+| S49 | https://trends.google.com/trends/api/explore (429) | n/a | 18:43:11Z |
+| S50 | https://www.googleapis.com/books/v1/volumes?q=isbn:9798994148839 (429, daily quota 0) | n/a | 18:25:03Z |
+| S51 | https://openlibrary.org/authors/OL539266A.json (example of the `links` and `remote_ids` fields) | n/a | 18:47:20Z |
+| S52 | https://advertising.amazon.com/help/G5RLASA28TP9TFXZ (book ads policy; JS-only) | n/a | 18:28:42Z |
