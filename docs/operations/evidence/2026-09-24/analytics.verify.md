@@ -26,3 +26,32 @@
 | ana-10 | confirmed (window understated) | info | **info** | 75, then 2,107, then 7,386+ log lines. Pollution continued through the verifier runs, so the polluted window ends about 2026-09-25T19:00Z or later, not 18:40Z. |
 
 No finding was refuted. Five severities were lowered: ana-02, ana-03, ana-04, ana-06 and ana-07.
+
+## Per-finding detail
+
+### ana-01: Web Analytics switched off (CONFIRMED, critical)
+| check | source / tool call | UTC read | result |
+|---|---|---|---|
+| page views, 90 days | count_pageviews since 2026-06-26T00:00Z until 2026-09-24T18:46Z | ~18:46:20Z | 400 `web_analytics_not_enabled` |
+| custom events, 1 month | count_events since 2026-08-24 until 18:46Z | ~18:46:20Z | 400 `web_analytics_not_enabled` |
+| daily page views | aggregate_pageviews by day, 2026-08-24 to 18:47Z | ~18:46:40Z | 400 `web_analytics_not_enabled` |
+| scope sanity | get_project with the same ids | ~18:46:20Z | 200 OK, so the error is not a scope or permission artefact |
+| independent statement | PR #57 body (gh api pulls/57) | 18:54:13Z | "Vercel Web Analytics is disabled at the project level" |
+
+- **Refutation attempts:** I tried three tools and different date ranges; the error code was the same explicit one every time.
+- **Solution check:** The fix is right and needed: an owner dashboard toggle, with no code or CSP change (see the works checks). Two limits:
+  1. Counting starts only when the switch is turned on.
+  2. Until PR #57 is merged, only visitors who click Accept are counted.
+- **How to check it worked:** count_pageviews returning `0` or any number (not 400) proves the switch is on.
+
+### ana-02: Analytics loads only after "Accept all" (CONFIRMED, severity lowered to high)
+| check | source | UTC read | result |
+|---|---|---|---|
+| gate still live | GET /_next/static/chunks/312c5210c9c35dc5.js (22,515 B); the home page still references it | 18:46:47Z–18:46:54Z | `function P(){return"accepted"!==(0,S.useConsent)()?null:(0,t.jsx)(f,{})}` and `function k(){…(E)}`, exported as GatedAnalytics and GatedMarketing |
+| what the gate hides | the same chunk, module 10330 | 18:47:09Z | `f` = Suspense wrapper around the @vercel/analytics 2.0.1 component (script `/_vercel/insights/script.js` or `9de18cd67c0a6252/script.js`). `E` sets `ma_visitor_id` (2 years) and `ma_session_id` (30 minutes), then POSTs /api/marketing/visitor |
+| banner scope | the same chunk, module 14873 | 18:47:00Z | Consent is stored in localStorage `mayaallan_consent_v1`. The banner shows whenever the value is null. There is no region check, so everyone worldwide is asked |
+| no visitor POST in baseline | get_runtime_logs 2026-09-23T18:00Z to 09-24T17:30Z: `/api/` grouped by path, and `marketing` grouped by status | ~18:50Z, ~18:52Z | only `/api/health` 6; `marketing` returned 0 rows |
+| positive control | the same queries for 18:10Z to 18:40Z | ~18:51Z–18:52Z | /api/marketing/visitor 6 and /api/marketing/event 2 (status 200×4, 405×4), so the query method works |
+
+- **Why high and not critical:** While ana-01 is off, 0 visitors are counted with or without the gate. Once ana-01 is on, the gate means only visitors who accept are counted; it undercounts rather than zeroing. The claim that "most visitors never" accept is not measurable here, because the acceptance rate is unknown.
+- **Solution check:** PR #57 (live description) replaces GatedAnalytics with an unconditional cookieless `<Analytics/>` and keeps GatedMarketing. That fixes page-view counting only together with ana-01 and a production deploy built from the merge commit. Web Analytics also records referrer and UTM for every counted view, so the "where from" question is covered for everyone. The first-party first-touch record stays consent-only. I could not test the fix on the preview, because it is SSO-protected.
