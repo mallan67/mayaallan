@@ -5,7 +5,7 @@
 > scratch files, old handoffs or memory; anything not re-read live is marked **UNVERIFIED**; the
 > **Not done** list is always current.
 
-**Last updated:** 2026-09-24T18:31:00Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
+**Last updated:** 2026-09-24T18:36:27Z · **main at:** `ed7461a07e499694eba25ada437817c35983bd87`
 
 ## Owner goals (2026-09-24)
 1. **Leads.** One month in, zero leads — the only measure of success is leads (newsletter signups, inquiries, book purchases, event registrations, tool users who leave an email).
@@ -13,7 +13,7 @@
 3. **Every live failure** reported with a concrete solution; an in-depth report.
 4. **No dead information, no rehash.** What was done before did not produce leads; use what is new (2025-2026) and what top engineers/developers actually do, with evidence of results.
 5. Everything saved directly to git, with this continuous handoff. Nothing read from or written to local/scratch files.
-6. **Audiobook** organized so it can be properly set up, distributed and sold.
+6. **Audiobook** organized so it can be properly set up, distributed and sold. — **PAUSED by owner 2026-09-24T18:36:27Z: audiobook not finished; other work first.**
 7. **See every visitor and every action**; what works, what tracks, what fails — and an **always-on automatic system** that re-checks, updates and reports results when something fails. **One living system, not dead dashboards across endless sites.**
 8. Every agent works as a **senior engineer/developer with market understanding**; the site must be clean and top-notch.
 
@@ -31,14 +31,15 @@
 UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots index, follow`, canonical `https://www.mayaallan.com`, and **no analytics script** (curl at 2026-09-24T17:48Z — that capture passed through a local scratch file, so it is being re-read git-direct).
 
 ## In progress
-- **Audiobook + always-on ops** — workflow `wf_a255d729-1d6` (started 2026-09-24T18:31:00Z): audiobook current state (live GitHub branches/PRs/Actions), market & distribution 2025-2026, specs + automated QA pipeline, selling it on-site → **audiobook launch plan** (`docs/operations/audiobook/2026-09-24/`); every-visitor/every-action analytics + always-on self-checking "site doctor" with auto-issues, alerts, weekly digest and an auto-fix routine (PRs only) → **always-on ops blueprint** (`docs/operations/monitoring/2026-09-24/`).
+- **Always-on ops + analytics** — workflow `wf_a255d729-1d6` (resumed 2026-09-24T18:36:27Z without audiobook lenses): every-visitor/every-action analytics + always-on self-checking "site doctor" with auto-issues, alerts, weekly digest and an auto-fix routine (PRs only) → **always-on ops blueprint** (`docs/operations/monitoring/2026-09-24/`).
+- Audiobook lenses — **paused** by owner (not finished). Files already committed before the pause: none.
 - **Pioneer playbook** — workflow `wf_f2bd1f48-544` (started 2026-09-24T18:24:29Z): market map with live numbers; the whole Google network; all web + vertical search engines + AI answer engines; book ecosystem (ebook + audiobook); psychedelic-niche venues; open-web entity/profile/link venues with a tag/link (UTM + sameAs) matrix → 5 pioneer strategies (category creator, ecosystem/B2B, search-everywhere, data/PR, community) → 3 judges → **playbook + idea bank + first 14 days**. Output commits to `docs/operations/growth/2026-09-24/pioneer/`.
 - **Live site audit** — workflow `wf_c925e59f-494` (started ~2026-09-24T18:17Z): 9 live checks (crawl, real browser + console, crawler access, errors/ops/SEO-cron, visitors/clicks, index presence, rankings, off-site footprint, crawl/archive datasets). Each check and each adversarial re-check commits to `docs/operations/evidence/2026-09-24/`.
 - **Leads growth research** — workflow `wf_d03eba2c-a01` (started 2026-09-24T18:21:58Z): what top engineers/developers do now (2025-2026) — prior-efforts diagnosis (from live GitHub history), live lead-path audit, engineering-as-marketing, AI-assistant citation practice, niche landscape + channels, measurement engineering → **30-day lead plan**. Output commits to `docs/operations/growth/2026-09-24/`.
 - Stopped (not used): official-docs SEO research `wf_dbb8efd1-bbd` — stopped 2026-09-24T18:21:58Z on owner instruction (generic checklist = rehash).
 
 ## Not done
-- [ ] Audiobook launch plan (running).
+- [ ] Audiobook launch plan — paused by owner until the audiobook is finished.
 - [ ] Always-on ops + analytics blueprint (running), then build it as PRs.
 - [ ] Pioneer playbook + idea bank (running).
 - [ ] Live audit results + adversarial verdicts (running).
@@ -56,3 +57,4 @@ UNVERIFIED (to be re-read live, not relied on): homepage showed `meta robots ind
 - 2026-09-24T18:21:58Z — Owner: "do not use dead information… what they have done did not work… zero leads… read what savvy top engineers and developers do". Refocused on leads; stopped generic docs research; launched leads growth research `wf_d03eba2c-a01`. Live audit `wf_c925e59f-494` continues (current live state, not old advice). Draft PR #58 holds this handoff.
 - 2026-09-24T18:24:29Z — Owner: "what would a pioneer do… use all search engines, sites, venues to tag and link… Google networks… so much information and ideas". Launched pioneer playbook `wf_f2bd1f48-544` (all output to git).
 - 2026-09-24T18:31:00Z — Owner: audiobook must be organized and sold; every agent a senior engineer/developer; see every visitor and action; auto program that re-checks and reports failures; no dead system. Launched `wf_a255d729-1d6`.
+- 2026-09-24T18:36:27Z — Owner: "the audiobook is not finished, focus on the other stuff first". Stopped audiobook lenses; resumed always-on ops lenses only.
