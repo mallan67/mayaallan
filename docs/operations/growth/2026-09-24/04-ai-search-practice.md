@@ -242,3 +242,36 @@
 - **Week 1:** `ai-01`, `ai-02`, `ai-03`, `ai-10` (all S). The first `ai-12` panel as the baseline.
 - **Weeks 2–4:** `ai-09`, `ai-13`. The first 4 scenario pages (`ai-08`). YouTube channel plus 2 videos (`ai-04`). Review asks (`ai-07`). Reddit routine (`ai-05`).
 - **Months 2–3:** outreach to the domains the panel surfaced (`ai-06`), podcast guesting (`ai-04`), syndication (`ai-11`). Re-run the panel monthly.
+
+## 6. Unverified / not done (Rule 7)
+- **Which domains the engines actually cite for psilocybin-integration prompts** is **UNVERIFIED**. WebSearch hit the session limit (200/200), DuckDuckGo returned a CAPTCHA, Bing returned unrelated results, and I did not query any AI tool (not allowed). `ai-12` is how to get this.
+- Subreddit names and rules: **UNVERIFIED** (Reddit returned 403).
+- Current Search Console and Bing index status: **UNVERIFIED** (no access). The only reading is the 2026-09-05 PR #45 body.
+- Whether analytics could be injected outside the served HTML: **UNVERIFIED**. The Vercel project was not read in this session; PR #57 and #58 bodies say Web Analytics is disabled.
+- Original sources not read, only secondary reports: Glen Allsopp's 43.83% listicle figure, SparkToro's <1/100 list-repeat figure, Loamly's 70.6% missing-referrer figure, and the Kaiser & Schulze paper itself (INFORMS returned 403; read via Digital Commerce 360). Search Engine Land (Cloudflare challenge) and BusinessWire (403) could not be read.
+- Growth Memo posts from 2026-03-23, 2026-04-13, 2026-04-20 and 2026-06-24 are paywalled, so only their headline findings are used.
+- Web search modes for the OpenAI, Gemini and Claude APIs (`ai-12`), Medium canonical import (`ai-11`), and Vercel plan limits for UTM and custom events (`ai-01`): **UNVERIFIED this session**.
+- No correlation study here covers solo authors or health-adjacent books specifically. Every "expected impact" is carried over from other verticals and says so.
+
+---
+
+## 7. Sources (publication date and UTC read time on 2026-09-24)
+WebFetch reads are timed from the surrounding logged `date -u` stamps (±1 min). "Vendor" means the publisher sells an AI-visibility or SEO tool and uses its own data.
+
+| # | Source | URL | Published / updated | Read (UTC) | Type |
+|---|---|---|---|---|---|
+| 1 | Semrush: Most-Cited Domains in AI (3-month study) | https://www.semrush.com/blog/most-cited-domains-ai/ | 2025-11-10 | ~18:22Z | Vendor data |
+| 2 | Profound: AI Platform Citation Patterns | https://www.tryprofound.com/blog/ai-platform-citation-patterns | 2025-06-05 (upd. Aug 2025) | ~18:22Z | Vendor data |
+| 3 | Ahrefs: 97% of llms.txt files never get read (137K sites) | https://ahrefs.com/blog/llmstxt-study/ | 2026-06-15 | ~18:23Z | Vendor data |
+| 4 | SEJ: Google Analytics adds AI Assistant default channel group | https://www.searchenginejournal.com/google-analytics-adds-ai-assistant-as-default-channel-group/574974/ | 2026-05-14 | ~18:23Z | Trade press (reports Google) |
+| 5 | Ahrefs: Top Brand Visibility Factors in ChatGPT, AI Mode, AIO (75k brands) | https://ahrefs.com/blog/ai-brand-visibility-correlations/ | 2025-12-12 | ~18:23Z | Vendor data |
+| 6 | Growth Memo: AI Halftime Report H1 2026 | https://www.growth-memo.com/p/ai-halftime-report-h1-2026 | 2026-07-27 | ~18:23Z | Independent consultant |
+| 7 | SE Ranking: Health AI Overviews trust YouTube over medical sites | https://seranking.com/blog/health-ai-overviews-youtube-vs-medical-sites/ | 2026-01-14 | ~18:23Z | Vendor data |
+| 8 | Growth Memo: Shorter, Focused Content Wins in ChatGPT | https://www.growth-memo.com/p/shorter-focused-content-wins-in-chatgpt | 2026-04-13 (paywalled) | ~18:24Z | Independent consultant |
+| 9 | Growth Memo: The science of how AI picks its sources | https://www.growth-memo.com/p/the-science-of-how-ai-picks-its-sources | 2026-03-23 (paywalled) | ~18:24Z | Independent consultant |
+| 10 | SE Ranking: AI traffic research (101,574 sites) | https://seranking.com/blog/ai-traffic-research-study/ | 2026-06-18 | ~18:24Z | Vendor data |
+| 11 | SERoundtable: Google confirms AI Mode noreferrer is a bug | https://www.seroundtable.com/google-ai-mode-noreferrer-bug-39462.html | 2025-05-23 (upd. 2025-05-28) | ~18:24Z | Trade press (quotes Google) |
+| 12 | Lawrence Hitches: Google AI Mode traffic in GA4 | https://www.lawrencehitches.com/google-ai-mode-traffic-ga4/ | 2026-08-15 | ~18:24Z | Consultant (partly contradicted by #13) |
+| 13 | Google Search Central: AI features and your website | https://developers.google.com/search/docs/appearance/ai-features | updated 2025-12-10 | ~18:24Z, re-read ~18:33Z | Official |
+| 14 | OpenAI Help Center: Publishers and Developers FAQ | https://help.openai.com/en/articles/12627856-publishers-and-developers-faq | "Updated: 27 days ago" (≈2026-08-28) | 18:24:59Z | Official |
+| 15 | Ahrefs: 38% of AI Overview citations pull from the top 10 | https://ahrefs.com/blog/ai-overview-citations-top-10/ | 2026-03-02 | ~18:26Z | Vendor data |
