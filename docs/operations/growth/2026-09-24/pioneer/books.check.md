@@ -43,3 +43,37 @@
 | book-companion-journal | yes (reframed) | yes | **Not a gap**: 7 of the top 16 results are already journals or workbooks. | medium → low-medium |
 | book-outbound-links | yes | yes | Confirmed. Also, the site's **only Amazon link is the $33.99 hardcover**. | low → low |
 | book-kobo-bn-librarything-worldcat | yes (placeholder) | yes (unverified) | Still blocked. Kobo showed 0 results for ...839 once; the ebook ISBN search returned 403. | unknown |
+
+## 2. The eight corrections that change the plan
+
+1. **An ebook ISBN already exists.** The Google Play listing's JSON-LD carries `"isbn":"9798994148891"` with `bookFormat` EBook, $9.99 and 289 pages (read 22:22:59Z). The check digit is valid; it sits in the same 979-8-9941488 block as ...883 (paperback) and ...885 (hardcover). The D1 fix should therefore republish the Kindle edition with **979-8994148891** or with no ISBN (KDP: *"eBooks and low-content books are the only formats where an ISBN is optional"*, G201834170, 22:14Z), and reuse ...891 at Apple and D2D. Bowker does not need to sell a new ISBN. The map's JSON-LD snippet should give the EBook `workExample` `"isbn":"9798994148891"`. Whether a Bowker record for ...891 exists and says "ebook" is UNVERIFIED (behind login).
+2. **Kindle back-matter links are restricted.** KDP Hyperlink Guidelines (GQ6JQ7FM6C72HE4X, 22:30:40Z) prohibit *"Links to commercial eBook store sites other than Amazon"* and *"Links to web forms that request customer information (e.g., email address…)"*. External links should be present *"only if they directly enhance the reader experience"*, for example *"Links to additional ancillary material (e.g., checklists, assessment forms… printable materials)"*. The Content Quality guide (G200952510) states a *"zero-tolerance policy for any book content meant to advertise, promote, [or] mislead"*.
+   - So the Kindle link must go to the journal tool, not to an opt-in page and not to the book page that sells the ebook via PayPal.
+   - Live check at 22:30:53Z: `/integration-journal` has 1 form and **0 email fields**, so it qualifies today. Keep it that way.
+3. **The ACX royalty split is on a readable KDP page** (G201014330, 22:30:04Z): *"If you choose to distribute exclusively to these three channels, you will earn 40%… Royalty Share… 20%… non-exclusively, you will earn 25% and retain the right to distribute your recording."* For a wide audiobook, choose ACX non-exclusive at 25% and add Spotify for Authors and Voices by INaudio.
+4. **KDP does not accept BISAC codes.** The KDP categories help (G200652170, 22:16:33Z) says *"you can select 3 categories"* from Amazon's category tree and warns *"We do not tolerate categorization that misleads readers."* It never mentions BISAC. OCC039000 can only go where BISAC is entered (the Bowker title record, or IngramSpark if used). How KDP's Expanded Distribution maps categories to BISAC is UNVERIFIED.
+5. **The Indie Author Project is open now.** Its FAQ (22:29:21Z) says: *"Indie authors can submit qualifying ebooks to the Indie Author Project… shared with patrons of participating libraries across your region"* and *"completely free and non-exclusive… year-round discovery collections and annual contests."* The genre list (fiction + Memoir) and the April 1 - May 31 window apply only to the contest.
+6. **Goodreads lists do exist.** A Listopia search for *psilocybin* (22:24:01Z) returns "about 6 results":
+   - Best Psychedelic Knowledge (92 books, 52 voters)
+   - Pro-cannabis & psychedelia books!! (35, 31)
+   - Best books about psychedelic drugs! (29, 25)
+   - **Best Magic Mushroom Books (9 books, 6 voters)**
+   - Psychedelic Foundations (36, 5)
+   - Healing with Psychedelics and Holotropic Breathwork (10, 1)
+
+   Only *psychedelic integration* returns "No results". *Plant medicine* returns 14 lists, all herbal. The Goodreads Community Guidelines (22:24:46Z) ban *"incentivizing votes, likes, or other actions"* and *"Abusing Goodreads features to promote yourself"*. A partner creating a list at the author's request is therefore risky. Any member may add a book to an existing list, but the Listopia rules page returned 403, so that is UNVERIFIED.
+7. **Review services carry legal and platform constraints the map omitted.**
+   - FTC Consumer Reviews and Testimonials Rule, *"went into effect on October 21, 2024"*. Incentives are allowed only *"as long as there isn't an express or implied requirement that the reviews have to express a particular sentiment"*, and *"failing to disclose incentives could be a violation of the FTC Act"* (ftc.gov Q&A, 22:28:10Z).
+   - Goodreads Author Guidelines (22:41:12Z): *"we also prohibit paid reviews and reviews that have been incentivized in any way"*. Free copies are OK *"but you may not require a review in exchange."*
+   - Amazon removes *"A review by someone perceived to have a close personal relationship with the product's owner, author"* and *"A review in exchange for monetary reward"* (G3UA5WC5S5UUKB5G, 22:27:52Z).
+   - Use only services where the reader is not paid and a review is optional (BookSirens states *"You are NOT paying readers for reviews"*). Never ask for 5-star reviews.
+8. **The companion journal enters a crowded format; it is not a gap.** At 22:35:37Z, the top 16 for *psilocybin integration* include 7 journals or workbooks:
+   - *Psychedelic Prep, Trip, & Integration Workbook*
+   - *The Psilocybin Healing Journey Workbook*
+   - *Psilocybin Integration Journal*
+   - *THRIVE Model… Workbook*
+   - *My Psilocybin Journey* (guided journal)
+   - *Psychedelic Integration Workbook Vol. 2*
+   - *Microdosing Psilocybin: An Integration Journal*
+
+   The only differentiator is the tie-in to the Guide and to the free web tool.
