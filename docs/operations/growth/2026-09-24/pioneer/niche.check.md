@@ -153,3 +153,43 @@
 - Horizons week also includes off-site events "created by community allies" (see M7).
 
 **Lead value:** medium. It is a networking channel, not a direct lead source.
+
+### niche-evt-phf: DROP
+
+- Oct 15, 2026 at the NY Academy of Medicine, registered through Horizons. The audience is "executives, providers, and regulators". Source: https://psychedelicalpha.com/psychedelic-healthcare-forum-2026/ (~22:14:30Z).
+- The Horizons register page shows "Community Thursday-only $650", which is consistent.
+- It is not a reader or buyer audience for an ebook, and the cost is high.
+
+### niche-evt-spmc: DROP for 2026
+
+- Verified: "OCT 23-25, 2026 • VANCOUVER, BC"; vendor and sponsor application links exist. Source: https://spiritplantmedicine.com/ (~22:14:30Z).
+- The vendor page rendered no fee text through curl (JS-rendered), so the fee is UNVERIFIED.
+- One month out, with cross-border travel and an unknown fee: revisit for 2027.
+
+### niche-pub-chacruna: KEEP
+
+- The RSS feed confirms the latest posts: "Reflections on the Psychedelic Executive Order…" and "Building Tripsafe Communities…", both dated 2026-09-23. Source: https://chacruna.net/feed/ (22:14:48Z).
+- Inquiry by email; Author Guidelines PDF and Contributor Licensing Agreement are linked. Source: https://chacruna.net/read-chronicles/ (~22:14:35Z).
+- The audience is scholarly. Pitch integration research or practice, not the book.
+
+### niche-pub-tripsitter: DROP
+
+- The guidelines say "Last updated June 02, 2022". They also say "We do not accept requests for sponsored posts" and that editors reserve the right to remove product/service links. Source: https://tripsitter.com/write-for-us/ (~22:14:55Z).
+- The feed shows a 2026-07-23 post alongside "Where to Buy Magic Mushroom Spores in France/Denmark" pages. Source: https://tripsitter.com/feed/ (22:14:48Z).
+- That is brand and legal-adjacency risk for an integration author, and the link to the book may be stripped.
+
+### niche-pub-lucidnews: KEEP at low
+
+- The feed shows the latest item is "Psychedelic Policy Briefing 8.21.26", published 2026-08-21, with none since. Source: https://www.lucid.news/feed/ (22:14:48Z).
+- The About page has no pitch, freelance or editorial route; it offers only /contact. Source: https://www.lucid.news/about/ (~22:14:55Z).
+
+### niche-pub-psychedelicstoday: KEEP
+
+- "Inquire about Articles" goes to a **closed** Google Form. The podcast pitch goes to a monday.com form, and the page says: "We are very selective on what we host". Source: https://psychedelicstoday.com/contact/ (~22:15:00Z).
+- The Apple API shows 776 episodes, with the last release on 2026-08-12. The site feed shows a latest post of 2026-09-16. Sources: https://itunes.apple.com/search?media=podcast&term=Psychedelics+Today (22:15:16Z); https://psychedelicstoday.com/feed/ (22:14:48Z).
+
+### niche-pub-microdose: KEEP at low
+
+- Substack metadata says "Over 89[,000]". The latest issue is from 2026-09-21: "Did psychedelics help build ancient civilizations?: 5 Questions for journalist Andrew Lawler". That shows authors do get the 5 Questions slot.
+- Tips go to the newsletter tips inbox, published on the page.
+- Sources: https://themicrodose.substack.com/about and `/api/v1/archive` (22:15:54Z).
