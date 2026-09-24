@@ -80,3 +80,28 @@ Continues `04-book-ecosystem.md`, which has the baseline, defects D1-D8, the mar
 | BookFunnel / StoryOrigin | `utm_source=bookfunnel&utm_medium=reader-magnet&utm_campaign=<promo-name>` |
 
 The book page has `<link rel="canonical">` (verified live, S1), so UTM variants will not create duplicate URLs.
+
+**Structured data** (site JSON-LD, to add once D1 is fixed; ISBNs shown are the live ones):
+
+```json
+{"@type":"Book","name":"Psilocybin Integration Guide","author":{"@id":"https://www.mayaallan.com/#maya"},
+ "workExample":[
+  {"@type":"Book","bookFormat":"https://schema.org/Paperback","isbn":"9798994148839","sameAs":"https://www.amazon.com/dp/B0G91GZMLT"},
+  {"@type":"Book","bookFormat":"https://schema.org/Hardcover","isbn":"9798994148853","sameAs":"https://www.amazon.com/dp/B0G7JWDJYQ"},
+  {"@type":"Book","bookFormat":"https://schema.org/EBook","sameAs":["https://www.amazon.com/dp/B0G765BZDL","https://play.google.com/store/books/details?id=HvafEQAAQBAJ"]}],
+ "sameAs":["https://openlibrary.org/works/OL45177926W","https://www.goodreads.com/book/show/245299940","https://www.goodreads.com/book/show/245349971"]}
+{"@type":"Person","@id":"https://www.mayaallan.com/#maya","name":"Maya Allan",
+ "sameAs":["https://www.instagram.com/maya.allan66/","https://www.amazon.com/stores/author/B0G76975ST",
+  "https://www.goodreads.com/author/show/65134359.Maya_Allan","https://openlibrary.org/authors/OL16288546A"]}
+```
+
+When they exist, add ISNI, Wikidata, BookBub and the Spotify author profile. The ebook gets its own `isbn` only if a new ebook ISBN is assigned.
+
+## 5. Direct sales vs retailers
+
+| | Site (PayPal, $9.99) | Retailers |
+|---|---|---|
+| Lead capture | **Yes**: the buyer's email is the lead | No; the retailer owns the customer |
+| Rank and review signal | none | Yes: sales rank, "also bought", reviews |
+| Constraint | Blocks KDP Select: *"you cannot distribute your book digitally anywhere else, including on your website"* (S10) | n/a |
+| Pioneer play | Sell **what retailers cannot**: a bundle of ebook, fillable journal PDF and audio preview, delivered via BookFunnel. Keep list-price parity. | Use retailers for discovery. Every edition's back matter routes readers to the site. |
