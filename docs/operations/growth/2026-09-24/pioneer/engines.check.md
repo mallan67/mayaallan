@@ -174,3 +174,27 @@ Ranked by leads per hour **at today's baseline** (0 Goodreads ratings, 0 Amazon 
 | E10 | https://en.wikipedia.org/wiki/You.com (secondary) | — | 18:54:15–18:54:52Z |
 | E11 | https://support.apple.com/en-us/119829 | 2026-09-04 | 18:53:48–18:54:05Z |
 | E12 | https://ziyuan.baidu.com/ (302) | — | 18:55:19Z |
+| A1 | https://www.amazon.com/dp/B0G7JWDJYQ (Hardcover) | — | 18:55:54–18:55:57Z; swatches 19:00:25Z |
+| A2 | https://www.amazon.com/dp/B0G765BZDL (Kindle) | — | 19:00:44Z |
+| A3 | https://www.aboutamazon.com/news/retail/amazon-rufus | renamed 2026-05-13 | 18:55:54–18:56:21Z |
+| A4 | https://kdp.amazon.com/en_US/help/topic/G201298500 | — | 18:55:54–18:56:21Z |
+| A5 | https://kdp.amazon.com/en_US/help/topic/G200652170 | — | 18:55:54–18:56:21Z |
+| A6 | https://kdp.amazon.com/en_US/help/topic/GD9PMU58BV24QFZ7 ; https://kdp.amazon.com/en_US/help/topic/GEZBMTMYGN9EBTLG | — | 19:00:56–19:00:59Z |
+| A7 | https://kdp.amazon.com/en_US/help/topic/G200798990 | — | 18:59:14–19:00:25Z |
+| A8 | https://www.goodreads.com/author/program ; https://www.goodreads.com/book/show/245299940-psilocybin-integration-guide ; https://www.goodreads.com/giveaway/new ; https://www.goodreads.com/author/show/1077326.J_K_Rowling (website-link rel sample) | — | 18:56:21–18:57:09Z |
+| A9 | https://itunes.apple.com/search?term=psilocybin+integration+guide+allan&entity=ebook&country=us (and entity=audiobook) | — | 19:03:22Z |
+| A10 | https://play.google.com/books/publish/autonarrated/ | — | 18:56:36–18:57:09Z |
+| A11 | https://kdp.amazon.com/en_US/help/topic/G201014330 (ACX) ; https://www.acx.com/help/faq (JS-only) | — | 18:57:27–18:57:47Z |
+| A12 | https://kdp.amazon.com/en_US/help/topic/GMPQGZAZJH6FF456 | — | 18:57:13–18:57:27Z |
+| A13 | https://kdp.amazon.com/en_US/help/topic/GJSXT4GZLP4PL62B | — | 18:57:13–18:57:27Z |
+| A14 | https://www.draft2digital.com/partners/ ; https://www.draft2digital.com/faq/ ; https://authors.apple.com/ | — | 18:56:36–19:00:08Z |
+| A15 | https://authors.spotify.com/ | — | 18:56:36–18:57:09Z |
+| P1 | https://policy.pinterest.com/en/community-guidelines | effective May 2026 | 18:58:02–18:58:42Z |
+| P2 | https://help.pinterest.com/en/business/article/claim-your-website ; https://developers.pinterest.com/docs/web-features/rich-pins-overview/ | — | 18:57:47–18:58:02Z |
+| P3 | https://support.google.com/youtube/answer/2801964 | — | 18:58:02–18:58:42Z |
+| P4 | https://support.google.com/youtube/answer/9229611 | — | 18:58:02–18:58:42Z |
+| P5 | https://support.google.com/youtube/answer/13525207 | — | 18:57:28–18:57:47Z |
+| P6 | https://podcasts.google.com/ → https://music.youtube.com/googlepodcasts | — | 18:57:47–18:58:02Z |
+| P7 | https://podcasters.apple.com/support/897-submit-a-show | — | 18:57:47–18:58:02Z |
+| P8 | https://creators.spotify.com/ | — | 18:57:47–18:58:02Z |
+| P10 | https://on.substack.com/p/shea-serrano-podcast | — | 18:55:27–18:55:38Z |
