@@ -54,3 +54,29 @@ Continues `04-book-ecosystem.md`, which has the baseline, defects D1-D8, the mar
 | book-psychedelics-today | Psychedelics Today | live | A search for "book" returns 2 book-review mentions (S42). | UNVERIFIED | low-medium |
 | book-lucid-news / book-doubleblind | Lucid News; DoubleBlind | **UNVERIFIED** | Lucid News unreachable (HTTP 000); DoubleBlind returned a 202 JS challenge. | n/a | n/a |
 | book-reddit | Reddit book/psychedelic subs | **UNVERIFIED** | reddit.com returned 403 to about.json and old.reddit, so no subscriber counts (S40). | n/a | n/a |
+
+## 3. Restrictions for a drug-related title (cited)
+
+| Venue | What the live rule says | Consequence for this book |
+|---|---|---|
+| Google Ads | *"Ads for substances that alter mental state for the purpose of recreation… are not allowed"*; *"Ads for instructional content about producing, purchasing, or using recreational drugs are not allowed."* (S15) | Ads framed as how to use or trip are disallowed. Integration and aftercare framing is the only possible angle, and approval is uncertain. |
+| Amazon KDP content | No drug-specific clause; bans illegal content, hate speech etc., and content "we deem inappropriate or offensive" (S14) | Listing is fine, and the book is already live. |
+| Amazon Ads | Policy page JS-only (**UNVERIFIED**, S52). Competing psychedelic-integration books run sponsored ads live (S44). | Test small. Expect case-by-case moderation. |
+| Google Play Books | The content policy has an "Illegal Activities" section; no drug-specific clause found in the live text (S23). | The book is already live. |
+| Draft2Digital | "Oversaturated" subjects list (Mindfulness, Meditation, Affirmation…) plus proof of nonfiction expertise (S24) | Lead the metadata with psychedelic integration, not mindfulness. Have credentials or bio evidence ready. |
+| Kindle Deals | The title must be an eBook, not erotic, and enrolled in the 70% option (S19) | Eligible. |
+
+## 4. Tagging and linking convention
+
+**UTM rule** (every link placed on a venue that allows one): `utm_source=<venue>&utm_medium=<type>&utm_campaign=<name>`.
+
+| Placement | URL |
+|---|---|
+| Goodreads profile | `https://www.mayaallan.com/?utm_source=goodreads&utm_medium=profile&utm_campaign=author-profile` |
+| Kindle back matter | `https://www.mayaallan.com/integration-journal?utm_source=kindle&utm_medium=ebook-backmatter&utm_campaign=pig-ed1` |
+| Print QR | `?utm_source=paperback&utm_medium=print-qr&utm_campaign=pig-ed1` (the QR target should be a short, stable path) |
+| Library ebook | `?utm_source=overdrive&utm_medium=ebook-backmatter&utm_campaign=pig-library` (needs a separate EPUB build per channel) |
+| Audiobook | spoken short path `mayaallan.com/listen`, which redirects server-side to `?utm_source=audiobook&utm_medium=spoken-cta&utm_campaign=pig-audio` |
+| BookFunnel / StoryOrigin | `utm_source=bookfunnel&utm_medium=reader-magnet&utm_campaign=<promo-name>` |
+
+The book page has `<link rel="canonical">` (verified live, S1), so UTM variants will not create duplicate URLs.
