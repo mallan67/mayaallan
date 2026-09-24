@@ -105,3 +105,24 @@ All three feed one Resend sequence (PR #42).
 **Expected:** the capture rate is UNVERIFIED. The 40.1% and 44.9% figures come from quiz funnels, and they mix optional and gated forms. Leads ≈ completions × rate. Completions are unknown and probably near zero until eam-06 is running.
 
 **Measure:** `capture_submit / tool_complete` per tool, unsubscribes, and the Day-3 click rate.
+
+### eam-07: tool -> book bridge (code PR, S; same PR as eam-01)
+- **Owner decision:** show one primary CTA at completion: either the book ($9.99, the whole method) or the $9.99 save-this-session PDF. Two $9.99 asks at the same moment split attention. At this traffic level an A/B test cannot reach significance, so decide instead of testing.
+- **Attribution:** link to `/books/psilocybin-integration-guide?ref=tool-<slug>`.
+  - Do **not** put `utm_*` on internal links. PR #12 keeps first-touch and last-touch UTM cookies, so an internal UTM would overwrite the real outside source (for example a community link from eam-06).
+  - Send `ref` in the checkout request and store it on `pending_paypal_orders`. It is not an identifier, so it works without the consent cookie. PR #12's cookie snapshot only exists after consent.
+- **Same PR:** add `opengraph-image` for the three AI tool routes (salvaged from eam-08).
+- **Measure:** `tool_complete -> book_viewed -> checkout_started -> purchase_completed`, filtered by `ref=tool-*`, using the event names PR #12 already uses.
+
+### eam-06: distribution where people and citations are (owner account, M; start the same week)
+1. **Before posting:** Maya lists what has already been posted since April (reel script, Medium, author profiles). GitHub shows only that these were *prepared*, not whether they went out, so the list is what stops repeats.
+2. **Links that count everyone:** use short paths such as `/go/yt-reset` that 308-redirect to the tool with `ref=`, counted server-side. Two reasons:
+   - On Hobby, Vercel Web Analytics has no UTM reports (pricing doc, read ~18:52Z).
+   - PR #12's UTM cookies exist only after consent.
+3. **Channels:**
+   - Answer 2-3 real questions a week in integration communities, disclosing authorship. This is where eam-05's "real questions" work goes.
+   - Pitch podcasts and newsletters, offering the journal.
+   - Make one 60-90 s YouTube demo per tool. YouTube's policy (read ~18:51Z) allows educational, documentary, scientific and artistic (EDSA) context, bans selling drugs, and says EDSA content "may be age-restricted". Show the reflection tool, never drug use.
+   - Subreddit self-promotion rules could not be read live (HTTP 403 at 18:53:25Z), so they are UNVERIFIED. Read each community's rules before posting.
+4. **Domain:** repoint psilocybinintegrationguide.com from `/` to the book page (owner, Vercel domains, S).
+5. **Measure:** sessions and captures per `ref`, and `brand_mention` per week in the AEO tracker (the PR #46 split). Judge over weeks, not days. That is the lesson from HubSpot and Indig.
