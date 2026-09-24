@@ -80,3 +80,30 @@ Continues `00-PIONEER-PLAYBOOK.md` (sections 1, 2, 3A-3C). Sections 5-7 (first 1
 | F14 | "After your New Mexico session" handout for the program contact and the first named providers | New Mexico Medical Psilocybin Program (start by 2026-12-31) | `utm_source=nm-clinic-<slug>&utm_medium=b2b&utm_campaign=nm-launch` | CONTENT | 1d | M | mkt-03, [S25] |
 | F15 | A non-clinical companion ready before the COMP360 launch window | future COMP360 treatment sites | - | CONTENT | 3d | M (2027) | mkt-04, [S26] |
 | F16 | Watch the Department of Health request for proposals | New Jersey $6M pilot (3 hospitals) | - | MAYA | - | L | [S27] |
+
+### 3G. PR and data
+
+| # | Action | Venue | Link / tag | Owner | Effort | Lead | Source |
+|---|---|---|---|---|---|---|---|
+| G1 | /press (404 today): one bio, headshots, a fact box (ISBN per format after the fix), key numbers with sources, 5 story angles, a press contact | site | `utm_medium=pr` | PR + CONTENT | 2d | M | DATA M9, [S4] |
+| G2 | Free profile; answer only on-topic queries (one off-topic pitch means a permanent ban); link /press, never a sales page | Source of Sources (up to 3 request emails a day) | `utm_source=<outlet>&utm_medium=pr&utm_campaign=journo-requests` | MAYA | 20m a day | M | niche-pr-sos, [S61] |
+| G3 | Free tier (queries from HARO, LinkedIn and more) | Featured | same | MAYA | 20m a day | M | niche-pr-featured, [S61] |
+| G4 | Free tier (2 pitches a month) | Qwoted | same | MAYA | - | L-M | niche-pr-qwoted, [S61] |
+| G5 | Newsjack #1, this week: a 150-word comment on aftercare for the 44.7% of clients who go home out of state, sent to the reporters who covered the story | KLCC 2026-09-23 "Oregon abandons proposed fee hikes for psilocybin therapy industry"; OPB, Oregon Capital Chronicle, Portland Business Journal | `utm_campaign=newsjack-or-fees` | MAYA | 2h | M | [S18], [S69] |
+| G6 | Newsjack #2: the Colorado Oct 8 hearing (topic given by DATA as facilitator continuing education; re-check the notice, the DPO site returned 403 to Judge 3) | Colorado outlets | `utm_campaign=newsjack-co-hearing` | MAYA | 2h | L-M | [S28] |
+| G7 | Newsjack #3: the Oregon Q3 data file (early December, inferred from the Q2 file's 2026-09-04 date) | Oregon outlets, Psychedelic Alpha, BioSpace | `utm_campaign=newsjack-or-q3` | MAYA | 2h | M | [S21], [S68] |
+| G8 | Lean "Integration Gap" page: 3-4 charts from the Oregon CSV and DORA data, a CSV download, a "cite this" line; point psilowire.com at it | site + psilowire.com | `utm_source=psilowire&utm_medium=domain&utm_campaign=gap` | PR + CONTENT | 2d | M | DATA M2 |
+| G9 | Written comment for the Oct 8 hearing, authorship disclosed (positioning, not a lead source) | Colorado DPO | - | MAYA | 4h | L | DATA M7, [S28] |
+| G10 | Reader practice survey (month 2, once circles and partners can supply respondents): anonymous and minimal; no questions on dose, sourcing, setting or location below state level | site | `utm_campaign=survey-2026` | PR | 4d | M | DATA M1 (deferred) |
+| G11 | Zenodo DOI, Dataset JSON-LD and a Scholar-tagged PDF, only after a reporter has cited the data | Zenodo, Dataset Search, Google Scholar | - | PR | 1d | L | DATA M3, [S71] |
+| G12 | Embeddable glossary and gap widgets with a brand-name attribution link, never paid | partner sites | `utm_source=embed-<domain>&utm_medium=widget` | PR | 1d | L-M | DATA M14 |
+| G13 | Guest article "A field guide to difficult journey scenarios" linking the scenario pages | Chacruna, Psychedelics Today, Lucid News | `utm_medium=guest-article&utm_campaign=scenarios` | CONTENT | 1-2d | M | CAT M10 |
+| G14 | Podcast guest marketplaces as a backup channel (PodMatch has no free plan; MatchMaker.fm is live) | PodMatch, MatchMaker.fm | `utm_source=podcast-<show>&utm_medium=audio` | MAYA | 1h | L-M | [S62] |
+
+### 3H. Community and events
+
+| # | Action | Venue | Link / tag | Owner | Effort | Lead | Source |
+|---|---|---|---|---|---|---|---|
+| H1 | Back Home Circle: twice a month, 60 minutes, reading + reflection | Luma, Eventbrite, /events, MAPS calendar | `utm_source=luma&utm_medium=event-listing&utm_campaign=back-home-circle-2026-10` (source eventbrite or maps-calendar on those listings) | MAYA | 5h + 2h a session | H | BHC M1, [S42], [S64] |
+| H2 | 7-Day Integration Cohort, starting on the 1st of each month | email (Resend) | `source=cohort-7day` | CONTENT + PR | 1.5d | H | BHC M8, [S9] |
+| H3 | "The Integration Letter", twice a month, doubling as the circle calendar | newsletter | `utm_source=newsletter&utm_medium=email&utm_campaign=letter-<nn>` | CONTENT | 3h an issue | H | BHC M9 |
