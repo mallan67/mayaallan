@@ -200,3 +200,45 @@
 - **Owner:** code-pr. **Effort:** S.
 - **Expected impact:** AI visitors land deep and stay longer (9m19s vs 5m33s, SE Ranking 2026-06-18). Pages with no capture turn every such visit into zero leads. Conversion evidence is mixed (Kaiser & Schulze vs Ahrefs), so this is about *capturing* visits, not assuming a high conversion rate.
 - **Measure:** Signups by landing page and first-touch source (joins `ai-01`).
+
+### ai-11: Syndicate essays where engines already look (LinkedIn, Medium)
+- **Steps:**
+  1. Maya republishes each blog essay as a LinkedIn article and on Medium, with a clear "originally published at mayaallan.com/…" link.
+  2. If Medium's import is used it should set a canonical link to her page. That behaviour was **not verified this session**; check it on the first post.
+- **Owner:** owner-account. **Effort:** S per post.
+- **Expected impact:** LinkedIn was the top AI Mode domain (~15%). Medium was a top ChatGPT domain that *gained* share after Sept 2025 (Semrush, 2025-11-10). This is **low-cost reach**, not proof of results for a small author.
+- **Measure:** Views on each platform, referrals from `linkedin.com` and `medium.com`, and `ai-12` citations of those URLs.
+
+### ai-12: A monthly prompt panel measured per engine (replaces a single "AI score")
+- **Steps:**
+  1. Once a month Maya runs 15 fixed prompts, **logged out**, 3 runs each, in ChatGPT, Perplexity, Google AI Mode / AIO, Gemini, Copilot and Claude.
+  2. Mix unbranded and branded prompts, for example "books about psilocybin integration", "how to make sense of a difficult mushroom experience afterwards", "psilocybin integration journal prompts", "Maya Allan", "Psilocybin Integration Guide review".
+  3. Record for each run: mentioned (y/n), site cited (y/n), and the **cited domains**. The cited domains become the outreach list for `ai-06`.
+  4. A `code-pr` can upgrade the PR #46 tracker to search-capable modes of each API, because today 3 of 4 engines answer from training data only. Whether each API has a web-search mode is **UNVERIFIED this session**.
+- **Owner:** mixed. **Effort:** S per month.
+- **Expected impact:** Engines use separate sources (91%) and lists repeat less than once in 100, so a single snapshot misleads. Indig recommends tracking presence, portability and concentration (2026-05-11).
+- **Measure:** Per-engine mention rate and citation rate over time, and the number of distinct third-party domains that mention her.
+
+### ai-13: Consistent identity everywhere (hygiene, low evidence)
+- **Steps:**
+  1. A `code-pr` adds the Goodreads author URL and, once they exist, the Amazon author page, YouTube, LinkedIn and Medium to the Person `sameAs`. It adds `isbn: 9798994148839` to the Book schema and puts profile links in the footer.
+  2. Maya uses the same one-line bio ("author and educator", non-clinical, as governed by PR #50) on every profile.
+  3. Optionally, a later owner decision: point `psilocybinintegrationguide.com` at the book page instead of the homepage.
+- **Owner:** mixed. **Effort:** S.
+- **Expected impact:** **Weak evidence.** Google says structured data must match visible text and is not an AI requirement. Branded anchors correlate 0.51–0.63 (Ahrefs). Mostly it helps engines tie off-site mentions to one entity.
+- **Measure:** Rich Results test passes, and profiles in `ai-12` answers describe her the same way.
+
+---
+
+## 4. What not to repeat (already done or shown not to work)
+- More llms.txt, schema or FAQ-markup work for AI. Already present live, and the evidence says it has no effect (Ahrefs 2026-06-15, Google 2025-12-10).
+- Self-promotional "best of" lists (Lily Ray, 2026).
+- Changing dates without real changes (Ahrefs freshness caveat, 2025-07-28).
+- Reporting a pooled "AI citation rate" from API completions (PR #46 already split this; keep the split).
+- Resubmitting URLs over and over. Index status is fixed by content and off-site signals, not by resubmission.
+- Listing Maya in therapist, facilitator or practitioner directories. Her positioning is author and educator only (PRs #37, #45, #50). This is a compliance boundary, not a growth tactic.
+
+## 5. Order of work (suggested)
+- **Week 1:** `ai-01`, `ai-02`, `ai-03`, `ai-10` (all S). The first `ai-12` panel as the baseline.
+- **Weeks 2–4:** `ai-09`, `ai-13`. The first 4 scenario pages (`ai-08`). YouTube channel plus 2 videos (`ai-04`). Review asks (`ai-07`). Reddit routine (`ai-05`).
+- **Months 2–3:** outreach to the domains the panel surfaced (`ai-06`), podcast guesting (`ai-04`), syndication (`ai-11`). Re-run the panel monthly.
