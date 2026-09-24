@@ -147,3 +147,37 @@ The book's exact title is already Google's second suggestion for "psilocybin int
 | psychedelic integration | 9 | 7 | The Psychedelic Integration Compass (8, 2026-09-21); The Psychedelic Integration Podcast (136, 2026-06-15); Unjourneying / Mira Funk LCSW (9, 2026-08-03); The Integration Session / Centre for Psychedelics Health and Research (36, 2026-09-17); Hope for Humanity (43, 2026-09-08); Psychedelic Passage (83, 2026-09-09) |
 | microdosing | 42 | 12 | Third Wave "The Psychedelic Podcast" (376, 2026-09-23); many microdosing shows went quiet in 2025 (Microdosing Institute Table Talk, last 2025-04-12) |
 | psychedelic therapy | 15 | 4 | Beyond the Trip (25, 2026-06-21); Psychedelics Then and Now / Psychedelics Today (92, 2026-06-04); Secret Wilderness (34, 2026-08-17) |
+
+**Wikipedia pageviews** (Wikimedia REST, users only; Sep 2024–Aug 2025 compared with Sep 2025–Aug 2026; read 18:40:21Z and 18:41:42Z). These are a weak proxy for demand, because baseline articles are also falling: Meditation −21%, Major depressive disorder −14%.
+- Psilocybin mushroom: 966K → 759K (−21%)
+- Psilocybin: −27%
+- HPPD: 343K → 221K (−36%; still about 21.6K a month)
+- Bad trip: 76K → 57K
+- Microdosing: 55.6K → 23.9K (**−57%**, far below baseline)
+- Amanita muscaria: 874K → 817K (−7%; RAND also lists Amanita among the top-5 psychedelics of 2025)
+- Psychedelic therapy: 60K → 54K
+- There is no "Psychedelic integration" article (API 404).
+
+**Reddit:** **UNVERIFIED.** `about.json` for r/Psilocybin, r/microdosing, r/PsychedelicTherapy, r/Psychonaut, r/RationalPsychonaut, r/psychedelicrecovery and 12 others returned Reddit's network-policy block page to curl (18:24:30Z). WebFetch was refused for www.reddit.com. The third-party mirror subredditstats.com is **DEAD as a live source**: its last subscriber check for r/Psilocybin is dated 2023-12-17. No subscriber counts are reported here.
+
+**Google Trends:** **UNVERIFIED.** The explore API returned HTTP 429 (18:31:23Z).
+
+---
+
+## 5. Incumbents (who already serves these people)
+
+| Incumbent | What it is | Price | Where it is strong | Gap left for a pioneer |
+|---|---|---|---|---|
+| Fireside Project (S16) | Peer-support line by phone, SMS and app; coaching; "Lucy" AI practitioner training | Free (line) | Real-time crisis support; 40K conversations | Reading and self-work *after* the call: a partner, not a competitor |
+| Challenging Psychedelic Experiences Project, CPEP (S18) | Free monthly peer group, practitioner directory, guides, Substack, outcome reports | Free | Research credibility on difficult experiences | Structured, scenario-level self-help book |
+| Psychedelic Support (S22) | Directory of licensed providers, courses (CE/CME), articles | Courses paid | Clinicians | Client-facing reading for providers to hand out |
+| Nielson & Gorman, *Psychedelic Therapy Workbook* (2025) | Clinical workbook | Retail | Clinical / DSM framing | Non-clinical, lived scenarios |
+| MAPS Psychedelic Integration Workbook | Free PDF, widely re-hosted (e.g., spectrumpsychwa.com) | Free | Default free handout | A modern, psilocybin-specific scenario casebook |
+| Blue Soulspace (psilocybin and ketamine integration workbooks), THRIVE workbook (Amazon), Etsy PDF sellers | Workbooks | Low | Rank for "psilocybin integration workbook" (S17) | Deeper content and an author platform |
+| Psychedelic Passage, Third Wave, Numinus | Concierge or coaching services, podcasts, training | Paid | Audience and podcasts | Guest venues and partners |
+| Tracy Townsend MD (YouTube) | Doctor explainer videos | Free | Scenario and challenge videos | Integration after the challenge |
+| Retreat Guru | Retreat marketplace (738+ psilocybin retreats) | Commission | Retreat discovery | Post-retreat integration pack |
+
+Other books in the space (Open Library, read 18:32:47Z): Aixalà, *Psychedelic Integration* (2022); Graham, *Psychedelic Integration Workbook* (2023); Westrum, *Psychedelics Integration Handbook* (2024); Pennington, *Sacred Experiences … Journal* (2024); Zemon, *Earth Dream Guide* (2025); Zemon & Hildreth, ***Seniors on Psychedelics* (2026)**. Maya's book appears as work OL45177926W, author OL16288546A, ISBN 9798994148839.
+
+---
