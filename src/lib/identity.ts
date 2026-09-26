@@ -298,7 +298,7 @@ export const AUTHOR_JOB_TITLE = "Author and Educator"
 // tagline edit can never silently reintroduce off-brand positioning into the
 // SEO surface. The tagline may still be used for visible display copy.
 export const SITE_SEO_DESCRIPTION =
-  "Official website of author Maya Allan — books, essays, and reflective resources exploring consciousness, self-inquiry, personal agency, and transformative experience."
+  "Maya Allan is an author and educator offering non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
 
 // -----------------------------------------------------------------------------
 // SUPPORTED_LOCALES — i18n configuration
