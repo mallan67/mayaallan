@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { jsonLdScript } from "@/lib/json-ld"
 import { IntegrationJournalForm } from "./IntegrationJournalForm"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
@@ -107,9 +108,9 @@ export default function IntegrationJournalPage() {
           login.
         </p>
         <p className="mt-4">
-          <a href="/methods#integration-journal" className="text-sm text-blue-700 underline hover:text-blue-900">
+          <Link href="/methods#integration-journal" className="text-sm text-blue-700 underline hover:text-blue-900">
             Learn how to use the journal →
-          </a>
+          </Link>
         </p>
       </header>
 
@@ -198,12 +199,12 @@ export default function IntegrationJournalPage() {
           navigation, whether you journeyed alone or with support — lives in <em>Psilocybin Integration
           Guide</em>.
         </p>
-        <a
+        <Link
           href="/books/psilocybin-integration-guide"
           className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white font-medium text-sm hover:bg-slate-700 transition-colors"
         >
           See the book →
-        </a>
+        </Link>
       </aside>
     </div>
   )
