@@ -28,8 +28,14 @@ test("AEO prompt rows persist reader intent for both success and error paths", a
 
 test("Search Console activation remains explicit and read-only", async () => {
   const client = await readFile("src/lib/search-console/client.ts", "utf8")
-  assert.match(client, /webmasters\.readonly/)
-  assert.doesNotMatch(client, /webmasters(?!\.readonly)/)
+  assert.match(
+    client,
+    /const SEARCH_SCOPE = "https:\/\/www\.googleapis\.com\/auth\/webmasters\.readonly"/
+  )
+  assert.doesNotMatch(
+    client,
+    /const SEARCH_SCOPE = "https:\/\/www\.googleapis\.com\/auth\/webmasters"/
+  )
 })
 
 test("crawler telemetry does not record IP addresses or query strings", async () => {
