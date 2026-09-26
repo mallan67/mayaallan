@@ -145,16 +145,27 @@ async function probeViaGateway(
   try {
     const result = await generateText({
       model,
-      prompt,
+      prompt: searchCapable ? groundedPrompt(prompt) : prompt,
       maxOutputTokens: MAX_OUTPUT_TOKENS,
     })
+
+    const citations = uniqueStrings(
+      (result.sources ?? [])
+        .filter((source) => source.sourceType === "url")
+        .map((source) => source.url),
+    )
+    const searched =
+      searchCapable &&
+      (citations.length > 0 || hasSearchEvidence(result.providerMetadata))
 
     return {
       engine,
       content: result.text ?? "",
       model,
       searchCapable,
-      searchMode: searchCapable ? "grounded-search" : "model-memory",
+      searchMode: searched ? "grounded-search" : "model-memory",
+      citations,
+      searchQueries: collectQueries(result.providerMetadata),
     }
   } catch (err) {
     return {
