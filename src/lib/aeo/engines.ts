@@ -165,20 +165,30 @@ async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null>
     const blocks = Array.isArray(data?.content) ? data.content : []
     const textBlocks = blocks.filter((b: any) => b?.type === "text" && typeof b?.text === "string")
     const content = textBlocks.map((b: any) => b.text).join("\n").trim()
-    const citations = Array.from(new Set(textBlocks.flatMap((b: any) =>
-      Array.isArray(b?.citations)
-        ? b.citations.map((citation: any) => citation?.url).filter((url: unknown): url is string => typeof url === "string")
-        : []
-    )))
-    const searchQueries = Array.from(new Set(blocks
-      .filter((b: any) => b?.type === "server_tool_use" && b?.name === "web_search")
-      .map((b: any) => b?.input?.query)
-      .filter((query: unknown): query is string => typeof query === "string")))
-    const sourceUrls = Array.from(new Set(blocks.flatMap((b: any) =>
-      b?.type === "web_search_tool_result" && Array.isArray(b?.content)
-        ? b.content.map((result: any) => result?.url).filter((url: unknown): url is string => typeof url === "string")
-        : []
-    )))
+    const citations: string[] = Array.from(new Set<string>(
+      textBlocks.flatMap((b: any): string[] =>
+        Array.isArray(b?.citations)
+          ? b.citations
+              .map((citation: any) => citation?.url)
+              .filter((url: unknown): url is string => typeof url === "string")
+          : []
+      )
+    ))
+    const searchQueries: string[] = Array.from(new Set<string>(
+      blocks
+        .filter((b: any) => b?.type === "server_tool_use" && b?.name === "web_search")
+        .map((b: any) => b?.input?.query)
+        .filter((query: unknown): query is string => typeof query === "string")
+    ))
+    const sourceUrls: string[] = Array.from(new Set<string>(
+      blocks.flatMap((b: any): string[] =>
+        b?.type === "web_search_tool_result" && Array.isArray(b?.content)
+          ? b.content
+              .map((result: any) => result?.url)
+              .filter((url: unknown): url is string => typeof url === "string")
+          : []
+      )
+    ))
 
     return {
       engine: "claude",
@@ -236,26 +246,36 @@ async function queryChatGPTDirect(prompt: string): Promise<EngineResponse | null
         : []
     )
     const content = textParts.map((part: any) => part?.text).filter(Boolean).join("\n").trim()
-    const citations = Array.from(new Set(textParts.flatMap((part: any) =>
-      Array.isArray(part?.annotations)
-        ? part.annotations
-            .filter((annotation: any) => annotation?.type === "url_citation")
-            .map((annotation: any) => annotation?.url)
-            .filter((url: unknown): url is string => typeof url === "string")
-        : []
-    )))
+    const citations: string[] = Array.from(new Set<string>(
+      textParts.flatMap((part: any): string[] =>
+        Array.isArray(part?.annotations)
+          ? part.annotations
+              .filter((annotation: any) => annotation?.type === "url_citation")
+              .map((annotation: any) => annotation?.url)
+              .filter((url: unknown): url is string => typeof url === "string")
+          : []
+      )
+    ))
     const webCalls = output.filter((item: any) => item?.type === "web_search_call")
-    const searchQueries = Array.from(new Set(webCalls.flatMap((call: any) => {
-      const queries = call?.action?.queries
-      if (Array.isArray(queries)) return queries.filter((q: unknown): q is string => typeof q === "string")
-      const query = call?.action?.query
-      return typeof query === "string" ? [query] : []
-    })))
-    const sourceUrls = Array.from(new Set(webCalls.flatMap((call: any) =>
-      Array.isArray(call?.action?.sources)
-        ? call.action.sources.map((source: any) => source?.url).filter((url: unknown): url is string => typeof url === "string")
-        : []
-    )))
+    const searchQueries: string[] = Array.from(new Set<string>(
+      webCalls.flatMap((call: any): string[] => {
+        const queries = call?.action?.queries
+        if (Array.isArray(queries)) {
+          return queries.filter((q: unknown): q is string => typeof q === "string")
+        }
+        const query = call?.action?.query
+        return typeof query === "string" ? [query] : []
+      })
+    ))
+    const sourceUrls: string[] = Array.from(new Set<string>(
+      webCalls.flatMap((call: any): string[] =>
+        Array.isArray(call?.action?.sources)
+          ? call.action.sources
+              .map((source: any) => source?.url)
+              .filter((url: unknown): url is string => typeof url === "string")
+          : []
+      )
+    ))
 
     return {
       engine: "chatgpt",
