@@ -41,8 +41,12 @@ export interface EngineResponse {
    * not evidence of what a consumer search product would show (issue #44).
    */
   searchCapable: boolean
-  /** Source URLs the engine returned separately from the text (Perplexity). */
+  /** Source URLs the search-grounded engine returned separately from answer text. */
   citations?: string[]
+  /** Search queries executed by the provider, when exposed by its API. */
+  searchQueries?: string[]
+  /** Every web source consulted/returned, including sources not ultimately cited. */
+  sourceUrls?: string[]
   /** Set if the call failed. content will be empty. */
   error?: string
 }
@@ -122,7 +126,7 @@ async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null>
   const key = process.env.ANTHROPIC_API_KEY
   if (!key) return null
 
-  const model = "claude-haiku-4-5"
+  const model = process.env.AEO_CLAUDE_MODEL || "claude-haiku-4-5"
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -135,16 +139,49 @@ async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null>
         model,
         max_tokens: 1024,
         messages: [{ role: "user", content: prompt }],
+        tools: [
+          {
+            type: "web_search_20250305",
+            name: "web_search",
+            max_uses: 3,
+          },
+        ],
       }),
     })
     if (!res.ok) {
-      return { engine: "claude", content: "", model, searchCapable: false, error: `HTTP ${res.status}: ${await res.text()}` }
+      return { engine: "claude", content: "", model, searchCapable: true, error: `HTTP ${res.status}: ${await res.text()}` }
     }
+
     const data = await res.json()
-    const content = data?.content?.[0]?.text ?? ""
-    return { engine: "claude", content, model, searchCapable: false }
+    const blocks = Array.isArray(data?.content) ? data.content : []
+    const textBlocks = blocks.filter((b: any) => b?.type === "text" && typeof b?.text === "string")
+    const content = textBlocks.map((b: any) => b.text).join("\n").trim()
+    const citations = Array.from(new Set(textBlocks.flatMap((b: any) =>
+      Array.isArray(b?.citations)
+        ? b.citations.map((citation: any) => citation?.url).filter((url: unknown): url is string => typeof url === "string")
+        : []
+    )))
+    const searchQueries = Array.from(new Set(blocks
+      .filter((b: any) => b?.type === "server_tool_use" && b?.name === "web_search")
+      .map((b: any) => b?.input?.query)
+      .filter((query: unknown): query is string => typeof query === "string")))
+    const sourceUrls = Array.from(new Set(blocks.flatMap((b: any) =>
+      b?.type === "web_search_tool_result" && Array.isArray(b?.content)
+        ? b.content.map((result: any) => result?.url).filter((url: unknown): url is string => typeof url === "string")
+        : []
+    )))
+
+    return {
+      engine: "claude",
+      content,
+      model,
+      searchCapable: true,
+      citations,
+      searchQueries,
+      sourceUrls,
+    }
   } catch (err) {
-    return { engine: "claude", content: "", model, searchCapable: false, error: err instanceof Error ? err.message : String(err) }
+    return { engine: "claude", content: "", model, searchCapable: true, error: err instanceof Error ? err.message : String(err) }
   }
 }
 
@@ -165,25 +202,63 @@ async function queryChatGPTDirect(prompt: string): Promise<EngineResponse | null
   const key = process.env.OPENAI_API_KEY
   if (!key) return null
 
-  const model = "gpt-4o-mini"
+  const model = process.env.AEO_OPENAI_MODEL || "gpt-5.6-luna"
   try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const res = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "content-type": "application/json" },
       body: JSON.stringify({
         model,
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 1024,
+        input: prompt,
+        store: false,
+        max_output_tokens: 1024,
+        tools: [{ type: "web_search", search_context_size: "low" }],
       }),
     })
     if (!res.ok) {
-      return { engine: "chatgpt", content: "", model, searchCapable: false, error: `HTTP ${res.status}: ${await res.text()}` }
+      return { engine: "chatgpt", content: "", model, searchCapable: true, error: `HTTP ${res.status}: ${await res.text()}` }
     }
+
     const data = await res.json()
-    const content = data?.choices?.[0]?.message?.content ?? ""
-    return { engine: "chatgpt", content, model, searchCapable: false }
+    const output = Array.isArray(data?.output) ? data.output : []
+    const textParts = output.flatMap((item: any) =>
+      item?.type === "message" && Array.isArray(item?.content)
+        ? item.content.filter((part: any) => part?.type === "output_text")
+        : []
+    )
+    const content = textParts.map((part: any) => part?.text).filter(Boolean).join("\n").trim()
+    const citations = Array.from(new Set(textParts.flatMap((part: any) =>
+      Array.isArray(part?.annotations)
+        ? part.annotations
+            .filter((annotation: any) => annotation?.type === "url_citation")
+            .map((annotation: any) => annotation?.url)
+            .filter((url: unknown): url is string => typeof url === "string")
+        : []
+    )))
+    const webCalls = output.filter((item: any) => item?.type === "web_search_call")
+    const searchQueries = Array.from(new Set(webCalls.flatMap((call: any) => {
+      const queries = call?.action?.queries
+      if (Array.isArray(queries)) return queries.filter((q: unknown): q is string => typeof q === "string")
+      const query = call?.action?.query
+      return typeof query === "string" ? [query] : []
+    })))
+    const sourceUrls = Array.from(new Set(webCalls.flatMap((call: any) =>
+      Array.isArray(call?.action?.sources)
+        ? call.action.sources.map((source: any) => source?.url).filter((url: unknown): url is string => typeof url === "string")
+        : []
+    )))
+
+    return {
+      engine: "chatgpt",
+      content,
+      model,
+      searchCapable: true,
+      citations,
+      searchQueries,
+      sourceUrls,
+    }
   } catch (err) {
-    return { engine: "chatgpt", content: "", model, searchCapable: false, error: err instanceof Error ? err.message : String(err) }
+    return { engine: "chatgpt", content: "", model, searchCapable: true, error: err instanceof Error ? err.message : String(err) }
   }
 }
 
@@ -228,7 +303,7 @@ async function queryPerplexityDirect(prompt: string): Promise<EngineResponse | n
     const citations = Array.isArray(data?.citations)
       ? data.citations.filter((c: unknown): c is string => typeof c === "string")
       : []
-    return { engine: "perplexity", content, model, searchCapable: true, citations }
+    return { engine: "perplexity", content, model, searchCapable: true, citations, sourceUrls: citations }
   } catch (err) {
     return { engine: "perplexity", content: "", model, searchCapable: true, error: err instanceof Error ? err.message : String(err) }
   }
@@ -248,34 +323,78 @@ async function queryPerplexityDirect(prompt: string): Promise<EngineResponse | n
 //
 // Cost on Gateway: ~$0.003 per probe × 25 prompts × 4 weekly runs ≈ $0.30/mo.
 export async function queryGemini(prompt: string): Promise<EngineResponse | null> {
+  const directKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
   const hasGatewayKey = !!process.env.AI_GATEWAY_API_KEY
-  const hasDirectKey = !!(process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY)
-  const provider = (process.env.AI_PROVIDER ?? "gateway").toLowerCase()
 
-  // No usable credentials anywhere — skip silently.
-  if (!hasGatewayKey && !hasDirectKey) return null
+  // Prefer direct Gemini when a key exists because Google Search grounding is
+  // provider-specific and exposes the actual queries + source URLs.
+  if (directKey) {
+    const model = process.env.AEO_GEMINI_MODEL || "gemini-2.5-flash"
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "x-goog-api-key": directKey,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            tools: [{ google_search: {} }],
+            generationConfig: { maxOutputTokens: 1024 },
+          }),
+        }
+      )
+      if (!res.ok) {
+        return { engine: "gemini", content: "", model, searchCapable: true, error: `HTTP ${res.status}: ${await res.text()}` }
+      }
 
-  // Decide the actual transport: prefer the path that has a key configured,
-  // honoring AI_PROVIDER when it's set explicitly.
-  const useDirect = provider === "direct" ? hasDirectKey : !hasGatewayKey && hasDirectKey
-  const model = useDirect ? google("gemini-2.5-flash") : "google/gemini-2.5-flash"
-  const modelLabel = "gemini-2.5-flash"
+      const data = await res.json()
+      const candidate = data?.candidates?.[0]
+      const parts = Array.isArray(candidate?.content?.parts) ? candidate.content.parts : []
+      const content = parts.map((part: any) => part?.text).filter((text: unknown): text is string => typeof text === "string").join("\n").trim()
+      const metadata = candidate?.groundingMetadata ?? {}
+      const searchQueries = Array.isArray(metadata?.webSearchQueries)
+        ? metadata.webSearchQueries.filter((q: unknown): q is string => typeof q === "string")
+        : []
+      const sourceUrls = Array.isArray(metadata?.groundingChunks)
+        ? metadata.groundingChunks
+            .map((chunk: any) => chunk?.web?.uri)
+            .filter((url: unknown): url is string => typeof url === "string")
+        : []
 
+      return {
+        engine: "gemini",
+        content,
+        model,
+        searchCapable: true,
+        citations: Array.from(new Set(sourceUrls)),
+        searchQueries: Array.from(new Set(searchQueries)),
+        sourceUrls: Array.from(new Set(sourceUrls)),
+      }
+    } catch (err) {
+      return {
+        engine: "gemini",
+        content: "",
+        model,
+        searchCapable: true,
+        error: err instanceof Error ? err.message : String(err),
+      }
+    }
+  }
+
+  // Gateway-only fallback remains a non-search memory probe and is labelled as such.
+  if (!hasGatewayKey) return null
+  const model = "google/gemini-2.5-flash"
   try {
-    const { text } = await generateText({
-      model,
-      prompt,
-      // maxOutputTokens cap keeps cost predictable; 1024 is enough for AEO
-      // citation detection (we only need to see whether the engine mentioned
-      // the site, not get a full long-form answer).
-      maxOutputTokens: 1024,
-    })
-    return { engine: "gemini", content: text ?? "", model: modelLabel, searchCapable: false }
+    const { text } = await generateText({ model, prompt, maxOutputTokens: 1024 })
+    return { engine: "gemini", content: text ?? "", model: "gemini-2.5-flash", searchCapable: false }
   } catch (err) {
     return {
       engine: "gemini",
       content: "",
-      model: modelLabel,
+      model: "gemini-2.5-flash",
       searchCapable: false,
       error: err instanceof Error ? err.message : String(err),
     }
