@@ -7,6 +7,7 @@ import { detectCrawler } from "../../src/lib/crawler-telemetry.ts"
 import { VISIBILITY_GRAPH, suggestRelatedNodes } from "../../src/lib/visibility/topic-graph.ts"
 import { EVIDENCE_REGISTRY } from "../../src/lib/visibility/evidence-registry.ts"
 import { DISTRIBUTION_SURFACES, distributionSurface, distributionSummary } from "../../src/lib/visibility/distribution-surfaces.ts"
+import { AUTOMATIC_DISTRIBUTION, deliveryReadiness } from "../../src/lib/distribution/delivery-plan.ts"
 
 test("Search Console opportunity engine finds striking-distance and low-CTR queries", () => {
   const current = [
@@ -203,4 +204,21 @@ test("distribution registry models paid advertising, memberships, integration gr
   assert.equal(distributionSurface("adaa")?.paidExposure, true)
   assert.ok(distributionSurface("mindful")?.access?.includes("advertising"))
   assert.ok(distributionSurface("nectara")?.access?.includes("membership"))
+})
+
+
+test("canonical outbound feeds are registered as automatic distribution", () => {
+  assert.ok(AUTOMATIC_DISTRIBUTION.some((item) => item.url === "/feed.xml"))
+  assert.ok(AUTOMATIC_DISTRIBUTION.some((item) => item.url === "/feed.json"))
+  assert.equal(deliveryReadiness(distributionSurface("rss")).mode, "automatic-feed")
+  assert.equal(deliveryReadiness(distributionSurface("json-feed")).mode, "automatic-feed")
+})
+
+test("API channels require connection while communities stay review-first", () => {
+  assert.equal(deliveryReadiness(distributionSurface("linkedin")).mode, "api-after-connect")
+  assert.equal(deliveryReadiness(distributionSurface("pinterest")).mode, "api-after-connect")
+  assert.equal(deliveryReadiness(distributionSurface("youtube")).mode, "api-after-connect")
+  assert.equal(deliveryReadiness(distributionSurface("reddit-psychedelictherapy")).mode, "community-review")
+  assert.equal(deliveryReadiness(distributionSurface("psychedelics-today-editorial")).mode, "human-outreach")
+  assert.equal(deliveryReadiness(distributionSurface("adaa")).mode, "paid-placement")
 })

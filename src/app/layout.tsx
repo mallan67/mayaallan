@@ -199,6 +199,8 @@ export default async function RootLayout({
         {/* Preconnect to image origins so cache-miss image requests don't pay the TLS handshake cost. */}
         <link rel="preconnect" href="https://yaqhbuvjnaq0ur0v.public.blob.vercel-storage.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://yaqhbuvjnaq0ur0v.public.blob.vercel-storage.com" />
+        <link rel="alternate" type="application/rss+xml" title="Maya Allan — Writing" href={`${SITE_URL}/feed.xml`} />
+        <link rel="alternate" type="application/feed+json" title="Maya Allan — Writing" href={`${SITE_URL}/feed.json`} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

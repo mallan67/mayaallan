@@ -13,6 +13,7 @@ import { EVIDENCE_REGISTRY } from "@/lib/visibility/evidence-registry"
 import { loadPrompts } from "@/lib/aeo/prompts"
 import { engineReadiness } from "@/lib/aeo/engines"
 import { DISTRIBUTION_SURFACES, distributionSummary } from "@/lib/visibility/distribution-surfaces"
+import { AUTOMATIC_DISTRIBUTION, deliverySummary } from "@/lib/distribution/delivery-plan"
 import { CoveragePanel } from "./CoveragePanel"
 
 export const dynamic = "force-dynamic"
@@ -72,6 +73,7 @@ export default async function VisibilityPage() {
   const readinessItems = [...readiness.entity, ...readiness.google]
   const engineModes = engineReadiness()
   const distribution = distributionSummary()
+  const delivery = deliverySummary(DISTRIBUTION_SURFACES)
   const retryLater = DISTRIBUTION_SURFACES.filter((surface) => surface.status === "retry-later")
   const inherited = DISTRIBUTION_SURFACES.filter((surface) => surface.status === "inherited")
   const linkSuggestions = VISIBILITY_GRAPH.flatMap((node) =>
@@ -145,6 +147,27 @@ export default async function VisibilityPage() {
             </div>
           </div>
         )}
+        <div className="mt-4 border-t pt-4">
+          <h3 className="text-sm font-medium">Outbound delivery</h3>
+          <p className="text-xs text-slate-500 mt-1">
+            Canonical content is published on MayaAllan.com first. Feeds/indexing can fan out automatically;
+            account APIs require one-time authorization; communities/editorial destinations stay review-first.
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-3">
+            <Metric label="Automatic feeds" value={String(delivery.automatic)} />
+            <Metric label="API connected" value={String(delivery.apiReady)} />
+            <Metric label="API to connect" value={String(delivery.apiNeedsConnection)} />
+            <Metric label="Outreach/community" value={String(delivery.outreach)} />
+            <Metric label="Paid routes" value={String(delivery.paid)} />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {AUTOMATIC_DISTRIBUTION.map((item) => (
+              <a key={item.id} href={item.url} target="_blank" rel="noreferrer" className="text-xs border border-slate-200 rounded-full px-2 py-1 hover:border-slate-400">
+                {item.id}
+              </a>
+            ))}
+          </div>
+        </div>
         {retryLater.length > 0 && (
           <div className="mt-4 border-t pt-4">
             <h3 className="text-sm font-medium">Retry later — still eligible</h3>
