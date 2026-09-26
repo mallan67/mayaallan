@@ -148,6 +148,7 @@ export async function executeRun(): Promise<
             prompt: prompt.text,
             prompt_id: prompt.id,
             prompt_category: prompt.category,
+            prompt_intent: prompt.intent,
             was_cited: false,
             mention_types: [],
             cited_urls: [],
@@ -172,6 +173,7 @@ export async function executeRun(): Promise<
           prompt: prompt.text,
           prompt_id: prompt.id,
           prompt_category: prompt.category,
+          prompt_intent: prompt.intent,
           // "cited" is reserved for a real source citation (issue #44).
           was_cited: c.source_citation,
           mention_types: c.mention_types,
