@@ -6,6 +6,11 @@ import { buildSearchOpportunities } from "@/lib/search-console/opportunities"
 import { loadRecentRuns, allRows } from "@/lib/aeo/storage"
 import { aggregateExternalSources } from "@/lib/aeo/source-gaps"
 import { loadCrawlerSummary } from "@/lib/crawler-telemetry"
+import { entityReadiness } from "@/lib/visibility/entity-readiness"
+import { visualAssetReadiness } from "@/lib/visibility/visual-readiness"
+import { VISIBILITY_GRAPH } from "@/lib/visibility/topic-graph"
+import { EVIDENCE_REGISTRY } from "@/lib/visibility/evidence-registry"
+import { loadPrompts } from "@/lib/aeo/prompts"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
