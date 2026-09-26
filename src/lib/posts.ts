@@ -9,6 +9,7 @@ export type PostFrontmatter = {
   date: string // ISO
   /** Optional ISO date of the last substantive revision. Shown as "Updated" and used as Article dateModified. */
   updated?: string
+  answer?: string
   tool_link?: string
   tool_name?: string
   tags?: string[]
@@ -60,6 +61,7 @@ export async function listPosts(): Promise<PostSummary[]> {
       author: String(data.author ?? "Maya Allan"),
       date: isoDate(data.date, new Date().toISOString().slice(0, 10)) as string,
       updated: isoDate(data.updated),
+      answer: data.answer ? String(data.answer) : undefined,
       tool_link: data.tool_link ? String(data.tool_link) : undefined,
       tool_name: data.tool_name ? String(data.tool_name) : undefined,
       tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
@@ -90,6 +92,7 @@ export async function getPost(slug: string): Promise<PostFull | null> {
     author: String(data.author ?? "Maya Allan"),
     date: isoDate(data.date, new Date().toISOString().slice(0, 10)) as string,
     updated: isoDate(data.updated),
+    answer: data.answer ? String(data.answer) : undefined,
     tool_link: data.tool_link ? String(data.tool_link) : undefined,
     tool_name: data.tool_name ? String(data.tool_name) : undefined,
     tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
