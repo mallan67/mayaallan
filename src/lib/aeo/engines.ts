@@ -60,6 +60,15 @@ export const ENGINE_SEARCH_CAPABLE: Record<EngineName, boolean> = {
   gemini: false,
 }
 
+function groundedEngineEnabled(engine: EngineName): boolean {
+  const raw = process.env.AEO_GROUNDED_ENGINES?.trim()
+  if (!raw) return engine === "perplexity"
+  const enabled = new Set(
+    raw.split(",").map((value) => value.trim().toLowerCase()).filter(Boolean)
+  )
+  return enabled.has(engine)
+}
+
 // -----------------------------------------------------------------------------
 // Helper: shared probe via Vercel AI Gateway (or direct provider when
 // AI_PROVIDER=direct + the provider's direct key is set).
@@ -113,10 +122,10 @@ async function probeViaGateway(
 export async function queryClaude(prompt: string): Promise<EngineResponse | null> {
   return probeViaGateway(
     "claude",
-    "anthropic/claude-haiku-4-5",
-    "claude-haiku-4-5",
+    "anthropic/claude-sonnet-5",
+    "claude-sonnet-5",
     prompt,
-    () => queryClaudeDirect(prompt)
+    groundedEngineEnabled("claude") ? () => queryClaudeDirect(prompt) : undefined
   )
 }
 
@@ -126,7 +135,7 @@ async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null>
   const key = process.env.ANTHROPIC_API_KEY
   if (!key) return null
 
-  const model = process.env.AEO_CLAUDE_MODEL || "claude-haiku-4-5"
+  const model = process.env.AEO_CLAUDE_MODEL || "claude-sonnet-5"
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -191,10 +200,10 @@ async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null>
 export async function queryChatGPT(prompt: string): Promise<EngineResponse | null> {
   return probeViaGateway(
     "chatgpt",
-    "openai/gpt-4o-mini",
-    "gpt-4o-mini",
+    "openai/gpt-5.6-luna",
+    "gpt-5.6-luna",
     prompt,
-    () => queryChatGPTDirect(prompt)
+    groundedEngineEnabled("chatgpt") ? () => queryChatGPTDirect(prompt) : undefined
   )
 }
 
@@ -328,8 +337,8 @@ export async function queryGemini(prompt: string): Promise<EngineResponse | null
 
   // Prefer direct Gemini when a key exists because Google Search grounding is
   // provider-specific and exposes the actual queries + source URLs.
-  if (directKey) {
-    const model = process.env.AEO_GEMINI_MODEL || "gemini-2.5-flash"
+  if (directKey && groundedEngineEnabled("gemini")) {
+    const model = process.env.AEO_GEMINI_MODEL || "gemini-3.8-flash"
     try {
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
@@ -386,10 +395,10 @@ export async function queryGemini(prompt: string): Promise<EngineResponse | null
 
   // Gateway-only fallback remains a non-search memory probe and is labelled as such.
   if (!hasGatewayKey) return null
-  const model = "google/gemini-2.5-flash"
+  const model = "google/gemini-3.8-flash"
   try {
     const { text } = await generateText({ model, prompt, maxOutputTokens: 1024 })
-    return { engine: "gemini", content: text ?? "", model: "gemini-2.5-flash", searchCapable: false }
+    return { engine: "gemini", content: text ?? "", model: "gemini-3.8-flash", searchCapable: false }
   } catch (err) {
     return {
       engine: "gemini",
