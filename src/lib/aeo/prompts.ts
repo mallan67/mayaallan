@@ -13,6 +13,7 @@ export interface AeoPrompt {
   id: string
   category: string
   text: string
+  intent?: "discovery" | "problem" | "resource" | "tool" | "comparison" | "research" | "safety" | "brand"
 }
 
 const PROMPTS_FILE = path.join(process.cwd(), "content", "aeo-prompts.json")

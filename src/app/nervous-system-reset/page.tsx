@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ResetChat } from "@/components/ResetChat"
-import { HeartPulse } from "lucide-react"
+import { SeoExplainerVisual } from "@/components/SeoExplainerVisual"
 import { jsonLdScript } from "@/lib/json-ld"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
 import { generateBreadcrumbSchema, generateSoftwareApplicationSchema } from "@/lib/structured-data"
@@ -102,6 +102,12 @@ export default function ResetPage() {
                 is happening physically, and choose a simple practice without pretending to diagnose your nervous system.
               </p>
             </div>
+
+            <SeoExplainerVisual
+              slug="nervous-system-reset"
+              alt="Four-step grounding path: orient to the present, notice sensations, choose one small settling step, and check in again."
+              caption="The reset tool uses a simple body-first sequence intended for reflection and grounding, not diagnosis or treatment."
+            />
 
             <div className="grid sm:grid-cols-2 gap-6">
               <div>

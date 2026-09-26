@@ -38,6 +38,7 @@ export interface CitationRow {
   prompt: string
   prompt_id: string
   prompt_category: string
+  prompt_intent?: string
   /** v2: same as source_citation. Legacy rows: any mention at all. */
   was_cited: boolean
   mention_types: string[]
@@ -57,6 +58,10 @@ export interface CitationRow {
   source_citation?: boolean
   /** URLs the engine returned as citations separately from the text. */
   structured_citations?: string[]
+  /** Search queries the provider executed, when its API exposes them. */
+  search_queries?: string[]
+  /** All web sources exposed by the provider, including non-Maya competitors. */
+  source_urls?: string[]
   /** Full response text, kept so a row can be re-classified later without re-spending credits. */
   response_text?: string
 }

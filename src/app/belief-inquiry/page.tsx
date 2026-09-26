@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { InquiryChat } from "@/components/InquiryChat"
-import { ListChecks } from "lucide-react"
+import { SeoExplainerVisual } from "@/components/SeoExplainerVisual"
 import { jsonLdScript } from "@/lib/json-ld"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
 import { generateBreadcrumbSchema, generateSoftwareApplicationSchema } from "@/lib/structured-data"
@@ -102,6 +102,12 @@ export default function BeliefInquiryPage() {
                 Clean Language to explore what the belief means, where it shows up, and what else may also be true.
               </p>
             </div>
+
+            <SeoExplainerVisual
+              slug="belief-inquiry"
+              alt="Four-step Belief Inquiry reflection path: name the belief, explore its context, notice exceptions, and reflect on what changes."
+              caption="Belief Inquiry keeps the user’s own language central and uses a four-step reflection path rather than supplying a replacement belief."
+            />
 
             <div className="grid sm:grid-cols-2 gap-6">
               <div>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { IntegrationChat } from "@/components/IntegrationChat"
-import { Sparkles } from "lucide-react"
+import { SeoExplainerVisual } from "@/components/SeoExplainerVisual"
 import { jsonLdScript } from "@/lib/json-ld"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
 import { generateBreadcrumbSchema, generateSoftwareApplicationSchema } from "@/lib/structured-data"
@@ -102,6 +102,12 @@ export default function IntegrationPage() {
                 experience, and hold both in view without being told what the experience is supposed to mean.
               </p>
             </div>
+
+            <SeoExplainerVisual
+              slug="integration-reflection"
+              alt="Four-step Integration Reflection path: describe what happened, name the older pattern, hold both in view, and choose a small next step."
+              caption="Integration Reflection places a new experience beside an older expectation without claiming to install a new belief or produce a clinical outcome."
+            />
 
             <div className="grid sm:grid-cols-2 gap-6">
               <div>

@@ -148,6 +148,7 @@ export async function executeRun(): Promise<
             prompt: prompt.text,
             prompt_id: prompt.id,
             prompt_category: prompt.category,
+            prompt_intent: prompt.intent,
             was_cited: false,
             mention_types: [],
             cited_urls: [],
@@ -156,6 +157,8 @@ export async function executeRun(): Promise<
             error: result.error,
             classifier_version: 2,
             search_capable: result.searchCapable,
+            search_queries: result.searchQueries ?? [],
+            source_urls: result.sourceUrls ?? [],
           })
           continue
         }
@@ -170,6 +173,7 @@ export async function executeRun(): Promise<
           prompt: prompt.text,
           prompt_id: prompt.id,
           prompt_category: prompt.category,
+          prompt_intent: prompt.intent,
           // "cited" is reserved for a real source citation (issue #44).
           was_cited: c.source_citation,
           mention_types: c.mention_types,
@@ -183,6 +187,8 @@ export async function executeRun(): Promise<
           domain_reference: c.domain_reference,
           source_citation: c.source_citation,
           structured_citations: result.citations ?? [],
+          search_queries: result.searchQueries ?? [],
+          source_urls: result.sourceUrls ?? [],
           response_text: result.content,
         })
       }

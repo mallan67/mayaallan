@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { jsonLdScript } from "@/lib/json-ld"
 import { IntegrationJournalForm } from "./IntegrationJournalForm"
+import { SeoExplainerVisual } from "@/components/SeoExplainerVisual"
 import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
 import { generateBreadcrumbSchema, generateFAQSchema } from "@/lib/structured-data"
 
@@ -113,6 +114,12 @@ export default function IntegrationJournalPage() {
           </Link>
         </p>
       </header>
+
+      <SeoExplainerVisual
+        slug="integration-journal"
+        alt="Four-step Integration Journal reflection path: capture what stood out, notice recurring patterns, identify what matters, and revisit over time."
+        caption="The journal uses a simple repeatable reflection structure without claiming that integration follows a fixed biological or therapeutic timetable."
+      />
 
       {/* The actual tool */}
       <section className="mb-12 p-6 sm:p-8 rounded-2xl border border-slate-200 bg-gradient-to-br from-blue-50/30 to-white">
