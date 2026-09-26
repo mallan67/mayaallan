@@ -12,6 +12,7 @@ import { VISIBILITY_GRAPH, suggestRelatedNodes } from "@/lib/visibility/topic-gr
 import { EVIDENCE_REGISTRY } from "@/lib/visibility/evidence-registry"
 import { loadPrompts } from "@/lib/aeo/prompts"
 import { engineReadiness } from "@/lib/aeo/engines"
+import { DISTRIBUTION_SURFACES, distributionSummary } from "@/lib/visibility/distribution-surfaces"
 import { CoveragePanel } from "./CoveragePanel"
 
 export const dynamic = "force-dynamic"
@@ -70,6 +71,9 @@ export default async function VisibilityPage() {
   const visualReadyCount = visuals.filter((item) => item.ready).length
   const readinessItems = [...readiness.entity, ...readiness.google]
   const engineModes = engineReadiness()
+  const distribution = distributionSummary()
+  const retryLater = DISTRIBUTION_SURFACES.filter((surface) => surface.status === "retry-later")
+  const inherited = DISTRIBUTION_SURFACES.filter((surface) => surface.status === "inherited")
   const linkSuggestions = VISIBILITY_GRAPH.flatMap((node) =>
     suggestRelatedNodes(node.id, 2).map((target) => ({
       from: node.path,
@@ -106,6 +110,56 @@ export default async function VisibilityPage() {
         visualTotal={visuals.length}
         readiness={readinessItems}
       />
+
+      <section className="border border-slate-200 rounded-xl bg-white p-4">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+          <div>
+            <h2 className="font-semibold">Internet + AI + ecosystem distribution</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Root indexes, downstream search, AI answer engines, libraries, reader networks,
+              psychedelic media, social and syndication are tracked as one harmonized coverage system.
+            </p>
+          </div>
+          <div className="text-sm text-slate-600">{distribution.total} surfaces tracked</div>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+          {Object.entries(distribution.byCategory).map(([category, count]) => (
+            <div key={category} className="border border-slate-100 rounded-lg p-3">
+              <div className="text-[10px] uppercase tracking-[0.14em] text-slate-500">{category.replaceAll("-", " ")}</div>
+              <div className="text-xl font-serif font-semibold mt-1">{count}</div>
+            </div>
+          ))}
+        </div>
+        {inherited.length > 0 && (
+          <div className="mt-4 border-t pt-4">
+            <h3 className="text-sm font-medium">Inherited / downstream coverage</h3>
+            <p className="text-xs text-slate-500 mt-1">
+              These surfaces should be verified, but they do not create duplicate submission tasks when their root index is already active.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {inherited.map((surface) => (
+                <span key={surface.id} className="text-xs border border-slate-200 rounded-full px-2 py-1">
+                  {surface.name} ← {(surface.coverageFrom ?? []).join(", ")}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        {retryLater.length > 0 && (
+          <div className="mt-4 border-t pt-4">
+            <h3 className="text-sm font-medium">Retry later — still eligible</h3>
+            <div className="mt-2 space-y-2">
+              {retryLater.map((surface) => (
+                <div key={surface.id} className="text-sm">
+                  <span className="font-medium">{surface.name}</span>
+                  {typeof surface.attempts === "number" ? <span className="text-slate-500"> · {surface.attempts} prior attempts</span> : null}
+                  <p className="text-xs text-slate-500 mt-1">{surface.note}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
 
       <section>
         <h2 className="text-lg font-semibold mb-3">AEO engine modes</h2>

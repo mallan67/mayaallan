@@ -6,6 +6,7 @@ import { aggregateExternalSources } from "../../src/lib/aeo/source-gaps.ts"
 import { detectCrawler } from "../../src/lib/crawler-telemetry.ts"
 import { VISIBILITY_GRAPH, suggestRelatedNodes } from "../../src/lib/visibility/topic-graph.ts"
 import { EVIDENCE_REGISTRY } from "../../src/lib/visibility/evidence-registry.ts"
+import { DISTRIBUTION_SURFACES, distributionSurface } from "../../src/lib/visibility/distribution-surfaces.ts"
 
 test("Search Console opportunity engine finds striking-distance and low-CTR queries", () => {
   const current = [
@@ -109,5 +110,42 @@ test("multimodal explainer visuals use a registered route.ts handler and are emb
     const page = await readFile(pagePath, "utf8")
     assert.ok(page.includes("SeoExplainerVisual"), pagePath + " embeds the shared visual component")
     assert.ok(page.includes(`slug="${slug}"`), pagePath + " points at the expected visual slug")
+  }
+})
+
+
+test("distribution registry separates root indexes from downstream surfaces", () => {
+  assert.equal(distributionSurface("bing")?.status, "active")
+  assert.deepEqual(distributionSurface("yahoo")?.coverageFrom, ["bing"])
+  assert.deepEqual(distributionSurface("copilot")?.coverageFrom, ["bing"])
+  assert.equal(distributionSurface("yahoo")?.status, "inherited")
+})
+
+test("Goodreads remains eligible for future retry and is never modeled as blocked", () => {
+  const goodreads = distributionSurface("goodreads")
+  assert.ok(goodreads)
+  assert.equal(goodreads.status, "retry-later")
+  assert.equal(goodreads.attempts, 10)
+  assert.match(goodreads.note, /do NOT block/i)
+  assert.equal(DISTRIBUTION_SURFACES.some((surface) => surface.status === "blocked"), false)
+})
+
+test("distribution registry covers search, AI, libraries, reader networks and psychedelic ecosystem", () => {
+  const categories = new Set(DISTRIBUTION_SURFACES.map((surface) => surface.category))
+  for (const required of [
+    "root-index",
+    "downstream-search",
+    "ai-answer",
+    "bibliographic",
+    "reader-network",
+    "library",
+    "psychedelic-editorial",
+    "psychedelic-podcast",
+    "psychedelic-directory",
+    "conference-event",
+    "social",
+    "syndication",
+  ]) {
+    assert.ok(categories.has(required), "missing distribution category " + required)
   }
 })

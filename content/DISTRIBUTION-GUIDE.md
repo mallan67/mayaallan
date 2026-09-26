@@ -36,11 +36,12 @@
 
 These are "set up and forget" — they work in the background forever once set up. Each is a backlink to mayaallan.com and a way readers find you.
 
-**Goodreads Author Program** (20 min) — Largest book community online (~90M readers).
-1. [goodreads.com/author/program](https://www.goodreads.com/author/program) → Apply
-2. Claim your book profile
-3. Add bio, photo, link to mayaallan.com, link to Substack (when you have it)
-4. Approval in a few days
+**Goodreads Author Program** — keep as a future opportunity, not a blocked channel.
+- Maya has already applied approximately 10 times and has been rejected so far.
+- Do **not** keep submitting immediately and do **not** mark Goodreads permanently blocked.
+- Preserve the existing Goodreads book/author records and monitor them.
+- Retry the Author Program later after Maya Allan and the book have broader external exposure, additional catalog/library presence, more media mentions, and stronger authority signals.
+- When retrying, use the canonical bio and identifiers from the repo; do not create a Goodreads-specific bio variant.
 
 **BookBub Author Profile** (15 min + 1-2 week approval) — 15M+ reader newsletter.
 1. [partners.bookbub.com](https://partners.bookbub.com) → Apply as Author
