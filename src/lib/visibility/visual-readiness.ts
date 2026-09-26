@@ -8,7 +8,7 @@ export interface VisualAssetCheck {
   ready: boolean
 }
 
-const ROUTE_FILE = "src/app/seo-visual/[slug]/route.tsx"
+const ROUTE_FILE = "src/app/seo-visual/[slug]/route.ts"
 const TARGETS = [
   ["belief-inquiry", "src/app/belief-inquiry/page.tsx"],
   ["nervous-system-reset", "src/app/nervous-system-reset/page.tsx"],
