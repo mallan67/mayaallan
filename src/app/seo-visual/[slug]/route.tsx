@@ -26,6 +26,11 @@ const VISUALS: Record<string, Visual> = {
     subtitle: "A structured way to place a new experience beside an older expectation",
     steps: ["Describe what happened", "Name the older pattern", "Hold both in view", "Choose a small next step"],
   },
+  "integration-journal": {
+    title: "Integration Journal",
+    subtitle: "A simple structure for capturing reflection without imposing a fixed timeline",
+    steps: ["Capture what stood out", "Notice recurring patterns", "Identify what matters", "Revisit over time"],
+  },
 }
 
 export async function GET(
