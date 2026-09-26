@@ -1,128 +1,201 @@
 import "server-only"
 import { generateText } from "ai"
-import { google } from "@ai-sdk/google"
 
 // =============================================================================
-// AEO Engine clients — one minimal client per AI engine.
+// AEO engine probes
 // =============================================================================
-// Each function:
-//   - Returns null immediately if the engine's API key env var isn't set
-//     (so the AEO tracker gracefully skips engines you haven't enrolled in)
-//   - Uses raw fetch — no SDK dependencies — so adding/removing providers
-//     doesn't churn package.json
-//   - Returns { content, model, error? } — error captured rather than thrown
-//     so one engine's outage doesn't tank the weekly run
+// Direct provider credentials are preferred for AEO because OpenAI, Anthropic,
+// Google and Perplexity expose provider-native live web search/citation data.
+// When only Vercel AI Gateway is available, non-search providers fall back to a
+// plain completion and are explicitly labelled "model-memory". Perplexity Sonar
+// remains search-capable through Gateway because search is intrinsic to Sonar.
 //
-// API KEYS:
-//   ANTHROPIC_API_KEY      — Claude (claude.ai/console)
-//   OPENAI_API_KEY         — ChatGPT (platform.openai.com)
-//   PERPLEXITY_API_KEY     — Perplexity (perplexity.ai/settings/api)
-//   GOOGLE_GENAI_API_KEY   — Gemini (aistudio.google.com/apikey)
-//
-// Costs (May 2026): rough estimates for 25 prompts × weekly:
-//   Claude   — ~$0.10/week (sonnet)
-//   OpenAI   — ~$0.30/week (gpt-4o-mini)
-//   Perplexity — ~$0.20/week (sonar)
-//   Gemini   — free tier covers it
-// Total ~$2.50/month if all four are enabled.
+// This distinction is intentional: a model remembering Maya Allan is useful
+// brand-memory data, but it is NOT evidence that a live AI search found or cited
+// mayaallan.com.
 // =============================================================================
 
 export type EngineName = "claude" | "chatgpt" | "perplexity" | "gemini"
+export type SearchMode = "grounded-search" | "model-memory"
 
 export interface EngineResponse {
   engine: EngineName
   content: string
   model: string
-  /**
-   * Whether this probe could consult the live web. The Claude, OpenAI and
-   * Gemini calls below are plain completions with no browsing or tool use, so
-   * they answer from training data; only Perplexity Sonar searches. A
-   * non-search response that names the site is a brand mention from memory,
-   * not evidence of what a consumer search product would show (issue #44).
-   */
   searchCapable: boolean
-  /** Source URLs the engine returned separately from the text (Perplexity). */
+  searchMode: SearchMode
+  /** Structured source URLs returned by the provider. */
   citations?: string[]
+  /** Search queries exposed by the provider, when available. */
+  searchQueries?: string[]
   /** Set if the call failed. content will be empty. */
   error?: string
 }
 
-/** Which engines, as called here, can search the web. Gateway vs direct
- *  transport does not change this; it is a property of the model call. */
-export const ENGINE_SEARCH_CAPABLE: Record<EngineName, boolean> = {
-  claude: false,
-  chatgpt: false,
-  perplexity: true,
-  gemini: false,
+const MAX_OUTPUT_TOKENS = 1024
+
+function envInt(name: string, fallback: number, min = 1, max = 20): number {
+  const raw = process.env[name]
+  const parsed = raw ? Number.parseInt(raw, 10) : Number.NaN
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.min(max, Math.max(min, parsed))
+}
+
+function uniqueStrings(values: unknown[]): string[] {
+  return [...new Set(values.filter((v): v is string => typeof v === "string" && v.trim().length > 0).map((v) => v.trim()))]
+}
+
+function collectDeepStrings(
+  value: unknown,
+  keys: Set<string>,
+  out: string[] = [],
+): string[] {
+  if (!value || typeof value !== "object") return out
+  if (Array.isArray(value)) {
+    for (const item of value) collectDeepStrings(item, keys, out)
+    return out
+  }
+
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (keys.has(key)) {
+      if (typeof child === "string") out.push(child)
+      else if (Array.isArray(child)) {
+        for (const item of child) if (typeof item === "string") out.push(item)
+      }
+    }
+    collectDeepStrings(child, keys, out)
+  }
+  return out
+}
+
+function collectUrls(value: unknown): string[] {
+  return uniqueStrings(
+    collectDeepStrings(value, new Set(["url", "uri"])).filter((value) => {
+      try {
+        const u = new URL(value)
+        return u.protocol === "https:" || u.protocol === "http:"
+      } catch {
+        return false
+      }
+    }),
+  )
+}
+
+function collectQueries(value: unknown): string[] {
+  return uniqueStrings(collectDeepStrings(value, new Set(["query", "queries", "webSearchQueries"])))
+}
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}
+
+function groundedPrompt(prompt: string): string {
+  return [
+    "Search the live web before answering this question. Use current web sources and include source citations when the provider supports them.",
+    "Answer the reader's question naturally; do not mention this measurement instruction.",
+    "",
+    prompt,
+  ].join("\n")
+}
+
+function hasSearchEvidence(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false
+  if (Array.isArray(value)) return value.some(hasSearchEvidence)
+
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    const normalizedKey = key.toLowerCase()
+    if (
+      normalizedKey.includes("groundingmetadata") ||
+      normalizedKey.includes("grounding_metadata") ||
+      normalizedKey.includes("websearchqueries") ||
+      normalizedKey.includes("web_search_queries")
+    ) {
+      return true
+    }
+    if (
+      (key === "type" || key === "name") &&
+      typeof child === "string" &&
+      /web[_ -]?search|search_query|search_results?/i.test(child)
+    ) {
+      return true
+    }
+    if (hasSearchEvidence(child)) return true
+  }
+  return false
+}
+
+
+async function responseError(res: Response): Promise<string> {
+  const text = await res.text().catch(() => "")
+  return `HTTP ${res.status}${text ? `: ${text.slice(0, 1200)}` : ""}`
 }
 
 // -----------------------------------------------------------------------------
-// Helper: shared probe via Vercel AI Gateway (or direct provider when
-// AI_PROVIDER=direct + the provider's direct key is set).
+// Gateway memory/search fallback
 // -----------------------------------------------------------------------------
+
 async function probeViaGateway(
-  engineName: EngineResponse["engine"],
-  gatewayModel: string,
-  modelLabel: string,
+  engine: EngineName,
+  model: string,
   prompt: string,
-  /** Optional direct-API call. Returns null if its provider key isn't set. */
-  directFallback?: () => Promise<EngineResponse | null>
+  searchCapable: boolean,
 ): Promise<EngineResponse | null> {
-  const hasGateway = !!process.env.AI_GATEWAY_API_KEY
-
-  // PREFER the direct API path when the provider's direct key is present —
-  // this routes calls through the user's own provider credit (e.g., their
-  // Anthropic console balance) instead of burning Vercel AI Gateway credits.
-  // directFallback() returns null when its key isn't set, falling through to
-  // the Gateway path below.
-  if (directFallback) {
-    const direct = await directFallback()
-    if (direct !== null) return direct
-  }
-
-  // Fallback: Gateway. Skip silently if no Gateway key either.
-  if (!hasGateway) return null
+  if (!process.env.AI_GATEWAY_API_KEY && !process.env.VERCEL_OIDC_TOKEN) return null
 
   try {
-    const { text } = await generateText({
-      model: gatewayModel,
-      prompt,
-      maxOutputTokens: 1024,
+    const result = await generateText({
+      model,
+      prompt: searchCapable ? groundedPrompt(prompt) : prompt,
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
     })
-    return { engine: engineName, content: text ?? "", model: modelLabel, searchCapable: ENGINE_SEARCH_CAPABLE[engineName] }
+
+    const citations = uniqueStrings(
+      (result.sources ?? [])
+        .filter((source) => source.sourceType === "url")
+        .map((source) => source.url),
+    )
+    const searched =
+      searchCapable &&
+      (citations.length > 0 || hasSearchEvidence(result.providerMetadata))
+
+    return {
+      engine,
+      content: result.text ?? "",
+      model,
+      searchCapable,
+      searchMode: searched ? "grounded-search" : "model-memory",
+      citations,
+      searchQueries: collectQueries(result.providerMetadata),
+    }
   } catch (err) {
     return {
-      engine: engineName,
+      engine,
       content: "",
-      model: modelLabel,
-      searchCapable: ENGINE_SEARCH_CAPABLE[engineName],
-      error: err instanceof Error ? err.message : String(err),
+      model,
+      searchCapable,
+      searchMode: searchCapable ? "grounded-search" : "model-memory",
+      error: errorMessage(err),
     }
   }
 }
 
 // -----------------------------------------------------------------------------
-// Claude — prefers DIRECT Anthropic API when ANTHROPIC_API_KEY is set (so the
-// user's own Anthropic credit is consumed, not Vercel AI Gateway credit),
-// falls back to Gateway when only AI_GATEWAY_API_KEY is present.
+// Claude — provider-native web search when ANTHROPIC_API_KEY is configured.
 // -----------------------------------------------------------------------------
+
 export async function queryClaude(prompt: string): Promise<EngineResponse | null> {
-  return probeViaGateway(
-    "claude",
-    "anthropic/claude-haiku-4-5",
-    "claude-haiku-4-5",
-    prompt,
-    () => queryClaudeDirect(prompt)
-  )
+  const direct = await queryClaudeDirect(prompt)
+  if (direct) return direct
+
+  const gatewayModel = process.env.AEO_CLAUDE_GATEWAY_MODEL || "anthropic/claude-haiku-4-5"
+  return probeViaGateway("claude", gatewayModel, prompt, false)
 }
 
-/** Direct Anthropic API call — uses ANTHROPIC_API_KEY (the user's own
- *  Anthropic console credit). Haiku 4.5 is the cheapest current model. */
 async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null> {
   const key = process.env.ANTHROPIC_API_KEY
   if (!key) return null
 
-  const model = "claude-haiku-4-5"
+  const model = process.env.AEO_CLAUDE_MODEL || "claude-haiku-4-5-20251001"
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -133,161 +206,289 @@ async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null>
       },
       body: JSON.stringify({
         model,
-        max_tokens: 1024,
-        messages: [{ role: "user", content: prompt }],
+        max_tokens: MAX_OUTPUT_TOKENS,
+        messages: [{ role: "user", content: groundedPrompt(prompt) }],
+        tools: [
+          {
+            type: "web_search_20250305",
+            name: "web_search",
+            max_uses: envInt("AEO_MAX_SEARCHES_PER_PROBE", 2, 1, 5),
+          },
+        ],
       }),
+      cache: "no-store",
     })
+
     if (!res.ok) {
-      return { engine: "claude", content: "", model, searchCapable: false, error: `HTTP ${res.status}: ${await res.text()}` }
+      return {
+        engine: "claude",
+        content: "",
+        model,
+        searchCapable: true,
+        searchMode: "grounded-search",
+        error: await responseError(res),
+      }
     }
+
     const data = await res.json()
-    const content = data?.content?.[0]?.text ?? ""
-    return { engine: "claude", content, model, searchCapable: false }
+    const content = Array.isArray(data?.content)
+      ? data.content
+          .filter((block: unknown) => !!block && typeof block === "object" && (block as { type?: string }).type === "text")
+          .map((block: unknown) => String((block as { text?: unknown }).text ?? ""))
+          .join("\n")
+      : ""
+
+    const searched = hasSearchEvidence(data)
+    return {
+      engine: "claude",
+      content,
+      model,
+      searchCapable: true,
+      searchMode: searched ? "grounded-search" : "model-memory",
+      citations: collectUrls(data),
+      searchQueries: collectQueries(data),
+    }
   } catch (err) {
-    return { engine: "claude", content: "", model, searchCapable: false, error: err instanceof Error ? err.message : String(err) }
+    return {
+      engine: "claude",
+      content: "",
+      model,
+      searchCapable: true,
+      searchMode: "grounded-search",
+      error: errorMessage(err),
+    }
   }
 }
 
 // -----------------------------------------------------------------------------
-// ChatGPT — direct OpenAI when OPENAI_API_KEY is set, Gateway otherwise.
+// ChatGPT — Responses API + web_search when OPENAI_API_KEY is configured.
 // -----------------------------------------------------------------------------
+
 export async function queryChatGPT(prompt: string): Promise<EngineResponse | null> {
-  return probeViaGateway(
-    "chatgpt",
-    "openai/gpt-4o-mini",
-    "gpt-4o-mini",
-    prompt,
-    () => queryChatGPTDirect(prompt)
-  )
+  const direct = await queryChatGPTDirect(prompt)
+  if (direct) return direct
+
+  const gatewayModel = process.env.AEO_OPENAI_GATEWAY_MODEL || "openai/gpt-5.6-luna"
+  return probeViaGateway("chatgpt", gatewayModel, prompt, false)
 }
 
 async function queryChatGPTDirect(prompt: string): Promise<EngineResponse | null> {
   const key = process.env.OPENAI_API_KEY
   if (!key) return null
 
-  const model = "gpt-4o-mini"
+  const model = process.env.AEO_OPENAI_MODEL || "gpt-5.6-luna"
   try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const res = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "content-type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "content-type": "application/json",
+      },
       body: JSON.stringify({
         model,
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 1024,
+        input: groundedPrompt(prompt),
+        tools: [{ type: "web_search", search_context_size: "low" }],
+        max_output_tokens: MAX_OUTPUT_TOKENS,
       }),
+      cache: "no-store",
     })
+
     if (!res.ok) {
-      return { engine: "chatgpt", content: "", model, searchCapable: false, error: `HTTP ${res.status}: ${await res.text()}` }
+      return {
+        engine: "chatgpt",
+        content: "",
+        model,
+        searchCapable: true,
+        searchMode: "grounded-search",
+        error: await responseError(res),
+      }
     }
+
     const data = await res.json()
-    const content = data?.choices?.[0]?.message?.content ?? ""
-    return { engine: "chatgpt", content, model, searchCapable: false }
+    const content =
+      typeof data?.output_text === "string"
+        ? data.output_text
+        : Array.isArray(data?.output)
+          ? data.output
+              .flatMap((item: { content?: Array<{ type?: string; text?: string }> }) => item.content ?? [])
+              .filter((item: { type?: string }) => item.type === "output_text")
+              .map((item: { text?: string }) => item.text ?? "")
+              .join("\n")
+          : ""
+
+    const searched = hasSearchEvidence(data?.output ?? data)
+    return {
+      engine: "chatgpt",
+      content,
+      model,
+      searchCapable: true,
+      searchMode: searched ? "grounded-search" : "model-memory",
+      citations: collectUrls(data?.output ?? data),
+      searchQueries: collectQueries(data?.output ?? data),
+    }
   } catch (err) {
-    return { engine: "chatgpt", content: "", model, searchCapable: false, error: err instanceof Error ? err.message : String(err) }
+    return {
+      engine: "chatgpt",
+      content: "",
+      model,
+      searchCapable: true,
+      searchMode: "grounded-search",
+      error: errorMessage(err),
+    }
   }
 }
 
 // -----------------------------------------------------------------------------
-// Perplexity — direct API when PERPLEXITY_API_KEY is set, Gateway otherwise.
-// Perplexity is uniquely valuable because Sonar performs live web search
-// and cites URLs inline.
+// Perplexity — Sonar performs live search by design.
 // -----------------------------------------------------------------------------
+
 export async function queryPerplexity(prompt: string): Promise<EngineResponse | null> {
-  return probeViaGateway(
-    "perplexity",
-    "perplexity/sonar",
-    "sonar",
-    prompt,
-    () => queryPerplexityDirect(prompt)
-  )
+  const direct = await queryPerplexityDirect(prompt)
+  if (direct) return direct
+
+  const gatewayModel = process.env.AEO_PERPLEXITY_GATEWAY_MODEL || "perplexity/sonar"
+  return probeViaGateway("perplexity", gatewayModel, prompt, true)
 }
 
 async function queryPerplexityDirect(prompt: string): Promise<EngineResponse | null> {
   const key = process.env.PERPLEXITY_API_KEY
   if (!key) return null
 
-  const model = "sonar"
+  const model = process.env.AEO_PERPLEXITY_MODEL || "sonar"
   try {
     const res = await fetch("https://api.perplexity.ai/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "content-type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "content-type": "application/json",
+      },
       body: JSON.stringify({
         model,
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 1024,
+        messages: [{ role: "user", content: groundedPrompt(prompt) }],
+        max_tokens: MAX_OUTPUT_TOKENS,
       }),
+      cache: "no-store",
     })
+
     if (!res.ok) {
-      return { engine: "perplexity", content: "", model, searchCapable: true, error: `HTTP ${res.status}: ${await res.text()}` }
+      return {
+        engine: "perplexity",
+        content: "",
+        model,
+        searchCapable: true,
+        searchMode: "grounded-search",
+        error: await responseError(res),
+      }
     }
+
     const data = await res.json()
-    // Sonar returns citations as a separate field. Keep them separate so the
-    // classifier can record a structured citation as its own signal instead
-    // of finding it as text pasted onto the answer.
     const content = data?.choices?.[0]?.message?.content ?? ""
-    const citations = Array.isArray(data?.citations)
-      ? data.citations.filter((c: unknown): c is string => typeof c === "string")
-      : []
-    return { engine: "perplexity", content, model, searchCapable: true, citations }
+    const citations = uniqueStrings([
+      ...(Array.isArray(data?.citations) ? data.citations : []),
+      ...collectUrls(data?.search_results ?? []),
+    ])
+
+    return {
+      engine: "perplexity",
+      content,
+      model,
+      searchCapable: true,
+      searchMode: "grounded-search",
+      citations,
+      searchQueries: collectQueries(data),
+    }
   } catch (err) {
-    return { engine: "perplexity", content: "", model, searchCapable: true, error: err instanceof Error ? err.message : String(err) }
+    return {
+      engine: "perplexity",
+      content: "",
+      model,
+      searchCapable: true,
+      searchMode: "grounded-search",
+      error: errorMessage(err),
+    }
   }
 }
 
 // -----------------------------------------------------------------------------
-// Gemini — routed the same way the rest of the site's AI tools route
+// Gemini — direct Gemini REST API + google_search grounding when a Google key
+// is configured. Gateway-only fallback remains model-memory because the generic
+// generateText call below does not request provider-native Google Search.
 // -----------------------------------------------------------------------------
-// Mirrors src/app/api/chat/route.ts: defaults to Vercel AI Gateway (which uses
-// AI_GATEWAY_API_KEY and pulls from Vercel credits), and switches to direct
-// Google API only if AI_PROVIDER=direct is set (with GOOGLE_GENERATIVE_AI_API_KEY).
-//
-// Why: the direct Google API can have project-specific quota issues
-// (limit: 0 errors even on free-tier models). Going through Gateway uses the
-// same path that already works for the production chat tools, with predictable
-// billing on Vercel rather than Google's free-tier quirks.
-//
-// Cost on Gateway: ~$0.003 per probe × 25 prompts × 4 weekly runs ≈ $0.30/mo.
+
 export async function queryGemini(prompt: string): Promise<EngineResponse | null> {
-  const hasGatewayKey = !!process.env.AI_GATEWAY_API_KEY
-  const hasDirectKey = !!(process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY)
-  const provider = (process.env.AI_PROVIDER ?? "gateway").toLowerCase()
+  const direct = await queryGeminiDirect(prompt)
+  if (direct) return direct
 
-  // No usable credentials anywhere — skip silently.
-  if (!hasGatewayKey && !hasDirectKey) return null
+  const gatewayModel = process.env.AEO_GEMINI_GATEWAY_MODEL || "google/gemini-2.5-flash-lite"
+  return probeViaGateway("gemini", gatewayModel, prompt, false)
+}
 
-  // Decide the actual transport: prefer the path that has a key configured,
-  // honoring AI_PROVIDER when it's set explicitly.
-  const useDirect = provider === "direct" ? hasDirectKey : !hasGatewayKey && hasDirectKey
-  const model = useDirect ? google("gemini-2.5-flash") : "google/gemini-2.5-flash"
-  const modelLabel = "gemini-2.5-flash"
+async function queryGeminiDirect(prompt: string): Promise<EngineResponse | null> {
+  const key = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  if (!key) return null
+
+  const model = process.env.AEO_GEMINI_MODEL || "gemini-2.5-flash-lite"
+  const endpoint =
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`
 
   try {
-    const { text } = await generateText({
-      model,
-      prompt,
-      // maxOutputTokens cap keeps cost predictable; 1024 is enough for AEO
-      // citation detection (we only need to see whether the engine mentioned
-      // the site, not get a full long-form answer).
-      maxOutputTokens: 1024,
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: groundedPrompt(prompt) }] }],
+        tools: [{ google_search: {} }],
+        generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
+      }),
+      cache: "no-store",
     })
-    return { engine: "gemini", content: text ?? "", model: modelLabel, searchCapable: false }
+
+    if (!res.ok) {
+      return {
+        engine: "gemini",
+        content: "",
+        model,
+        searchCapable: true,
+        searchMode: "grounded-search",
+        error: await responseError(res),
+      }
+    }
+
+    const data = await res.json()
+    const candidate = data?.candidates?.[0]
+    const content = Array.isArray(candidate?.content?.parts)
+      ? candidate.content.parts.map((part: { text?: string }) => part.text ?? "").join("\n")
+      : ""
+    const grounding = candidate?.groundingMetadata ?? candidate?.grounding_metadata ?? {}
+
+    const searched = hasSearchEvidence(grounding)
+    return {
+      engine: "gemini",
+      content,
+      model,
+      searchCapable: true,
+      searchMode: searched ? "grounded-search" : "model-memory",
+      citations: collectUrls(grounding),
+      searchQueries: uniqueStrings([
+        ...(Array.isArray(grounding?.webSearchQueries) ? grounding.webSearchQueries : []),
+        ...(Array.isArray(grounding?.web_search_queries) ? grounding.web_search_queries : []),
+      ]),
+    }
   } catch (err) {
     return {
       engine: "gemini",
       content: "",
-      model: modelLabel,
-      searchCapable: false,
-      error: err instanceof Error ? err.message : String(err),
+      model,
+      searchCapable: true,
+      searchMode: "grounded-search",
+      error: errorMessage(err),
     }
   }
 }
 
-/** Returns only engines that have a usable credential path (direct OR
- *  Gateway). With AI_GATEWAY_API_KEY set, every engine is usable; with
- *  individual provider keys set (ANTHROPIC_API_KEY etc.), those engines
- *  are usable via direct API. */
+/** Returns engines with either direct credentials or a Gateway credential path. */
 export function enabledEngines(): Array<(prompt: string) => Promise<EngineResponse | null>> {
-  const hasGateway = !!process.env.AI_GATEWAY_API_KEY
+  const hasGateway = !!process.env.AI_GATEWAY_API_KEY || !!process.env.VERCEL_OIDC_TOKEN
   const all: Array<{ fn: (p: string) => Promise<EngineResponse | null>; enabled: boolean }> = [
     { fn: queryClaude, enabled: hasGateway || !!process.env.ANTHROPIC_API_KEY },
     { fn: queryChatGPT, enabled: hasGateway || !!process.env.OPENAI_API_KEY },
@@ -300,5 +501,6 @@ export function enabledEngines(): Array<(prompt: string) => Promise<EngineRespon
         !!process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     },
   ]
-  return all.filter((e) => e.enabled).map((e) => e.fn)
+
+  return all.filter((entry) => entry.enabled).map((entry) => entry.fn)
 }

@@ -11,10 +11,10 @@ Open Vercel → Project → Settings → Environment Variables and add the follo
 | Variable | Required? | Where to get it | Notes |
 |---|---|---|---|
 | `CRON_SECRET` | **Yes** | Generate any random 32+ char string (e.g. `openssl rand -hex 32`) | Vercel Cron sends this in the `Authorization: Bearer ...` header. Without it, the cron route returns 401. |
-| `ANTHROPIC_API_KEY` | No | console.anthropic.com → API Keys | Claude tracking. Cost: ~$0.10/week for 25 prompts. |
-| `OPENAI_API_KEY` | No | platform.openai.com → API keys | ChatGPT tracking. Cost: ~$0.30/week. |
-| `PERPLEXITY_API_KEY` | No | perplexity.ai → Settings → API | **Highest-signal engine** — Perplexity actually does live web search and cites sources inline. Cost: ~$0.20/week. |
-| `GOOGLE_GENAI_API_KEY` | No | aistudio.google.com/apikey | Gemini tracking. Free tier covers it. |
+| `ANTHROPIC_API_KEY` | No | Anthropic Console | Enables provider-native Claude web-search probes. |
+| `OPENAI_API_KEY` | No | OpenAI Platform | Enables Responses API web-search probes. |
+| `PERPLEXITY_API_KEY` | No | Perplexity API settings | Enables Sonar live-search probes. |
+| `GOOGLE_GENAI_API_KEY` / `GOOGLE_GENERATIVE_AI_API_KEY` | No | Google AI Studio | Enables Gemini Google Search grounding. |
 
 **Minimum viable**: just set `CRON_SECRET` + one engine key. The cron runs, you start collecting data.
 
@@ -58,7 +58,7 @@ Response is JSON with run summary. Typical first run takes 1-3 minutes.
 Log in at `/admin/login`, then visit **`/admin/aeo`**. You'll see:
 
 - Three separate measures per engine, never summed: **brand mentions** (author or book named in the text), **domain references** (the domain as plain text), and **source citations** (a URL under the site in the text or in the engine's citation list). Only the last one is a citation.
-- The same three measures split by whether the engine could search the web. Only Perplexity Sonar searches; the Claude, OpenAI and Gemini calls answer from training data and do not represent what a consumer search product shows.
+- The same three measures split by **grounded search** versus **model memory**. Direct provider credentials use provider-native search/grounding where supported. Gateway-only fallbacks that do not invoke a provider search tool stay labelled model-memory and are never pooled into live-search rates.
 - Recent runs (with per-dimension counts + error count)
 - Prompts ranked by source-citation rate, with brand mentions shown alongside
 - Most-cited URLs — source citations only
@@ -102,7 +102,7 @@ Per the May 2026 SparkToro data: AI-engine click-through rates are **15.9% (Chat
 
 | What | Where | Frequency |
 |---|---|---|
-| AI mention/citation probes (4 engines × 25 prompts; 1 search-capable) | `/admin/aeo` | Weekly auto, manual on-demand |
+| Grounded AI mention/citation probes + model-memory fallbacks | `/admin/aeo` | Weekly auto, manual on-demand |
 | AI engine click-through traffic | GA4 → AI Search channel | Real-time |
 | Google + Bing organic | GSC + Bing Webmaster | Real-time |
 | Site speed (Core Web Vitals) | Vercel Speed Insights | Real-time |

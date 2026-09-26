@@ -25,6 +25,9 @@ interface RunSummary {
   domainReferences?: number
   sourceCitations?: number
   errors: number
+  groundedSearchProbes?: number
+  modelMemoryProbes?: number
+  externalSourceCitations?: number
   blobPath?: string
   storageError?: string
 }
@@ -77,8 +80,8 @@ export function RunNowButton() {
         <div>
           <p className="text-sm font-semibold text-slate-900">Trigger a probe now</p>
           <p className="text-xs text-slate-500 mt-1">
-            Runs all configured engines against all 25 prompts. Takes 30 sec – 3 min depending
-            on engine count.
+            Runs all configured engines against the tracked intent matrix. Direct provider keys
+            use live web grounding where supported; gateway-only fallbacks remain model-memory probes.
           </p>
         </div>
         <button
@@ -111,6 +114,9 @@ export function RunNowButton() {
           {result.domainReferences ?? 0} domain reference{result.domainReferences === 1 ? "" : "s"} across{" "}
           {result.totalProbes} probe{result.totalProbes === 1 ? "" : "s"}{" "}
           ({result.enginesRun.join(", ")}).
+          {typeof result.groundedSearchProbes === "number" && (
+            <span> {result.groundedSearchProbes} grounded, {result.modelMemoryProbes ?? 0} memory probe{(result.modelMemoryProbes ?? 0) === 1 ? "" : "s"}.</span>
+          )}
           {result.errors > 0 && (
             <span className="text-amber-700"> {result.errors} error{result.errors === 1 ? "" : "s"}.</span>
           )}

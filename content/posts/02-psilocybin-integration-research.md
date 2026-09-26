@@ -4,6 +4,7 @@ subtitle: "Memory reconsolidation is real science and a contested one. Here is w
 author: Maya Allan
 date: 2026-04-19
 updated: 2026-09-05
+shortAnswer: "Research supports memory reconsolidation strongly in animals, but human findings are mixed, and current evidence does not establish that post-psilocybin reflection literally rewrites an emotional belief or that one integration method improves outcomes. The reflective practice described here is an interpretation built from clinical theory and emerging psychedelic research, with those limits made explicit."
 tool_link: https://www.mayaallan.com/integration-reflection
 tool_name: Integration Reflection
 book_link: https://www.mayaallan.com/books/psilocybin-integration-guide

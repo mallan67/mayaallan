@@ -38,6 +38,9 @@ export interface CitationRow {
   prompt: string
   prompt_id: string
   prompt_category: string
+  prompt_intent?: string
+  prompt_topic?: string
+  target_path?: string
   /** v2: same as source_citation. Legacy rows: any mention at all. */
   was_cited: boolean
   mention_types: string[]
@@ -47,8 +50,10 @@ export interface CitationRow {
   error: string | null
   /** 2 = split classifier. Absent on legacy rows. */
   classifier_version?: number
-  /** Whether the engine call could search the web (see engines.ts). */
+  /** Whether the engine call could search the live web (see engines.ts). */
   search_capable?: boolean
+  /** grounded-search vs model-memory. Older classified rows may omit this. */
+  search_mode?: "grounded-search" | "model-memory"
   /** Author name or book title appears in the text. */
   brand_mention?: boolean
   /** The bare domain appears as text, not as a link. */
@@ -57,6 +62,12 @@ export interface CitationRow {
   source_citation?: boolean
   /** URLs the engine returned as citations separately from the text. */
   structured_citations?: string[]
+  /** Provider-exposed search queries, when available. */
+  search_queries?: string[]
+  /** Cited/search-result URLs outside mayaallan.com — our citation-gap evidence. */
+  external_sources?: string[]
+  /** Normalized hosts for external_sources, useful for competitor/source aggregation. */
+  external_source_domains?: string[]
   /** Full response text, kept so a row can be re-classified later without re-spending credits. */
   response_text?: string
 }

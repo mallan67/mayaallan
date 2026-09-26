@@ -181,11 +181,11 @@ export default async function RootLayout({
   const websiteSchema = generateWebSiteSchema()
   const organizationSchema = generateOrganizationSchema()
 
-  // Locale + direction are detected in middleware.ts and passed in via the
+  // Locale + direction are detected in proxy.ts and passed in via the
   // x-locale header. Layouts can't see params from nested [locale] routes, so
   // the header is the cleanest way to set <html lang> + <html dir> correctly
   // for Hebrew (rtl) and the LTR locales. Defaults to English if anything's
-  // off (e.g., middleware skipped a static asset).
+  // off (e.g., proxy skipped a static asset).
   const headersList = await headers()
   const rawLocale = headersList.get("x-locale") ?? DEFAULT_LOCALE
   const locale = (LOCALES as readonly string[]).includes(rawLocale)

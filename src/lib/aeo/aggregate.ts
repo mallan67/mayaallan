@@ -23,6 +23,10 @@ export interface AggRow {
   brand_mention?: boolean
   domain_reference?: boolean
   source_citation?: boolean
+  search_mode?: "grounded-search" | "model-memory"
+  search_queries?: string[]
+  external_sources?: string[]
+  external_source_domains?: string[]
 }
 
 export interface DimensionCounts {
@@ -57,6 +61,12 @@ export interface PromptStats {
   search: RateCounts
   non_search: RateCounts
   legacy_probes: number
+}
+
+export interface ExternalSourceCounts {
+  value: string
+  grounded: number
+  memory: number
 }
 
 export interface UrlCounts {
@@ -170,4 +180,43 @@ export function aggregateByUrl(rows: Array<AggRow & { cited_urls?: string[] }>):
 
 function rate(c: DimensionCounts): number {
   return c.total ? (c.source_citations / c.total) * 100 : 0
+}
+
+
+/** External sources chosen instead of mayaallan.com, split by actual grounding mode. */
+export function aggregateExternalSources(
+  rows: Array<AggRow & { external_sources?: string[] }>,
+): ExternalSourceCounts[] {
+  const map = new Map<string, ExternalSourceCounts>()
+  for (const r of rows) {
+    if (r.error || !isClassifiedRow(r)) continue
+    for (const value of r.external_sources ?? []) {
+      const m = map.get(value) ?? { value, grounded: 0, memory: 0 }
+      if (r.search_mode === "grounded-search" || r.search_capable) m.grounded++
+      else m.memory++
+      map.set(value, m)
+    }
+  }
+  return Array.from(map.values()).sort(
+    (a, b) => b.grounded - a.grounded || b.memory - a.memory || a.value.localeCompare(b.value),
+  )
+}
+
+/** External domains selected by grounded engines — the clearest competitor/source-gap view. */
+export function aggregateExternalDomains(
+  rows: Array<AggRow & { external_source_domains?: string[] }>,
+): ExternalSourceCounts[] {
+  const map = new Map<string, ExternalSourceCounts>()
+  for (const r of rows) {
+    if (r.error || !isClassifiedRow(r)) continue
+    for (const value of r.external_source_domains ?? []) {
+      const m = map.get(value) ?? { value, grounded: 0, memory: 0 }
+      if (r.search_mode === "grounded-search" || r.search_capable) m.grounded++
+      else m.memory++
+      map.set(value, m)
+    }
+  }
+  return Array.from(map.values()).sort(
+    (a, b) => b.grounded - a.grounded || b.memory - a.memory || a.value.localeCompare(b.value),
+  )
 }

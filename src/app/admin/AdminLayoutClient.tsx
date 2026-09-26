@@ -13,7 +13,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   // while logged out — and, for forgot/reset, sometimes while a stale admin
   // session cookie still exists — so showing the panel chrome around them is
   // wrong and confusing. Keep this list in sync with the PUBLIC_ADMIN_PATHS
-  // allowlists in middleware.ts and AdminAuthGuard.tsx.
+  // allowlists in proxy.ts and AdminAuthGuard.tsx.
   const PUBLIC_AUTH_PATHS = ["/admin/login", "/admin/forgot-password", "/admin/reset-password"]
   if (PUBLIC_AUTH_PATHS.includes(pathname)) {
     return <>{children}</>
@@ -51,6 +51,15 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
             </Link>
             <Link href="/admin/aeo" className="hover:opacity-70">
               AI Search
+            </Link>
+            <Link href="/admin/search-visibility" className="hover:opacity-70">
+              Search Visibility
+            </Link>
+            <Link href="/admin/content-intelligence" className="hover:opacity-70">
+              Content Intelligence
+            </Link>
+            <Link href="/admin/crawlers" className="hover:opacity-70">
+              Crawlers
             </Link>
             <Link href="/" className="hover:opacity-70">
               View Site

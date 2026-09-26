@@ -11,6 +11,7 @@ import {
 } from "@/lib/aeo/engines"
 import { saveRun, pruneOldRuns, type AeoRun, type CitationRow } from "@/lib/aeo/storage"
 import { alertAdmin } from "@/lib/alert-admin"
+import { SITE_URL } from "@/lib/identity"
 
 // =============================================================================
 // Tuning knobs (override via env)
@@ -34,6 +35,28 @@ function parseEngineAllowList(): Set<string> | null {
   const raw = process.env.AEO_ENGINES?.trim()
   if (!raw) return null
   return new Set(raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean))
+}
+
+const SITE_HOST = new URL(SITE_URL).hostname.replace(/^www\./, "")
+
+function externalSourceData(urls: string[]): { urls: string[]; domains: string[] } {
+  const externalUrls: string[] = []
+  const domains: string[] = []
+  for (const value of urls) {
+    try {
+      const url = new URL(value)
+      const host = url.hostname.replace(/^www\./, "")
+      if (host === SITE_HOST || host.endsWith(`.${SITE_HOST}`)) continue
+      externalUrls.push(url.toString())
+      domains.push(host)
+    } catch {
+      // Ignore malformed provider citations rather than failing the full run.
+    }
+  }
+  return {
+    urls: [...new Set(externalUrls)],
+    domains: [...new Set(domains)],
+  }
 }
 
 function parseConcurrency(): number {
@@ -67,6 +90,9 @@ export interface RunSummary {
   domainReferences: number
   sourceCitations: number
   errors: number
+  groundedSearchProbes: number
+  modelMemoryProbes: number
+  externalSourceCitations: number
   blobPath?: string
   /** Number of old runs auto-deleted by retention policy after this run. */
   prunedOldRuns?: number
@@ -105,6 +131,9 @@ export async function executeRun(): Promise<
   let domainReferences = 0
   let sourceCitations = 0
   let errors = 0
+  let groundedSearchProbes = 0
+  let modelMemoryProbes = 0
+  let externalSourceCitations = 0
 
   // Concurrent prompt batches × parallel engines per prompt.
   //
@@ -141,6 +170,9 @@ export async function executeRun(): Promise<
         if (!enginesRun.includes(name)) enginesRun.push(name)
         totalProbes++
 
+        if (result.searchMode === "grounded-search") groundedSearchProbes++
+        else modelMemoryProbes++
+
         if (result.error) {
           errors++
           rows.push({
@@ -148,6 +180,9 @@ export async function executeRun(): Promise<
             prompt: prompt.text,
             prompt_id: prompt.id,
             prompt_category: prompt.category,
+            prompt_intent: prompt.intent,
+            prompt_topic: prompt.topic,
+            target_path: prompt.target_path,
             was_cited: false,
             mention_types: [],
             cited_urls: [],
@@ -156,11 +191,18 @@ export async function executeRun(): Promise<
             error: result.error,
             classifier_version: 2,
             search_capable: result.searchCapable,
+            search_mode: result.searchMode,
+            structured_citations: result.citations ?? [],
+            search_queries: result.searchQueries ?? [],
+            external_sources: externalSourceData(result.citations ?? []).urls,
+            external_source_domains: externalSourceData(result.citations ?? []).domains,
           })
           continue
         }
 
         const c = classifyEngineResponse({ content: result.content, structuredCitations: result.citations })
+        const external = externalSourceData(result.citations ?? [])
+        externalSourceCitations += external.urls.length
         if (c.brand_mention) brandMentions++
         if (c.domain_reference) domainReferences++
         if (c.source_citation) sourceCitations++
@@ -170,6 +212,9 @@ export async function executeRun(): Promise<
           prompt: prompt.text,
           prompt_id: prompt.id,
           prompt_category: prompt.category,
+          prompt_intent: prompt.intent,
+          prompt_topic: prompt.topic,
+          target_path: prompt.target_path,
           // "cited" is reserved for a real source citation (issue #44).
           was_cited: c.source_citation,
           mention_types: c.mention_types,
@@ -179,10 +224,14 @@ export async function executeRun(): Promise<
           error: null,
           classifier_version: 2,
           search_capable: result.searchCapable,
+          search_mode: result.searchMode,
           brand_mention: c.brand_mention,
           domain_reference: c.domain_reference,
           source_citation: c.source_citation,
           structured_citations: result.citations ?? [],
+          search_queries: result.searchQueries ?? [],
+          external_sources: external.urls,
+          external_source_domains: external.domains,
           response_text: result.content,
         })
       }
@@ -262,6 +311,9 @@ export async function executeRun(): Promise<
       domainReferences,
       sourceCitations,
       errors,
+      groundedSearchProbes,
+      modelMemoryProbes,
+      externalSourceCitations,
       ...(blobPath && { blobPath }),
       ...(typeof pruned === "number" && pruned > 0 && { prunedOldRuns: pruned }),
       ...(storageError && { storageError }),

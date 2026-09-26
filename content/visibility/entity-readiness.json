@@ -1,0 +1,60 @@
+{
+  "$schema": "Third-party visibility readiness. Code can prepare these integrations but cannot claim/verify external accounts without the owner's account action.",
+  "items": [
+    {
+      "id": "google-search-console",
+      "name": "Google Search Console property",
+      "status": "owner-action",
+      "url": "https://search.google.com/search-console",
+      "why": "Source of truth for Google queries, pages, indexing, generative-AI and multimodal reporting."
+    },
+    {
+      "id": "google-search-console-api",
+      "name": "Search Console API service account",
+      "status": "owner-action",
+      "why": "Required for automated /admin/search-visibility ingestion."
+    },
+    {
+      "id": "google-generative-ai-control",
+      "name": "Search generative AI inclusion",
+      "status": "verify-in-console",
+      "why": "Confirm the site remains included for AI Overviews, AI Mode and generative Discover."
+    },
+    {
+      "id": "google-search-profile",
+      "name": "Google Search Profile",
+      "status": "check-eligibility",
+      "why": "If Maya has a Search Profile, add its canonical profile URL to the site."
+    },
+    {
+      "id": "google-preferred-source",
+      "name": "Google Preferred Sources",
+      "status": "check-eligibility",
+      "why": "If mayaallan.com appears in Google's source preferences tool, enable the site button/link for readers."
+    },
+    {
+      "id": "amazon-author",
+      "name": "Amazon Author Central",
+      "status": "owner-action",
+      "why": "Claim and keep the author identity aligned with the canonical Maya bio."
+    },
+    {
+      "id": "goodreads-author",
+      "name": "Goodreads Author Program",
+      "status": "owner-action",
+      "why": "Claim the existing author stub before adding it to sameAs."
+    },
+    {
+      "id": "open-library",
+      "name": "Open Library author/work records",
+      "status": "owner-action",
+      "why": "Independent book/author catalog identity and library graph."
+    },
+    {
+      "id": "orcid",
+      "name": "ORCID",
+      "status": "optional",
+      "why": "Useful persistent identifier only if Maya wants an author/research identity there; do not create solely for SEO."
+    }
+  ]
+}
