@@ -38,6 +38,7 @@ export interface CitationRow {
   prompt: string
   prompt_id: string
   prompt_category: string
+  prompt_intent?: string
   /** v2: same as source_citation. Legacy rows: any mention at all. */
   was_cited: boolean
   mention_types: string[]
