@@ -1,0 +1,181 @@
+# Evidence: where Maya Allan and the book appear off-site, and whether they link back
+
+- **Lens:** appears-offsite-footprint (finding ids `foot-`)
+- **Branch/path:** `work/site-visibility` : `docs/operations/evidence/2026-09-24/appears-offsite-footprint.md`
+- **UTC window:** 2026-09-24T18:18:41Z to 2026-09-24T18:37:49Z (all reads live, in this window). Saving started at 2026-09-24T18:40:40Z (saved in 11 commits (1 create, 9 appends, 1 wording fix) because of a command-length limit in this environment; each commit changes only this path).
+- **Sources used (all public, GET only, no logins):** live site www.mayaallan.com (curl); Amazon.com / .co.uk / .ca / .de / .com.au product and author pages (curl); Goodreads book, author and work pages (curl); Google Play Books and Google Books pages (curl); Barnes and Noble (curl + WebFetch); ThriftBooks, AbeBooks, Bokus (curl); Bookshop.org, Waterstones, Kobo, BookBub, LibraryThing, Books-A-Million, Walmart (attempted, bot-walled); Open Library JSON API; Apple iTunes Search/Lookup API (ebooks, audiobooks, podcasts, podcast episodes); Wikidata API; Library of Congress JSON; Wayback Machine CDX API; Bluesky public AppView API; Instagram, Pinterest, Threads, TikTok, YouTube, Facebook, X, Substack, Medium, Linktree public profile URLs (curl / WebFetch); YouTube public results page; StoryGraph public search; search engines: WebSearch tool (8 queries, then the session-wide 200-query budget was exhausted), Bing HTML (curl + WebFetch), DuckDuckGo HTML (bot challenge), Mojeek (captcha), Brave (JS only), Yahoo (empty body), Reddit JSON (403), Listen Notes (403); GitHub live metadata for mallan67/mayaallan via `gh api`.
+- **Not used (forbidden or not needed):** repository source files, any local file or scratch dir, Gmail/Drive, logins, POST/submit (except the gitsave git API calls).
+- **Reading rule:** every row gives the URL or query and the UTC read time. Where a WebSearch/WebFetch call has no own timestamp, the time is bracketed by the neighbouring timestamped shell reads. Absence claims list at least two independent observations or are marked single-observation / unverified.
+- **Public repo notice:** mallan67/mayaallan is public (`gh api repos/mallan67/mayaallan` at 18:33:19Z: `visibility=public`), so this file is public. It contains no secrets, cookies, env values or visitor data.
+
+## 1. Plain-language summary
+
+1. **The book exists in the big catalogues, but nobody has rated it and none of those listings link to the website.** Amazon (Kindle, paperback, hardcover), Goodreads, Google Play/Books, Barnes and Noble, ThriftBooks, AbeBooks, Bokus and Open Library all have the book. All three Amazon formats and both Goodreads works show **0 ratings**. **None** of the listings or author profiles checked contains a link to or mention of `mayaallan.com`.
+2. **No outside website links to or mentions mayaallan.com.** Searches for the domain return only the site itself or unrelated noise. The Wayback Machine has not archived the site since 2026-01-31. No podcast, interview, YouTube video, Reddit thread (blocked, so not verified) or directory mention was found.
+3. **The author identity is weak off-site.** The Goodreads author page is unclaimed: placeholder photo, no bio, no website. The Amazon author page has a photo and bio, but uses a different job title ("Author · Speaker · Wellness Advocate") and different positioning from the site. On Bing, the name "Maya Allan" shows the author site at #1 and #2, then 8 real-estate profiles.
+4. **Social media barely exists and is not linked.** Instagram @maya.allan66 exists, but the site links to it only in hidden JSON-LD, not in visible links. No YouTube, Bluesky or Linktree account exists. The Pinterest account "mayaallan2" has personal boards (clothes, hair, nails) and no website. The Substack and Medium accounts named mayaallan are empty, and we could not confirm they belong to her.
+5. **Edition data is inconsistent.** The Kindle listing shows the paperback ISBN. Amazon print titles list the author twice ("Allan, Maya, Allan, Maya"). On Goodreads, the hardcover is a separate, uncombined work. The site Book schema gives only the hardcover ASIN and no ISBN.
+6. **What works:** the site ranks **#1 on Bing** for "Maya Allan" (2 reads). All 6 extra domains 308-redirect to www.mayaallan.com and keep the path. The Amazon listings are live in 5 marketplaces. Google Play sells the ebook at $9.99.
+
+## 2. Identifiers observed (live)
+
+| Item | Value | Where read | UTC read |
+|---|---|---|---|
+| Book title | Psilocybin Integration Guide: 40 Real Scenarios for Navigating What You See, Feel & Experience | Amazon, Goodreads, Google Play, B&N page titles | 18:20:07Z-18:25:02Z |
+| Kindle ASIN | B0G765BZDL (pub. Dec 15 2025, 281 pp, publisher "Maya Allan") | https://www.amazon.com/dp/B0G765BZDL | 18:22:42Z |
+| Paperback | ASIN B0G91GZMLT, ISBN-13 979-8994148839 (Dec 13 2025, 289 pp) | https://www.amazon.com/dp/B0G91GZMLT | 18:22:44Z |
+| Hardcover | ASIN B0G7JWDJYQ, ISBN-13 979-8994148853 (Dec 13 2025, 289 pp) | https://www.amazon.com/dp/B0G7JWDJYQ | 18:22:47Z |
+| Ebook ISBN (Google) | 9798994148891 | https://play.google.com/store/books/details?id=HvafEQAAQBAJ | 18:24:40Z |
+| Amazon author id | B0G76975ST (`/e/B0G76975ST` returns 404; `/stores/author/B0G76975ST` returns 200) | amazon.com | 18:23:41Z |
+| Goodreads author | 65134359.Maya_Allan | goodreads.com | 18:24:10Z |
+| Goodreads works | 274201719 (Kindle 245299940 + paperback 245505700); 274327770 (hardcover 245349971, separate) | goodreads.com | 18:33:56Z |
+| Google Books id | HvafEQAAQBAJ | books.google.com | 18:24:41Z |
+| B&N work id | 1148993659 (one variant: 9798994148839 paperback) | barnesandnoble.com JSON-LD | 18:25:56Z |
+| Open Library | work OL45177926W, edition OL61601841M (paperback only), author OL16288546A | openlibrary.org JSON | 18:26:26Z-18:26:41Z |
+| Instagram | @maya.allan66 (in site JSON-LD `sameAs`) | site HTML + instagram.com | 18:18:55Z, 18:30:44Z |
+
+## 3. Inventory: where it appears, and whether it links back
+
+"Links back?" means a link to, or a text mention of, `mayaallan.com` (or psilowire.com / psilocybinintegrationguide.com) found in the fetched HTML.
+
+| # | URL | What it is | Exists? | Links back? | Name / photo / bio consistency | UTC read / source |
+|---|---|---|---|---|---|---|
+| 1 | https://www.amazon.com/dp/B0G765BZDL | Amazon Kindle listing | yes, 200 | **no** (0 mentions) | byline "Maya Allan (Author)"; BSR #3,144,369 Kindle Store; ratings histogram 0% on every star (0 ratings); shows ISBN-13 979-8994148839, the paperback ISBN | 18:20:07Z, 18:22:42Z, 18:23:21Z curl |
+| 2 | https://www.amazon.com/dp/B0G91GZMLT | Amazon paperback | yes, 200 | **no** | page title "Allan, Maya, Allan, Maya" (author listed twice); BSR #957,243 Books; 0 ratings | 18:20:09Z, 18:22:44Z, 18:23:22Z |
+| 3 | https://www.amazon.com/dp/B0G7JWDJYQ | Amazon hardcover | yes, 200 | **no** | title "Allan, Maya, Allan, Maya"; BSR #3,949,951 Books; 0 ratings | 18:20:12Z, 18:22:47Z, 18:23:24Z |
+| 4 | https://www.amazon.com/stores/author/B0G76975ST | Amazon author page | yes, 200 | **no** | has an author photo (amzn-author-media) and a long bio. Headline is "Author · Speaker · Wellness Advocate"; the site says "Author and Educator". The bio opens "I believe deep inner clarity is a fundamental human birthright ... no one can heal us but ourselves" and then repeats both sentences. The site version says "no one can do this inner work for us". | 18:23:41Z; site /about 18:34:57Z |
+| 5 | amazon.co.uk / .ca / .de / .com.au `/dp/B0G765BZDL`; amazon.co.uk `/dp/B0G91GZMLT` | international Amazon | yes, all 200 | not checked per page | titles match | 18:32:56Z-18:33:03Z |
+| 6 | https://www.goodreads.com/book/show/245299940-psilocybin-integration-guide | Goodreads Kindle edition (linked from the site sameAs) | yes, 200 | **no** | 0 ratings, avg 0; record ISBN 9798994148839 (paperback ISBN) with format Kindle Edition, ASIN B0G765BZDL | 18:23:56Z |
+| 7 | https://www.goodreads.com/book/show/245349971-psilocybin-integration-guide | Goodreads hardcover | yes, 200 | **no** | separate work 274327770, **not combined** with work 274201719 | 18:24:11Z, 18:33:56Z |
+| 8 | https://www.goodreads.com/author/show/65134359.Maya_Allan | Goodreads author page | yes, 200 | **no** (no website field) | **unclaimed look**: placeholder photo, no bio; "0 ratings, 0 reviews"; the book list shows the title twice | 18:24:10Z, 18:33:44Z |
+| 9 | https://play.google.com/store/books/details?id=HvafEQAAQBAJ | Google Play ebook | yes, 200 | **no** | "by Maya Allan"; published Dec 15 2025; ISBN 9798994148891; no reviews shown | 18:24:40Z |
+| 10 | https://books.google.com/books?id=HvafEQAAQBAJ | Google Books | yes, 200 | **no** | description tagline "Rewire Your Mind • Release Fears • Heal Trauma"; this clashes with the site "non-clinical, educational" positioning | 18:24:41Z |
+| 11 | https://www.barnesandnoble.com/w/psilocybin-integration-guide-maya-allan/1148993659 | B&N | yes, 200 | **no** | paperback only, $21.99 (JSON-LD InStock), but the page HTML also shows "This item is currently out of stock online." No NOOK ebook, no hardcover, no About the Author | curl 18:25:02Z-18:25:56Z; WebFetch 18:25:06Z-18:25:34Z also reports "out of stock online" |
+| 12 | https://www.thriftbooks.com/w/.../57728042/ | ThriftBooks | yes, 200 | **no** | "0 rating"; ISBN 9798994148839 | 18:25:04Z |
+| 13 | https://www.abebooks.com/9798994148839/.../plp | AbeBooks | yes, 200 | **no** | author "Allan, Maya" | 18:25:06Z |
+| 14 | https://www.bokus.com/bok/9798994148839/psilocybin-integration-guide/ | Bokus (Sweden) | yes, 200 | **no** | Maya Allan, paperback (Häftad) | 18:25:06Z |
+| 15 | https://bookshop.org/p/books/...maya-allan/3c9390316323761a | Bookshop.org | **unverified**: 403 bot wall on curl and WebFetch | unverified | linked from the site | 18:25:04Z; WebFetch 18:25:06Z-18:25:34Z |
+| 16 | https://www.waterstones.com/book/.../9798994148839 | Waterstones | **unverified**: 403 on curl and WebFetch | unverified | linked from the site | 18:25:04Z; WebFetch same bracket |
+| 17 | https://openlibrary.org/works/OL45177926W | Open Library | yes: 1 edition (paperback only); 979...853 and 979...891 return 404 | **no** | author record OL16288546A has name only: no bio, photo or links | 18:26:26Z, 18:26:41Z, 18:34:30Z |
+| 18 | Apple Books | ebook store | **no**: iTunes Search "Psilocybin Integration Guide Maya Allan" returns 0; "Psilocybin Integration Guide" returns 21 results, none by Maya Allan; lookup isbn 9798994148891 returns 0 | n/a | n/a | 18:26:08Z, 18:26:40Z |
+| 19 | Apple Books audiobook | audiobook | **no**: iTunes audiobook search, 10 results, none hers | n/a | n/a | 18:26:08Z |
+| 20 | Kobo | ebook store | **unverified**: curl "Challenged" 403; WebFetch 403 | n/a | n/a | 18:26:26Z; WebFetch 18:32:38Z-18:32:56Z |
+| 21 | StoryGraph | reader catalogue | **no (probable)**: the title search shows only a Kyle Woodruff book; the "Maya Allan" search shows none of her books | n/a | n/a | 18:36:43Z, 18:36:53Z |
+| 22 | https://barwebooks.com/product/psilocybin-integration-guide-...-paperback/ | reseller listing (indexed on Bing) | **dead**: 404 | n/a | n/a | Bing 18:27:09Z; curl 18:33:05Z |
+| 23 | https://www.instagram.com/maya.allan66/ | Instagram | yes: WebFetch title "Maya Allan (@maya.allan66) • Instagram photos and videos" | **unverified**: login wall, bio link not readable | display name matches | curl 18:30:44Z (title "Instagram" only); WebFetch 18:30:44Z-18:31:04Z; embed 18:35:28Z |
+| 24 | https://www.pinterest.com/mayaallan2/ | Pinterest "Maya Allan (mayaallan2)" | yes | **no**: website_url null, domain_verified false, about empty | boards are clothes / hair / nails. **Not an author presence**, and ownership is unverified. It ranks on the WebSearch "mayaallan.com" query | WebSearch 18:19:09Z-18:19:42Z; curl 18:30:44Z-18:31:16Z |
+| 25 | https://mayaallan.substack.com/ | Substack "Maya Allan" | exists; og says "Launched 2 years ago"; archive API returns an empty list (0 posts) | **no** | ownership unverified | 18:31:36Z, 18:32:01Z |
+| 26 | https://medium.com/@mayaallan | Medium "Maya Allan" | exists; RSS feed has 0 items | **no** | ownership unverified | 18:31:38Z, 18:32:01Z |
+| 27 | https://www.linkedin.com/in/mayaallan | LinkedIn "Maya Allan - Licensed Real Estate Broker / Founder, MAllan" (Bing title) | yes (from Bing SERP) | unverified (login wall) | real-estate identity; the author role is not shown in the title | Bing curl 18:27:27Z; Bing WebFetch 18:35:50Z-18:36:06Z |
+| 28 | YouTube | video | **no**: /@mayaallan 404, /@maya.allan66 404; 2 result-page searches return 16 videos, 0 from a "Maya Allan" channel | n/a | n/a | 18:31:35Z, 18:36:06Z-18:36:07Z |
+| 29 | Bluesky | social | **no**: getProfile actor=mayaallan.com returns "Profile not found"; searchActors "Maya Allan" returns 10 other people | n/a | n/a | 18:32:00Z |
+| 30 | Linktree | link hub | **no**: /mayaallan 404, /maya.allan66 404 | n/a | n/a | 18:31:40Z-18:31:41Z |
+| 31 | X, TikTok, Threads, Facebook | social | **unverified**: X is an SPA and syndication returned 429; TikTok and Threads are generic JS shells; Facebook curl returned 400 | n/a | n/a | 18:31:31Z-18:31:43Z, 18:32:18Z |
+| 32 | Podcasts | media | **none found**: iTunes podcastEpisode "Maya Allan" has 22 results, 0 mention her; "Psilocybin Integration Guide Maya Allan" has 0; podcast search has 0. Listen Notes returned 403 | n/a | n/a | 18:26:08Z, 18:32:17Z, 18:32:36Z |
+| 33 | Reddit | community | **unverified**: search.json returned 403 twice | n/a | n/a | 18:32:38Z |
+| 34 | Wikidata / Library of Congress | knowledge graph / catalogue | **none**: Wikidata "Maya Allan" 0 entities, "Psilocybin Integration Guide" 0; LoC ISBN 9798994148839 0 results | n/a | n/a | 18:34:18Z-18:34:29Z |
+| 35 | https://github.com/mallan67/mayaallan/pull/54 | public dev PR, surfaced by WebSearch for the book + author query | yes (anonymous GET 200) | links to the repo, not the site | internal dev text appears in the book SERP | WebSearch 18:19:09Z-18:19:42Z (2 queries); gh api 18:33:19Z |
+
+## 4. Search-engine observations (appearance of the name, book and domains)
+
+| Query | Engine / read | Result |
+|---|---|---|
+| "Maya Allan" author | WebSearch, 18:19:09Z-18:19:42Z | mayaallan.com and /about present (positions 6-7 of 9); the rest are other Mayas |
+| "Psilocybin Integration Guide" "Maya Allan" | WebSearch, same bracket | 3 Amazon URLs first, then **GitHub PR #54**, then mayaallan.com and /about |
+| mayaallan.com | WebSearch, same bracket | Pinterest mayaallan2 first, then mayaallan.com; no third-party page mentions the domain |
+| "Psilocybin Integration Guide" 40 Real Scenarios | WebSearch, same bracket | 3 Amazon URLs; mayaallan.com **not** in the top 9 |
+| "Maya Allan" goodreads psilocybin | WebSearch, same bracket | Amazon x3, GitHub PR #54, mayaallan.com, /about; the Goodreads book page is **not** returned |
+| "Maya Allan" podcast OR interview psychedelic integration | WebSearch, same bracket | no interview or podcast with her; only her own site and Amazon |
+| psilowire.com | WebSearch, same bracket | **no result for the domain** (only look-alikes) |
+| psilocybinintegrationguide.com | WebSearch, same bracket | **no result for the domain** |
+| "Maya Allan" | Bing curl 18:27:27Z and Bing WebFetch 18:35:50Z-18:36:06Z | **#1 mayaallan.com, #2 mayaallan.com/books**, #3-#10 real-estate profiles (LinkedIn /in/mayaallan, Zillow, realtor.com, LoopNet, mallannyhomes.com, Homes.com, StreetEasy, Citysnap); about 26,500 results |
+| "Maya Allan" psilocybin | Bing curl 18:27:09Z | site home, site book page, Google Books, Amazon hardcover, barwebooks (dead), Amazon.ca Kindle, ThriftBooks |
+| site:mayaallan.com | Bing curl 18:27:10Z | about 36 results |
+| "mayaallan.com" -site:mayaallan.com | Bing curl 18:27:10Z (NYT Connections noise); Bing WebFetch 18:28:44Z-18:29:13Z (St. Lukes noise, about 50) | **no third-party page mentioning the domain** (2 observations) |
+| later Bing queries | Bing curl 18:27:24Z-18:27:53Z | Bing started returning generic "Maya" (Autodesk/civilization) results. Treated as throttling and **not** used as evidence |
+| DuckDuckGo / Mojeek / Brave / Yahoo | 18:26:59Z, 18:28:06Z, 18:28:24Z, 18:28:39Z | bot challenge / captcha / JS-only / empty body: **no data** |
+
+**Wayback Machine** (CDX API, 18:29:13Z-18:29:56Z): mayaallan.com has 89 unique URLs, all first captured 2026-01-30/31. The newest homepage capture is 20260131005213, so nothing has been captured in about 8 months. psilowire.com has 0 captures and psilocybinintegrationguide.com has 0.
+
+**Domain redirects** (curl, 18:19:42Z-18:19:45Z and 18:35:49Z-18:35:50Z): psilowire.com, www.psilowire.com, psilocybinintegrationguide.com, www.psilocybinintegrationguide.com, mayaallan.com and mayaallan.vercel.app all return **308 to https://www.mayaallan.com/** and keep the path (for example /scenarios becomes /scenarios). http://mayaallan.com returns 308 to https first.
+
+**What the site itself points to** (curl, 18:18:55Z-18:19:09Z, 18:34:41Z-18:34:43Z):
+- Person/Organization sameAs = only https://www.instagram.com/maya.allan66/.
+- On /, /about, /contact, /books and /media, **no visible link to any profile**: Instagram appears only inside script (JSON-LD / RSC) text.
+- The book page links retailers: a.co/d/hRppkCZ (goes to the Kindle B0G765BZDL), Bookshop, Google Play, AbeBooks, B&N, Bokus and Waterstones. It does **not** link Goodreads visibly (sameAs only) and does **not** link the Amazon author page.
+- Book JSON-LD identifier = ASIN B0G7JWDJYQ (the hardcover), with **no isbn**. sameAs mixes the hardcover (Amazon), paperback (B&N, Bookshop, Abe, Thrift), Kindle (Goodreads) and ebook (Google Play).
+
+## 5. Findings
+
+| id | Severity | Title | Evidence (live, UTC) | Impact | Solution | Owner |
+|---|---|---|---|---|---|---|
+| foot-01 | high | Zero reader ratings or reviews anywhere | Amazon Kindle, paperback and hardcover rating histograms are all 0% (18:23:21Z-18:23:24Z); Goodreads 245299940 and 245349971 show ratingsCount 0 (18:23:56Z, 18:24:11Z); author page "0 ratings, 0 reviews" (18:24:10Z); ThriftBooks "0 rating" (18:25:04Z). Amazon ranks: Kindle #3,144,369, paperback #957,243, hardcover #3,949,951 | No social proof on any storefront. Retail algorithms and AI answers have nothing to cite, and shoppers do not trust a listing with no reviews | Run an early-reader review drive: ARC services (for example BookSirens or Booksprout), a Goodreads Kindle giveaway, and personal asks to readers. Add a "please rate it on Amazon or Goodreads" line to the book back matter and the site book page | owner-account / content |
+| foot-02 | high | No outside page links to or mentions mayaallan.com | 0 mentions on Amazon x3 and the author page, Goodreads book/author pages, Google Play/Books, B&N, ThriftBooks, AbeBooks and Bokus (inventory rows 1-14). Pinterest website_url null. "mayaallan.com" -site: returns only noise on Bing (2 reads). WebSearch "mayaallan.com" returns only the site and Pinterest. Wayback: no capture since 2026-01-31 | No referral path from the places the book is sold or discussed, and no links that give search engines or AI systems a reason to show the site. This is the main off-site reason the site "is not seen anywhere" | (1) Claim the Goodreads author profile and set website = https://www.mayaallan.com. (2) Add the website to the Open Library author record. (3) Print "mayaallan.com" in the book front and back matter (all editions), and in the Amazon About-the-author text if Amazon policy allows (verify the KDP rules). (4) Put the site link in the Instagram bio. (5) Earn links from guest posts, podcasts and integration directories (see foot-08) | owner-account / content |
+| foot-03 | high | Goodreads author profile unclaimed; hardcover not combined | Author page: placeholder photo, no bio, no website (18:24:10Z). Hardcover 245349971 is in work 274327770; Kindle + paperback are in work 274201719 (18:33:56Z); the author list shows 2 separate books (18:33:44Z) | Readers searching Goodreads see an empty author and two copies of the book, which splits any future ratings | Apply to the Goodreads Author Program (claim profile 65134359), add photo, bio, website and Instagram, then ask a Goodreads librarian (or use Combine editions) to merge 245349971 into work 274201719 | owner-account |
+| foot-04 | medium | Edition and ISBN metadata inconsistent | Amazon Kindle shows ISBN-13 979-8994148839, the paperback ISBN (18:22:42Z). The Goodreads Kindle record carries the same ISBN (18:23:56Z). Google Play ebook ISBN is 9798994148891 (18:24:40Z). Amazon print page titles read "Allan, Maya, Allan, Maya" (18:20:09Z, 18:20:12Z). Site Book schema: ASIN of the hardcover only, no isbn (18:19:09Z) | Catalogue matching (Goodreads, Open Library, Google, AI entity graphs) cannot cleanly tie the editions to one book and one author | In KDP: set the eBook ISBN field to 9798994148891 (or leave it blank) and remove the duplicate contributor on the print editions. On the site: give the Book JSON-LD an isbn plus workExample entries (Paperback 9798994148839, Hardcover 9798994148853, EBook 9798994148891 / ASIN B0G765BZDL), each with its own retailer URL | owner-account + code-pr |
+| foot-05 | medium | Missing storefronts and formats | Apple Books absent (iTunes search 0, ISBN lookup 0; 18:26:08Z, 18:26:40Z). No audiobook (18:26:08Z). B&N has the paperback only, with no NOOK or hardcover, and the page shows "out of stock online" (18:25:45Z-18:25:56Z). Kobo unverified (bot wall) | Readers on Apple, Kobo and NOOK cannot buy the ebook. The B&N page may look unavailable | Check whether the Kindle ebook is in KDP Select, which requires exclusivity. If not, distribute the ebook to Apple Books, Kobo and B&N Press (directly or via an aggregator). Ask B&N/Ingram to confirm the paperback stock state. An audiobook is optional later | owner-account |
+| foot-06 | medium | The name search is shared with the real-estate identity | Bing "Maya Allan": #1-#2 the author site, #3-#10 real-estate profiles (18:27:27Z; WebFetch 18:35:50Z-18:36:06Z) | Positive: the site already ranks #1 on Bing. But every other strong profile for the name is real estate, so there is no third-party author profile to back up "Maya Allan = author" | Build author-specific profiles (foot-03, foot-07) and list them in sameAs. Optionally add "Author, Psilocybin Integration Guide" and the site link to the LinkedIn /in/mayaallan profile (owner choice on mixing brands) | owner-account |
+| foot-07 | medium | Social presence thin, not linked from the site, partly not hers | Instagram exists, but the site has no visible link, only JSON-LD (18:34:41Z-18:34:43Z). YouTube 404 on 2 handles and 0 channel results; Bluesky not found; Linktree 404 (18:31:35Z-18:36:07Z). The Pinterest mayaallan2 account has personal boards and no website, while the site shows Pinterest share buttons (18:31:04Z-18:31:16Z). Substack and Medium are empty; X, TikTok and Facebook are unverified | Visitors cannot follow her, and search and AI systems cannot corroborate the author entity | Add visible social links (footer and About). Pick 1-2 active channels (Instagram, plus YouTube Shorts or Substack) with the site link in each bio. Create a Pinterest business profile and claim mayaallan.com. Delete or fill the empty Substack/Medium if they are hers. Extend sameAs with Amazon author, Goodreads author, Open Library and Google Books URLs | code-pr + owner-account |
+| foot-08 | medium | No media, podcast or interview footprint | iTunes episodes: 0 mentions (18:32:17Z); YouTube: 0 (18:36:06Z); WebSearch podcast query: none (18:19Z bracket); Listen Notes and Reddit blocked (18:32:36Z-18:32:38Z) | No outside voices point to the book, and no backlinks from media | Build a press/media kit page (bio, headshot, one-sheet, topics). Pitch psychedelic-integration and self-inquiry podcasts and newsletters, and ask each host to link www.mayaallan.com in the show notes | content / owner-account |
+| foot-09 | low | Public GitHub PRs show up in the book SERP; repo homepage outdated | WebSearch returned github.com/mallan67/mayaallan/pull/54 for 2 book+author queries (18:19Z bracket). gh api: visibility=public, homepage=https://mayaallan.vercel.app (18:33:19Z) | Internal dev text competes with the book in results. The repo points to an old host (it does redirect) | Set the repo homepage to https://www.mayaallan.com. Owner decision: make the repo private (check first that Vercel and Actions keep working) | owner-account |
+| foot-10 | low | Extra domains have no footprint; the book domain root goes to the homepage | WebSearch 0 results for psilowire.com and psilocybinintegrationguide.com (18:19Z bracket); Wayback 0 captures (18:29:20Z-18:29:28Z); root returns 308 to / (18:19:43Z) | The exact-match book domain is wasted as a memorable print/URL shortcut | Redirect psilocybinintegrationguide.com/ to /books/psilocybin-integration-guide and keep path-preserving 308s. Use it in print and podcast mentions | vercel-setting / code-pr |
+| foot-11 | low | Retailer links carry session and third-party tracking parameters | Book page (18:19:09Z): the B&N link has a jsessionid; Bookshop has source=IndieBound and ref=google.com; AbeBooks has an Impact affiliate clickid and ref_=aff_ir_353196_77798; Bokus has srsltid= | Any affiliate credit may go to someone else; links carry copied session IDs | Replace them with clean canonical product URLs, or with Maya Allan own affiliate IDs if wanted | code-pr / content |
+| foot-12 | low | Bio and positioning inconsistent across platforms | Site: "Author and Educator ... non-clinical, educational" (18:34:57Z). Amazon: "Author · Speaker · Wellness Advocate", with the opening sentences repeated (18:23:41Z). Google/B&N description: "Rewire Your Mind • Release Fears • Heal Trauma" (18:24:41Z, 18:25:45Z) | Mixed signals about who she is and what the book claims; the site is careful to be non-clinical, while retail copy promises healing | Write one canonical bio (50 and 150 words) and one book description. Update Amazon Author Central, the KDP description, Google Play, Goodreads, Open Library and Instagram to match. Remove the duplicated bio sentences | content / owner-account |
+| foot-13 | low | Library and knowledge-graph records thin or absent | Open Library: paperback only; author has name only (18:26:41Z, 18:34:30Z). Wikidata 0; LoC 0 (18:34:29Z) | Fewer structured sources for search and AI entity recognition | Add the hardcover and ebook editions plus bio and website to Open Library (free account). Optionally create Wikidata items for the author and book with their ISBNs and Goodreads/OL/Amazon identifiers | owner-account |
+| foot-14 | info | A dead reseller listing is still indexed | barwebooks.com product URL: Bing result (18:27:09Z), 404 on fetch (18:33:05Z) | A small dead end for searchers | None needed. It will drop out of the index | none |
+| foot-15 | info | Incidental on-site observation (for the site-errors lens) | The book page HTML contains a link to https://www.paypal.com/signout (18:19:09Z) | Out of this lens scope; noted for cross-check | Hand to the on-site audit lens | code-pr |
+
+## 6. What works
+
+| Item | Evidence (live, UTC) |
+|---|---|
+| Amazon US listings live for Kindle, paperback and hardcover under one author (B0G76975ST) | 200 on all three /dp/ pages, byline "Maya Allan (Author)", 18:19:52Z-18:23:24Z |
+| Amazon author page live with photo and bio | /stores/author/B0G76975ST 200, author-media image present, 18:23:41Z |
+| International Kindle availability (UK, CA, DE, AU) and UK paperback | all 200, 18:32:56Z-18:33:03Z |
+| Google Play sells the ebook ($9.99), and Google Books has the record | 200, 18:24:40Z-18:24:47Z |
+| Goodreads has the book (3 editions) and an author page | 200, 18:23:56Z-18:24:12Z |
+| B&N, ThriftBooks, AbeBooks and Bokus list the paperback | 200, 18:25:02Z-18:25:06Z |
+| Open Library has the paperback edition and an author record | 18:26:26Z-18:26:41Z |
+| The site ranks #1 and #2 on Bing for "Maya Allan", and is in WebSearch results for name + topic queries | Bing 18:27:27Z and 18:35:50Z-18:36:06Z; WebSearch 18:19Z bracket |
+| All extra domains send users and crawlers to the canonical host with path kept (308) | 18:19:42Z-18:19:45Z, 18:35:49Z-18:35:50Z |
+| The site book page offers 7 retailer links and share buttons | 18:19:09Z |
+| Instagram @maya.allan66 exists under the name Maya Allan | WebFetch title, 18:30:44Z-18:31:04Z |
+
+## 7. Conspicuously missing, with a solution for each
+
+| Missing | Proven by | Solution |
+|---|---|---|
+| Any rating or review | foot-01 | Review drive plus a back-matter call to action |
+| Any off-site link to www.mayaallan.com | foot-02 | Goodreads/OL website fields, Instagram bio, the URL in the book, podcast show notes |
+| Claimed Goodreads author profile | foot-03 | Goodreads Author Program |
+| Apple Books, Kobo (unverified), NOOK ebook, audiobook | foot-05 | Wide distribution if not in KDP Select |
+| YouTube, Bluesky, Linktree; author Pinterest; active Substack/Medium | foot-07 | Choose 1-2 channels, link both ways |
+| Podcasts, interviews, press | foot-08 | Media kit plus outreach |
+| Wikidata / library records | foot-13 | Open Library edits; optional Wikidata items |
+| A book-domain landing page | foot-10 | Redirect the root to the book page |
+| Visible social links and a full sameAs on the site | foot-07 | Footer/About links; sameAs: Amazon author, Goodreads author, OL author, Google Books, Instagram |
+
+## 8. Unverified (needs an outside-source check)
+
+| Item | Why unverified | What would verify it |
+|---|---|---|
+| Google (google.com) positions and impressions for the name, book and domains | Google blocks scripted queries; the WebSearch engine identity is not stated | Google Search Console (owner login) |
+| Instagram bio link, followers, posts | login wall (curl title "Instagram" only; the embed has no bio) | Owner view of the profile |
+| X, TikTok, Threads, Facebook, LinkedIn content | JS shells / 400 / 429 / login walls | Owner view, or logged-in check by the owner |
+| Kobo, Bookshop.org, Waterstones, BookBub, LibraryThing, Books-A-Million, Walmart listings | 403 / Cloudflare / "Robot or human" on curl and WebFetch (18:25:04Z-18:36:34Z) | Manual browser check by the owner |
+| Whether Substack mayaallan and Medium @mayaallan belong to the author | no identifying content (0 posts) | Owner confirmation |
+| Whether Pinterest mayaallan2 belongs to the author | name matches, content is personal | Owner confirmation |
+| Author photo consistency (site vs Amazon) | a visual comparison would need image files saved locally, which is forbidden here | Owner side-by-side view |
+| Whether the printed book contains mayaallan.com | book interior not publicly readable | Owner check of the manuscript/PDF |
+| KDP Select enrollment (limits Apple/Kobo) | KDP dashboard is private | Owner KDP dashboard |
+| Reddit mentions | reddit.com search.json 403 (2 reads, 18:32:38Z) | Manual Reddit search |
+| Google Books API record details | API returned 429 (daily anonymous quota) at 18:24:25Z | Retry later, or the browser page (partly done) |
+| Amazon KDP policy on URLs in author bio or description | policy page not fetched | KDP help pages |
+
+## 9. Not exercised
+
+- WebSearch: only 8 queries ran before the session-wide 200-query budget was hit (18:26:59Z bracket). Bing (curl + WebFetch) was used as the second engine; DuckDuckGo, Mojeek, Brave and Yahoo gave no usable data.
+- The Playwright MCP was not used (this lens does not call for it).
+- No Vercel MCP calls (not needed for the off-site footprint).
+- Referral or click data from off-site sources could not be measured: Vercel Web Analytics is not enabled (per task context) and runtime logs keep only about 1 day. That belongs to the traffic lens.
+- Save method: the file was written in 11 commits on work/site-visibility, all with the same subject: 1 create, 9 appends, and 1 fix to this wording. Before each change the current file was read live from the branch head. Each compare listed only this path.

@@ -1,0 +1,177 @@
+# Audit evidence — REAL BROWSER + CONSOLE (lens ids `ui-`)
+
+| Field | Value |
+|---|---|
+| Site | https://www.mayaallan.com (canonical host) |
+| Lens | Real browser + console, desktop 1366x900 and mobile 390x844 |
+| UTC window | 2026-09-24T18:18:42Z to 2026-09-24T18:38:14Z (browser closed 18:38Z); file written ~18:45Z in chunks (Bash tool rejected one large command) |
+| Browser | Playwright MCP, Chromium, request UA `Chrome/153.0.0.0` Windows (request headers of POST /api/marketing/event, 18:20:59Z) |
+| Deployment served | Every audited page loaded chunks with `?dpl=dpl_5ug8W5ASgWuKHpxSYScqtAH1q9Q4` = the production deployment named in the task |
+| Sources (all live) | Playwright MCP (navigate, evaluate, console_messages, network_requests, network_request, click, resize, wait_for, close); `curl` GET to the site domains (piped only); `gh api` (PR #57 metadata, branch ref); Vercel MCP `get_project` (prj_CkwsvLxnWkKGJlyAA93lRVxAOQ9Y, team_kZQh5NYLyrOKqffK0r9EXf4E) |
+| Not used | Repository source files, local files, scratchpad, Gmail/Drive, logins, form submits, /api/cron, /api/admin, /api/indexnow |
+| Clicks made | Cookie banner Accept/Reject, footer "Cookie preferences", mobile "Open menu", one menu link, one page link, one journal radio (client-side). No Buy/PayPal/Subscribe/Send/Download/AI clicks. |
+
+## 0. Verdict
+
+The site itself runs cleanly in a real browser. Across 26 desktop and 24 mobile page loads there were **0 JavaScript errors, 0 hydration errors, 0 CSP violations, 0 failed network requests, 0 broken visible images, 0 images missing alt, and 0 horizontal overflow**. The only console output is a mobile "preload not used" warning for the book cover, plus the expected 404 on the 404 test page. What fails is measurement and conversion, not code. **Visitors are counted only after they click "Accept all".** Anyone who rejects or ignores the banner produces no pageview and no visitor record. The only exception is one anonymous `book_viewed` event on the book page. Vercel Web Analytics is also reported as not enabled (orchestrator fact, 17:48Z), and PR #57 is still open and unmerged (checked live 18:38:14Z). So "who looks / who clicks" is almost invisible. On the book page, the Buy button sits 3.3 screens down on desktop and 5.7 screens down on mobile. Several indexed pages in the main navigation are empty or thin (Events, Media, Scenarios).
+
+## 1. Desktop 1366x900 — page matrix
+
+Console = errors/warnings (level debug) since navigation. Failed = requests with status >=400 or failed (Playwright network list + `responseStatus`). Imgs = total (broken/missing-alt/empty-alt). Overflow: scrollWidth 1351 vs innerWidth 1366 = scrollbar only. TTFB/load from Navigation Timing.
+
+| # | URL | HTTP | Console | Failed | Imgs | Overflow | TTFB/load ms | Observations | Read UTC |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | / | 200 | 0/0 | 0 | 3 (0/0/1 decorative) | none | 205/740 | JSON-LD WebSite+Organization+Person; newsletter at y~4452 of 5105; no language links | 18:18:49Z, 18:29:53Z |
+| 2 | /books | 200 | 0/0 | 0 | 1 (0/0/0) | none | 70/204 | 1 book listed | 18:21:40Z |
+| 3 | /books/psilocybin-integration-guide | 200 | 0/0 | 0 | 1 (0/0/0) | none | 43/379 | Buy y=2962 of 4270; 9 retailer links; share links; POST /api/marketing/event 200 (book_viewed) | 18:20:57Z |
+| 4 | /blog | 200 | 0/0 | 0 | 0 | none | 78/191 | 5 posts, no images | 18:21:59Z |
+| 5 | /blog/psilocybin-integration-research | 200 | 0/0 | 0 | 0 | none | 108/346 | 13 citations; no share links; title 102 chars | 18:22:18Z |
+| 6 | /events | 200 | 0/0 | 0 | 0 | none | 159/469 | "No events are currently scheduled." (indexed, in header nav) | 18:22:35Z |
+| 7 | /about | 200 | 0/0 | 0 | 1 (0/0/0) | none | 179/411 | 0 outbound links | 18:22:54Z |
+| 8 | /contact | 200 | 0/0 | 0 | 0 | none | 94/190 | Form: company (honeypot), name, email, message; no action attr (JS); no email shown | 18:23:13Z |
+| 9 | /faq | 200 | 0/0 | 0 | 0 | none | 43/307 | 28 in-page anchors, all targets exist | 18:23:34Z |
+| 10 | /glossary | 200 | 0/0 | 0 | 0 | none | 44/692 | anchors ok | 18:23:59Z |
+| 11 | /media | 200 | 0/0 | 0 | 1 (0/0/0) | none | 48/343 | H1 "Media – Music, Guides & Videos" but 1 item, **not linked** to /media/Mushroom-Healing | 18:24:20Z |
+| 12 | /media/Mushroom-Healing | 200 | 0/0 | 0 | 1 (0/0/0) | none | 86/- | back link + image + title only (sitemap-only) | 18:24:49Z |
+| 13 | /methods | 200 | 0/0 | 0 | 0 | none | 113/200 | tool anchors exist (curl 18:29:14Z) | 18:25:03Z |
+| 14 | /scenarios | 200 | 0/0 | 0 | 0 | none | 49/204 | hub lists **1** scenario (book advertises 40) | 18:25:23Z |
+| 15 | /scenarios/ego-dissolution | 200 | 0/0 | 0 | 0 | none | 46/257 | 14 citations; links to book + blog | 18:25:42Z |
+| 16 | /belief-inquiry | 200 | 0/0 | 0 | 0 | none | 261/1038 | textarea + 3 prompt chips + Send [disabled]; 0 API calls on load | 18:26:02Z |
+| 17 | /nervous-system-reset | 200 | 0/0 | 0 | 0 | none | 52/291 | same; Send disabled | 18:26:33Z |
+| 18 | /integration-reflection | 200 | 0/0 | 0 | 0 | none | 81/317 | same; Send disabled | 18:26:51Z |
+| 19 | /integration-journal | 200 | 0/0 | 0 | 0 | none | 64/322 | 4 phase radios, intention 0/280, date, "Download free PDF" | 18:27:10Z |
+| 20 | /privacy | 200 | 0/0 | 0 | 0 | none | 59/- | "Last updated: May 20, 2026"; no mention of Vercel/Web Analytics | 18:27:44Z |
+| 21 | /terms | 200 | 0/0 | 0 | 0 | none | 151/- | "Last updated: July 10, 2026" | 18:28:00Z |
+| 22 | /refunds | 200 | 0/0 | 0 | 0 | none | 57/- | "Last updated: May 19, 2026" | 18:28:14Z |
+| 23 | /practices | 200 | 0/0 | 0 | 0 | none | 66/- | in sitemap, **not in header or footer** | 18:28:27Z |
+| 24 | /legal | 200 | 0/0 | 0 | 0 | none | 52/- | educational disclaimer | 18:28:42Z |
+| 25 | /he | 200 | 0/0 | 0 | 0 | none | - | lang=he dir=rtl; header nav stays English | 18:29:38Z |
+| 26 | /this-page-does-not-exist-xyz | 404 | 1/0 (the 404 document) | - | 0 | none | - | friendly 404; robots metas conflict (index,follow + googlebot index + noindex) | 18:29:21Z |
+
+Cart/checkout/shop: none. `/cart /checkout /shop /store /buy` -> 404 (curl 18:28:57Z). Purchase happens only on the book page.
+
+## 2. Mobile 390x844 — page matrix
+
+Broken = visible images only (see ui-09 for the hidden hero). scrollW 375 = 390 minus scrollbar; 390 on full-height tool pages.
+
+| URL | Console | scrollW/innerW | Broken/noAlt | Observations | Read UTC |
+|---|---|---|---|---|---|
+| / | 0 err / 1 warn (cover w=384 preloaded, not used) | 375/390 | 0/0 | banner 375x287 = 34% of viewport; buttons 343x41 / 343x40 | 18:30:17Z |
+| mobile menu | 0 err / +1 warn (same) | - | - | aria-expanded=true, aria-controls=mobile-menu-panel; 9 links 268x52; tapping Books navigates and closes panel | 18:30:55Z-18:31:14Z |
+| /books | 0 err / 1 warn (same) | 375/390 | 0/0 | Reject clicked here | 18:31:14Z |
+| /books/psilocybin-integration-guide | 0 err / 1 warn (same) | 375/390 | 0/0 | Buy y=4778 of 7307 (265x40); retailers y=5118-5663 (292x47); small targets "Back to Books" 115x20, "Sign out of PayPal" 97x14 | 18:31:30Z |
+| /blog | 0/0 | 375/390 | 0/0 | - | 18:31:53Z |
+| /blog/psilocybin-integration-research | 0/0 | 375/390 | 0/0 | docH 16089 | 18:32:10Z |
+| /events | 0/0 | 375/390 | 0/0 | - | 18:32:23Z |
+| /about | 0/0 | 375/390 | 0/0 | - | 18:32:35Z |
+| /contact | 0/0 | 375/390 | 0/0 | inputs font 14px; honeypot offscreen (-9999px, aria-hidden, tabindex -1) | 18:32:47Z |
+| /faq | 0/0 | 375/390 | 0/0 | - | 18:33:09Z |
+| /glossary | 0/0 | 375/390 | 0/0 | - | 18:33:21Z |
+| /media | 0/0 | 375/390 | 0/0 | - | 18:33:35Z |
+| /methods | 0/0 | 375/390 | 0/0 | - | 18:33:47Z |
+| /scenarios | 0/0 | 375/390 | 0/0 | - | 18:33:59Z |
+| /scenarios/ego-dissolution | 0/0 | 375/390 | 0/0 | - | 18:34:11Z |
+| /belief-inquiry | 0/0 | 390/390 | 0/0 | textarea in view (font 15.2px); Send 44x44 disabled; chips 334x71 | 18:34:23Z |
+| /nervous-system-reset | 0/0 | 390/390 | 0/0 | textarea in view | 18:34:36Z |
+| /integration-reflection | 0/0 | 390/390 | 0/0 | textarea in view | 18:34:46Z |
+| /integration-journal | 0/0 | 375/390 | 0/0 | radios 294x61; Download y=1095 (167x40) | 18:34:55Z |
+| /privacy | 0/0 | 375/390 | 0/0 | - | 18:35:06Z |
+| /terms | 0/0 | 375/390 | 0/0 | - | 18:35:15Z |
+| /refunds | 0/0 | 375/390 | 0/0 | - | 18:35:26Z |
+| /he | 0/0 | 375/390 | 0/0 | nothing off-screen (RTL) | 18:35:36Z |
+| /practices | 0/0 | 375/390 | 0/0 | not in header/footer on mobile either | 18:35:47Z |
+
+## 3. Header, footer and mobile-menu links
+
+Header (10): `/ /books /belief-inquiry /nervous-system-reset /integration-reflection /media /events /about /contact`. Footer (17): `/books /events /media /about /belief-inquiry /nervous-system-reset /integration-reflection /integration-journal /methods /blog /scenarios /glossary /faq /contact /privacy /terms /refunds`. Mobile menu (9) = the header set. All returned **200** in the browser and via curl GET (18:28:57Z). The curl pass also covered all sitemap URLs, `/es /pt /de /fr /he /es/about /he/about /robots.txt /llms.txt` and the book OG image (200, 219 KB).
+
+| Host (curl GET /, 18:29:14Z) | Result |
+|---|---|
+| mayaallan.com | 308 -> https://www.mayaallan.com/ |
+| psilowire.com, www.psilowire.com | 308 -> www.mayaallan.com |
+| psilocybinintegrationguide.com, www. | 308 -> www.mayaallan.com |
+| mayaallan.vercel.app | 308 -> www.mayaallan.com |
+| mayaallan-mallan.vercel.app, mayaallan-git-main-mallan.vercel.app | 302 -> vercel.com/sso-api (get_project: ssoProtection all_except_custom_domains) |
+
+## 4. Cookie consent and tracking — before vs after
+
+The Playwright profile arrived with `localStorage.mayaallan_consent_v1="rejected"` from an earlier run, so no banner showed at 18:18:49Z. I removed it (later also the cookies and sessionStorage) to simulate a first-time visitor.
+
+| UTC | Action | Requests (non-static, excl. RSC prefetch) | Storage / cookies |
+|---|---|---|---|
+| 18:19:29Z | Fresh visitor, home | document, 2 fonts, CSS, 2 /_next/image, 12 JS, 18 ?_rsc prefetches. **No analytics, no third party.** | Banner role=dialog "Privacy choices ... anonymous visitor IDs and UTM-based campaign attribution" with **Reject analytics** / **Accept all** + privacy link |
+| 18:19:44Z | **Accept all** | GET /9de18cd67c0a6252/script.js 200 (Vercel Analytics on an obfuscated first-party path, cache HIT). POST /api/marketing/visitor 200 {"ok":true}. POST /9de18cd67c0a6252/view 200 (text/plain, len 2, MISS, 18:19:46Z) | consent=accepted; cookies ma_visitor_id, ma_session_id, ma_first_touch, ma_last_touch (names only) |
+| 18:20:24Z | Fresh, /books, **Reject analytics** | none | consent=rejected, 0 cookies, no analytics script |
+| 18:20:59Z | Book page while rejected | POST /api/marketing/event 200, body {eventName:"book_viewed", path, properties:{book_id, slug, title, direct_sale_enabled:true, ebook_price:9.99}}, no cookie | sessionStorage ma_book_viewed:1 (once per session) |
+| 18:36:06Z | Footer **Cookie preferences** | - | banner reappears; stored consent cleared |
+| 18:36:16-26Z | Accept, then client-side link to /integration-journal | script.js 200; /view 200 for /practices **and again** for the route change | consent=accepted, but **no ma_* cookies and no /api/marketing/visitor** (ui-13) |
+| 18:37:02-21Z | Fully fresh: home (undecided) -> book page (undecided, book_viewed sent) -> Accept on page 2 | script.js, POST /api/marketing/visitor 200, /view 200 | 4 ma_* cookies, ma_bootstrapped set |
+
+- No requests at any time to va.vercel-scripts.com, /_vercel/insights or vitals.vercel-insights.com. Analytics runs from first-party `/9de18cd67c0a6252/`. No Google, Meta or other trackers.
+- The CSP (response header on /api/marketing/event) allows script-src self, PayPal and va.vercel-scripts.com, and connect-src self, *.supabase.co, PayPal and vitals.vercel-insights.com. It sets frame-ancestors 'none'. **No CSP violation in any console.**
+- Web Analytics: the orchestrator reports `web_analytics_not_enabled` (17:48Z; not re-read, and `get_project` does not expose the flag). PR #57 "feat(analytics): count every visitor, and show where they came from": **open, merged=false**, created 2026-09-07T02:58:16Z, updated 2026-09-07T03:49:42Z (gh api 18:38:14Z).
+- My test footprint, to exclude from stats: 2 visitor registrations (18:19:44Z, 18:37:21Z), 4 /view beacons (18:19:46Z, ~18:36:16Z, ~18:36:26Z, ~18:37:21Z), 2 book_viewed events (18:20:59Z, 18:37:11Z), UA Chrome/153 Windows.
+
+## 5. Tools and buy buttons (client-side only)
+
+| Item | Observed live | Stopped before |
+|---|---|---|
+| Belief Inquiry / Nervous System Reset / Integration Reflection | Textarea + 3 prompt chips + icon "Send message" button that stays **disabled** while empty. 0 API requests on load. Footer hidden, header visible. | Typing/sending, and clicking the prompt chips (they may send immediately) — AI submission |
+| Integration Journal | Phase radio "integration" selected client-side (18:27:32Z) with no console output and no request | "Download free PDF" (form submit, server-side PDF) |
+| Contact | Form renders; honeypot hidden correctly | "Send" |
+| Home newsletter | Email + honeypot + "Subscribe" (y~4452) | "Subscribe" |
+| Buy Ebook with PayPal · $9.99 | Rendered, visible, enabled, type=submit. Desktop 265x40 at y=2962; mobile y=4778. No paypal.com request before click (SDK not preloaded). | Click (payment) |
+| Retailer links | 9 visible (Amazon x3, Google Play, Barnes & Noble, Bookshop, Waterstones, bokus, AbeBooks), target=_blank rel="noopener noreferrer nofollow sponsored" | Opening them |
+
+## 6. Findings
+
+| id | Severity | Finding | Evidence (live, UTC) | Fix owner |
+|---|---|---|---|---|
+| ui-01 | high | Measurement depends on consent. Visitors who reject or ignore the banner produce 0 pageviews and 0 visitor records. The cookieless counting fix (PR #57) is still unmerged. | Section 4, 18:19:29Z and 18:20:24Z; PR #57 open/unmerged at 18:38:14Z | code-pr + owner-account |
+| ui-02 | medium | Analytics beacons get HTTP 200 (/9de18cd67c0a6252/view), but the project reports Web Analytics as not enabled. The browser appears to send data that may never be stored. | response headers 18:19:46Z; orchestrator fact 17:48Z | vercel-setting |
+| ui-03 | medium | Book page: price and Buy are far below the fold. Desktop Buy at y=2962 of 4270 (3.3 screens). Mobile Buy at y=4778 of 7307 (5.7 screens); first retailer link at y=5118. Above the fold on desktop: back link, H1, byline, subtitles, "About This Book" only. | 18:20:57Z desktop; 18:31:30Z mobile | code-pr |
+| ui-04 | low | A visible "Sign out of PayPal" link (https://www.paypal.com/signout) sits beside the Buy button, 97x14 on mobile. Trust/UX noise. | 18:20:57Z, 18:31:30Z | code-pr |
+| ui-05 | medium | Thin or empty indexed pages linked from main nav. /events says "No events are currently scheduled". /media has 1 unlinked item under a "Music, Guides & Videos" H1. /media/Mushroom-Healing (sitemap-only) is an image + title. /scenarios lists 1 scenario. | 18:22:35Z, 18:24:20Z, 18:24:49Z, 18:25:23Z | content |
+| ui-06 | low | No language switcher. /es /pt /de /fr /he (+ /about) return 200 and sit in hreflang/sitemap, but the EN home has 0 links to them. On /he the header nav is still English. | 18:29:53Z, 18:29:38Z | code-pr |
+| ui-07 | low | /practices (in sitemap; overview of the 4 tools) is not linked from header or footer (desktop and mobile) | 18:28:27Z, 18:35:47Z | code-pr |
+| ui-08 | low | /about and /contact show 0 outbound profile links (no author page, Goodreads, social) and no contact email | 18:22:54Z, 18:23:13Z | content |
+| ui-09 | low | Mobile: console warning "cover w=384 preloaded but not used" on /, /books and the book page, followed by a second download at w=640. The hidden desktop hero (sizes "(max-width: 768px) 0px, 45vw", parent display:none) is still fetched at w=384 and w=640. Wasted bytes on phones. | 18:30:17Z-18:31:30Z | code-pr |
+| ui-10 | low | 404 page emits conflicting robots metas (index,follow; googlebot index; noindex). The HTTP 404 status governs, so impact is minor. | 18:29:21Z | code-pr |
+| ui-11 | low | Mobile input font-size under 16px (contact 14px, tool textareas 15.2px), so iOS Safari will zoom on focus | 18:32:47Z, 18:34:23Z | code-pr |
+| ui-12 | info | book_viewed is sent regardless of consent (undecided or rejected), cookieless, once per session. It is the only first-party signal from non-consenting visitors. Keep it; the privacy text should cover it. | 18:20:59Z, 18:37:11Z | content |
+| ui-13 | low (plausible) | Accept -> cookies removed -> "Cookie preferences" -> Accept in the same tab session: the analytics script and /view resumed, but no ma_* cookies or /api/marketing/visitor came back, because the ma_bootstrapped sessionStorage flag was still set. My manual cookie clearing induced this; whether "Reject analytics" itself deletes the cookies was not verified. | 18:36:06Z-18:36:32Z vs fresh flow 18:37:21Z | code-pr |
+| ui-14 | low | Retailer URLs carry stale or foreign tracking: B&N ";jsessionid=...", AbeBooks third-party affiliate click IDs (clickid, afn_sr=impact, ref_=aff_ir_...), Bookshop "ref=https://www.google.com/&source=IndieBound", bokus "srsltid". | 18:20:57Z | content |
+| ui-15 | low | Privacy policy (May 20, 2026) does not name Vercel Web Analytics, which loads after Accept | 18:27:44Z | content |
+| ui-16 | low | Blog post title tag is 102 characters and will be truncated in results | curl 18:37:49Z | content |
+
+## 7. What works (verified live)
+
+- All 30 sitemap URLs, the 4 other locale homes and 2 locale about pages return 200. The production deployment is serving (?dpl= on chunks).
+- Console: **0 errors / 0 warnings on every desktop page**. On mobile the only message is the preload warning (ui-09). No hydration errors, no uncaught exceptions, no CSP violations.
+- **0 failed network requests (>=400)** on every audited page and viewport.
+- **0 broken visible images, 0 images without alt** (1 decorative image with alt="").
+- **No horizontal overflow** at 1366 or 390 on any page, RTL /he included.
+- Header (10), footer (17) and mobile menu (9) links all resolve 200. The mobile menu opens, sets aria-expanded, navigates and closes.
+- The consent banner meets the basics: nothing tracks before a choice, Reject and Accept have equal size, the choice persists, and "Cookie preferences" reopens it. After Accept, client-side route changes are counted (/view per route).
+- Canonical is self-referencing with index,follow on every page. JSON-LD parses on key pages (home WebSite/Organization/Person; book Book+BreadcrumbList; blog Article; scenario Article+BreadcrumbList; FAQ FAQPage; glossary DefinedTermSet; about Person+FAQPage) — curl 18:37:49Z.
+- All secondary domains 308 to www. Preview aliases sit behind Vercel SSO.
+- The contact honeypot is correctly hidden. Tool Send buttons stay disabled while empty. The journal radio works client-side. FAQ (28) and /methods anchors resolve.
+- Speed: desktop TTFB 43-261 ms, load 190-1038 ms.
+
+## 8. Not exercised (by rule)
+
+AI submissions on the 3 tools (endpoint not observable before send). Prompt chips. Journal "Download free PDF". Contact "Send". Home "Subscribe". "Buy Ebook with PayPal" and the PayPal checkout. Opening the retailer and share links (Instagram, Copy link, Facebook, X, LinkedIn, WhatsApp, Telegram, Reddit, Pinterest, TikTok, email). The paid "Save a session as a PDF for $9.99" mentioned on /practices. Browser-level load of the other 4 blog posts and the non-Hebrew locale pages (HTTP 200 only). Safari/iOS, Firefox and real devices (Chromium only).
+
+## 9. Unverified / needs outside-source check
+
+- Whether /9de18cd67c0a6252/view beacons are stored anywhere while Web Analytics is "not enabled" (owner's Vercel Analytics dashboard).
+- Whether /api/marketing/visitor and /api/marketing/event rows are persisted and visible to the owner (needs admin/DB access; not permitted in this lens).
+- Whether "Reject analytics" deletes existing ma_* cookies (ui-13).
+- Whether the PayPal Buy flow opens checkout (not clicked).
+- Real visitor counts and click paths: no live source is available until ui-01/ui-02 are fixed.
+
+## 10. Process notes (honest disclosure)
+
+- On every navigation and click, the Playwright MCP tool **automatically wrote** accessibility-snapshot .yml and console .log files under the session working directory `.playwright-mcp\`. No filename parameter was passed. **They were never read or used as evidence.** Every value here comes from inline tool results. The owner may want those files deleted, or the MCP output directory reconfigured.
+- The Bash tool refused one large single command. This file was therefore written in 6 sequential commits to work/site-visibility. Each commit re-read the live file from the branch head and appended one section. Every compare listed only this path.
+- At 18:38:13Z, get_project showed a preview deployment dpl_7rnTwmp7mAUMRHXMmBkQ7yx4TdFm BUILDING (target null). Its source branch was not checked.

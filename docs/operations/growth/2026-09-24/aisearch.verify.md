@@ -1,0 +1,250 @@
+# AI-search lens: adversarial review (2026-09-24)
+
+Reviewed file: `docs/operations/growth/2026-09-24/04-ai-search-practice.md`, commit `c4155b14` on `work/site-visibility`. That commit exists live and changed only that path (checked with `gh api` at 2026-09-24T18:51:23Z). There are 13 tactics, ai-01 to ai-13.
+
+## How this review was done
+
+- **Sources.** Each cited URL was opened live with WebFetch or curl between 18:49:06Z and 18:51:37Z UTC on 2026-09-24. Each source's date comes from the page itself.
+- **Prior work.** Checked through live GitHub metadata of `mallan67/mayaallan`:
+  - PR titles and bodies, read 18:46:52Z to 18:47:07Z
+  - `main` commit messages and file lists, read 18:47:18Z to 18:47:42Z
+  - issues, read 18:51:23Z
+  - No source files were read.
+- **Live site.** GET requests to `www.mayaallan.com` between 18:50:43Z and 18:51:04Z. No forms were submitted.
+- **No local files.** This file was built in memory and saved through the GitHub API.
+- **Limit.** The session's WebSearch budget ran out (200 of 200) at 18:50:26Z. No replacement sources could be searched for. Anything that needed a fresh search is marked UNVERIFIED.
+
+## Verdict
+
+**Keep 8:**
+- ai-01
+- ai-02 (owner step only)
+- ai-03 (as a readout of the existing experiment)
+- ai-04 (narrowed to guest spots)
+- ai-05
+- ai-06 (primary)
+- ai-10
+- ai-12 (manual, reduced)
+
+**Drop 5:** ai-07 (folded into ai-06), ai-08, ai-09, ai-11, ai-13.
+
+**Main finding: 5 of the 13 tactics repeat work that already shipped between 2026-04-20 and 2026-09-06, and that work has produced no leads.**
+
+| Prior work | Commits |
+|---|---|
+| IndexNow | `b7a0f8a6`; the key file is live |
+| sameAs, ISBN and identity layer | `b7a0f8a6`, `ea9c7231`, PR #50 |
+| Answer-first FAQ, built on the same 44.2% statistic | `41974c97` |
+| 39 draft scenario pages | `5be3503b` |
+| Medium cross-posting | `91c8f5d1` |
+| AEO tracker | `b7a0f8a6`, PR #46 |
+
+The lens's own conclusion is that off-site mentions matter and on-site markup barely does. By that logic, its on-site items (ai-08, ai-09, ai-13) should go. The tactics that survive are:
+- off-site: ai-04, ai-05, ai-06
+- the one direct lead-capture build: ai-10
+- measurement needed to see any result: ai-01, ai-02, ai-03, ai-12
+
+## Review table: ai-01 to ai-06
+
+| id | Tactic | (a) Recency | (b) Evidence | (c) Rehash of prior work? | (d) Fit (solo author, no audience, psychedelic restrictions) | Keep |
+|---|---|---|---|---|---|---|
+| ai-01 | Measurement and AI-referral classification | OK. OpenAI FAQ updated about 2026-08-28; SEJ 2026-05-14; Vercel docs 2026-09-16 | Real, first-party docs. The 35.7% and 70.6% no-referrer figures come from vendors (Clickport, Loamly) with self-selected samples | Partly. Vercel Web Analytics was added 2026-04-20 (`ff0028c4`) but never enabled. PR #12 (2026-05-13) already stores `utm_*` on orders. New work: enabling it and mapping AI hosts | Fits. S effort | **YES** (a prerequisite; produces no leads by itself) |
+| ai-02 | Bing Webmaster Tools AI Performance, plus IndexNow | OK. Bing 2026-02-10 | Real first-party feature. It is a product launch, not a results study | **YES for IndexNow.** Built 2026-05-19 (`b7a0f8a6`: lib, key file, submit API); the key file returns 200 live. The AI Performance report is new | Fits. Owner, S effort | **YES, owner step only.** Drop the code PR |
+| ai-03 | Check Google indexing | OK. Google 2025-12-10; Ahrefs 2026-03-02 | Real. Google docs; Ahrefs: 863k SERPs, 4M URLs (vendor data) | **YES.** This is the post-merge plan already written in PR #45 (2026-09-05) | Fits. Owner, S effort | **YES**, as the readout that decides whether any more on-site work happens |
+| ai-04 | YouTube: own channel plus podcast guest spots | OK. 2025-12-12 to 2026-03-13 | Correlation only, and the lens left out two key caveats (see details) | No | Own channel: poor fit (L effort, zero subscribers). Guest spots: good fit. YouTube allows educational content that gives no use, making or sourcing instructions | **YES, narrowed to guest spots** |
+| ai-05 | Reddit answers | Mixed. Profound's data runs Aug 2024 to Jun 2025, before ChatGPT's Reddit drop; Semrush 2025-11-10; Ahrefs 2026-03-13 | Real but conflicting. Vercel's "seed community mentions" is advice, not a measured result | No | Good fit: the audience is there. Subreddit rules are UNVERIFIED because Reddit returned 403 | **YES** |
+| ai-06 | Earned media and third-party book lists | OK. 2025-09-10 to 2026-06-17 | Real but indirect. arXiv preprint, not peer reviewed. Lily Ray's data is B2B SaaS only | No | Good fit. Earned media is not subject to ad restrictions | **YES, primary tactic** |
+
+## Review table: ai-07 to ai-13
+
+| id | Tactic | (a) Recency | (b) Evidence | (c) Rehash of prior work? | (d) Fit | Keep |
+|---|---|---|---|---|---|---|
+| ai-07 | Goodreads and Amazon ratings | OK (live page) | **None for AI.** The lens itself says this is inference | **YES.** Author-profile setup steps were written 2026-04-20 (`1573f924`). Five months later: 0 ratings, and the Goodreads author profile shows no sign of being claimed | Fits, but the AI benefit is unproven | **NO** as a standalone tactic. Fold into ai-06: ask review-copy readers for an honest rating |
+| ai-08 | More answer-first scenario and FAQ pages | OK | Partly unverifiable. The 815k-pair Growth Memo post is paywalled; only its headline was readable. The Consensus Gap overlap figures are only 1.1–2.3% | **YES.** Same format and same 44.2% reasoning as `/faq` (`41974c97`, 2026-05-19); same template as PR #45. The 39 drafts already exist (`5be3503b`) | Not materially different. More of the same bet while PR #45's two pages had not been indexed | **NO** (gated behind ai-03) |
+| ai-09 | Server-render text on the tool pages | **FAILS.** The only source is 2024-12-17. No 2025–26 confirmation was fetched, so current status is UNVERIFIED | Real measurement, but old. The lens says the effect has not been measured | Same class as the on-site crawler work that has not moved results (PR F, #43, #52) | Speculative | **NO** |
+| ai-10 | Email capture on deep pages | OK. 2025-10-24 to 2026-06-18 | The AI-conversion evidence is mixed. The measured gap is real: the live check found 0 email inputs on the deep pages | No. Only the homepage newsletter and the /contact form exist | Strong fit. Owned email is the one channel ad restrictions cannot block | **YES** (the only tactic that captures leads directly) |
+| ai-11 | Republish on LinkedIn and Medium | OK. Semrush 2025-11-10 | Weak. Vendor data at domain level; prompt categories not disclosed; no data for this niche | **YES for Medium.** `91c8f5d1` (2026-04-20) built a Medium API script. Medium archived that API on 2023-03-02 and says it allows no new integrations | Poor fit. She has no LinkedIn network, and LinkedIn citations are likely driven by B2B queries | **NO** |
+| ai-12 | Monthly prompt panel; move the tracker to search modes | OK. 2026-05-11 and 2026-03-13 | Real (3.7M citations; SparkToro) | **YES for the tracker.** Built 2026-05-19 (PR F) and fixed 2026-09-05 (PR #46, issue #44). The manual logged-out panel is materially different | 15 prompts × 3 runs × 6 engines = 270 runs a month is too heavy for a solo author | **YES, reduced and manual only.** Drop the tracker PR |
+| ai-13 | Consistent identity: sameAs and ISBN | OK | **Weak.** The lens says so itself, and Google says no special schema is needed | **YES.** Identity layer, sameAs and ISBN/ASIN identifiers already shipped (`b7a0f8a6`, `ea9c7231`, PR #50) | Hygiene only | **NO.** The missing ISBN is a data bug for another PR, not a tactic |
+
+## Kept tactics: corrected steps and evidence notes
+
+### ai-01: Measurement. Keep, with a smaller build
+- **Evidence read:**
+  - OpenAI's publisher FAQ says "ChatGPT automatically includes the UTM parameter utm_source=chatgpt.com in referral URLs" (curl 18:49:21Z; the page showed "Updated: 27 days ago").
+  - SEJ, 2026-05-14: GA4 has a built-in AI Assistant channel.
+  - Vercel docs (last_updated 2026-09-16): UTM filtering needs "Web Analytics Plus and Enterprise".
+  - Clickport (updated 2026-09-18) is a vendor with self-selected samples: 87 sites for the 35.7% figure, Loamly's customers for the 70.6% figure.
+- **Live check, 18:50:43Z:** no analytics script appears in the homepage server HTML. PR #57 is still open (last updated 2026-09-07).
+- **Corrected steps:**
+  1. Owner: Vercel → project `mayaallan` → Analytics → Enable, then merge PR #57.
+  2. Code PR (S): add AI host mapping and `utm_source=chatgpt.com` to the referrer helper that PR #57 introduces. Do not build new first-touch storage for orders: PR #12 (2026-05-13) already writes `utm_*` and `visitor_id` onto orders. Whether subscribers carry attribution is UNVERIFIED.
+  3. Do not add GA4 just to get the AI channel. GA4 is not on the live site, and adding it brings extra consent work.
+- **Measure:** the Vercel Referrers panel (everyone, cookieless) and the admin acquisition panels (consented visitors only, per the PR #57 body).
+
+### ai-02: Bing AI Performance. Keep the owner step; drop the IndexNow PR
+- **Evidence read:** Bing, 2026-02-10 (read 18:49:06Z). The report shows total citations, average cited pages, grounding queries and page-level citations across Copilot, Bing AI summaries and partners. It is a public preview; whether every site can use it is not stated.
+- **Rehash:** IndexNow already exists: `b7a0f8a6` (2026-05-19) added a client lib, key file and submit API, and `2cb9afd6` / `5cadd779` (2026-07-08) maintained it. The live key file returned 200 (32 bytes) and `/api/indexnow/submit` returned 405 to GET (18:50:43Z). No `msvalidate` meta tag appears on the live homepage.
+- **Corrected steps (owner, about 20 minutes):**
+  1. Verify the site in Bing Webmaster Tools by importing from Search Console.
+  2. Submit `/sitemap.xml`.
+  3. Open AI Performance.
+  4. Open the IndexNow report to confirm the existing integration's submissions actually arrive.
+  - Only if none arrive: a small fix PR to the existing route, not a new integration.
+
+### ai-03: Indexing readout. Keep, run in the same owner session
+- **Evidence read:**
+  - Google, updated 2025-12-10: a page must be "indexed and eligible to be shown in Google Search with a snippet". No special files or schema are needed. AI features are counted in Search Console under the "Web" search type.
+  - Ahrefs, 2026-03-02: 37.9% of AIO citations are in the top 10 (down from about 76% in July 2025). 31.0% are beyond the top 100. Of those, 18.2% are YouTube.
+- **Rehash:** these steps are PR #45's own post-merge plan (merged 2026-09-05): verify indexability, request indexing once, monitor without resubmitting. Nothing in the live metadata records that the readout was done.
+- **Step:** URL Inspection on the book page, `/faq`, `/glossary`, `/blog/psilocybin-integration-research` and `/scenarios/ego-dissolution`. Record status and date in the PR #58 handoff. **This result gates ai-08.**
+
+### ai-04: YouTube. Keep, narrowed to guest spots
+- **Evidence read:**
+  - Ahrefs, 2025-12-12 (75k brands): YouTube mentions correlate 0.737 with ChatGPT visibility, 0.740 with AI Mode and 0.712 with AIO. A mention is counted when the name appears in a video title, transcript or description, **weighted by views**. Ahrefs itself says "correlation isn't causation" and notes the barriers emerging brands face.
+  - SE Ranking, 2026-01-14: the lens left out that this study used **German-language queries from Berlin**, and that **24 of the 25 most-cited videos came from medical channels** (hospitals, clinics, health organizations).
+- **Why narrow it:** a new channel with no views adds almost nothing to a view-weighted metric, and a non-clinical author does not match the profile of the cited health channels.
+- **Corrected steps:**
+  1. Pitch about 10 integration-focused podcasts that publish full episodes on YouTube. Ask the host to put "Maya Allan" and the book title in the video title or description.
+  2. Clip the episodes for Shorts only after a guest spot airs.
+  3. Stay within YouTube's educational/documentary exception (policy read 18:51:37Z): no instructions on use, making or sourcing, and nothing about sales.
+- **Effort:** M.
+
+### ai-05: Reddit. Keep
+- **Evidence read:** the sources conflict.
+  - Profound, 2025-06-05 (updated Aug 2025; data Aug 2024 to Jun 2025; vendor): Reddit is 6.6% of Perplexity citations and 2.2% of AIO citations.
+  - Semrush, 2025-11-10 (vendor; 230k prompts, Jul to Oct 2025): ChatGPT's Reddit share went from "close to 60%" to "around 10%" by mid-September.
+  - Ahrefs, 2026-03-13: Reddit is ChatGPT's #1 cited domain (847,338 mentions).
+  - Vercel, 2025-06-10: ChatGPT brings about 10% of Vercel signups. That result is measured. The Reddit and community part is advice.
+- **Adjustments:**
+  - The main value is people reading her answers directly. Whether AI engines cite individual comments is unproven.
+  - Owner checks each subreddit's rules, account-age and karma requirements before posting.
+  - No links for the first weeks.
+  - Never dosing or sourcing.
+- **Effort:** M, ongoing.
+
+### ai-06: Earned media. Keep, as the primary tactic
+- **Evidence read:**
+  - Chen et al., arXiv 2509.08919 (2025-09-10): a preprint, not peer reviewed. It reports a "systematic and overwhelming bias towards Earned media".
+  - Lily Ray, 2026-02-03: 7 SaaS/B2B sites, Sistrix data, correlation confounded by other tactics.
+  - Lily Ray, 2026-06-17: 100 B2B software queries; the brand was left out of the recommendation 69% of the time its own listicle was cited.
+  - Allsopp, via Ahrefs 2026-03-13: 43.83% of citations for software, agency and product queries.
+  - None of these studies covers books or health. The direction agrees with the Ahrefs mention correlations.
+- **Addition (absorbs ai-07):** send review copies to list authors, reviewers and newsletter writers, and invite an honest Goodreads or Amazon rating with no incentive. Amazon's rules on reviews from free copies are UNVERIFIED this session, so the owner checks them before asking for Amazon reviews. The target list comes from the ai-12 panel's cited domains.
+
+### ai-10: Email capture on deep pages. Keep (the only direct lead capture)
+- **Live check, 18:50:54Z to 18:51:04Z.** Server HTML fetched with the OAI-SearchBot user agent showed 0 email inputs on:
+  - `/books/psilocybin-integration-guide`
+  - `/faq`
+  - `/glossary`
+  - `/blog/psilocybin-integration-research`
+  - `/scenarios/ego-dissolution`
+  - `/integration-reflection`, `/belief-inquiry`, `/nervous-system-reset`, `/integration-journal`
+  - Only the homepage (1) and `/contact` (1) have one. The lens said "only the homepage", but `/contact` has one too.
+- **Evidence read:**
+  - SE Ranking, 2026-06-18 (101,574 sites, Jan 2025 to Apr 2026): AI visitors average 9m19s against 5m33s for organic, and AI is 0.29% of US traffic. The study has **no conversion data**.
+  - Kaiser & Schulze, reported 2025-10-24 (973 sites): ChatGPT "underperformed every traditional channel except paid social". The source does **not** say the study is peer reviewed, although the lens summary calls it that.
+  - Ahrefs, updated 2025-11-10: the 23× figure is a vendor's report on its own SaaS; the sample is not disclosed.
+  - So the case for this tactic is the measured gap on the site, not any AI-specific conversion claim.
+- **Corrected step (code PR, S):**
+  - Add one reusable email block to the pages listed above, using the existing subscribe route and the Resend flow (PR #42 and PR #49).
+  - Deliver the offer **on the page right after submit**. PR #42's merge message says the subscriber welcome email is disabled.
+  - Record the landing page for each signup.
+  - Keep the consent and unsubscribe wording consistent with PR #35 and PR #42.
+- **Expected impact:** leads grow with traffic, and traffic is unknown until ai-01 is live. Honest expectation: a few signups a month to begin with.
+
+### ai-12: Prompt panel. Keep, reduced and manual only
+- **Evidence read:**
+  - Growth Memo, 2026-05-11 (3.7M citations across ChatGPT, Perplexity and AIO): 91% of cited URLs appear in only one engine, and 2.37% in all three.
+  - SparkToro, via Ahrefs 2026-03-13: there is less than a 1 in 100 chance of getting the same brand list twice.
+- **Rehash:** the tracker (PR F, 2026-05-19; PR #46, 2026-09-05) has run for about 4 months without informing any action. Drop the "switch to web-search modes" PR.
+- **Corrected step (owner):**
+  - **First,** read the tracker data recorded since PR #46. It is the only clean data, per that PR's body.
+  - **Then, once:** 10 unbranded prompts, 2 runs each, logged out, in ChatGPT, Perplexity and Google AI Mode. Record whether she is mentioned and which domains are cited.
+  - The cited domains become the ai-06 outreach list. Repeat quarterly, not monthly.
+
+## Dropped tactics
+- **ai-07 (ratings).** There is no evidence for an AI effect. The profile-setup steps written 2026-04-20 (`1573f924`) were never acted on: Goodreads still showed 0 ratings, 0 reviews and an unclaimed-looking author profile at 18:50:26Z. Ratings are folded into ai-06's review-copy outreach, which is how ratings get produced anyway.
+- **ai-08 (more answer-first pages).** A rehash:
+  - `/faq` (`41974c97`, 2026-05-19) was built on the same "44.2% from the first 30%" reasoning.
+  - The 39 draft scenarios exist (`5be3503b`).
+  - PR #45 already applied the exact template (How to read this, About the author, Updated date) to two pages that had been "Crawled, currently not indexed".
+  - The lens's newest support (Growth Memo, 2026-04-13) is paywalled; only its headline could be read.
+  - Revisit only if ai-03 shows the PR #45 pages indexed **and** ai-02 or ai-12 show a real question to answer. Then write only those scenarios.
+- **ai-09 (server-render tool text).**
+  - The only source is Vercel/MERJ, 2024-12-17. No 2025–26 confirmation could be fetched (search budget exhausted), so current crawler behaviour is UNVERIFIED.
+  - The lens says the effect has not been measured.
+  - The measured text inside `<main>` was 618–678 characters on three tool pages and 3,916 on `/integration-journal`, not "about 1.2k".
+- **ai-11 (LinkedIn and Medium).**
+  - The Semrush data (2025-11-10, vendor) is aggregated by domain with undisclosed prompt categories.
+  - Medium cross-posting was already built (`91c8f5d1`, 2026-04-20) on the Medium API, which Medium archived on 2023-03-02 ("We don't allow any new integrations"; read 18:51:23Z). It most likely never worked.
+  - A LinkedIn article with no network behind it gets no distribution.
+- **ai-13 (identity).**
+  - A rehash of `b7a0f8a6` and `ea9c7231` (2026-05-19), which wired sameAs and ISBN plus ASIN identifiers, and of PR #50.
+  - Live at 18:50:54Z: the Book `identifier` holds only the ASIN, although `ea9c7231` says it emits the ISBN too, and Person `sameAs` lists Instagram only.
+  - Treat the missing ISBN as a one-line data fix inside another PR. Adding sameAs links for profiles that do not exist yet does nothing.
+
+## Corrections to the lens's summary
+1. "Peer-reviewed study found ChatGPT referrals convert worse": the Digital Commerce 360 report (2025-10-24) does not give a review status.
+2. "Only the homepage has an email signup field": `/contact` also has an email input.
+3. "The tool pages serve about 1.2k characters": measured inside `<main>`, it is 618–678 characters on three tool pages and 3,916 on `/integration-journal`.
+4. "YouTube is the most-cited AIO source for health queries": this came from German-language queries in Berlin, and 24 of the 25 most-cited videos were from medical channels.
+5. Vercel's "seeding authentic community mentions" is advice, not a measured cause of its ChatGPT signups.
+6. The Reddit share in ChatGPT is contested: Semrush (Nov 2025) says it collapsed to about 10%, while Ahrefs (Mar 2026) says Reddit is ChatGPT's #1 cited domain.
+7. The lens names ai-02's IndexNow and ai-13's sameAs/ISBN as new builds, but both shipped on 2026-05-19.
+
+## Revised order
+1. **Week 1, owner (about 1 hour):**
+   - ai-01: enable Vercel Web Analytics and merge PR #57.
+   - ai-02 and ai-03: one session in Bing Webmaster Tools and Search Console.
+   - ai-12: read the existing tracker data.
+2. **Week 1, code (S):**
+   - ai-10: email capture on the deep pages, with on-page delivery.
+   - ai-01: AI host mapping in the PR #57 helper.
+3. **Weeks 1–2, owner:** a single ai-12 run (10 prompts × 2 runs × 3 engines) to get the cited-domain list.
+4. **Ongoing, owner:**
+   - ai-06: pitches and review copies, with honest-rating requests.
+   - ai-04: podcast guest spots published on YouTube.
+   - ai-05: 3–5 Reddit answers a week.
+5. **Gated:** ai-08 runs only after ai-03 and ai-02 show indexed pages and real question demand.
+
+## Not done / UNVERIFIED
+- No replacement sources were searched for after the WebSearch budget ran out (18:50:26Z).
+  - Current AI-crawler JavaScript rendering (ai-09) is UNVERIFIED.
+  - General content-page email-capture conversion benchmarks (ai-10) are UNVERIFIED.
+  - Amazon's review policy for free or advance copies is UNVERIFIED.
+- Subreddit rules: Reddit returned 403 in the lens run; not rechecked here.
+- Whether the AEO tracker cron still runs, and what it recorded, sits behind the admin login: UNVERIFIED.
+- Search Console and Bing Webmaster Tools status need the owner's account: UNVERIFIED.
+- Whether subscribers carry first-touch attribution cannot be seen from PR metadata: UNVERIFIED.
+- The Growth Memo article of 2026-04-13 is paywalled; only its headline was verified.
+
+## Sources opened (UTC read time, 2026-09-24)
+| Source | Published or updated | Read |
+|---|---|---|
+| help.openai.com/en/articles/12627856 | "Updated 27 days ago" (about 2026-08-28) | 18:49:21Z (curl) |
+| searchenginejournal.com/…/574974 | 2026-05-14 | 18:49:06Z |
+| clickport.io/blog/chatgpt-direct-traffic-ga4 (vendor) | 2026-09-18 | 18:49:06Z |
+| vercel.com/docs/analytics/filtering | 2026-09-16 | 18:49:06Z |
+| blogs.bing.com/webmaster/February-2026/… | 2026-02-10 | 18:49:06Z |
+| developers.google.com/search/docs/appearance/ai-features | 2025-12-10 | 18:49:33Z |
+| ahrefs.com/blog/ai-overview-citations-top-10 (vendor data) | 2026-03-02 | 18:49:33Z |
+| ahrefs.com/blog/ai-brand-visibility-correlations (vendor data) | 2025-12-12 | 18:49:33Z |
+| seranking.com/blog/health-ai-overviews-youtube-vs-medical-sites (vendor) | 2026-01-14 | 18:49:33Z |
+| ahrefs.com/blog/how-to-rank-on-chatgpt | 2026-03-13 | 18:49:33Z |
+| tryprofound.com/blog/ai-platform-citation-patterns (vendor) | 2025-06-05, updated Aug 2025 | 18:49:53Z |
+| semrush.com/blog/most-cited-domains-ai (vendor) | 2025-11-10 | 18:49:53Z |
+| vercel.com/blog/how-were-adapting-seo-for-llms-and-ai-search | 2025-06-10 | 18:49:53Z |
+| arxiv.org/abs/2509.08919 (preprint) | 2025-09-10 | 18:49:53Z |
+| lilyraynyc.substack.com (2 posts) | 2026-02-03; 2026-06-17 | 18:49:53Z |
+| growth-memo.com shorter-focused (paywalled) | 2026-04-13 | 18:50:10Z |
+| growth-memo.com the-consensus-gap | 2026-05-11 | 18:50:10Z |
+| ahrefs.com/blog/do-ai-assistants-prefer-to-cite-fresh-content | 2025-07-28 | 18:50:10Z |
+| vercel.com/blog/the-rise-of-the-ai-crawler | 2024-12-17 | 18:50:10Z |
+| seranking.com/blog/ai-traffic-research-study (vendor) | 2026-06-18 | 18:50:10Z |
+| digitalcommerce360.com/2025/10/24/… | 2025-10-24 | 18:50:10Z |
+| ahrefs.com/blog/ai-seo-statistics (vendor self-report) | 2025-11-10 | 18:50:26Z |
+| goodreads.com/book/show/245299940 | live | 18:50:26Z |
+| lawrencehitches.com/utm-source-chatgpt-explained (consultant) | 2026-09-20 | 18:50:26Z |
+| github.com/Medium/medium-api-docs | archived 2023-03-02 | 18:51:23Z |
+| support.google.com/youtube/answer/2801964 | no date shown | 18:51:37Z |

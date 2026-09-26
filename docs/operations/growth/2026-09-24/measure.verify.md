@@ -1,0 +1,138 @@
+# Adversarial review: measurement-engineering lens (06), 2026-09-24
+
+**Reviewed:** `docs/operations/growth/2026-09-24/06-measurement-engineering.md`, commit `de61b08713e0cd1ad578fa8c892a8114896c226f` (authored 2026-09-24T18:47:12Z). The live compare `de61b087...work/site-visibility` at 18:55:54Z showed the branch 38 commits ahead and 0 behind, so the reviewed commit is on the branch.
+**Reviewer window (UTC):** 2026-09-24T18:48:45Z to 18:57:03Z. Every fact below was read live in that window, and each one names its source and read time. Nothing here comes from a local file, clone, cache or earlier answer.
+**Rules applied to each tactic:** (a) recency, (b) real evidence or opinion/vendor claim, (c) rehash of earlier work on this site that produced no results, (d) fit for a solo author with almost no audience whose topic has ad restrictions. Any tactic that fails a rule gets `keep=false`.
+**Save note:** this file was written in several appending commits, because a single long command would not parse. Each commit changed only this path.
+
+---
+
+## Verdict first
+
+1. **None of these tactics creates a lead.** The lens says this itself. Measurement shows where the funnel breaks. It does not fill the funnel.
+2. **This site has already built a lot of measurement, and none of it produced a lead.** Live GitHub history of `mallan67/mayaallan` (read 18:48:45Z to 18:49:37Z):
+   - 2026-04-20: `ff0028c4` "Add Vercel Web Analytics", `1029986d` "Add typed analytics event helpers", `2e559a06` "Wire analytics events into three chat components"
+   - 2026-05-13: `ae9e9e98` "Add monitoring stack: /api/health + alertAdmin + scheduled GH Actions", then PR #12 "PR E: marketing attribution + conversion analytics + admin dashboard" (merged 2026-05-13T20:01Z)
+   - 2026-05-19: `b7a0f8a6` "PR F: AI search + AEO tracker + i18n + linkable assets", plus 8 AEO follow-up commits
+   - 2026-05-21: PR #23 consent-banner fix, and `835ec51b` / `478f6663` alertAdmin
+   - 2026-09-05: PR #46 AEO classifier, PR #47 and #49 operator notification emails
+   - 2026-09-07: PR #57 "count every visitor" is **still open and unmerged** (mergeable_state=clean, read 18:48:52Z)
+
+   That is five months of dashboards and trackers, and still zero leads. Leads (signup, contact, checkout, purchase) have been recorded on the server since PR #12, and the owner is emailed for each one (#47, #49). **So "zero leads" is a measured fact, not a gap in measurement.**
+3. **What survives:** only items that are S-effort (small) or take the owner a few minutes, and that reveal a funnel step nobody can see today. Planned build time for everything kept here is 1 to 2 days of PRs plus about 30 minutes of owner clicks. More measurement work should wait until lead-generating tactics from the other lenses are live.
+
+| id | keep | (a) recency | (b) evidence | (c) rehash? | (d) fit | one-line reason |
+|---|---|---|---|---|---|---|
+| meas-01 | **yes** (prerequisite) | ok (2026-06-26 / 2026-06-19) | real (live site + docs); Plausible 5–25% is an **uncited vendor estimate** | **yes**: finishing PR #57, not new | fits | Owner merges an existing PR in 5 minutes. No lead impact. |
+| meas-02 | **yes** | ok (2026-08-25 / 2026-09-14) | real, but the enabled state is **UNVERIFIED** | partly (named in PR #57 and #58) | fits, but a plan-terms issue found | Owner check in minutes. New finding: Hobby is "non-commercial, personal use only" |
+| meas-03 | **yes** | ok | real (live page shows 7 untracked retailer exits and a third-party affiliate ID) | no | fits | S; purchase-intent visibility |
+| meas-04 | **yes, deferred** | ok (vendor page read live) | vendor capability doc only; no outcome data | no | fits (free, KDP eligible) | Do it only after meas-03 shows Amazon clicks. Drop the Bookshop sub-step (unsourced) |
+| meas-05 | **yes** (tiny) | ok | real (live 308s); but **no evidence either domain gets traffic** | no | fits | S; point the book domain at the book page |
+| meas-06 | **yes, with a condition** | ok | real (live chunk) | **yes**: April 2026 events never produced data; the new version is materially different | fits only without identifiers | S; aggregate tool funnel with no visitor ID |
+| meas-07 | **yes, trimmed** | mixed (2025 data labelled) | real + vendor; one figure misattributed | partly (AEO tracker) but materially different | fits | Bing AI Performance is the valuable part; the AI referral channel will read about 0–4 visits a month |
+| meas-08 | **yes** | ok (2025, updated 2026-05-31) | real first-party data (Ahrefs about itself) | no | fits | S; the first leads explain where they came from |
+| meas-09 | **no** | ok | real docs | **yes**: more dashboard and alert work on top of #12/#57, alertAdmin and GH Actions monitoring | poor (M effort, weekly zeros) | Keep one S step: a data-flow assertion in the existing monitor |
+| meas-10 | **no** | ok | the Clarity policy does not show consent is unneeded elsewhere | no | **poor**: legal risk on a mental-health topic, M effort, only a handful of rows gained | Leave consent as is |
+
+---
+
+## Per-tactic findings
+
+### meas-01: Merge PR #57 (cookieless page views for everyone). KEEP as a prerequisite, not as growth
+- **Live site** (GET https://www.mayaallan.com/, 2026-09-24T18:50:02Z): the RSC payload references `GatedAnalytics` 1× and `CookielessAnalytics` 0×. The claim is confirmed: the page-view component is still gated on consent.
+- **PR #57** (GitHub API, 18:48:52Z): state=open, mergeable=true, mergeable_state=clean, head `fa5d59b3`, last updated 2026-09-07T03:49:42Z.
+- **Vercel Web Analytics privacy doc** (https://vercel.com/docs/analytics/privacy-policy, last_updated 2026-06-26, read 18:51Z): "without using any third-party cookies, instead end users are identified by a hash created from the incoming request… automatically discarded after 24 hours." Confirmed.
+- **ICO DUAA page** (updated 19 June 2026, read 18:51Z): organisations may "set some types of cookies without having to get consent, such as those you may use to collect information for statistical purposes." **ICO exceptions page** (no date shown, read 18:51Z): the exception requires clear information and a simple, free way to object, and **does not cover tracking individual visitors**. Confirmed, and this supports keeping `ma_*` behind consent.
+- **Correction:** the "5–25% missed without a proxy" figure (https://plausible.io/docs/proxy/introduction, last updated 2026-05-29) cites no study. It is an **uncited vendor estimate**, not evidence.
+- **EU position UNVERIFIED:** EDPB Guidelines 2/2023 on Art. 5(3) scope, final v2 adopted 2024-10-16 (EDPB landing page, read 18:56Z). The guideline text could not be retrieved in this review. Treat "no consent needed in the EU" as unverified, and let owner or counsel decide.
+- **Rehash check:** this is the work of PR #57 (2026-09-07), finished rather than new. It stays because every other visitor number depends on it.
+- **Impact:** 0 leads. Owner action takes about 5 minutes. **Measure:** a curl of the homepage shows `CookielessAnalytics` and no `GatedAnalytics`, and Vercel shows visitors above 0 within 24h.
+
+### meas-02: Confirm Web Analytics is enabled and record the plan. KEEP, with a new finding
+- **Live** (GET https://www.mayaallan.com/_vercel/insights/script.js, 18:50:02Z): 200, `application/javascript`, 4,469 bytes. The troubleshooting doc (last_updated 2026-06-26) links a **404** to "deploying the tracking code before enabling Web Analytics". It does **not** say a 200 proves the feature is enabled. **Status: UNVERIFIED.** This review did not read the Vercel project. The owner has to look at Vercel → mayaallan → Analytics.
+- **Plan limits** (https://vercel.com/docs/analytics/limits-and-pricing, last_updated 2026-08-25, read 18:51Z): on Hobby, Custom Events "-", Reporting Window 1 Month, UTM Parameters "-". On Pro, UTM Parameters is "N/A" (only Web Analytics Plus, $10/mo, includes UTM). **Correction to the lens:** Vercel-side UTM reporting needs Pro plus Plus. Until then the site's own table (utm_* since PR #12) is the only UTM source.
+- **New finding** (https://vercel.com/docs/plans/hobby, last_updated 2026-09-14, read 18:54Z): "the Hobby plan restricts users to non-commercial, personal use only." The site sells ebooks through PayPal. If the project is on Hobby, that terms issue matters more than analytics. Pro would also bring custom events (2 properties) and a 12-month window. The plan tier is **UNVERIFIED** here.
+- **Measure:** the owner records the plan tier and enabled state, with a screenshot date, in the continuous handoff.
+
+### meas-03: Retailer, button and share click events in the site's own table, plus cleaned retailer URLs. KEEP
+- **Live book page** (GET https://www.mayaallan.com/books/psilocybin-integration-guide, 18:50:31Z): outbound hosts are a.co, bookshop.org, play.google.com, abebooks.com, barnesandnoble.com, bokus.com, waterstones.com (7), plus PayPal. The strings `retailer_click` and `cta_click` are absent. The AbeBooks URL carries `cm_mmc=aff-_-ir-_-353196-_-77798` and `ref_=aff_ir_353196_77798`, which is **someone else's affiliate tag**. B&N carries `jsessionid=…`, Bokus carries `srsltid=…`, and Bookshop carries `source=IndieBound&ref=https://www.google.com/`. All confirmed.
+- **Evidence nuance:** the Vercel custom-events doc (last_updated 2026-06-26) says server-side tracking is "more useful" for sign-ups and purchases. It says nothing about outbound clicks, which can only be caught in the browser. The beacon approach is sound, but the lens cites no source for it.
+- **Rehash check:** no PR or commit title mentions retailer or outbound-click tracking. Closed PR #4 (retailer layout, unmerged) and commit `d1053bd6` (2026-01-22, "Show all retailers") only changed layout. **New.**
+- **Build notes:** the beacon must not attach `ma_visitor_id` unless consent was given, and must stay cookieless. Retailer URLs may live in admin book data (`e61f0843` "BOOK-METADATA.md", `ff328383`/`2c8dffbc` admin commits). Whether step 3 is a code change or an owner edit in /admin is **UNVERIFIED**.
+- **Impact:** shows purchase intent, not leads. **Measure:** retailer_click by retailer; retailer_click ÷ book_viewed.
+
+### meas-04: Amazon Attribution tags. KEEP, deferred; drop the Bookshop sub-step
+- **Live** (GET https://advertising.amazon.com/solutions/products/amazon-attribution, undated, read 18:53:06Z): "Amazon Attribution is a free measurement solution"; usable by "Kindle Direct Publishing (KDP) authors that are part of the advertising console"; "reports have a 14-day attribution window." Confirmed.
+- **Live** (GET https://a.co/d/hRppkCZ, 18:50:40Z): 301 to `amazon.com/dp/B0G765BZDL?ref=cm_sw_r_ffobk…&social_share=…`, a share link with no attribution tag. Confirmed.
+- **Evidence type:** a vendor capability page with no outcome data. The product has existed for years and the page is still current.
+- **Fit:** free, and tags do not run ads. Whether creating tags triggers any Amazon Ads policy review for psilocybin content is **UNVERIFIED**.
+- **Bookshop.org affiliate sub-step:** the lens gives no source. https://bookshop.org/info/affiliates and https://bookshop.org/pages/affiliates both returned **404** (18:54:28Z). **UNVERIFIED**, and it is about earning money, not measurement, so remove it from this tactic.
+- **Deferral rule:** start only when meas-03 shows about 5 or more Amazon retailer clicks a week. Before then, KDP's own sales report already shows every sale, so attribution adds almost nothing.
+
+### meas-05: UTM tags on the redirects from the owned domains. KEEP (tiny)
+- **Live** (HEAD, 18:50:40Z and 18:54:53Z): apex and www of psilocybinintegrationguide.com and psilowire.com return **308** to `https://www.mayaallan.com/…` with path and query **preserved** (`Server: Vercel`). Confirmed.
+- **Adversarial finding:** the Wayback CDX query (https://web.archive.org/cdx/search/cdx?url=…, 18:54:53Z) returned **0 captures for both domains**. Nothing shows either domain has ever been linked or visited. Expect about 0 rows unless the domain is printed in the book, a bio or an interview.
+- **Material improvement:** send psilocybinintegrationguide.com to `/books/psilocybin-integration-guide?utm_source=psilocybinintegrationguide.com&utm_medium=domain_redirect`, since someone typing the book's name wants the book. Keep path passthrough for deep links.
+- **Rehash:** no.
+
+### meas-06: Tool usage events in the site's own table, plus a tool funnel. KEEP, on condition
+- **Live** (GET https://www.mayaallan.com/_next/static/chunks/9a7cf34cbe809fe3.js, loaded by /belief-inquiry, 18:51:04Z): contains `tool_started`, `session_completed` and `export_cta_clicked`, sent through `null==(i=window.va)||i.call(window,"event",…)`, which does nothing when `window.va` is absent. No `marketing/event` call in that chunk. Confirmed.
+- **Rehash check:** **yes.** These events were built on 2026-04-20 (`1029986d`, `2e559a06`) and have never produced visible data, first because of the consent gate and second because Hobby has no custom events (limits doc 2026-08-25). The new version is **materially different**: it writes to the site's own table, so it works on any plan and without consent.
+- **Condition (fit):** these are usage events from reflection tools on a psilocybin and mental-health topic. Send them **aggregate only**: event name, tool and step. **No `ma_visitor_id`, no session ID, no text.** Reason: Washington's My Health My Data Act (https://www.atg.wa.gov/protecting-washingtonians-personal-health-data-and-privacy, read 18:53Z; effective 2024-03-31, still in force) covers data identifying "past, present, or future physical or mental health status", including inferences. This review makes no legal call; it avoids the question by not linking tool steps to a person.
+- **Measure:** per-tool step ratios as the lens describes.
+
+### meas-07: AI-assistant referral channel plus Bing AI Performance. KEEP, trimmed (Bing first)
+- **OpenAI Publishers FAQ** (https://help.openai.com/en/articles/12627856-publishers-and-developers-faq; WebFetch returned 403, curl returned 200 at 18:52:57Z; page data `updatedAt` = 2026-08-29T03:00Z, "Updated: 27 days ago"): "ChatGPT automatically includes the UTM parameter utm_source=chatgpt.com in referral URLs." Confirmed.
+- **Bing AI Performance** (https://blogs.bing.com/webmaster/2026/2/Introducing-AI-Performance-in-Bing-Webmaster-Tools-Public-Preview/, 2026-02-10, read 18:52Z): total citations, average cited pages, grounding queries and page-level activity across Copilot, Bing AI summaries and "select partner integrations". **No click data.** Confirmed.
+- **Microsoft Bing post** (https://blogs.bing.com/webmaster/2025/11/How-AI-Search-Is-Changing%E2%80%AFthe%E2%80%AFWay%E2%80%AFConversions%E2%80%AFare-Measured/, 2025-11-20; **vendor**): Clarity data from 1,200 publisher and news sites; AI referrals converted "at up to three times the rate" and were "under 1% of total visits". Amsive's figures are 7.05% vs 5.81%. The lens's "1.2–3x" range is accurate, but it is vendor-reported.
+- **Vercel blog** (https://vercel.com/blog/how-were-adapting-seo-for-llms-and-ai-search, 2025-06-10): "ChatGPT now refers around 10% of new Vercel signups… 1% six months ago." The source is a tweet by Vercel's CEO about a developer platform with a large brand. **This is a self-report and does not transfer to a solo author site.** Label it as context only.
+- **Ahrefs** (https://ahrefs.com/blog/ai-traffic-study/, published 2025-02-06, dateModified 2026-05-31, curl 18:52:20Z): sites with fewer than 999 visitors get 0.37% of views and 0.56% of visitors from AI, which the study's table puts at **7 views and 4 visitors a month** on average. **Correction:** the split "ChatGPT 50%, Perplexity 30.7%, Gemini 17.6%" is the **all-sites** figure. For the under-999 cohort it is **ChatGPT 67.4%, Perplexity 24.8%, Gemini 7.6%**.
+- **Live preconditions:** robots.txt allows GPTBot, OAI-SearchBot, ChatGPT-User, PerplexityBot, ClaudeBot and Google-Extended (18:55:44Z). DNS TXT for mayaallan.com contains a `google-site-verification` record (dns.google, 18:53:59Z; value withheld), so a Google Search Console domain property probably exists. No `msvalidate.01` meta tag on the homepage and `/BingSiteAuth.xml` returns 404 (18:53:49Z). **Bing verification is UNVERIFIED.** Bing can import from GSC, which leaves no public trace.
+- **Rehash check:** the AEO tracker (PR F 2026-05-19; #46 2026-09-05) sends paid probes to LLM APIs. Bing AI Performance is Microsoft's own citation data, free. **Materially different.** The referral classifier is a small extension of PR #57's `analytics-acquisition.ts`.
+- **Priority:** the owner's Bing Webmaster Tools step first. The referral channel is a cheap add-on and will read close to 0 at this scale.
+
+### meas-08: "How did you find me?" on the lead forms. KEEP
+- **Ahrefs 2025-02-06** (curl 18:52:20Z): "we collect qualitative feedback on registration, and to date we've seen 14K+ self-attributed new users from ChatGPT." Confirmed.
+- **Ahrefs 2025-03-26** (https://ahrefs.com/blog/ai-traffic-research/, read 18:52Z): "approximately 3% of our own conversions have come from AI over the last year, based on registration data, and qualitative 'how did you hear about us?' responses", with AI at 0.1% of referral traffic across about 35,000 sites. Confirmed. This is real first-party data, from a large SaaS company about itself.
+- **Rehash:** no PR or commit title mentions found_via or "how did you hear". **New.**
+- **Build note:** store the answer in `marketing_events.properties` (no migration) rather than in a new column. Keep it optional, with one select field.
+- **Fit:** S, no device storage, so no consent issue. With 0 leads it gives 0 answers. Its value is that the first real leads explain where they came from.
+
+### meas-09: Weekly digest, snapshot table and daily heartbeat. REJECT (keep=false); keep one S step
+- **Sources check out:** Web Analytics API public 2026-05-18 (changelog, read 18:52Z); docs last_updated 2026-06-26 list `referrerHostname`, `requestPath`, UTM and `eventData/<property>` dimensions. Cron doc (last_updated 2026-07-15): Hobby "Once per day", "Per-hour (±59 min)".
+- **Why it is rejected:**
+  - It is M effort for a weekly email of zeros.
+  - It is the same "more dashboards and alerts" pattern as PR #12, PR #57 and the May monitoring stack (`ae9e9e98` scheduled GH Actions, alertAdmin `835ec51b`/`478f6663`), which did not change results.
+  - The owner already gets an email for every signup and contact (#47, #49).
+  - A "0 page views in 24h" alert will fire falsely at almost zero traffic.
+  - UTM grouping in the Vercel API needs Web Analytics Plus (see meas-02).
+- **Salvage (S, code PR):** add one check to the **existing** scheduled health workflow. It fails if production HTML stops mounting the page-view component, or if `marketing_events` records no rows in 7 days. That catches the "analytics silently off for months" failure with no new cron, token or table.
+
+### meas-10: Consent banner only in EEA, UK and CH. REJECT (keep=false)
+- **Live privacy page** (GET https://www.mayaallan.com/privacy, 18:51:13Z): "If you are in the EU, the UK, or any other jurisdiction where consent is required for non-essential cookies, these are set only after you accept". Confirmed.
+- **Clarity consent doc** (https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-consent-api-v2, ms.date 2025-08-28, updated_at 2025-12-05): "Starting October 31, 2025, Clarity begins enforcing consent signal requirements for page visits originating from the … EEA, UK, and Switzerland." This is **Microsoft's policy for its own product**. It does not show that other jurisdictions need no consent.
+- **Vercel request headers** (last_updated 2025-12-13): `x-vercel-ip-country` exists. The mechanism works.
+- **Why it is rejected:**
+  - (d) Default-on identifiers that link a visit on a psilocybin and mental-health site to later actions carry legal risk. Examples: WA My Health My Data Act (see meas-06), and the ICO statement that the statistical exemption does not cover tracking individuals.
+  - It is M effort.
+  - At near-zero traffic the gain is a handful of extra first-touch rows. The leads themselves are already recorded on the server whatever the consent state.
+  - It also weakens the site's privacy-first positioning.
+- **Cheaper fix for the mismatch:** leave the code alone and change the privacy wording to say the choice is offered to every visitor. That is a content edit, not a build.
+
+---
+
+## Recommended order (kept items only)
+1. Owner, minutes: **meas-01** (merge #57, confirm the deploy), then **meas-02** (Analytics enabled? plan tier? note the Hobby commercial-use rule).
+2. One code PR, S: **meas-03** and **meas-06** together (one shared cookieless beacon, no visitor ID on tool events), **meas-05**, **meas-08**, the classifier part of **meas-07**, and the salvage monitor check from **meas-09**.
+3. Owner, about 15 minutes: Bing Webmaster Tools, imported from GSC, with AI Performance on (**meas-07**).
+4. Later, only when data justifies it: **meas-04** Amazon Attribution.
+5. Stop measurement work there. The next effort should go to lead-generating tactics from the other lenses.
+
+## Not verified in this review (open items)
+- Whether Vercel Web Analytics is enabled, and the plan tier. No Vercel read was done; the owner must check.
+- The EU Art. 5(3) position for cookieless request-hash analytics. The EDPB 2/2023 v2 text could not be retrieved.
+- Whether retailer URLs are stored in code or in admin book data.
+- Whether creating Amazon Attribution tags triggers an ad-policy review for this book.
+- Bookshop.org affiliate programme terms (pages returned 404).
+- Bing Webmaster Tools verification state.
+- Whether either owned domain gets any traffic. The only evidence is 0 Wayback captures.
