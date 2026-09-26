@@ -142,10 +142,34 @@ test("distribution registry covers search, AI, libraries, reader networks and ps
     "psychedelic-editorial",
     "psychedelic-podcast",
     "psychedelic-directory",
+    "psychedelic-community",
+    "psychedelic-marketplace",
+    "youtube-channel",
     "conference-event",
     "social",
     "syndication",
   ]) {
     assert.ok(categories.has(required), "missing distribution category " + required)
+  }
+})
+
+
+test("distribution registry includes psychedelic discussion marketplaces and named YouTube channels", () => {
+  for (const id of [
+    "reddit-psychedelictherapy",
+    "how-to-use-psychedelics",
+    "violette",
+    "global-psychedelic-society",
+    "shroomery",
+    "meetup-psychedelic",
+    "eventbrite-psychedelic",
+    "youtube-maps",
+    "youtube-psychedelics-today",
+    "youtube-third-wave",
+    "youtube-doubleblind",
+    "youtube-psychedelic-spotlight",
+    "youtube-psychedelic-integration-compass",
+  ]) {
+    assert.ok(distributionSurface(id), "missing distribution surface " + id)
   }
 })
