@@ -34,11 +34,9 @@ export interface EngineResponse {
   content: string
   model: string
   /**
-   * Whether this probe could consult the live web. The Claude, OpenAI and
-   * Gemini calls below are plain completions with no browsing or tool use, so
-   * they answer from training data; only Perplexity Sonar searches. A
-   * non-search response that names the site is a brand mention from memory,
-   * not evidence of what a consumer search product would show (issue #44).
+   * Whether this specific probe consulted or could consult the live web.
+   * Direct grounded calls return true; AI Gateway fallback completions return
+   * false except Perplexity Sonar, which is search-backed.
    */
   searchCapable: boolean
   /** Source URLs the search-grounded engine returned separately from answer text. */
@@ -51,8 +49,8 @@ export interface EngineResponse {
   error?: string
 }
 
-/** Which engines, as called here, can search the web. Gateway vs direct
- *  transport does not change this; it is a property of the model call. */
+/** Search capability of the AI Gateway fallback path. Direct provider calls
+ *  may override this by returning searchCapable:true after using web search. */
 export const ENGINE_SEARCH_CAPABLE: Record<EngineName, boolean> = {
   claude: false,
   chatgpt: false,
@@ -449,4 +447,60 @@ export function enabledEngines(): Array<(prompt: string) => Promise<EngineRespon
     },
   ]
   return all.filter((e) => e.enabled).map((e) => e.fn)
+}
+
+
+export type EngineProbeMode = "grounded-search" | "model-memory" | "disabled"
+
+export interface EngineReadiness {
+  engine: EngineName
+  mode: EngineProbeMode
+  note: string
+}
+
+export function engineReadiness(): EngineReadiness[] {
+  const hasGateway = !!process.env.AI_GATEWAY_API_KEY
+  const directKeys: Record<EngineName, boolean> = {
+    claude: !!process.env.ANTHROPIC_API_KEY,
+    chatgpt: !!process.env.OPENAI_API_KEY,
+    perplexity: !!process.env.PERPLEXITY_API_KEY,
+    gemini:
+      !!process.env.GOOGLE_GENAI_API_KEY ||
+      !!process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  }
+
+  return (["claude", "chatgpt", "perplexity", "gemini"] as EngineName[]).map((engine) => {
+    const grounded =
+      engine === "perplexity"
+        ? directKeys.perplexity || hasGateway
+        : directKeys[engine] && groundedEngineEnabled(engine)
+
+    if (grounded) {
+      return {
+        engine,
+        mode: "grounded-search",
+        note:
+          engine === "perplexity"
+            ? "Search-backed probe is available."
+            : "Direct provider key is present and this engine is opted into AEO_GROUNDED_ENGINES.",
+      }
+    }
+
+    if (hasGateway || directKeys[engine]) {
+      return {
+        engine,
+        mode: "model-memory",
+        note:
+          engine === "perplexity"
+            ? "Credential path exists but search probe is not currently available."
+            : "Probe can run, but live search is not opted in; results measure model memory rather than search visibility.",
+      }
+    }
+
+    return {
+      engine,
+      mode: "disabled",
+      note: "No usable provider or AI Gateway credential is configured.",
+    }
+  })
 }
