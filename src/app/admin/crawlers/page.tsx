@@ -20,12 +20,10 @@ function stringProp(row: CrawlerRow, key: string): string {
 export default async function CrawlerVisibilityPage() {
   if (!(await isAuthenticated())) redirect("/admin/login")
 
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
   const { data, error } = await supabaseAdmin
     .from("marketing_events")
     .select("created_at, path, properties")
     .eq("event_name", "crawler_visit")
-    .gte("created_at", since)
     .order("created_at", { ascending: false })
     .limit(5000)
 
@@ -63,7 +61,7 @@ export default async function CrawlerVisibilityPage() {
       {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error.message}</div>}
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Metric title="Crawler requests · 30d" value={rows.length.toLocaleString()} />
+        <Metric title="Recent crawler requests" value={rows.length.toLocaleString()} />
         <Metric title="Crawler types" value={String(crawlers.length)} />
         <Metric title="Public paths crawled" value={String(byPath.size)} />
         <Metric title="OAI-SearchBot" value={String(byCrawler.get("OAI-SearchBot") ?? 0)} />
