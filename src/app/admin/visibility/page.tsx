@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { isAuthenticated } from "@/lib/session"
-import { querySearchConsole, searchConsoleConfiguration } from "@/lib/search-console/client"
+import { querySearchConsole, searchConsoleConfiguration, type SearchConsoleRow } from "@/lib/search-console/client"
 import { buildSearchOpportunities } from "@/lib/search-console/opportunities"
 import { loadRecentRuns, allRows } from "@/lib/aeo/storage"
 import { aggregateExternalSources } from "@/lib/aeo/source-gaps"
@@ -24,8 +24,8 @@ export default async function VisibilityPage() {
   if (!(await isAuthenticated())) redirect("/admin/login")
 
   const config = searchConsoleConfiguration()
-  let current = []
-  let previous = []
+  let current: SearchConsoleRow[] = []
+  let previous: SearchConsoleRow[] = []
   let searchError: string | null = null
 
   if (config.configured) {
