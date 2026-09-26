@@ -16,8 +16,10 @@ test("Search Console opportunity engine finds striking-distance and low-CTR quer
   ]
 
   const rows = buildSearchOpportunities(current, previous)
-  assert.ok(rows.some((row) => row.query === "integration after psilocybin" && row.kind === "striking_distance"))
-  assert.ok(rows.some((row) => row.query === "integration after psilocybin" && row.kind === "low_ctr"))
+  const opportunity = rows.find((row) => row.query === "integration after psilocybin")
+  assert.ok(opportunity)
+  assert.equal(opportunity.kind, "striking_distance")
+  assert.equal(rows.filter((row) => row.query === "integration after psilocybin").length, 1)
   assert.ok(!rows.some((row) => row.query === "maya allan"))
 })
 
