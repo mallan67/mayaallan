@@ -49,12 +49,19 @@ export const ALLOWED_EVENT_NAMES = [
   "export_cta_clicked",
   "export_purchased",
   "download_started",
-  "crawler_visit",
 ] as const
 
-export type MarketingEventName = (typeof ALLOWED_EVENT_NAMES)[number]
+export const SERVER_ONLY_EVENT_NAMES = ["crawler_visit"] as const
 
-const ALLOWED_EVENT_SET = new Set<string>(ALLOWED_EVENT_NAMES)
+export type PublicMarketingEventName = (typeof ALLOWED_EVENT_NAMES)[number]
+export type MarketingEventName =
+  | PublicMarketingEventName
+  | (typeof SERVER_ONLY_EVENT_NAMES)[number]
+
+const ALLOWED_EVENT_SET = new Set<string>([
+  ...ALLOWED_EVENT_NAMES,
+  ...SERVER_ONLY_EVENT_NAMES,
+])
 
 const MAX_PROPERTIES_BYTES = 4 * 1024 // 4 KB
 const MAX_STRING_FIELD_LENGTH = 256
