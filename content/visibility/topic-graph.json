@@ -1,0 +1,225 @@
+{
+  "$schema": "Maya Allan topic/answer graph. Nodes are canonical public resources; edges power internal-link recommendations and visibility coverage checks.",
+  "nodes": [
+    {
+      "id": "author",
+      "kind": "entity",
+      "path": "/about",
+      "topics": [
+        "maya-allan",
+        "author-discovery"
+      ]
+    },
+    {
+      "id": "book",
+      "kind": "book",
+      "path": "/books/psilocybin-integration-guide",
+      "topics": [
+        "psilocybin-integration",
+        "book-discovery",
+        "journey-scenarios"
+      ]
+    },
+    {
+      "id": "practices",
+      "kind": "hub",
+      "path": "/practices",
+      "topics": [
+        "tools",
+        "self-inquiry",
+        "integration"
+      ]
+    },
+    {
+      "id": "methods",
+      "kind": "hub",
+      "path": "/methods",
+      "topics": [
+        "methods",
+        "attribution",
+        "evidence"
+      ]
+    },
+    {
+      "id": "ego-dissolution",
+      "kind": "scenario",
+      "path": "/scenarios/ego-dissolution",
+      "topics": [
+        "ego-dissolution",
+        "journey",
+        "safety",
+        "integration"
+      ]
+    },
+    {
+      "id": "integration-research",
+      "kind": "article",
+      "path": "/blog/psilocybin-integration-research",
+      "topics": [
+        "integration",
+        "memory-reconsolidation",
+        "evidence",
+        "coherence-therapy"
+      ]
+    },
+    {
+      "id": "curiosity-ifs",
+      "kind": "article",
+      "path": "/blog/curiosity-over-judgment-ifs",
+      "topics": [
+        "ifs",
+        "grounding",
+        "activation",
+        "parts"
+      ]
+    },
+    {
+      "id": "affirmations-integration",
+      "kind": "article",
+      "path": "/blog/affirmations-vs-integration",
+      "topics": [
+        "belief-change",
+        "integration",
+        "juxtaposition"
+      ]
+    },
+    {
+      "id": "integration-tool",
+      "kind": "tool",
+      "path": "/integration-reflection",
+      "topics": [
+        "integration",
+        "juxtaposition",
+        "reflection"
+      ]
+    },
+    {
+      "id": "belief-tool",
+      "kind": "tool",
+      "path": "/belief-inquiry",
+      "topics": [
+        "belief-inquiry",
+        "clean-language",
+        "self-inquiry"
+      ]
+    },
+    {
+      "id": "reset-tool",
+      "kind": "tool",
+      "path": "/nervous-system-reset",
+      "topics": [
+        "grounding",
+        "activation",
+        "parts",
+        "somatic-reflection"
+      ]
+    },
+    {
+      "id": "journal",
+      "kind": "tool",
+      "path": "/integration-journal",
+      "topics": [
+        "journaling",
+        "integration",
+        "reflection"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "book",
+      "to": "ego-dissolution",
+      "relation": "example-scenario"
+    },
+    {
+      "from": "book",
+      "to": "integration-research",
+      "relation": "evidence-context"
+    },
+    {
+      "from": "book",
+      "to": "practices",
+      "relation": "companion-tools"
+    },
+    {
+      "from": "ego-dissolution",
+      "to": "integration-tool",
+      "relation": "next-step"
+    },
+    {
+      "from": "ego-dissolution",
+      "to": "integration-research",
+      "relation": "evidence-context"
+    },
+    {
+      "from": "integration-research",
+      "to": "integration-tool",
+      "relation": "companion-tool"
+    },
+    {
+      "from": "integration-research",
+      "to": "methods",
+      "relation": "method-attribution"
+    },
+    {
+      "from": "integration-research",
+      "to": "affirmations-integration",
+      "relation": "related-explanation"
+    },
+    {
+      "from": "curiosity-ifs",
+      "to": "reset-tool",
+      "relation": "companion-tool"
+    },
+    {
+      "from": "curiosity-ifs",
+      "to": "methods",
+      "relation": "method-attribution"
+    },
+    {
+      "from": "affirmations-integration",
+      "to": "integration-tool",
+      "relation": "companion-tool"
+    },
+    {
+      "from": "affirmations-integration",
+      "to": "belief-tool",
+      "relation": "related-tool"
+    },
+    {
+      "from": "belief-tool",
+      "to": "methods",
+      "relation": "method-attribution"
+    },
+    {
+      "from": "reset-tool",
+      "to": "methods",
+      "relation": "method-attribution"
+    },
+    {
+      "from": "integration-tool",
+      "to": "methods",
+      "relation": "method-attribution"
+    },
+    {
+      "from": "journal",
+      "to": "integration-research",
+      "relation": "evidence-context"
+    },
+    {
+      "from": "journal",
+      "to": "book",
+      "relation": "related-resource"
+    },
+    {
+      "from": "author",
+      "to": "book",
+      "relation": "author-of"
+    },
+    {
+      "from": "author",
+      "to": "practices",
+      "relation": "creator-of"
+    }
+  ]
+}
