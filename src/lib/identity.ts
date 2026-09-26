@@ -173,6 +173,10 @@ export const BOOK_EDITIONS: Record<string, BookEditionIdentity[]> = {
         "https://www.walmart.com/ip/Psilocybin-Integration-Guide-40-Real-Scenarios-for-Navigating-What-You-See-Feel-Experience-Paperback-9798994148839/18999463307",
         "https://www.foyles.co.uk/book/psilocybin-integration-guide/maya-allan/9798994148839",
         "https://www.hatchards.co.uk/book/psilocybin-integration-guide/maya-allan/9798994148839",
+        "https://www.adlibris.com/sv/bok/psilocybin-integration-guide-9798994148839",
+        "https://www.bol.com/nl/nl/p/psilocybin-integration-guide/9300000253222512/",
+        "https://www.lafeltrinelli.it/psilocybin-integration-guide-40-real-libro-inglese-maya-allan/e/9798994148839",
+        "https://www.ebay.fr/itm/188780563782",
       ],
     },
     {
