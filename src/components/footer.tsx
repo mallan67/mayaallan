@@ -3,6 +3,8 @@ import CookiePreferencesLink from "@/components/CookiePreferencesLink"
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
+  const searchProfileUrl = process.env.NEXT_PUBLIC_GOOGLE_SEARCH_PROFILE_URL?.trim()
+  const preferredSourceEnabled = process.env.NEXT_PUBLIC_GOOGLE_PREFERRED_SOURCE_ENABLED === "true"
 
   return (
     <footer className="bg-navy pt-16 pb-10 text-white">
