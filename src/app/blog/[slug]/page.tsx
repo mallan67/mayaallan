@@ -120,13 +120,6 @@ export default async function BlogPostPage({ params }: { params: Params }) {
           <p className="text-charcoal-soft/60 text-xs mt-4">By {post.author}</p>
         </header>
 
-        {post.answer && (
-          <aside className="mb-8 border-l-4 border-blue-400 bg-blue-50/40 p-5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-700 mb-2">At a glance</p>
-            <p className="text-base leading-relaxed text-slate-800">{post.answer}</p>
-          </aside>
-        )}
-
         <div className="prose prose-charcoal max-w-none text-charcoal leading-[1.8] [&_h2]:font-serif [&_h2]:text-xl [&_h2]:sm:text-2xl [&_h2]:font-semibold [&_h2]:text-charcoal [&_h2]:mt-10 [&_h2]:mb-3 [&_h3]:font-serif [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:text-charcoal [&_h3]:mt-6 [&_h3]:mb-2 [&_p]:my-4 [&_p]:text-charcoal [&_p]:text-[0.95rem] [&_p]:sm:text-base [&_a]:text-liquid-blue [&_a]:underline hover:[&_a]:text-liquid-blue-bright [&_blockquote]:border-l-2 [&_blockquote]:border-liquid-blue/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-charcoal-soft [&_blockquote]:my-4 [&_strong]:text-charcoal [&_strong]:font-semibold [&_em]:italic [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-4 [&_li]:my-1 [&_code]:bg-[#F5F7FA] [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[0.9em] [&_hr]:my-8 [&_hr]:border-[#E8ECF0]">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
