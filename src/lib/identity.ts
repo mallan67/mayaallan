@@ -167,17 +167,16 @@ export const AUTHOR_IDENTIFIERS: AuthorIdentifier[] = [
 ]
 
 // -----------------------------------------------------------------------------
-// AUTHOR_BIO — canonical short bio used in JSON-LD descriptions
+// AUTHOR_BIO — restored author bio (the version that predated the Sept. 6 change)
 // -----------------------------------------------------------------------------
 // Keep this in sync with claimed external author profiles for consistency.
 // Consistent identity information can reduce ambiguity across sources; it is
 // not a guaranteed ranking signal.
 export const AUTHOR_BIO =
-  "Maya Allan is an author and educator focused on psilocybin integration, post-journey " +
-  "reflection, and self-inquiry. She writes non-clinical, educational resources — including " +
-  "the Psilocybin Integration Guide — that help readers make sense of their own experiences " +
-  "and build a personal reflective practice. Her work centers on personal agency: the " +
-  "meaning-making after an experience is the reader's own to do."
+  "Deep inner clarity is a fundamental human birthright. It is a capacity we all possess, though it is often buried under the noise of inherited narratives and the pressure of who we are \"supposed\" to be. My work is built on a simple conviction: no one can heal us but ourselves. True healing is a practical, grounded process of self-knowledge and radical acceptance. It happens when we stop seeking external approval, drop the weight of inherited guilt, and finally feel at home in our own skin.\n\n" +
+  "The Foundation: My own path involved years of navigating these complexities, which led me to value clear, evidence-based tools over abstract theories. I view myself as an explorer of consciousness—not an authority, but a provider of information. My focus is on reclaiming personal agency by examining the factors that shape our daily experience: Belief Systems: How the stories we believe dictate the lives we lead. Ancestry & Memory: Understanding how the past influences our present choices and biology.\n\n" +
+  "Mental Reshaping: How the mind forms, and how it can be consciously reshaped. Your Journey: Through my writing, I offer structure and insights to help you trust your own perception. My goal is to empower you to question what you’ve inherited and to step fully into the authorship of your own transformation. Awareness is not a destination to reach, but a flow to cultivate. It requires a kind relationship with yourself, a regulated nervous system, and a willingness to be exactly who you are.\n\n" +
+  "To know and accept yourself is to be \"home.\" Others are here to share the journey, but the return to yourself is a path only you can take."
 
 export const AUTHOR_NAME = "Maya Allan"
 export const AUTHOR_JOB_TITLE = "Author and Educator"
