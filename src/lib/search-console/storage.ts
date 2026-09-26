@@ -27,6 +27,8 @@ export interface SearchConsoleSnapshot {
   opportunities: SearchOpportunity[]
   pages: Array<{ page: string; clicks: number; impressions: number; ctr: number; position: number }>
   daily: Array<{ date: string; clicks: number; impressions: number; ctr: number; position: number }>
+  imagePages: Array<{ page: string; clicks: number; impressions: number; ctr: number; position: number }>
+  searchAppearances: Array<{ appearance: string; clicks: number; impressions: number; ctr: number; position: number }>
   sitemaps: unknown[]
   inspections: UrlInspectionSummary[]
 }
