@@ -223,8 +223,11 @@ export default async function HomePage() {
     // Events section won't render if empty
   }
 
-  // Author schema for SEO
-  const authorSchema = generateAuthorSchema(SITE_URL, AUTHOR_BIO)
+  // Author schema for SEO — use the owner-controlled bio when present.
+  const authorSchema = generateAuthorSchema(
+    SITE_URL,
+    authorInfo?.authorBio || "Maya Allan is an author and educator exploring consciousness, integration, and self-agency through lived experience and inquiry.",
+  )
 
   // Extract blurb preview (first 2-3 sentences)
   const getBlurbPreview = (blurb: string | null) => {
