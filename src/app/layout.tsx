@@ -8,7 +8,7 @@ import { Footer } from "@/components/footer"
 import ConsentBanner from "@/components/ConsentBanner"
 import { GatedAnalytics, GatedMarketing } from "@/components/AnalyticsGated"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
-import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structured-data"
+import { generateWebSiteSchema, generatePublisherSchema } from "@/lib/structured-data"
 import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL, SITE_SEO_DESCRIPTION } from "@/lib/identity"
 import { iconMimeTypeFromUrl } from "@/lib/icon-mime"
 
@@ -81,7 +81,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(SITE_URL),
     title: {
-      default: `${siteName} | Psilocybin Integration Author & Educator`,
+      default: `${siteName} | Author`,
       template: `%s | ${siteName}`,
     },
     description,
@@ -179,7 +179,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const websiteSchema = generateWebSiteSchema()
-  const organizationSchema = generateOrganizationSchema()
+  const publisherSchema = generatePublisherSchema()
 
   // Locale + direction are detected in middleware.ts and passed in via the
   // x-locale header. Layouts can't see params from nested [locale] routes, so
@@ -208,7 +208,7 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: jsonLdScript(organizationSchema),
+            __html: jsonLdScript(publisherSchema),
           }}
         />
       </head>
