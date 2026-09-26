@@ -77,36 +77,41 @@ test("FROZEN EXCEPTION: the scenario page is untouched and still carries the han
 })
 
 // ---------------------------------------------------------------------------
-// B. Author bio restoration / governance
+// B. Canonical author bio governance
 // ---------------------------------------------------------------------------
 
-test("Home reads the preserved author bio from site_settings", () => {
-  assert.match(home, /author_bio/)
-  assert.match(home, /authorInfo\.authorBio/)
-  assert.match(home, /\.select\("author_name, author_bio, author_photo_url"\)/)
+test("identity.ts contains the one approved author bio", () => {
+  assert.match(identity, /Deep inner clarity is a fundamental human birthright/)
+  assert.match(identity, /no one can heal us but ourselves/)
+  assert.doesNotMatch(identity, /Maya Allan is an author and educator focused on psilocybin integration/)
 })
 
-test("About reads the preserved author bio from site_settings", () => {
-  assert.match(about, /author_bio/)
-  assert.match(about, /author\.authorBio/)
-  assert.match(about, /\.select\("id, author_name, author_bio, author_photo_url"\)/)
+test("Home renders AUTHOR_BIO and never reads author_bio from site_settings", () => {
+  assert.match(home, /\bAUTHOR_BIO\b/)
+  assert.match(home, /\{AUTHOR_BIO\}/)
+  assert.doesNotMatch(home, /author_bio|authorBio/)
+  assert.match(home, /\.select\("author_photo_url"\)/)
 })
 
-test("Admin Settings exposes author name and bio for owner-controlled editing", () => {
-  assert.match(adminSettingsUi, /name="authorName"/)
-  assert.match(adminSettingsUi, /name="authorBio"/)
-  assert.match(adminSettingsUi, /authorName:\s*String\(/)
-  assert.match(adminSettingsUi, /authorBio:\s*String\(/)
+test("About renders AUTHOR_BIO and never reads author_bio from site_settings", () => {
+  assert.match(about, /\bAUTHOR_BIO\b/)
+  assert.match(about, /\{AUTHOR_BIO\}/)
+  assert.doesNotMatch(about, /author_bio|authorBio/)
+  assert.match(about, /\.select\("author_photo_url"\)/)
+})
+
+test("Admin Settings shows the canonical bio read-only and cannot submit another version", () => {
+  assert.match(adminSettingsUi, /Canonical Author Bio/)
+  assert.match(adminSettingsUi, /\{AUTHOR_BIO\}/)
+  assert.doesNotMatch(adminSettingsUi, /name="authorName"|name="authorBio"/)
+  assert.doesNotMatch(adminSettingsUi, /authorName:\s*String\(|authorBio:\s*String\(/)
   assert.match(adminSettingsUi, /label="Author Photo"/)
 })
 
-test("Admin Settings API accepts and writes author name/bio", () => {
+test("Admin Settings API does not accept, expose, or write alternate author bio fields", () => {
   const schema = adminSettingsApi.slice(adminSettingsApi.indexOf("const SettingsSchema"), adminSettingsApi.indexOf("export async function GET"))
-  assert.match(schema, /^\s*authorName\s*:/m)
-  assert.match(schema, /^\s*authorBio\s*:/m)
+  assert.doesNotMatch(schema, /^\s*(authorName|authorBio)\s*:/m)
   const write = adminSettingsApi.slice(adminSettingsApi.indexOf("const settingsData"), adminSettingsApi.indexOf("updated_at:"))
-  assert.match(write, /^\s*author_name\s*:/m)
-  assert.match(write, /^\s*author_bio\s*:/m)
-  assert.match(adminSettingsApi, /authorName:\s*row\.author_name/)
-  assert.match(adminSettingsApi, /authorBio:\s*row\.author_bio/)
+  assert.doesNotMatch(write, /^\s*(author_name|author_bio)\s*:/m)
+  assert.doesNotMatch(adminSettingsApi, /authorName:\s*row\.author_name|authorBio:\s*row\.author_bio/)
 })
