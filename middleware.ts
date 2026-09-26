@@ -16,8 +16,13 @@ function detectLocale(pathname: string): string {
   return (I18N_LOCALES as readonly string[]).includes(first || "") ? (first as string) : DEFAULT_I18N_LOCALE
 }
 
-export function middleware(request: NextRequest) {
+export function middleware(request: NextRequest, event: NextFetchEvent) {
   const { pathname } = request.nextUrl
+
+  const crawler = detectCrawler(request.headers.get("user-agent"))
+  if (crawler && !pathname.startsWith("/admin") && !pathname.startsWith("/api/")) {
+    event.waitUntil(recordCrawlerHit(crawler, pathname))
+  }
 
   // Add pathname + locale headers for server components (layouts especially) to
   // read without re-parsing the URL themselves.
