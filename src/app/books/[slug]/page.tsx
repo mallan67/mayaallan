@@ -13,7 +13,7 @@ import {
   generateBookSchema,
   generateBreadcrumbSchema,
 } from "@/lib/structured-data"
-import { SITE_URL, bookMachineSummary } from "@/lib/identity"
+import { SITE_URL, BOOK_DISCOVERED_RETAILERS, bookMachineSummary } from "@/lib/identity"
 
 interface BookPageProps {
   params: Promise<{ slug: string }>
@@ -305,8 +305,16 @@ export default async function BookPage({ params }: BookPageProps) {
       retailersByFormat[format].push(link)
     })
 
+  const discoveredRetailers = BOOK_DISCOVERED_RETAILERS[book.slug] ?? []
+  const discoveredRetailersByFormat = discoveredRetailers.reduce<Record<string, typeof discoveredRetailers>>((acc, retailer) => {
+    if (!acc[retailer.format]) acc[retailer.format] = []
+    acc[retailer.format].push(retailer)
+    return acc
+  }, {})
+
   const hasRetailerLinks = Object.keys(retailersByFormat).length > 0
-  const showRetailerSale = book.allowRetailerSale === true && hasRetailerLinks
+  const hasDiscoveredRetailers = discoveredRetailers.length > 0
+  const showRetailerSale = book.allowRetailerSale === true && (hasRetailerLinks || hasDiscoveredRetailers)
 
   // ============================================
   // FORMATS & PRICING
@@ -571,6 +579,28 @@ export default async function BookPage({ params }: BookPageProps) {
                             <span className="truncate">
                               {link.retailer.name}
                             </span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  {Object.entries(discoveredRetailersByFormat).map(([formatType, links]) => (
+                    <div key={`discovered-${formatType}`} className="mb-5 last:mb-0">
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 capitalize">
+                        More {formatType} retailers
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {links.map((retailer) => (
+                          <a
+                            key={retailer.url}
+                            href={retailer.url}
+                            target="_blank"
+                            rel="noopener noreferrer nofollow sponsored"
+                            className="inline-flex items-center gap-3 px-5 py-3 border-2 border-slate-200 rounded-xl bg-white hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all text-sm font-semibold group"
+                          >
+                            <RetailerIcon name={retailer.name} className="w-5 h-5 text-slate-600 group-hover:text-slate-900 transition-colors" />
+                            <span className="truncate">{retailer.name}</span>
                           </a>
                         ))}
                       </div>
