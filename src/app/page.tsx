@@ -110,8 +110,6 @@ export default async function HomePage() {
     audiobookPrice: number | null
   } | null = null
 
-  // Public author identity (name, bio) is governed in code (AUTHOR_NAME,
-  // AUTHOR_BIO in src/lib/identity.ts). site_settings supplies the PHOTO only.
   let authorInfo: {
     authorPhotoUrl: string | null
   } | null = null
@@ -188,7 +186,7 @@ export default async function HomePage() {
     console.error("Homepage featured book fetch failed:", featuredBookResult.reason)
   }
 
-  // Author photo — the only author field read from the DB.
+  // Public author identity is canonical in code; site_settings supplies only the photo.
   if (authorInfoResult.status === "fulfilled") {
     const { data } = authorInfoResult.value
     if (data) {
@@ -198,7 +196,6 @@ export default async function HomePage() {
     }
   } else {
     console.error("Homepage authorInfo fetch failed:", authorInfoResult.reason)
-    // Fallback handled in rendering
   }
 
   // Upcoming events — DB returns snake_case (post-migration); map to camelCase
@@ -221,7 +218,7 @@ export default async function HomePage() {
     // Events section won't render if empty
   }
 
-  // Author schema for SEO
+  // Author schema for SEO — one approved bio everywhere.
   const authorSchema = generateAuthorSchema(SITE_URL, AUTHOR_BIO)
 
   // Extract blurb preview (first 2-3 sentences)
@@ -331,7 +328,7 @@ export default async function HomePage() {
             </div>
 
             <p className="font-serif italic font-normal text-base text-white/75 leading-[1.7] pl-5 border-l-[3px] border-gold text-left">
-              &ldquo;No one can do this inner work for us. The return to your ever-evolving self is a path only you can take.&rdquo;
+              &ldquo;To know and accept yourself is to be &quot;home.&quot; Others are here to share the journey, but the return to yourself is a path only you can take.&rdquo;
             </p>
           </div>
         </div>
@@ -561,7 +558,6 @@ export default async function HomePage() {
               <h2 className="font-serif text-[clamp(1.8rem,3.5vw,2.6rem)] font-semibold tracking-[-0.02em] mb-6 text-white">
                 About Me
               </h2>
-              {/* Canonical bio — governed in src/lib/identity.ts, never from the DB */}
               <div className="text-[0.95rem] text-white/85 leading-[1.85] mb-7 whitespace-pre-wrap">
                 {AUTHOR_BIO}
               </div>
