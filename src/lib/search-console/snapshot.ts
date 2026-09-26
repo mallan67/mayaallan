@@ -85,7 +85,7 @@ export async function collectSearchConsoleSnapshot(): Promise<SearchConsoleSnaps
   const previousEndDate = isoDateDaysAgo(31)
   const previousStartDate = isoDateDaysAgo(58)
 
-  const [currentRows, previousRows, pageData, dailyData, sitemapResult] = await Promise.all([
+  const [currentRows, previousRows, pageData, dailyData, imagePageData, appearanceData, sitemapResult] = await Promise.all([
     querySearchAnalytics({
       startDate,
       endDate,
@@ -114,6 +114,21 @@ export async function collectSearchConsoleSnapshot(): Promise<SearchConsoleSnaps
       rowLimit: 100,
       dataState: "final",
     }),
+    querySearchAnalytics({
+      startDate,
+      endDate,
+      dimensions: ["page"],
+      type: "image",
+      rowLimit: 5_000,
+      dataState: "final",
+    }).catch(() => []),
+    querySearchAnalytics({
+      startDate,
+      endDate,
+      dimensions: ["searchAppearance"],
+      rowLimit: 1_000,
+      dataState: "final",
+    }).catch(() => []),
     listSearchConsoleSitemaps().catch((error) => [{ error: error instanceof Error ? error.message : String(error) }]),
   ])
 
@@ -141,6 +156,17 @@ export async function collectSearchConsoleSnapshot(): Promise<SearchConsoleSnaps
     opportunities: buildSearchOpportunities(current, previous),
     pages: pageRows(pageData),
     daily: dailyRows(dailyData),
+    imagePages: pageRows(imagePageData),
+    searchAppearances: appearanceData
+      .filter((row) => Array.isArray(row.keys) && row.keys.length >= 1)
+      .map((row) => ({
+        appearance: row.keys?.[0] ?? "",
+        clicks: Number(row.clicks) || 0,
+        impressions: Number(row.impressions) || 0,
+        ctr: Number(row.ctr) || 0,
+        position: Number(row.position) || 0,
+      }))
+      .filter((row) => row.appearance.length > 0),
     sitemaps: sitemapResult,
     inspections,
   }
