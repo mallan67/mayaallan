@@ -21,6 +21,7 @@ import { isAuthenticated } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { loadRecentRuns, allRows, type CitationRow, type AeoRun } from "@/lib/aeo/storage"
 import { aggregateByEngine, aggregateBySearchCapability, aggregateByPrompt, aggregateByUrl, isClassifiedRow, type DimensionCounts } from "@/lib/aeo/aggregate"
+import { aggregateExternalSources } from "@/lib/aeo/source-gaps"
 import { RunNowButton } from "./RunNowButton"
 import { CopyButton } from "./CopyButton"
 import { ClearAllButton } from "./ClearAllButton"
@@ -49,6 +50,7 @@ export default async function AeoDashboardPage() {
   const bySearch = aggregateBySearchCapability(rows)
   const byPrompt = aggregateByPrompt(rows)
   const byUrl = aggregateByUrl(rows)
+  const externalSources = aggregateExternalSources(rows).slice(0, 20)
   const legacyRows = rows.filter((r) => !r.error && !isClassifiedRow(r)).length
   const recentDetections = rows
     .filter((r) => isClassifiedRow(r) && (r.source_citation || r.brand_mention || r.domain_reference))
@@ -233,9 +235,9 @@ export default async function AeoDashboardPage() {
       <section className="mb-10">
         <h2 className="text-lg font-semibold text-slate-900 mb-3">Prompts, by search capability</h2>
         <p className="text-xs text-slate-500 mb-3">
-          The <strong>search-capable</strong> columns (Perplexity) are the search-visibility measure: an
-          engine that looked at the web and pointed at this site. The <strong>non-search</strong> columns
-          (Claude, ChatGPT, Gemini) show what models say from memory. The two are never combined.
+          The <strong>search-capable</strong> columns are the search-visibility measure: direct provider probes
+          that actually consulted the web (plus Perplexity). Gateway fallbacks that did not search remain
+          in <strong>non-search</strong> and show model memory instead. The two are never combined.
           Ranked by search-capable citation rate.
         </p>
         <div className="overflow-x-auto">
@@ -322,6 +324,41 @@ export default async function AeoDashboardPage() {
                     <td className="px-3 py-2 text-right font-semibold">{u.search}</td>
                     <td className="px-3 py-2 text-right">{u.non_search}</td>
                     <td className="px-3 py-2 text-right text-slate-400">{u.legacy || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="mb-10">
+        <h2 className="text-lg font-semibold text-slate-900 mb-3">Citation gaps: outside sources AI search used</h2>
+        <p className="text-xs text-slate-500 mb-3">
+          Domains returned by grounded web-search probes other than mayaallan.com. Repeated appearance
+          means those sources are being consulted for tracked questions. Use this to inspect what they
+          cover, cite, or explain that Maya&apos;s site may be missing. This is not a competitor ranking.
+        </p>
+        {externalSources.length === 0 ? (
+          <p className="text-sm text-slate-500 italic">No grounded source-gap data yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-slate-600 text-xs uppercase">
+                <tr>
+                  <th className="text-left px-3 py-2">Domain</th>
+                  <th className="text-right px-3 py-2">Tracked prompts</th>
+                  <th className="text-right px-3 py-2">Probe appearances</th>
+                  <th className="text-right px-3 py-2">Distinct URLs</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {externalSources.map((source) => (
+                  <tr key={source.host}>
+                    <td className="px-3 py-2 font-medium">{source.host}</td>
+                    <td className="px-3 py-2 text-right">{source.prompts}</td>
+                    <td className="px-3 py-2 text-right">{source.probes}</td>
+                    <td className="px-3 py-2 text-right">{source.urls}</td>
                   </tr>
                 ))}
               </tbody>
