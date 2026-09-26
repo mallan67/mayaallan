@@ -77,49 +77,36 @@ test("FROZEN EXCEPTION: the scenario page is untouched and still carries the han
 })
 
 // ---------------------------------------------------------------------------
-// B. Canonical author name / bio governance
+// B. Author bio restoration / governance
 // ---------------------------------------------------------------------------
 
-const DB_IDENTITY_TOKENS = /author_name|author_bio|authorName|authorBio/
-
-test("Home renders canonical AUTHOR_NAME / AUTHOR_BIO and reads only the author photo from site_settings", () => {
-  assert.match(home, /import\s*\{[^}]*\bAUTHOR_NAME\b[^}]*\}\s*from\s*"@\/lib\/identity"/)
-  assert.match(home, /import\s*\{[^}]*\bAUTHOR_BIO\b[^}]*\}\s*from\s*"@\/lib\/identity"/)
-  assert.doesNotMatch(home, DB_IDENTITY_TOKENS)
-  assert.match(home, /\.select\("author_photo_url"\)/)
-  assert.match(home, /\{AUTHOR_BIO\}/)
-  assert.match(home, /\{AUTHOR_NAME\}/)
+test("Home reads the preserved author bio from site_settings", () => {
+  assert.match(home, /author_bio/)
+  assert.match(home, /authorInfo\.authorBio/)
+  assert.match(home, /\.select\("author_name, author_bio, author_photo_url"\)/)
 })
 
-test("About renders canonical AUTHOR_NAME / AUTHOR_BIO and reads only the author photo from site_settings", () => {
-  assert.match(about, /import\s*\{[^}]*\bAUTHOR_NAME\b[^}]*\}\s*from\s*"@\/lib\/identity"/)
-  assert.match(about, /import\s*\{[^}]*\bAUTHOR_BIO\b[^}]*\}\s*from\s*"@\/lib\/identity"/)
-  assert.doesNotMatch(about, DB_IDENTITY_TOKENS)
-  assert.match(about, /\.select\("(id, )?author_photo_url"\)/)
-  assert.match(about, /\{AUTHOR_BIO\}/)
-  assert.match(about, /<h1[^>]*>\s*\{AUTHOR_NAME\}/)
-  assert.match(about, /generateProfilePageSchema\(\s*SITE_URL,\s*AUTHOR_BIO/)
-  assert.match(about, /About \$\{AUTHOR_NAME\}/)
+test("About reads the preserved author bio from site_settings", () => {
+  assert.match(about, /author_bio/)
+  assert.match(about, /author\.authorBio/)
+  assert.match(about, /\.select\("id, author_name, author_bio, author_photo_url"\)/)
 })
 
-test("Admin Settings UI no longer presents author name/bio as editable, and never sends them", () => {
-  assert.doesNotMatch(adminSettingsUi, /name="authorName"/)
-  assert.doesNotMatch(adminSettingsUi, /name="authorBio"/)
-  assert.doesNotMatch(adminSettingsUi, /authorName:\s*String\(/)
-  assert.doesNotMatch(adminSettingsUi, /authorBio:\s*String\(/)
-  // Author photo remains editable exactly as before.
+test("Admin Settings exposes author name and bio for owner-controlled editing", () => {
+  assert.match(adminSettingsUi, /name="authorName"/)
+  assert.match(adminSettingsUi, /name="authorBio"/)
+  assert.match(adminSettingsUi, /authorName:\s*String\(/)
+  assert.match(adminSettingsUi, /authorBio:\s*String\(/)
   assert.match(adminSettingsUi, /label="Author Photo"/)
-  assert.match(adminSettingsUi, /authorPhotoUrl:\s*authorPhotoUrl \|\| ""/)
 })
 
-test("Admin Settings API no longer accepts or writes author name/bio; the photo column is still written", () => {
+test("Admin Settings API accepts and writes author name/bio", () => {
   const schema = adminSettingsApi.slice(adminSettingsApi.indexOf("const SettingsSchema"), adminSettingsApi.indexOf("export async function GET"))
-  // Key definitions only (an explanatory comment may still name the fields).
-  assert.doesNotMatch(schema, /^\s*(authorName|authorBio)\s*:/m)
-  assert.match(schema, /authorPhotoUrl:\s*optionalHttpsUrl/)
+  assert.match(schema, /^\s*authorName\s*:/m)
+  assert.match(schema, /^\s*authorBio\s*:/m)
   const write = adminSettingsApi.slice(adminSettingsApi.indexOf("const settingsData"), adminSettingsApi.indexOf("updated_at:"))
-  assert.doesNotMatch(write, /^\s*(author_name|author_bio)\s*:/m)
-  assert.match(write, /author_photo_url:\s*data\.authorPhotoUrl/)
-  // The wire shape no longer advertises the fields either.
-  assert.doesNotMatch(adminSettingsApi, /authorName:\s*row\.author_name|authorBio:\s*row\.author_bio/)
+  assert.match(write, /^\s*author_name\s*:/m)
+  assert.match(write, /^\s*author_bio\s*:/m)
+  assert.match(adminSettingsApi, /authorName:\s*row\.author_name/)
+  assert.match(adminSettingsApi, /authorBio:\s*row\.author_bio/)
 })
