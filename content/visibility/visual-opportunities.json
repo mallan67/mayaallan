@@ -1,0 +1,35 @@
+{
+  "$schema": "Original visual coverage backlog. Do not use stock filler. Each asset should teach or navigate something the page already explains.",
+  "items": [
+    {
+      "path": "/blog/psilocybin-integration-research",
+      "priority": "high",
+      "concept": "Evidence map: animal reconsolidation → contested human evidence → clinical theory → psychedelic research → what is still unknown",
+      "altIntent": "Diagram separating established evidence, clinical theory, and Maya's interpretation of psilocybin integration."
+    },
+    {
+      "path": "/scenarios/ego-dissolution",
+      "priority": "high",
+      "concept": "Experience-to-integration map: during experience → immediate re-entry → reflection → when to seek professional help",
+      "altIntent": "Diagram showing stages for understanding and reflecting on an ego-dissolution experience."
+    },
+    {
+      "path": "/belief-inquiry",
+      "priority": "medium",
+      "concept": "Belief inquiry flow: name belief → context → protective logic → contradictory experience → what changes",
+      "altIntent": "Flow diagram of the Belief Inquiry reflection process."
+    },
+    {
+      "path": "/nervous-system-reset",
+      "priority": "medium",
+      "concept": "Body-first check-in map: activation → sensation → orientation → manageable next step",
+      "altIntent": "Grounding check-in diagram for the Nervous System Reset tool."
+    },
+    {
+      "path": "/integration-reflection",
+      "priority": "medium",
+      "concept": "Juxtaposition diagram: old pattern + new lived experience held together without forcing replacement",
+      "altIntent": "Diagram explaining juxtaposition in the Integration Reflection tool."
+    }
+  ]
+}
