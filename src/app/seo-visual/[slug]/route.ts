@@ -1,0 +1,149 @@
+import { createElement } from "react"
+import { ImageResponse } from "next/og"
+import type { NextRequest } from "next/server"
+import { OG_CACHE_HEADERS, loadInterFont, ogFonts } from "@/lib/og-image-helpers"
+
+export const runtime = "edge"
+
+type Visual = {
+  title: string
+  subtitle: string
+  steps: string[]
+}
+
+const VISUALS: Record<string, Visual> = {
+  "belief-inquiry": {
+    title: "Belief Inquiry",
+    subtitle: "A reflection path that keeps your own language central",
+    steps: ["Name the belief", "Explore its context", "Notice exceptions", "Reflect on what changes"],
+  },
+  "nervous-system-reset": {
+    title: "Nervous System Reset",
+    subtitle: "A gentle body-first check-in for moments of activation",
+    steps: ["Orient to the present", "Notice sensations", "Choose one small settling step", "Check in again"],
+  },
+  "integration-reflection": {
+    title: "Integration Reflection",
+    subtitle: "A structured way to place a new experience beside an older expectation",
+    steps: ["Describe what happened", "Name the older pattern", "Hold both in view", "Choose a small next step"],
+  },
+  "integration-journal": {
+    title: "Integration Journal",
+    subtitle: "A simple structure for capturing reflection without imposing a fixed timeline",
+    steps: ["Capture what stood out", "Notice recurring patterns", "Identify what matters", "Revisit over time"],
+  },
+}
+
+function stepCard(step: string, index: number) {
+  return createElement(
+    "div",
+    {
+      key: step,
+      style: {
+        display: "flex",
+        flex: 1,
+        flexDirection: "column",
+        justifyContent: "space-between",
+        border: "1px solid #cbd5e1",
+        borderRadius: "22px",
+        padding: "28px",
+        background: "#ffffff",
+      },
+    },
+    createElement(
+      "div",
+      {
+        style: {
+          width: "46px",
+          height: "46px",
+          borderRadius: "999px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#e0f2fe",
+          color: "#075985",
+          fontSize: "22px",
+          fontWeight: 700,
+        },
+      },
+      String(index + 1),
+    ),
+    createElement(
+      "div",
+      { style: { fontSize: "25px", fontWeight: 700, lineHeight: 1.25 } },
+      step,
+    ),
+  )
+}
+
+function visualTree(visual: Visual) {
+  return createElement(
+    "div",
+    {
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        background: "#f8fafc",
+        padding: "70px",
+        fontFamily: "Inter",
+        color: "#0f172a",
+      },
+    },
+    createElement(
+      "div",
+      { style: { display: "flex", flexDirection: "column", marginBottom: "46px" } },
+      createElement(
+        "div",
+        { style: { fontSize: "54px", fontWeight: 700, lineHeight: 1.05 } },
+        visual.title,
+      ),
+      createElement(
+        "div",
+        { style: { fontSize: "24px", color: "#475569", marginTop: "16px" } },
+        visual.subtitle,
+      ),
+    ),
+    createElement(
+      "div",
+      { style: { display: "flex", gap: "18px", width: "100%", flex: 1 } },
+      ...visual.steps.map(stepCard),
+    ),
+    createElement(
+      "div",
+      {
+        style: {
+          display: "flex",
+          justifyContent: "space-between",
+          marginTop: "34px",
+          fontSize: "18px",
+          color: "#64748b",
+        },
+      },
+      createElement("span", null, "mayaallan.com"),
+      createElement("span", null, "Educational reflection tool"),
+    ),
+  )
+}
+
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<{ slug: string }> },
+) {
+  const { slug } = await context.params
+  const visual = VISUALS[slug]
+  if (!visual) return new Response("Not found", { status: 404 })
+
+  const [regular, bold] = await Promise.all([
+    loadInterFont(400, `seo-visual:${slug}`),
+    loadInterFont(700, `seo-visual:${slug}`),
+  ])
+
+  return new ImageResponse(visualTree(visual), {
+    width: 1200,
+    height: 675,
+    fonts: ogFonts(regular, bold),
+    headers: OG_CACHE_HEADERS,
+  })
+}
