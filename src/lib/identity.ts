@@ -151,6 +151,7 @@ export interface BookEditionIdentity {
     | "https://schema.org/AudiobookFormat"
   publisher: string
   language?: string
+  sameAs?: string[]
 }
 
 export const BOOK_EDITIONS: Record<string, BookEditionIdentity[]> = {
@@ -162,6 +163,17 @@ export const BOOK_EDITIONS: Record<string, BookEditionIdentity[]> = {
       bookFormat: "https://schema.org/Paperback",
       publisher: "Maya Allan",
       language: "en",
+      sameAs: [
+        "https://www.amazon.com/Psilocybin-Integration-Guide-Navigating-Experience/dp/B0G91GZMLT",
+        "https://www.barnesandnoble.com/w/psilocybin-integration-guide-maya-allan/1148993659?ean=9798994148839",
+        "https://bookshop.org/p/books/psilocybin-integration-guide-40-real-scenarios-for-navigating-what-you-see-feel-experience-maya-allan/3c9390316323761a?ean=9798994148839",
+        "https://www.waterstones.com/book/psilocybin-integration-guide/maya-allan/9798994148839",
+        "https://www.bokus.com/bok/9798994148839/psilocybin-integration-guide-40-real-scenarios-for-navigating-what-you-see-feel-experience",
+        "https://www.abebooks.com/9798994148839/Psilocybin-Integration-Guide-Real-Scenarios/plp",
+        "https://www.walmart.com/ip/Psilocybin-Integration-Guide-40-Real-Scenarios-for-Navigating-What-You-See-Feel-Experience-Paperback-9798994148839/18999463307",
+        "https://www.foyles.co.uk/book/psilocybin-integration-guide/maya-allan/9798994148839",
+        "https://www.hatchards.co.uk/book/psilocybin-integration-guide/maya-allan/9798994148839",
+      ],
     },
     {
       key: "hardcover",
@@ -170,6 +182,9 @@ export const BOOK_EDITIONS: Record<string, BookEditionIdentity[]> = {
       bookFormat: "https://schema.org/Hardcover",
       publisher: "Maya Allan",
       language: "en",
+      sameAs: [
+        "https://www.amazon.com/Psilocybin-Integration-Guide-Navigating-Experience/dp/B0G7JWDJYQ",
+      ],
     },
     {
       key: "ebook",
@@ -178,6 +193,10 @@ export const BOOK_EDITIONS: Record<string, BookEditionIdentity[]> = {
       bookFormat: "https://schema.org/EBook",
       publisher: "Maya Allan",
       language: "en",
+      sameAs: [
+        "https://www.amazon.com/Psilocybin-Integration-Guide-Navigating-Experience-ebook/dp/B0G765BZDL",
+        "https://play.google.com/store/books/details?id=HvafEQAAQBAJ",
+      ],
     },
   ],
 }
