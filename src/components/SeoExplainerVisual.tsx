@@ -5,7 +5,7 @@ export function SeoExplainerVisual({
   alt,
   caption,
 }: {
-  slug: "belief-inquiry" | "nervous-system-reset" | "integration-reflection"
+  slug: "belief-inquiry" | "nervous-system-reset" | "integration-reflection" | "integration-journal"
   alt: string
   caption: string
 }) {
