@@ -45,7 +45,7 @@ const FAQS = [
   {
     question: "How do I use it?",
     answer:
-      "Pick the phase you're in, optionally write your intention or journey date for the cover page, and download. Print it or write digitally — handwriting is recommended; research suggests it engages reflective processing more deeply than typing.",
+      "Pick the phase you're in, optionally write your intention or journey date for the cover page, and download. Print it or write digitally — use whichever format makes it easiest for you to return to the reflection.",
   },
   {
     question: "Is it free?",
@@ -55,7 +55,7 @@ const FAQS = [
   {
     question: "Why is it only 7 days?",
     answer:
-      "Integration is a months-long process, but the first 7 days are where most insight either lands or fades. The journal is designed for that window — you can re-download it (or the next phase) to continue.",
+      "Seven days gives the journal a practical structure without implying that integration follows a fixed timeline. Research describes integration as an extended process that can take different forms and durations. You can re-download the journal or move to another version whenever it is useful.",
   },
   {
     question: "What is the difference between integration and shadow work versions?",
@@ -77,9 +77,8 @@ export default function IntegrationJournalPage() {
 
   const faqSchema = generateFAQSchema(FAQS, URL_PATH)
 
-  // SoftwareApplication schema — marks this as a free tool, eligible for the
-  // free-tool rich result in Bing + some AI engines treat it as a citable
-  // utility rather than just an article.
+  // SoftwareApplication schema describes the free web utility in machine-readable
+  // form. It does not promise a rich result or ranking treatment.
   const softwareSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -158,15 +157,15 @@ export default function IntegrationJournalPage() {
       <section className="mb-12 text-slate-700 leading-relaxed space-y-4">
         <h2 className="font-serif text-2xl font-semibold text-slate-900 mb-3">Why journaling matters after a psilocybin experience</h2>
         <p>
-          The medicine opens a window. Integration is what you build in that window. Research from
-          Johns Hopkins, Imperial College London, and the Usona Institute consistently shows that
-          the long-term benefits of psilocybin experiences come not from the experience itself but
-          from the practices that follow — and journaling is one of the most accessible.
+          Integration is commonly described as the process of revisiting, making sense of, and
+          bringing parts of an experience into ordinary life. Reviews describe many practices
+          people use for that work, including reflection and journaling, but the evidence does not
+          establish one best integration method or a fixed timetable that works for everyone.
         </p>
         <p>
-          The first 24 hours after a journey are when non-verbal experience is most translatable
-          into language. The week that follows is when patterns become legible. The month that
-          follows is when insight either becomes action or fades into a beautiful memory.
+          This journal therefore uses seven days as a simple container for reflection, not as a
+          claim about a biological or therapeutic window. The prompts are meant to help you capture
+          what stood out, notice patterns, and decide what—if anything—you want to carry forward.
         </p>
         <p>
           The prompts in these journals are drawn from <em>Psilocybin Integration Guide</em>, which
