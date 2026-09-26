@@ -21,7 +21,7 @@ export const metadata: Metadata = {
  * 2. Client-side navigation and logout functionality
  *
  * Security layers:
- * - middleware.ts (Edge runtime) - First line of defense
+ * - proxy.ts (Edge runtime) - First line of defense
  * - AdminAuthGuard (Server Component) - Second line of defense
  * - API route authentication - Third line of defense
  */
