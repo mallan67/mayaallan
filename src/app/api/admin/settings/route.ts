@@ -75,9 +75,8 @@ const SettingsSchema = z.object({
   socialYoutube: optionalHttpsUrl,
   socialTiktok: optionalHttpsUrl,
   footerText: optionalString(500),
-  // authorName / authorBio are intentionally NOT accepted: public author
-  // identity is governed in code (AUTHOR_NAME / AUTHOR_BIO in identity.ts).
-  // Unknown keys from an older admin UI are stripped by z.object, never written.
+  authorName: optionalString(120),
+  authorBio: optionalString(2000),
   authorPhotoUrl: optionalHttpsUrl,
   defaultOgImageUrl: optionalHttpsUrl,
   siteIconUrl: optionalHttpsUrl,
@@ -126,8 +125,8 @@ function settingsRowToObject(row: any): Record<string, unknown> {
     socialYoutube: row.social_youtube,
     socialTiktok: row.social_tiktok,
     footerText: row.footer_text,
-    // author_name / author_bio columns remain in the DB as legacy storage but
-    // are no longer part of the settings contract (see SettingsSchema).
+    authorName: row.author_name,
+    authorBio: row.author_bio,
     authorPhotoUrl: row.author_photo_url,
     defaultOgImageUrl: row.default_og_image_url,
     siteIconUrl: row.site_icon_url,
@@ -187,6 +186,8 @@ export async function PATCH(request: Request) {
       social_youtube: data.socialYoutube,
       social_tiktok: data.socialTiktok,
       footer_text: data.footerText,
+      author_name: data.authorName,
+      author_bio: data.authorBio,
       author_photo_url: data.authorPhotoUrl,
       default_og_image_url: data.defaultOgImageUrl,
       site_icon_url: data.siteIconUrl,
