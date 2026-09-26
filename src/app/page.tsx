@@ -6,7 +6,7 @@ import { MessageCircle, Dna, Brain, ListChecks, HeartPulse, PenLine, Star, Calen
 import { NewsletterSection } from "@/components/NewsletterSection"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateAuthorSchema } from "@/lib/structured-data"
-import { SITE_URL, SITE_SEO_DESCRIPTION, AUTHOR_JOB_TITLE, AUTHOR_NAME, AUTHOR_BIO } from "@/lib/identity"
+import { SITE_URL, SITE_SEO_DESCRIPTION, AUTHOR_JOB_TITLE, AUTHOR_NAME } from "@/lib/identity"
 import { upcomingEventsOrClause } from "@/lib/events-visibility"
 
 export const revalidate = 300 // 5 minutes
@@ -110,9 +110,9 @@ export default async function HomePage() {
     audiobookPrice: number | null
   } | null = null
 
-  // Public author identity (name, bio) is governed in code (AUTHOR_NAME,
-  // AUTHOR_BIO in src/lib/identity.ts). site_settings supplies the PHOTO only.
   let authorInfo: {
+    authorName: string | null
+    authorBio: string | null
     authorPhotoUrl: string | null
   } | null = null
 
@@ -141,7 +141,7 @@ export default async function HomePage() {
       .single(),
     supabaseAdmin
       .from(Tables.siteSettings)
-      .select("author_photo_url")
+      .select("author_name, author_bio, author_photo_url")
       .limit(1)
       .single(),
     supabaseAdmin
@@ -188,11 +188,13 @@ export default async function HomePage() {
     console.error("Homepage featured book fetch failed:", featuredBookResult.reason)
   }
 
-  // Author photo — the only author field read from the DB.
+  // Author info — DB returns snake_case; map to camelCase for rendering.
   if (authorInfoResult.status === "fulfilled") {
     const { data } = authorInfoResult.value
     if (data) {
       authorInfo = {
+        authorName: data.author_name,
+        authorBio: data.author_bio,
         authorPhotoUrl: data.author_photo_url,
       }
     }
@@ -561,10 +563,23 @@ export default async function HomePage() {
               <h2 className="font-serif text-[clamp(1.8rem,3.5vw,2.6rem)] font-semibold tracking-[-0.02em] mb-6 text-white">
                 About Me
               </h2>
-              {/* Canonical bio — governed in src/lib/identity.ts, never from the DB */}
-              <div className="text-[0.95rem] text-white/85 leading-[1.85] mb-7 whitespace-pre-wrap">
-                {AUTHOR_BIO}
-              </div>
+              {authorInfo?.authorBio ? (
+                <div className="text-[0.95rem] text-white/85 leading-[1.85] mb-7 whitespace-pre-wrap">
+                  {authorInfo.authorBio}
+                </div>
+              ) : (
+                <>
+                  <p className="text-[1.1rem] text-white font-medium leading-[1.75] mb-4">
+                    I believe deep inner clarity is a fundamental human birthright.
+                  </p>
+                  <p className="text-[0.95rem] text-white/85 leading-[1.85] mb-4">
+                    It&apos;s a capacity we all have — but it gets buried under inherited narratives, the pressure of who we&apos;re &ldquo;supposed&rdquo; to be, and a world that profits from our confusion. My work starts with a simple conviction: no one can do this inner work for us.
+                  </p>
+                  <p className="text-[0.95rem] text-white/85 leading-[1.85] mb-7">
+                    I&apos;m not a guru, and I&apos;m not interested in being one. I&apos;m a writer who cares about practical tools over abstract theories. This is grounded work — self-knowledge, radical acceptance, and finally feeling at home in your own skin.
+                  </p>
+                </>
+              )}
 
               {/* Pillars */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 mb-7">
