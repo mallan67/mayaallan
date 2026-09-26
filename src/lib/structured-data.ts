@@ -205,7 +205,7 @@ export const AUTHOR_FAQS: FAQItem[] = [
   },
   {
     question: "What does Maya Allan write about?",
-    answer: "Maya Allan writes about psilocybin integration, post-journey reflection, and self-inquiry. Her books offer educational guidance for readers reflecting on and integrating their own psychedelic experiences.",
+    answer: "Maya Allan writes books, essays, and reflective resources about consciousness, self-inquiry, personal agency, and transformative experience. Her published work includes the Psilocybin Integration Guide.",
   },
   {
     question: "What is psilocybin integration?",
@@ -213,7 +213,7 @@ export const AUTHOR_FAQS: FAQItem[] = [
   },
   {
     question: "Who are Maya Allan's books for?",
-    answer: "Maya Allan's books are written for readers navigating their own psilocybin experiences — anyone seeking clear, educational guidance for reflection, integration, and self-agency.",
+    answer: "Maya Allan's books are written for curious readers interested in consciousness, self-inquiry, personal agency, reflection, and making meaning from transformative experiences.",
   },
 ]
 
@@ -221,6 +221,7 @@ export function generateWebSiteSchema(siteName = "Maya Allan", siteUrl = SITE_UR
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": WEBSITE_ID,
     name: siteName,
     url: siteUrl,
     description: SITE_SEO_DESCRIPTION,
@@ -288,10 +289,14 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
   // Book entity has its own consolidated authority web independent of the author.
   const bookSameAs = options?.sameAs ?? BOOK_PROFILES[book.slug] ?? []
 
-  // ISBN + ASIN identifiers, emitted as schema.org PropertyValue nodes so
-  // Google can match the Book entity against retailer catalogs in either direction.
+  const editions = BOOK_EDITIONS[book.slug] ?? []
+  const hasEditionMap = editions.length > 0
+
+  // Work-level identifiers should not flatten edition ISBNs together. When an
+  // edition map exists, ISBNs live on workExample nodes only. Legacy books
+  // without an edition map may still expose their single books.isbn value.
   const bookIdentifiers: Array<{ "@type": "PropertyValue"; propertyID: string; value: string }> = []
-  if (book.isbn) {
+  if (book.isbn && !hasEditionMap) {
     bookIdentifiers.push({ "@type": "PropertyValue", propertyID: "ISBN", value: book.isbn })
   }
   const asin = BOOK_ASINS[book.slug]
@@ -301,7 +306,6 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
 
   const authorIdentifiers = authorIdentifierNodes()
 
-  const editions = BOOK_EDITIONS[book.slug] ?? []
   const workId = `${siteUrl}/books/${book.slug}#work`
 
   return {
@@ -312,7 +316,7 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
     ...(book.subtitle1 && { alternativeHeadline: book.subtitle1 }),
     // Machine-facing summary, NEVER the mutable sales blurb (book.blurb).
     description: bookMachineSummary(book.slug, book.title),
-    ...(book.isbn && { isbn: book.isbn }),
+    ...(book.isbn && !hasEditionMap && { isbn: book.isbn }),
     ...(bookIdentifiers.length > 0 && { identifier: bookIdentifiers }),
     ...(book.copyright && { copyrightNotice: book.copyright }),
     ...(book.coverUrl && {
