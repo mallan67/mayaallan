@@ -18,9 +18,10 @@ import { SITE_URL } from "@/lib/identity"
 //   anthropic-ai   — Legacy Anthropic crawler name
 //   PerplexityBot  — Perplexity search index
 //   Perplexity-User — Perplexity's per-query fetch
-//   Google-Extended — Opts Google's Gemini into using your pages for training
-//                    + AI Overviews. Without this, Google can index but can't
-//                    cite you in AI answers.
+//   Google-Extended — Controls whether Google may use site content to improve
+//                    Gemini Apps and Vertex AI generative APIs. Google states
+//                    this token does NOT affect inclusion or ranking in Search,
+//                    including AI features in Search.
 //   GoogleOther    — Google's secondary research crawler
 //   Applebot-Extended — Apple Intelligence + Siri training
 //   Bytespider     — TikTok / ByteDance AI
