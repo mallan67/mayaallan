@@ -104,6 +104,23 @@ jobs:
           script: |
             const { INCIDENT_LABEL, DETAILS } = process.env
             const ts = new Date().toISOString()
+
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: INCIDENT_LABEL,
+              })
+            } catch (error) {
+              if (error.status !== 404) throw error
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: INCIDENT_LABEL,
+                color: 'b60205',
+                description: 'Automatic live SEO health-check incident',
+              })
+            }
             const runUrl = \`\${process.env.GITHUB_SERVER_URL}/\${process.env.GITHUB_REPOSITORY}/actions/runs/\${process.env.GITHUB_RUN_ID}\`
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
