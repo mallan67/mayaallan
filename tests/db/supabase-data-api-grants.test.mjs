@@ -59,11 +59,16 @@ function serviceRoleGrantedTables(sql) {
   return granted
 }
 
-function serviceRoleGrantedSequences(sql) {
+function serviceRoleUsageGrantedSequences(sql) {
   const granted = new Set()
-  const re = /grant\s+[\s\S]*?\s+on\s+sequence\s+([\s\S]*?)\s+to\s+service_role\s*;/gi
+  const re = /grant\s+([\s\S]*?)\s+on\s+sequence\s+([\s\S]*?)\s+to\s+service_role\s*;/gi
   for (const match of sql.matchAll(re)) {
-    for (const raw of match[1].split(",")) {
+    const privileges = match[1]
+      .split(",")
+      .map((value) => value.trim().toLowerCase())
+    if (!privileges.includes("usage")) continue
+
+    for (const raw of match[2].split(",")) {
       const name = normalizeIdentifier(raw)
       if (/^[_a-z][_a-z0-9]*$/i.test(name)) granted.add(name)
     }
@@ -101,7 +106,7 @@ test("every serial column created in SQL grants its generated sequence to servic
     const createdSequences = createdSerialSequences(sql)
     if (createdSequences.length === 0) continue
 
-    const grantedSequences = serviceRoleGrantedSequences(sql)
+    const grantedSequences = serviceRoleUsageGrantedSequences(sql)
     const missing = createdSequences.filter((sequence) => !grantedSequences.has(sequence))
     if (missing.length) failures.push(`${path.relative(process.cwd(), file)}: ${missing.join(", ")}`)
   }
@@ -111,7 +116,7 @@ test("every serial column created in SQL grants its generated sequence to servic
     [],
     [
       "SERIAL/BIGSERIAL table grants are insufficient by themselves.",
-      "The generated sequence must also grant USAGE/SELECT to service_role or inserts can fail.",
+      "The generated sequence must explicitly grant USAGE to service_role or nextval() inserts can fail.",
       ...failures,
     ].join("\n"),
   )
