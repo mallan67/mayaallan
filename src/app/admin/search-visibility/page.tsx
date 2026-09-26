@@ -116,6 +116,42 @@ export default async function SearchVisibilityPage() {
           </section>
 
           <section>
+            <h2 className="text-lg font-semibold mb-3">Visual &amp; multimodal signals</h2>
+            <p className="text-xs text-slate-500 mb-3">
+              Image Search is pulled through the documented Search Analytics API. Search appearance labels
+              are displayed exactly as Google returns them; the system does not invent a multimodal API label
+              if Google has not exposed one to this property yet.
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="border border-slate-200 rounded-xl bg-white p-4">
+                <h3 className="text-sm font-semibold mb-3">Top pages in Google Image Search</h3>
+                <div className="space-y-2">
+                  {(snapshot.imagePages ?? []).slice(0, 12).map((item) => (
+                    <div key={item.page} className="flex gap-3 text-xs">
+                      <span className="truncate flex-1">{item.page.replace("https://www.mayaallan.com", "") || "/"}</span>
+                      <span className="text-slate-500">{num(item.impressions)} impr.</span>
+                      <span className="text-slate-500">{num(item.clicks)} clicks</span>
+                    </div>
+                  ))}
+                  {(snapshot.imagePages ?? []).length === 0 && <p className="text-xs text-slate-500 italic">No Image Search rows yet.</p>}
+                </div>
+              </div>
+              <div className="border border-slate-200 rounded-xl bg-white p-4">
+                <h3 className="text-sm font-semibold mb-3">Search appearance values returned by Google</h3>
+                <div className="space-y-2">
+                  {(snapshot.searchAppearances ?? []).map((item) => (
+                    <div key={item.appearance} className="flex gap-3 text-xs">
+                      <span className="truncate flex-1">{item.appearance}</span>
+                      <span className="text-slate-500">{num(item.impressions)} impr.</span>
+                    </div>
+                  ))}
+                  {(snapshot.searchAppearances ?? []).length === 0 && <p className="text-xs text-slate-500 italic">No Search appearance rows returned yet.</p>}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section>
             <h2 className="text-lg font-semibold mb-3">Critical URL index state</h2>
             <div className="grid gap-3">
               {snapshot.inspections.map((item) => (
