@@ -385,6 +385,55 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
   }
 }
 
+export interface SoftwareApplicationSchemaInput {
+  name: string
+  url: string
+  description: string
+  applicationCategory?: string
+  featureList?: string[]
+}
+
+export function generateSoftwareApplicationSchema(input: SoftwareApplicationSchemaInput) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: input.name,
+    url: input.url,
+    description: input.description,
+    applicationCategory: input.applicationCategory ?? "LifestyleApplication",
+    operatingSystem: "Any",
+    browserRequirements: "Requires JavaScript",
+    isAccessibleForFree: true,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    author: {
+      "@type": "Person",
+      name: AUTHOR_NAME,
+      url: `${SITE_URL}/about`,
+      sameAs: AUTHOR_PROFILES,
+    },
+    ...(input.featureList && input.featureList.length > 0 && {
+      featureList: input.featureList,
+    }),
+  }
+}
+
+export function generateProfilePageSchema(siteUrl = SITE_URL, bio?: string, imageUrl?: string) {
+  const author = generateAuthorSchema(siteUrl, bio, imageUrl)
+  const { "@context": _context, ...mainEntity } = author
+  void _context
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    url: `${siteUrl}/about`,
+    mainEntity,
+  }
+}
+
 export function generateAuthorSchema(siteUrl = SITE_URL, bio?: string, imageUrl?: string) {
   const identifiers = authorIdentifierNodes()
   return {

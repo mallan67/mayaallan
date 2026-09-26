@@ -6,15 +6,16 @@ import { SITE_URL } from "@/lib/identity"
 // =============================================================================
 // IndexNow is an open API jointly supported by Bing, Yandex, Naver, Seznam,
 // DuckDuckGo (via Bing index), and several smaller engines. When you publish
-// or update a page, you POST the URL to a single IndexNow endpoint and every
-// participating engine crawls it within minutes.
+// or update a page, you can notify participating engines through one IndexNow
+// endpoint. A successful response confirms receipt of the URL; it does not
+// guarantee when or whether a search engine will crawl or index it.
 //
 // HOW IT WORKS:
 //   1. You generate a random alphanumeric key (no auth required).
 //   2. You host that key as a text file at `/{key}.txt` on your domain.
 //      This proves you own the domain.
 //   3. You POST URLs to https://api.indexnow.org/indexnow with the key.
-//   4. Bing + Yandex + Naver crawl those URLs immediately.
+//   4. Participating engines receive the notification and decide when/if to crawl.
 //
 // USAGE:
 //   In any server action / API route / cron after publishing content:
@@ -47,8 +48,8 @@ export interface IndexNowResult {
 }
 
 /**
- * Submit up to 10,000 URLs per call to IndexNow. The participating engines
- * crawl them within minutes.
+ * Submit up to 10,000 URLs per call to IndexNow. HTTP success means the
+ * notification was received, not that crawling or indexing is guaranteed.
  *
  * Returns ok=true on HTTP 200 or 202 (accepted but pending validation).
  * Silently no-ops (returns ok=false with error="not configured") if

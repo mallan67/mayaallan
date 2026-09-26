@@ -5,7 +5,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { ArrowRight } from "lucide-react"
 import {
-  generateAuthorSchema,
+  generateProfilePageSchema,
   generateFAQSchema,
   generateBreadcrumbSchema,
   AUTHOR_FAQS,
@@ -82,8 +82,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AboutPage() {
   const authorPhotoUrl = await getAuthorPhoto()
 
-  // Generate Author schema for SEO — canonical bio, dynamic photo only
-  const authorSchema = generateAuthorSchema(SITE_URL, AUTHOR_BIO, authorPhotoUrl ?? undefined)
+  // ProfilePage + Person schema — explicitly identifies /about as Maya's author profile.
+  const profileSchema = generateProfilePageSchema(SITE_URL, AUTHOR_BIO, authorPhotoUrl ?? undefined)
 
   // FAQPage JSON-LD — mirrors the visible reader questions below
   const faqSchema = generateFAQSchema(AUTHOR_FAQS, `${SITE_URL}/about`)
@@ -96,11 +96,11 @@ export default async function AboutPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Author Schema JSON-LD for SEO */}
+      {/* ProfilePage schema with Maya Allan as the main Person entity. */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: jsonLdScript(authorSchema),
+          __html: jsonLdScript(profileSchema),
         }}
       />
       {/* FAQPage JSON-LD */}

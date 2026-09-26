@@ -222,10 +222,7 @@ export default async function HomePage() {
   }
 
   // Author schema for SEO
-  const authorSchema = generateAuthorSchema(
-    SITE_URL,
-    "Maya Allan is a writer dedicated to helping readers navigate life's most profound experiences with clarity, compassion, and practical wisdom."
-  )
+  const authorSchema = generateAuthorSchema(SITE_URL, AUTHOR_BIO)
 
   // Extract blurb preview (first 2-3 sentences)
   const getBlurbPreview = (blurb: string | null) => {

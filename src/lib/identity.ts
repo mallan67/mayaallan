@@ -3,8 +3,9 @@
 // =============================================================================
 // One place to maintain every external profile + identifier for Maya Allan.
 // Everything in here is injected into JSON-LD `sameAs` arrays site-wide so
-// search engines (Google Knowledge Graph) and AI engines (ChatGPT, Claude,
-// Perplexity) consolidate all profiles into a single entity for you.
+// search engines and other parsers have consistent external identity references.
+// These signals help disambiguate the entity but do not guarantee a Knowledge
+// Panel, ranking improvement, or inclusion in any AI answer.
 //
 // HOW TO ADD A NEW PROFILE:
 //   1. Create the profile on the platform (Wikidata, Goodreads, etc.)
@@ -168,8 +169,9 @@ export const AUTHOR_IDENTIFIERS: AuthorIdentifier[] = [
 // -----------------------------------------------------------------------------
 // AUTHOR_BIO — canonical short bio used in JSON-LD descriptions
 // -----------------------------------------------------------------------------
-// Keep this in sync with Amazon Author Central + Goodreads bio for consistency.
-// Google rewards consistent bios across the web — it's a "same entity" signal.
+// Keep this in sync with claimed external author profiles for consistency.
+// Consistent identity information can reduce ambiguity across sources; it is
+// not a guaranteed ranking signal.
 export const AUTHOR_BIO =
   "Maya Allan is an author and educator focused on psilocybin integration, post-journey " +
   "reflection, and self-inquiry. She writes non-clinical, educational resources — including " +

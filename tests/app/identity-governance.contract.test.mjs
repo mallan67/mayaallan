@@ -98,7 +98,7 @@ test("About renders canonical AUTHOR_NAME / AUTHOR_BIO and reads only the author
   assert.match(about, /\.select\("(id, )?author_photo_url"\)/)
   assert.match(about, /\{AUTHOR_BIO\}/)
   assert.match(about, /<h1[^>]*>\s*\{AUTHOR_NAME\}/)
-  assert.match(about, /generateAuthorSchema\(\s*SITE_URL,\s*AUTHOR_BIO/)
+  assert.match(about, /generateProfilePageSchema\(\s*SITE_URL,\s*AUTHOR_BIO/)
   assert.match(about, /About \$\{AUTHOR_NAME\}/)
 })
 

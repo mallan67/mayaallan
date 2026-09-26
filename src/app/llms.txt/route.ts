@@ -58,11 +58,10 @@ function retailerLabel(url: string): string {
 // that agents can use when they need context about a site.
 //
 // What this file does:
-//   ChatGPT, Claude, Perplexity, Google AI Overviews, and other AI engines can
-//   read /llms.txt to help identify (a) what this site is about and (b) which
-//   specific pages are worth citing. NOTE: llms.txt is an emerging, unproven
-//   convention — treat it as an experimental discovery aid, not a guaranteed
-//   ranking or citation mechanism.
+//   Provides an optional machine-readable overview for services that choose to
+//   support the llms.txt proposal. Google Search explicitly says llms.txt is
+//   not needed for Search and has no positive or negative ranking effect.
+//   Treat it as a convenience manifest only; canonical HTML remains primary.
 //
 // Why it's dynamic (route handler vs static public/llms.txt):
 //   So newly-published books, blog posts, and scenario pages appear in the
