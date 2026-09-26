@@ -3,6 +3,8 @@ import CookiePreferencesLink from "@/components/CookiePreferencesLink"
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
+  const preferredSourcesEnabled = process.env.ENABLE_GOOGLE_PREFERRED_SOURCE === "true"
+  const googleSearchProfileUrl = process.env.GOOGLE_SEARCH_PROFILE_URL?.trim()
 
   return (
     <footer className="bg-navy pt-16 pb-10 text-white">
@@ -104,6 +106,26 @@ export function Footer() {
                 Refunds
               </Link>
               <CookiePreferencesLink />
+              {preferredSourcesEnabled && (
+                <a
+                  href="https://www.google.com/preferences/source?q=www.mayaallan.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors"
+                >
+                  Add as a Google Preferred Source
+                </a>
+              )}
+              {googleSearchProfileUrl && (
+                <a
+                  href={googleSearchProfileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[0.95rem] text-white/70 hover:text-white py-1.5 transition-colors"
+                >
+                  Find Maya on Google Search
+                </a>
+              )}
             </nav>
           </div>
         </div>
