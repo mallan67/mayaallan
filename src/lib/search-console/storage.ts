@@ -1,8 +1,6 @@
 import "server-only"
-import { put, list } from "@vercel/blob"
+import { supabaseAdmin } from "@/lib/supabaseAdmin"
 import type { SearchOpportunity, QueryPageMetric } from "@/lib/search-console/opportunities"
-
-const PREFIX = "search-console/runs/"
 
 export interface UrlInspectionSummary {
   url: string
@@ -33,25 +31,39 @@ export interface SearchConsoleSnapshot {
   inspections: UrlInspectionSummary[]
 }
 
-export async function saveSearchConsoleSnapshot(snapshot: SearchConsoleSnapshot): Promise<string> {
-  const day = snapshot.fetchedAt.slice(0, 10)
-  const result = await put(`${PREFIX}${day}.json`, JSON.stringify(snapshot), {
-    access: "public",
-    contentType: "application/json",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-  })
-  return result.url
+export async function saveSearchConsoleSnapshot(snapshot: SearchConsoleSnapshot): Promise<void> {
+  const snapshotDate = snapshot.fetchedAt.slice(0, 10)
+  const { error } = await supabaseAdmin
+    .from("search_console_snapshots")
+    .upsert(
+      {
+        snapshot_date: snapshotDate,
+        fetched_at: snapshot.fetchedAt,
+        payload: snapshot,
+      },
+      { onConflict: "snapshot_date" },
+    )
+
+  if (error) {
+    throw new Error(`Search Console snapshot save failed: ${error.message}`)
+  }
 }
 
 export async function loadLatestSearchConsoleSnapshot(): Promise<SearchConsoleSnapshot | null> {
   try {
-    const result = await list({ prefix: PREFIX, limit: 100 })
-    const latest = [...result.blobs].sort((a, b) => (a.pathname < b.pathname ? 1 : -1))[0]
-    if (!latest) return null
-    const res = await fetch(latest.url, { cache: "no-store" })
-    if (!res.ok) return null
-    return (await res.json()) as SearchConsoleSnapshot
+    const { data, error } = await supabaseAdmin
+      .from("search_console_snapshots")
+      .select("payload")
+      .order("snapshot_date", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (error) {
+      console.error("[search-console] latest snapshot query failed:", error.message, error.code)
+      return null
+    }
+    if (!data?.payload || typeof data.payload !== "object") return null
+    return data.payload as SearchConsoleSnapshot
   } catch (err) {
     console.warn("[search-console] Unable to load latest snapshot:", err)
     return null
