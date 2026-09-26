@@ -20,14 +20,20 @@
  */
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { trackMarketingEvent, ALLOWED_EVENT_NAMES, type MarketingEventName } from "@/lib/marketing-events"
+import {
+  trackMarketingEvent,
+  ALLOWED_EVENT_NAMES,
+  type PublicMarketingEventName,
+} from "@/lib/marketing-events"
 import { rateLimit, getClientIp } from "@/lib/rate-limit"
 import { isAllowedMarketingOrigin } from "@/lib/marketing-origin"
 
 export const runtime = "nodejs"
 
 const EventSchema = z.object({
-  eventName: z.enum(ALLOWED_EVENT_NAMES as unknown as [MarketingEventName, ...MarketingEventName[]]),
+  eventName: z.enum(
+    ALLOWED_EVENT_NAMES as unknown as [PublicMarketingEventName, ...PublicMarketingEventName[]],
+  ),
   path: z.string().max(256).optional().nullable(),
   properties: z.record(z.string(), z.unknown()).optional(),
 })
