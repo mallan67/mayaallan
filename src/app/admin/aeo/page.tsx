@@ -20,7 +20,16 @@ import Link from "next/link"
 import { isAuthenticated } from "@/lib/session"
 import { redirect } from "next/navigation"
 import { loadRecentRuns, allRows, type CitationRow, type AeoRun } from "@/lib/aeo/storage"
-import { aggregateByEngine, aggregateBySearchCapability, aggregateByPrompt, aggregateByUrl, isClassifiedRow, type DimensionCounts } from "@/lib/aeo/aggregate"
+import {
+  aggregateByEngine,
+  aggregateBySearchCapability,
+  aggregateByPrompt,
+  aggregateByUrl,
+  aggregateExternalDomains,
+  aggregateExternalSources,
+  isClassifiedRow,
+  type DimensionCounts,
+} from "@/lib/aeo/aggregate"
 import { RunNowButton } from "./RunNowButton"
 import { CopyButton } from "./CopyButton"
 import { ClearAllButton } from "./ClearAllButton"
@@ -49,6 +58,8 @@ export default async function AeoDashboardPage() {
   const bySearch = aggregateBySearchCapability(rows)
   const byPrompt = aggregateByPrompt(rows)
   const byUrl = aggregateByUrl(rows)
+  const externalDomains = aggregateExternalDomains(rows).slice(0, 15)
+  const externalSources = aggregateExternalSources(rows).slice(0, 20)
   const legacyRows = rows.filter((r) => !r.error && !isClassifiedRow(r)).length
   const recentDetections = rows
     .filter((r) => isClassifiedRow(r) && (r.source_citation || r.brand_mention || r.domain_reference))
@@ -69,9 +80,9 @@ export default async function AeoDashboardPage() {
           <code className="bg-slate-100 px-1 rounded text-xs">aeo/runs/*.json</code>.
         </p>
         <p className="mt-2 text-xs text-slate-500">
-          Only Perplexity searches the web. The Claude, ChatGPT and Gemini probes are plain model calls
-          that answer from training data; a brand mention from them says nothing about what a consumer
-          search product would show.
+          Direct provider credentials use live web grounding for Claude, ChatGPT, Perplexity, and Gemini.
+          Gateway-only fallbacks that do not invoke a provider web-search tool are stored separately as
+          <strong> model-memory</strong> probes. Grounded search and model memory are never pooled.
         </p>
         {fetchError && (
           <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-sm">
@@ -124,8 +135,8 @@ export default async function AeoDashboardPage() {
       <section className="mb-10">
         <h2 className="text-lg font-semibold text-slate-900 mb-3">By search capability</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <DimensionCard title="Search-capable engines (Perplexity)" counts={bySearch.search_capable} />
-          <DimensionCard title="Non-search engines (Claude, ChatGPT, Gemini)" counts={bySearch.non_search} />
+          <DimensionCard title="Grounded / search-capable probes" counts={bySearch.search_capable} />
+          <DimensionCard title="Model-memory fallbacks" counts={bySearch.non_search} />
         </div>
       </section>
 
@@ -233,10 +244,9 @@ export default async function AeoDashboardPage() {
       <section className="mb-10">
         <h2 className="text-lg font-semibold text-slate-900 mb-3">Prompts, by search capability</h2>
         <p className="text-xs text-slate-500 mb-3">
-          The <strong>search-capable</strong> columns (Perplexity) are the search-visibility measure: an
-          engine that looked at the web and pointed at this site. The <strong>non-search</strong> columns
-          (Claude, ChatGPT, Gemini) show what models say from memory. The two are never combined.
-          Ranked by search-capable citation rate.
+          The <strong>search-capable</strong> columns are live-web visibility: the provider searched or
+          grounded against current web sources. <strong>Non-search</strong> columns are model-memory
+          fallbacks. The two are never combined. Ranked by grounded citation rate.
         </p>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
@@ -328,6 +338,50 @@ export default async function AeoDashboardPage() {
             </table>
           </div>
         )}
+      </section>
+
+      {/* EXTERNAL SOURCES / CITATION GAPS */}
+      <section className="mb-10">
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">Citation gaps — sources chosen instead of Maya</h2>
+        <p className="text-xs text-slate-500 mb-4">
+          Provider-returned external sources from grounded probes. These are evidence for where AI search
+          is finding answers when it does not point to mayaallan.com. Use them to compare coverage,
+          evidence, answer clarity, and external authority — not as an automatic competitor ranking.
+        </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 bg-slate-50 text-sm font-semibold">Top external domains</div>
+            <div className="divide-y divide-slate-100">
+              {externalDomains.length === 0 ? (
+                <p className="px-4 py-4 text-sm text-slate-500 italic">No grounded external-source data yet.</p>
+              ) : (
+                externalDomains.map((item) => (
+                  <div key={item.value} className="px-4 py-2 flex items-center gap-3 text-sm">
+                    <span className="truncate flex-1">{item.value}</span>
+                    <span className="text-xs text-slate-500">{item.grounded} grounded</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 bg-slate-50 text-sm font-semibold">Top external source URLs</div>
+            <div className="divide-y divide-slate-100">
+              {externalSources.length === 0 ? (
+                <p className="px-4 py-4 text-sm text-slate-500 italic">No grounded external-source data yet.</p>
+              ) : (
+                externalSources.map((item) => (
+                  <div key={item.value} className="px-4 py-2 flex items-center gap-3 text-sm">
+                    <a href={item.value} target="_blank" rel="noreferrer" className="truncate flex-1 text-blue-700 hover:underline">
+                      {item.value}
+                    </a>
+                    <span className="text-xs text-slate-500">{item.grounded}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* RECENT ERRORS */}
