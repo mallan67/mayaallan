@@ -596,8 +596,9 @@ test("committed baseline is well-formed, portable, records its source commit, ES
   assert.equal(b.format, FINGERPRINT_FORMAT)
   const sum = Object.values(b.fingerprints).reduce((a, n) => a + n, 0)
   assert.equal(b.total, sum)
-  // The approved population on 2026-09-06. Lower this together with a reviewed baseline tightening; never raise it.
-  assert.equal(b.total, 172)
+  // The approved population. Lower this together with a reviewed baseline tightening; never raise it.
+  // 2026-09-06: 172. 2026-09-07: 171 — ConsentBanner's privacy link became a next/link <Link>.
+  assert.equal(b.total, 171)
   assert.ok(Number.isInteger(b.duplicateDiagnostics) && b.duplicateDiagnostics >= 0)
   for (const [fp, n] of Object.entries(b.fingerprints)) {
     assert.equal(fp.split(" :: ").length, 7, "identity has the 7 documented parts: " + fp)
@@ -612,5 +613,5 @@ test("committed baseline is well-formed, portable, records its source commit, ES
 test("current tree passes the ratchet against the committed baseline with zero identity collisions (runs ESLint)", () => {
   const r = spawnSync(process.execPath, ["scripts/lint-ratchet.mjs"], { cwd: root, encoding: "utf8" })
   assert.equal(r.status, 0, `ratchet exit ${r.status}\n${r.stdout}\n${r.stderr}`)
-  assert.match(r.stdout, /lint-ratchet: OK — 172 warnings, 0 errors, 0 identity collisions/)
+  assert.match(r.stdout, /lint-ratchet: OK — 171 warnings, 0 errors, 0 identity collisions/)
 })

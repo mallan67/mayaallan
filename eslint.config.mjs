@@ -31,8 +31,9 @@ import nextTs from "eslint-config-next/typescript"
  *     baseline, so the fixed warning cannot come back. Normal CI never
  *     regenerates the baseline, and it must not be regenerated to silence a
  *     newly introduced warning.
- *   - `pnpm lint` keeps `--max-warnings` at the count measured on 2026-09-05
- *     as a secondary ceiling only. Do not raise it.
+ *   - `pnpm lint` keeps `--max-warnings` at the currently approved warning
+ *     count as a secondary ceiling only. Lower it whenever a warning is
+ *     fixed and the baseline is tightened; never raise it.
  */
 export default defineConfig([
   ...nextVitals,

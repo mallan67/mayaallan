@@ -6,7 +6,7 @@ import "./globals.css"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import ConsentBanner from "@/components/ConsentBanner"
-import { GatedAnalytics, GatedMarketing } from "@/components/AnalyticsGated"
+import { CookielessAnalytics, GatedMarketing } from "@/components/AnalyticsGated"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structured-data"
 import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL, SITE_SEO_DESCRIPTION } from "@/lib/identity"
@@ -224,11 +224,13 @@ export default async function RootLayout({
           {children}
         </main>
         <Footer />
-        {/* Analytics + attribution gated by user consent (GDPR/ePrivacy).
+        {/* Two measurement layers, split by what they store (see
+            AnalyticsGated.tsx). Cookieless page-view counting runs for
+            everyone; the cookie-based attribution stack waits for consent.
             Banner shows on first visit; choice persists in localStorage.
             Users can revisit via the "Cookie preferences" link in the footer. */}
         <ConsentBanner />
-        <GatedAnalytics />
+        <CookielessAnalytics />
         <GatedMarketing />
       </body>
     </html>
