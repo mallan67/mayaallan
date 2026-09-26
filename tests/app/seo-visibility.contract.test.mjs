@@ -59,3 +59,17 @@ test("sitemap keeps the three interactive tools on canonical descriptive slugs",
   assert.doesNotMatch(sitemap, /\`\$\{baseUrl\}\/reset\`/)
   assert.doesNotMatch(sitemap, /\`\$\{baseUrl\}\/integration\`/)
 })
+
+
+test("tool auto-scroll is scoped to the chat boundary, not the whole SEO page", async () => {
+  for (const path of [
+    "src/components/InquiryChat.tsx",
+    "src/components/ResetChat.tsx",
+    "src/components/IntegrationChat.tsx",
+  ]) {
+    const sourceText = await source(path)
+    assert.match(sourceText, /chatContainerRef/)
+    assert.match(sourceText, /getBoundingClientRect\(\)\.bottom/)
+    assert.doesNotMatch(sourceText, /document\.documentElement\.scrollHeight/)
+  }
+})
