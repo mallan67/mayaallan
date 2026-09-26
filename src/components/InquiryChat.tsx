@@ -259,21 +259,15 @@ export function InquiryChat() {
           </article>
         )}
 
-        {/* Error display — includes a short opaque correlation id derived
-            from the current minute, so a user contacting support can quote
-            it for log lookup without exposing real session data. */}
+        {/* Error display. Do not synthesize correlation ids during render; if
+            request tracing is needed, surface a real server-provided id. */}
         {error && (
           <div className="flex justify-center" role="alert">
             <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-3 text-red-600 text-sm text-center max-w-md">
               {isRateLimited ? (
                 "Daily limit reached. Come back tomorrow."
               ) : (
-                <>
-                  Something went wrong. Please try again.
-                  <span className="block mt-1 text-xs text-red-500/80">
-                    Reference: {Date.now().toString(36).slice(-6)}
-                  </span>
-                </>
+                "Something went wrong. Please try again."
               )}
             </div>
           </div>
