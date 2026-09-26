@@ -156,11 +156,7 @@ export default async function AboutPage() {
               </h1>
               <p className="text-[0.85rem] text-gold font-semibold tracking-[0.06em] uppercase mb-5">
                 {AUTHOR_JOB_TITLE}
-              </p>
-              <p className="text-[1.05rem] text-charcoal-mid leading-[1.8] max-w-[540px]">
-                Deep inner clarity is a fundamental human birthright.
-              </p>
-            </div>
+              </p>            </div>
           </div>
         </div>
       </section>
