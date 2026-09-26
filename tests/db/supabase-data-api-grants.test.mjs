@@ -61,7 +61,7 @@ function serviceRoleGrantedTables(sql) {
 
 function serviceRoleUsageGrantedSequences(sql) {
   const granted = new Set()
-  const re = /grant\s+([\s\S]*?)\s+on\s+sequence\s+([\s\S]*?)\s+to\s+service_role\s*;/gi
+  const re = /grant\s+([^;]+?)\s+on\s+sequence\s+([^;]+?)\s+to\s+service_role\s*;/gi
   for (const match of sql.matchAll(re)) {
     const privileges = match[1]
       .split(",")
