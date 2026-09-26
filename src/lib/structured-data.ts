@@ -167,17 +167,17 @@ export function generateArticleSchema(input: ArticleSchemaInput, siteUrl = SITE_
       keywords: Array.isArray(input.keywords) ? input.keywords.join(", ") : input.keywords,
     }),
     ...(input.wordCount && { wordCount: input.wordCount }),
+    // FROZEN through the active indexing experiment: preserve the exact
+    // pre-experiment Article JSON-LD output. Author-first identity changes are
+    // applied to the site/person/book graph, not to frozen article/scenario nodes.
     author: {
       "@type": "Person",
-      "@id": AUTHOR_ID,
       name: AUTHOR_NAME,
       url: siteUrl,
-      sameAs: AUTHOR_PROFILES,
-      ...(authorIdentifiers && { identifier: authorIdentifiers }),
+      sameAs: ["https://www.instagram.com/maya.allan66/"],
     },
     publisher: {
-      "@type": "Person",
-      "@id": AUTHOR_ID,
+      "@type": "Organization",
       name: AUTHOR_NAME,
       url: siteUrl,
     },
