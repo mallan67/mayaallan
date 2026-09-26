@@ -11,6 +11,7 @@ import { visualAssetReadiness } from "@/lib/visibility/visual-readiness"
 import { VISIBILITY_GRAPH, suggestRelatedNodes } from "@/lib/visibility/topic-graph"
 import { EVIDENCE_REGISTRY } from "@/lib/visibility/evidence-registry"
 import { loadPrompts } from "@/lib/aeo/prompts"
+import { engineReadiness } from "@/lib/aeo/engines"
 import { CoveragePanel } from "./CoveragePanel"
 
 export const dynamic = "force-dynamic"
@@ -68,6 +69,7 @@ export default async function VisibilityPage() {
   const promptIntents = new Set(prompts.map((prompt) => prompt.intent).filter(Boolean)).size
   const visualReadyCount = visuals.filter((item) => item.ready).length
   const readinessItems = [...readiness.entity, ...readiness.google]
+  const engineModes = engineReadiness()
   const linkSuggestions = VISIBILITY_GRAPH.flatMap((node) =>
     suggestRelatedNodes(node.id, 2).map((target) => ({
       from: node.path,
@@ -104,6 +106,29 @@ export default async function VisibilityPage() {
         visualTotal={visuals.length}
         readiness={readinessItems}
       />
+
+      <section>
+        <h2 className="text-lg font-semibold mb-3">AEO engine modes</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {engineModes.map((item) => (
+            <div key={item.engine} className="border border-slate-200 rounded-xl bg-white p-4">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-medium capitalize">{item.engine}</span>
+                <span className={
+                  item.mode === "grounded-search"
+                    ? "text-xs text-emerald-700"
+                    : item.mode === "model-memory"
+                      ? "text-xs text-amber-700"
+                      : "text-xs text-slate-400"
+                }>
+                  {item.mode.replace("-", " ")}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-2 leading-relaxed">{item.note}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section>
         <h2 className="text-lg font-semibold mb-3">Google Search Console</h2>
