@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- Provider web-search APIs return heterogeneous JSON block shapes; every accessed field is runtime-guarded before use. */
 import "server-only"
 import { generateText } from "ai"
-import { google } from "@ai-sdk/google"
 
 // =============================================================================
 // AEO Engine clients — one minimal client per AI engine.
