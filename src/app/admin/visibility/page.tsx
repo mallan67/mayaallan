@@ -167,7 +167,7 @@ export default async function VisibilityPage() {
       <section className="border border-slate-200 rounded-xl bg-white p-4">
         <h2 className="font-semibold">Internal-link opportunities</h2>
         <p className="text-xs text-slate-500 mt-1">
-          Suggestions come from shared topics in the visibility graph. They are review cues, not automatic link insertion.
+          Suggestions come from shared topics in the visibility graph. They are review cues, not proof that a rendered page is missing the link, and they are never inserted automatically.
         </p>
         {linkSuggestions.length === 0 ? (
           <p className="text-sm text-slate-500 mt-3">No additional graph-based link suggestions.</p>
@@ -186,7 +186,7 @@ export default async function VisibilityPage() {
       <section className="border border-slate-200 rounded-xl bg-white p-4">
         <h2 className="font-semibold">Crawler activity · last 14 days</h2>
         <p className="text-xs text-slate-500 mt-1">
-          Bot name and public pathname only. No IP addresses, query strings, or human visitor data are stored.
+          User-agent-identified bot name and public pathname only. These counts are not IP-verified crawler identity. No IP addresses, query strings, or human visitor data are stored.
         </p>
         {crawlers.length === 0 ? (
           <p className="text-sm text-slate-500 mt-3">No tracked crawler hits yet, or Upstash is not configured.</p>
