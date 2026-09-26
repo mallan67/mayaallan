@@ -60,6 +60,9 @@ export default async function VisibilityPage() {
   const groundedCitations = grounded.filter((row) => row.source_citation).length
   const gaps = aggregateExternalSources(aeoRows).slice(0, 12)
   const crawlers = await loadCrawlerSummary(14)
+  const readiness = entityReadiness()
+  const visuals = await visualAssetReadiness()
+  const prompts = await loadPrompts()
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
