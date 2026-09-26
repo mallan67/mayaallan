@@ -38,6 +38,11 @@ CREATE TABLE IF NOT EXISTS public.pending_paypal_orders (
   consumed_at       TIMESTAMPTZ
 );
 
+-- Explicit Data API grants for the server-only checkout table. These are
+-- required when this migration is replayed after Supabase's 2026-10-30 change.
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.pending_paypal_orders TO service_role;
+GRANT USAGE, SELECT ON SEQUENCE public.pending_paypal_orders_id_seq TO service_role;
+
 -- Lookups are always by paypal_order_id; the UNIQUE constraint above already
 -- creates an index, but we add a partial index on status to speed up the
 -- "any stale pending rows still around?" cleanup queries.
