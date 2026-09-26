@@ -63,6 +63,10 @@ export default async function VisibilityPage() {
   const readiness = entityReadiness()
   const visuals = await visualAssetReadiness()
   const prompts = await loadPrompts()
+  const graphLinks = VISIBILITY_GRAPH.reduce((sum, node) => sum + node.requiredLinks.length, 0)
+  const promptIntents = new Set(prompts.map((prompt) => prompt.intent).filter(Boolean)).size
+  const visualReadyCount = visuals.filter((item) => item.ready).length
+  const readinessItems = [...readiness.entity, ...readiness.google]
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
