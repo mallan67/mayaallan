@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { access, readFile } from "node:fs/promises"
 import { buildSearchOpportunities } from "../../src/lib/search-console/opportunities.ts"
 import { aggregateExternalSources } from "../../src/lib/aeo/source-gaps.ts"
 import { detectCrawler } from "../../src/lib/crawler-telemetry.ts"
@@ -87,5 +88,26 @@ test("evidence registry records boundaries and canonical discussions", () => {
     assert.ok(record.boundary.length >= 40)
     assert.match(record.canonicalDiscussion, /^\//)
     assert.ok(record.appliesTo.length > 0)
+  }
+})
+
+
+test("multimodal explainer visuals use a registered route.ts handler and are embedded on all four pages", async () => {
+  await access("src/app/seo-visual/[slug]/route.ts")
+  await assert.rejects(access("src/app/seo-visual/[slug]/route.tsx"))
+
+  const route = await readFile("src/app/seo-visual/[slug]/route.ts", "utf8")
+  const pages = [
+    ["belief-inquiry", "src/app/belief-inquiry/page.tsx"],
+    ["nervous-system-reset", "src/app/nervous-system-reset/page.tsx"],
+    ["integration-reflection", "src/app/integration-reflection/page.tsx"],
+    ["integration-journal", "src/app/integration-journal/page.tsx"],
+  ]
+
+  for (const [slug, pagePath] of pages) {
+    assert.ok(route.includes(`"${slug}"`), "visual route contains " + slug)
+    const page = await readFile(pagePath, "utf8")
+    assert.ok(page.includes("SeoExplainerVisual"), pagePath + " embeds the shared visual component")
+    assert.ok(page.includes(`slug="${slug}"`), pagePath + " points at the expected visual slug")
   }
 })
