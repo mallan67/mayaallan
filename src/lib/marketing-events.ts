@@ -49,6 +49,7 @@ export const ALLOWED_EVENT_NAMES = [
   "export_cta_clicked",
   "export_purchased",
   "download_started",
+  "crawler_visit",
 ] as const
 
 export type MarketingEventName = (typeof ALLOWED_EVENT_NAMES)[number]
