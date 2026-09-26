@@ -81,7 +81,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(SITE_URL),
     title: {
-      default: `${siteName} | Author`,
+      default: `${siteName} | Psilocybin Integration Author & Educator`,
       template: `%s | ${siteName}`,
     },
     description,
