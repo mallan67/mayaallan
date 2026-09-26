@@ -5,6 +5,7 @@ import { querySearchConsole, searchConsoleConfiguration } from "@/lib/search-con
 import { buildSearchOpportunities } from "@/lib/search-console/opportunities"
 import { loadRecentRuns, allRows } from "@/lib/aeo/storage"
 import { aggregateExternalSources } from "@/lib/aeo/source-gaps"
+import { loadCrawlerSummary } from "@/lib/crawler-telemetry"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -53,6 +54,7 @@ export default async function VisibilityPage() {
   const grounded = aeoRows.filter((row) => row.classifier_version === 2 && row.search_capable && !row.error)
   const groundedCitations = grounded.filter((row) => row.source_citation).length
   const gaps = aggregateExternalSources(aeoRows).slice(0, 12)
+  const crawlers = await loadCrawlerSummary(14)
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
@@ -102,6 +104,35 @@ export default async function VisibilityPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+      </section>
+
+      <section className="border border-slate-200 rounded-xl bg-white p-4">
+        <h2 className="font-semibold">Crawler activity · last 14 days</h2>
+        <p className="text-xs text-slate-500 mt-1">
+          Bot name and public pathname only. No IP addresses, query strings, or human visitor data are stored.
+        </p>
+        {crawlers.length === 0 ? (
+          <p className="text-sm text-slate-500 mt-3">No tracked crawler hits yet, or Upstash is not configured.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+            {crawlers.map((crawler) => (
+              <div key={crawler.name} className="border border-slate-100 rounded-lg p-3">
+                <div className="flex justify-between gap-3">
+                  <span className="font-medium text-sm">{crawler.name}</span>
+                  <span className="text-sm">{crawler.hits}</span>
+                </div>
+                <div className="mt-2 space-y-1">
+                  {crawler.paths.slice(0, 4).map((row) => (
+                    <div key={row.path} className="flex justify-between gap-2 text-[11px] text-slate-500">
+                      <span className="truncate">{row.path}</span>
+                      <span>{row.hits}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>
