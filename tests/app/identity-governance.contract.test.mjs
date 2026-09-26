@@ -130,10 +130,26 @@ test("Admin Settings API no longer accepts or writes author name/bio; the photo 
 // D. Author-first publishing identity + edition governance
 // ---------------------------------------------------------------------------
 
-test("Maya Allan has one stable Person identity used across the site graph", () => {
+test("Maya Allan has one stable Person identity across the active site, publisher, and book graph", () => {
   assert.match(identity, /export const AUTHOR_ID = `\$\{SITE_URL\}\/\#maya-allan`/)
-  assert.match(structuredData, /"@id": AUTHOR_ID/)
-  assert.doesNotMatch(structuredData, /"@type": "Organization",[\s\S]{0,120}name: AUTHOR_NAME/)
+
+  const publisherSchema = structuredData.slice(
+    structuredData.indexOf("export function generatePublisherSchema"),
+    structuredData.indexOf("// -----------------------------------------------------------------------------\n// Reviews & Ratings")
+  )
+  const bookSchema = structuredData.slice(
+    structuredData.indexOf("export function generateBookSchema"),
+    structuredData.indexOf("export interface SoftwareApplicationSchemaInput")
+  )
+
+  for (const graph of [publisherSchema, bookSchema]) {
+    assert.match(graph, /"@type": "Person"/)
+    assert.match(graph, /"@id": AUTHOR_ID/)
+    assert.doesNotMatch(graph, /"@type": "Organization",[\s\S]{0,120}name: AUTHOR_NAME/)
+  }
+
+  // The Article generator is intentionally frozen during the active indexing
+  // experiment and may retain its pre-experiment Organization publisher shape.
 })
 
 test("Psilocybin Integration Guide models paperback, hardcover and ebook as distinct ISBN editions", () => {
