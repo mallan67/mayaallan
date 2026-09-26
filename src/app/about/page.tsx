@@ -10,41 +10,50 @@ import {
   generateBreadcrumbSchema,
   AUTHOR_FAQS,
 } from "@/lib/structured-data"
-import { SITE_URL, AUTHOR_JOB_TITLE, AUTHOR_NAME, AUTHOR_BIO } from "@/lib/identity"
+import { SITE_URL, AUTHOR_JOB_TITLE, AUTHOR_NAME } from "@/lib/identity"
 
-// Cache the author photo lookup for 5 min (admin edits in Settings will
-// revalidate the page automatically when they save).
+// Cache author bio for 5 min (admin edits in Settings will revalidate the page).
 export const revalidate = 300
 
-// Public author identity (name, bio) is governed in code — src/lib/identity.ts
-// (AUTHOR_NAME, AUTHOR_BIO). site_settings only supplies the author PHOTO, so
-// an admin edit can never change what the site says Maya is.
-async function getAuthorPhoto(): Promise<string | null> {
+async function getAuthorInfo() {
   try {
     const { data: settings, error } = await supabaseAdmin
       .from(Tables.siteSettings)
-      .select("author_photo_url")
+      .select("id, author_name, author_bio, author_photo_url")
       .order("id", { ascending: true })
       .limit(1)
       .single()
 
     if (error) {
-      console.error("About page - Error fetching author photo:", error.message, error.code)
+      console.error("About page - Error fetching author info:", error.message, error.code)
       return null
     }
-    return (settings?.author_photo_url as string | null) ?? null
+
+    return {
+      id: settings.id,
+      authorName: settings.author_name as string | null,
+      authorBio: settings.author_bio as string | null,
+      authorPhotoUrl: settings.author_photo_url as string | null,
+    }
   } catch (error) {
-    console.error("About page - Failed to fetch author photo:", error)
+    console.error("About page - Failed to fetch author info:", error)
     return null
   }
 }
 
 export async function generateMetadata(): Promise<Metadata> {
+  const author = await getAuthorInfo()
   const title = "About"
 
-  // Canonical, code-governed description (not derived from any DB field).
-  const description =
-    "Learn more about Maya Allan — author and educator writing non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
+  const truncateAtWord = (str: string, max = 155) => {
+    if (str.length <= max) return str
+    const slice = str.slice(0, max)
+    const lastSpace = slice.lastIndexOf(" ")
+    return slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…"
+  }
+  const description = author?.authorBio
+    ? truncateAtWord(author.authorBio, 155)
+    : "Learn more about Maya Allan — author and educator writing non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
   // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
   // Author photos may not be the correct aspect ratio for social sharing
   const imageUrl = `${SITE_URL}/opengraph-image`
@@ -80,7 +89,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  const authorPhotoUrl = await getAuthorPhoto()
+  const author = await getAuthorInfo()
+  const authorPhotoUrl = author?.authorPhotoUrl ?? null
 
   // ProfilePage + Person schema — explicitly identifies /about as Maya's author profile.
   const profileSchema = generateProfilePageSchema(SITE_URL, AUTHOR_BIO, authorPhotoUrl ?? undefined)
@@ -172,10 +182,26 @@ export default async function AboutPage() {
       {/* ── Bio Section ── */}
       <section className="py-16 md:py-20">
         <div className="max-w-[680px] mx-auto px-5 md:px-9">
-          {/* Canonical bio — governed in src/lib/identity.ts, never from the DB */}
-          <div className="text-[1.05rem] leading-[1.85] text-charcoal-mid whitespace-pre-wrap">
-            {AUTHOR_BIO}
-          </div>
+          {author?.authorBio ? (
+            <div className="text-[1.05rem] leading-[1.85] text-charcoal-mid whitespace-pre-wrap">
+              {author.authorBio}
+            </div>
+          ) : (
+            <>
+              <p className="text-[1.1rem] text-charcoal font-medium leading-[1.75] mb-6">
+                I believe deep inner clarity is a fundamental human birthright.
+              </p>
+              <p className="text-[1.05rem] text-charcoal-mid leading-[1.85] mb-5">
+                It&apos;s a capacity we all have — but it gets buried under inherited narratives, the pressure of who we&apos;re &ldquo;supposed&rdquo; to be, and a world that profits from our confusion. My work starts with a simple conviction: no one can do this inner work for us.
+              </p>
+              <p className="text-[1.05rem] text-charcoal-mid leading-[1.85] mb-5">
+                I&apos;m not a guru, and I&apos;m not interested in being one. I&apos;m a writer who cares about practical tools over abstract theories. This is grounded work — self-knowledge, radical acceptance, and finally feeling at home in your own skin.
+              </p>
+              <p className="text-[1.05rem] text-charcoal-mid leading-[1.85]">
+                My writing is for anyone who&apos;s tired of being told what to think. I offer structure and perspective to help you trust your own perception — and step fully into the authorship of your own life.
+              </p>
+            </>
+          )}
         </div>
       </section>
 
