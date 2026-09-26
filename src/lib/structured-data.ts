@@ -151,7 +151,6 @@ export interface ArticleSchemaInput {
 }
 
 export function generateArticleSchema(input: ArticleSchemaInput, siteUrl = SITE_URL) {
-  const authorIdentifiers = authorIdentifierNodes()
   return {
     "@context": "https://schema.org",
     "@type": "Article",
