@@ -9,9 +9,9 @@ import { internalLinkRecommendations, loadTopicGraph } from "@/lib/visibility/to
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
-async function editorialQueue(): Promise<Array<{ path: string; priority: string; reason: string; action: string }>> {
+async function jsonItems<T>(file: string): Promise<T[]> {
   try {
-    const raw = await fs.readFile(path.join(process.cwd(), "content", "visibility", "editorial-review.json"), "utf8")
+    const raw = await fs.readFile(path.join(process.cwd(), "content", "visibility", file), "utf8")
     const parsed = JSON.parse(raw)
     return Array.isArray(parsed?.items) ? parsed.items : []
   } catch {
@@ -19,15 +19,21 @@ async function editorialQueue(): Promise<Array<{ path: string; priority: string;
   }
 }
 
+async function editorialQueue(): Promise<Array<{ path: string; priority: string; reason: string; action: string }>> {
+  return jsonItems("editorial-review.json")
+}
+
 export default async function ContentIntelligencePage() {
   if (!(await isAuthenticated())) redirect("/admin/login")
 
-  const [graph, linkRecommendations, evidence, coverage, review] = await Promise.all([
+  const [graph, linkRecommendations, evidence, coverage, review, visuals, identityReadiness] = await Promise.all([
     loadTopicGraph(),
     internalLinkRecommendations(),
     loadEvidenceRegistry(),
     evidenceCoverageByPage(),
     editorialQueue(),
+    jsonItems<{ path: string; priority: string; concept: string; altIntent: string }>("visual-opportunities.json"),
+    jsonItems<{ id: string; name: string; status: string; why: string }>("entity-readiness.json"),
   ])
 
   return (
@@ -84,6 +90,41 @@ export default async function ContentIntelligencePage() {
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold mb-3">Original visual / multimodal backlog</h2>
+        <p className="text-xs text-slate-500 mb-3">
+          Visuals should explain something the page already establishes; no stock filler or decorative AI images.
+          Search Console image and appearance performance is tracked separately in Search Visibility.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {visuals.map((item) => (
+            <article key={item.path} className="border border-slate-200 rounded-xl bg-white p-4">
+              <div className="flex items-center gap-2">
+                <Link href={item.path} target="_blank" className="font-medium text-blue-700 hover:underline">{item.path}</Link>
+                <span className="text-[10px] uppercase tracking-wide bg-slate-100 px-2 py-0.5 rounded">{item.priority}</span>
+              </div>
+              <p className="text-sm text-slate-700 mt-2">{item.concept}</p>
+              <p className="text-xs text-slate-500 mt-2"><strong>Alt intent:</strong> {item.altIntent}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold mb-3">External identity &amp; Google feature readiness</h2>
+        <div className="border border-slate-200 rounded-xl bg-white divide-y divide-slate-100">
+          {identityReadiness.map((item) => (
+            <div key={item.id} className="p-4 flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
+              <div className="sm:w-56">
+                <div className="font-medium text-sm">{item.name}</div>
+                <div className="text-[10px] uppercase tracking-wide text-slate-500 mt-1">{item.status}</div>
+              </div>
+              <p className="text-sm text-slate-600 flex-1">{item.why}</p>
+            </div>
+          ))}
         </div>
       </section>
 
