@@ -166,6 +166,41 @@ CREATE TABLE IF NOT EXISTS public.media_items (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ---------------------------------------------------------------------------
+-- Data API grants (required for new/recreated tables from 2026-10-30 onward)
+-- ---------------------------------------------------------------------------
+-- The application uses Supabase only through the server-side service role.
+-- Keep browser roles out of this bootstrap; RLS and browser exposure are a
+-- separate decision. These explicit grants make schema resets/rebuilds work
+-- after Supabase stops auto-granting Data API access to new public tables.
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+  public.books,
+  public.retailers,
+  public.book_retailer_links,
+  public.navigation_items,
+  public.site_settings,
+  public.email_subscribers,
+  public.contact_submissions,
+  public.orders,
+  public.download_tokens,
+  public.events,
+  public.media_items
+TO service_role;
+
+GRANT USAGE, SELECT ON SEQUENCE
+  public.books_id_seq,
+  public.retailers_id_seq,
+  public.book_retailer_links_id_seq,
+  public.navigation_items_id_seq,
+  public.site_settings_id_seq,
+  public.email_subscribers_id_seq,
+  public.contact_submissions_id_seq,
+  public.orders_id_seq,
+  public.download_tokens_id_seq,
+  public.events_id_seq,
+  public.media_items_id_seq
+TO service_role;
+
 -- Create indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_books_slug ON public.books(slug);
 CREATE INDEX IF NOT EXISTS idx_books_is_published ON public.books(is_published);

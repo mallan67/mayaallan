@@ -37,5 +37,9 @@ create table if not exists admin_auth (
   constraint admin_auth_singleton check (id = 1)
 );
 
+-- Explicit Data API grant for the server-side Supabase client. New public
+-- tables are no longer auto-exposed after Supabase's 2026-10-30 change.
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.admin_auth TO service_role;
+
 -- Seed the single row so the app can always UPDATE id=1 (no INSERT race).
 insert into admin_auth (id) values (1) on conflict (id) do nothing;

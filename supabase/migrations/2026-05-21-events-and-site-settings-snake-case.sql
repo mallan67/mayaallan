@@ -247,6 +247,19 @@ BEGIN
   END IF;
 END $$;
 
+-- Explicit Data API grants. Supabase stops auto-granting new public tables
+-- on 2026-10-30; this migration drops/recreates both tables, so the grants
+-- must travel with the recreation.
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+  public.events,
+  public.site_settings
+TO service_role;
+
+GRANT USAGE, SELECT ON SEQUENCE
+  public.events_id_seq,
+  public.site_settings_id_seq
+TO service_role;
+
 COMMIT;
 
 -- ─── VERIFICATION ────────────────────────────────────────────────────
