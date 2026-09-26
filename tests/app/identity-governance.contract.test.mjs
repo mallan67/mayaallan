@@ -28,6 +28,7 @@ const about = read("../../src/app/about/page.tsx")
 const adminSettingsUi = read("../../src/app/admin/settings/page.tsx")
 const adminSettingsApi = read("../../src/app/api/admin/settings/route.ts")
 const scenarioPage = read("../../src/app/scenarios/[slug]/page.tsx")
+const structuredData = read("../../src/lib/structured-data.ts")
 
 const FORBIDDEN_POSITIONING = /\b(speaker|speaking|wellness advocate|therapist|facilitator|coach|clinician|healer|psychedelic practitioner|lived[- ]experience)\b/i
 
@@ -122,4 +123,37 @@ test("Admin Settings API no longer accepts or writes author name/bio; the photo 
   assert.match(write, /author_photo_url:\s*data\.authorPhotoUrl/)
   // The wire shape no longer advertises the fields either.
   assert.doesNotMatch(adminSettingsApi, /authorName:\s*row\.author_name|authorBio:\s*row\.author_bio/)
+})
+
+
+// ---------------------------------------------------------------------------
+// D. Author-first publishing identity + edition governance
+// ---------------------------------------------------------------------------
+
+test("Maya Allan has one stable Person identity used across the site graph", () => {
+  assert.match(identity, /export const AUTHOR_ID = `\$\{SITE_URL\}\/\#maya-allan`/)
+  assert.match(structuredData, /"@id": AUTHOR_ID/)
+  assert.doesNotMatch(structuredData, /"@type": "Organization",[\s\S]{0,120}name: AUTHOR_NAME/)
+})
+
+test("Psilocybin Integration Guide models paperback, hardcover and ebook as distinct ISBN editions", () => {
+  assert.match(identity, /isbn: "9798994148839"/)
+  assert.match(identity, /isbn: "9798994148853"/)
+  assert.match(identity, /isbn: "9798994148891"/)
+  assert.match(identity, /bookFormat: "https:\/\/schema\.org\/Paperback"/)
+  assert.match(identity, /bookFormat: "https:\/\/schema\.org\/Hardcover"/)
+  assert.match(identity, /bookFormat: "https:\/\/schema\.org\/EBook"/)
+  assert.match(structuredData, /workExample: editions\.map/)
+  assert.match(structuredData, /exampleOfWork: \{ "@id": workId \}/)
+})
+
+test("edition-mapped books do not publish the legacy single ISBN at work level", () => {
+  assert.match(structuredData, /book\.isbn && !hasEditionMap/)
+  assert.match(structuredData, /book\.isbn && !hasEditionMap && \{ isbn: book\.isbn \}/)
+})
+
+test("verified author and book authority URLs are wired into sameAs", () => {
+  assert.match(identity, /linkedin\.com\/in\/mayaallan/)
+  assert.match(identity, /openlibrary\.org\/authors\/OL16288546A\/Maya_Allan/)
+  assert.match(identity, /openlibrary\.org\/works\/OL45177926W/)
 })
