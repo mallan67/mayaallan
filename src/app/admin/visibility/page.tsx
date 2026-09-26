@@ -8,7 +8,7 @@ import { aggregateExternalSources } from "@/lib/aeo/source-gaps"
 import { loadCrawlerSummary } from "@/lib/crawler-telemetry"
 import { entityReadiness } from "@/lib/visibility/entity-readiness"
 import { visualAssetReadiness } from "@/lib/visibility/visual-readiness"
-import { VISIBILITY_GRAPH } from "@/lib/visibility/topic-graph"
+import { VISIBILITY_GRAPH, suggestRelatedNodes } from "@/lib/visibility/topic-graph"
 import { EVIDENCE_REGISTRY } from "@/lib/visibility/evidence-registry"
 import { loadPrompts } from "@/lib/aeo/prompts"
 import { CoveragePanel } from "./CoveragePanel"
@@ -68,6 +68,13 @@ export default async function VisibilityPage() {
   const promptIntents = new Set(prompts.map((prompt) => prompt.intent).filter(Boolean)).size
   const visualReadyCount = visuals.filter((item) => item.ready).length
   const readinessItems = [...readiness.entity, ...readiness.google]
+  const linkSuggestions = VISIBILITY_GRAPH.flatMap((node) =>
+    suggestRelatedNodes(node.id, 2).map((target) => ({
+      from: node.path,
+      to: target.path,
+      sharedTopics: target.topics.filter((topic) => node.topics.includes(topic)),
+    }))
+  ).slice(0, 12)
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
@@ -128,6 +135,25 @@ export default async function VisibilityPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+      </section>
+
+      <section className="border border-slate-200 rounded-xl bg-white p-4">
+        <h2 className="font-semibold">Internal-link opportunities</h2>
+        <p className="text-xs text-slate-500 mt-1">
+          Suggestions come from shared topics in the visibility graph. They are review cues, not automatic link insertion.
+        </p>
+        {linkSuggestions.length === 0 ? (
+          <p className="text-sm text-slate-500 mt-3">No additional graph-based link suggestions.</p>
+        ) : (
+          <div className="mt-3 divide-y">
+            {linkSuggestions.map((item) => (
+              <div key={item.from + "->" + item.to} className="py-2 text-sm flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <span className="break-all">{item.from} → {item.to}</span>
+                <span className="text-xs text-slate-500">{item.sharedTopics.join(", ")}</span>
+              </div>
+            ))}
           </div>
         )}
       </section>
