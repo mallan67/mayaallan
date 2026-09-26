@@ -1,0 +1,17 @@
+{
+  "$schema": "Editorial review queue for visibility-sensitive content. Items stay here until reviewed; the system should not treat flagged pages as preferred answer sources.",
+  "items": [
+    {
+      "path": "/blog/curiosity-over-judgment-ifs",
+      "priority": "high",
+      "reason": "Contains causal claims such as activation 'making it worse' and broad statements about what 'research says' that are stronger than the cited evidence supports.",
+      "action": "Re-source and distinguish IFS clinical theory, evidence from the cited depression study, and Maya's interpretation before adding a shortAnswer."
+    },
+    {
+      "path": "/blog/affirmations-vs-integration",
+      "priority": "high",
+      "reason": "Contains claims that a specific integration structure 'actually rewires' emotional schemas and that neuroscience has established the mechanism. The newer integration-research article explicitly treats human reconsolidation as contested.",
+      "action": "Revise to match the evidence standard in /blog/psilocybin-integration-research before adding a shortAnswer."
+    }
+  ]
+}
