@@ -31,15 +31,18 @@ export async function loadPrompts(): Promise<AeoPrompt[]> {
       console.warn("[aeo] aeo-prompts.json missing 'prompts' array")
       return []
     }
-    return parsed.prompts.filter(
-      (p: any): p is AeoPrompt =>
-        typeof p?.id === "string" &&
-        typeof p?.category === "string" &&
-        typeof p?.text === "string" &&
+    return parsed.prompts.filter((value: unknown): value is AeoPrompt => {
+      if (!value || typeof value !== "object") return false
+      const p = value as Record<string, unknown>
+      return (
+        typeof p.id === "string" &&
+        typeof p.category === "string" &&
+        typeof p.text === "string" &&
         (p.intent === undefined || typeof p.intent === "string") &&
         (p.topic === undefined || typeof p.topic === "string") &&
         (p.target_path === undefined || typeof p.target_path === "string")
-    )
+      )
+    })
   } catch (err) {
     console.warn("[aeo] Failed to load prompts:", err)
     return []
