@@ -15,11 +15,11 @@ import { SITE_URL, AUTHOR_NAME, AUTHOR_BIO, bookMachineSummary } from "@/lib/ide
 //   /llms.txt is an INDEX (titles + URLs + 1-sentence summaries).
 //   /llms-full.txt is the CORPUS (actual page bodies in one document).
 //
-//   AI training crawlers (OpenAI's GPTBot, Anthropic's ClaudeBot,
-//   Perplexity-User, OAI-SearchBot, Google-Extended) preferentially ingest
-//   /llms-full.txt because it gives them the substantive content of a site
-//   in one fetch instead of crawling 40+ pages. The result: your answers
-//   appear in AI-generated responses with proper attribution to your URLs.
+//   This is an experimental convenience document for systems that choose to
+//   use the llms.txt proposal. Google Search states that llms.txt is not needed
+//   for Search and does not improve or reduce Google visibility or rankings.
+//   Do not treat this file as a substitute for crawlable HTML, robots.txt,
+//   sitemap.xml, structured data, or normal internal linking.
 //
 // What this route emits:
 //   - Header: who you are + canonical bio
@@ -52,8 +52,8 @@ export async function GET() {
   lines.push("Canonical site: " + SITE_URL)
   lines.push("Author: " + AUTHOR_NAME)
   lines.push("")
-  lines.push("This is the FULL-CONTENT companion to /llms.txt — AI engines can")
-  lines.push("ingest this single document instead of crawling individual pages.")
+  lines.push("This is the FULL-CONTENT companion to /llms.txt for systems that choose")
+  lines.push("to use the llms.txt proposal. Canonical HTML pages remain the primary sources.")
   lines.push("All content below is publicly available at the URLs cited.")
   lines.push("")
   lines.push("Topics covered:")
@@ -214,8 +214,8 @@ export async function GET() {
   // -------------------------------------------------------------------------
   lines.push("## Free AI-Guided Tools")
   lines.push("")
-  lines.push("Three free chat-based tools that apply the integration methodology from the book.")
-  lines.push("All run in-browser; no signup required.")
+  lines.push("Three free web-based guided tools that draw on methods documented on this site.")
+  lines.push("No signup is required to begin.")
   lines.push("")
   lines.push("### Integration Reflection tool")
   lines.push(`Source: ${SITE_URL}/integration-reflection`)
