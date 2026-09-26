@@ -11,6 +11,12 @@ export type DistributionCategory =
   | "psychedelic-community"
   | "psychedelic-marketplace"
   | "youtube-channel"
+  | "mental-health-community"
+  | "self-help-wellness"
+  | "integration-group"
+  | "membership-club"
+  | "professional-network"
+  | "paid-media"
   | "conference-event"
   | "social"
   | "syndication"
@@ -26,6 +32,22 @@ export type DistributionStatus =
   | "external-activation"
   | "retry-later"
 
+export type DistributionAccessModel =
+  | "organic-discussion"
+  | "editorial"
+  | "membership"
+  | "directory-listing"
+  | "event"
+  | "networking"
+  | "book-club"
+  | "sponsorship"
+  | "advertising"
+  | "newsletter-placement"
+  | "podcast"
+  | "video"
+  | "partnership"
+  | "community-post"
+
 export interface DistributionSurface {
   id: string
   name: string
@@ -37,6 +59,9 @@ export interface DistributionSurface {
   attempts?: number
   note: string
   modes?: string[]
+  access?: DistributionAccessModel[]
+  paidExposure?: boolean
+  audiences?: string[]
 }
 
 /**
@@ -359,6 +384,253 @@ export const DISTRIBUTION_SURFACES: DistributionSurface[] = [
     note: "Psychedelic education/podcast video surface worth evaluating for author interviews or topic discussions.",
   },
 
+  // Mental-health, self-help, integration, membership and professional audiences
+  {
+    id: "psychedelic-society-membership",
+    name: "The Psychedelic Society — Membership & Integration Circles",
+    category: "membership-club",
+    status: "opportunity",
+    url: "https://psychedelicsociety.org.uk/",
+    modes: ["membership", "members-only integration circle", "events", "community socials"],
+    access: ["membership", "event", "networking", "book-club"],
+    audiences: ["psychedelic community", "integration", "consciousness", "personal growth"],
+    note: "Members receive integration circles, socials and event access; evaluate book-club, talk, member-resource and partnership routes rather than treating it as a retail outlet.",
+  },
+  {
+    id: "nectara",
+    name: "Nectara — Psychedelic Integration Community",
+    category: "integration-group",
+    status: "opportunity",
+    url: "https://www.nectara.org/membership",
+    modes: ["membership", "live integration circles", "courses", "community", "guided practices"],
+    access: ["membership", "networking", "community-post"],
+    audiences: ["journeyers", "integration", "preparation", "personal growth"],
+    note: "Large integration-focused member community; evaluate educational-resource, book-discussion, partnership and member-content routes.",
+  },
+  {
+    id: "psychedelics-today-navigators",
+    name: "Psychedelics Today — Navigators",
+    category: "membership-club",
+    status: "opportunity",
+    url: "https://psychedelicstoday.com/navigators/",
+    modes: ["membership", "book and film club", "webinars", "live classes", "community"],
+    access: ["membership", "book-club", "event", "networking"],
+    audiences: ["psychedelic practice", "education", "integration", "professional community"],
+    note: "Members-only community explicitly includes book and film clubs; treat as a potential discussion/author-event surface in addition to Psychedelics Today editorial and podcast channels.",
+  },
+  {
+    id: "district216",
+    name: "District216 — Psychedelic Social Club",
+    category: "membership-club",
+    status: "opportunity",
+    url: "https://www.district216.com/online-memberships",
+    modes: ["private club", "online membership", "education", "discussion", "events"],
+    access: ["membership", "event", "networking"],
+    audiences: ["psychedelic culture", "consciousness", "integration", "self-exploration"],
+    note: "Private educational/community club with author and educator programming; evaluate talks, book discussions, events and member-resource placement.",
+  },
+  {
+    id: "psychedelic-health-professional-network",
+    name: "Psychedelic Health Professional Network",
+    category: "professional-network",
+    status: "opportunity",
+    url: "https://psychedelicnetwork.org.uk/",
+    modes: ["membership", "weekly newsletter", "integration meetings", "presentations", "professional networking"],
+    access: ["membership", "networking", "event", "newsletter-placement"],
+    audiences: ["mental health professionals", "psychedelic practitioners", "researchers", "integration professionals"],
+    note: "Professional membership/networking audience; any book positioning must remain educational and avoid implying clinical authority.",
+  },
+  {
+    id: "intercollegiate-psychedelics-network",
+    name: "Intercollegiate Psychedelics Network",
+    category: "professional-network",
+    status: "opportunity",
+    url: "https://www.intercollegiatepsychedelics.net/",
+    modes: ["member portal", "directory", "events", "WhatsApp community", "resource discounts"],
+    access: ["membership", "networking", "event", "directory-listing"],
+    audiences: ["students", "young professionals", "psychedelic studies", "research community"],
+    note: "2,000+ member international student/young-professional network; evaluate educational talks, resources and book-discussion opportunities.",
+  },
+  {
+    id: "psychedelic-states-america",
+    name: "Psychedelic State(s) of America",
+    category: "professional-network",
+    status: "opportunity",
+    url: "https://psychedelicamericas.org/events",
+    modes: ["mixers", "member meetups", "livestreams", "professional development", "event submission"],
+    access: ["event", "networking", "community-post"],
+    audiences: ["psychedelic professionals", "community organizers", "policy", "education"],
+    note: "Public event/networking surface with event submission; useful for talks, livestreams and regional professional exposure.",
+  },
+  {
+    id: "psychedelic-network-business",
+    name: "Psychedelic Network — Business Development",
+    category: "paid-media",
+    status: "opportunity",
+    url: "https://psychedelic-network.org/",
+    modes: ["business development packages", "community", "integration groups", "art and wellness"],
+    access: ["advertising", "partnership", "directory-listing"],
+    paidExposure: true,
+    audiences: ["psychedelic community", "healing", "integration", "art", "wellness"],
+    note: "Site advertises business-development packages; evaluate paid visibility only after confirming audience quality, placement terms and legal/compliance fit.",
+  },
+  {
+    id: "psychedelic-mental-health-access-alliance",
+    name: "Psychedelic Mental Health Access Alliance",
+    category: "mental-health-community",
+    status: "opportunity",
+    url: "https://pmhaa.org/",
+    modes: ["coalition", "research", "newsletter", "community engagement"],
+    access: ["networking", "partnership", "event"],
+    audiences: ["mental health", "psychedelic access", "research", "community health"],
+    note: "Mental-health/access coalition; track for educational partnership, research-adjacent and community-engagement opportunities rather than direct consumer advertising.",
+  },
+  {
+    id: "institute-psychedelic-therapy-integration-groups",
+    name: "Institute of Psychedelic Therapy — Integration Groups",
+    category: "integration-group",
+    status: "monitor",
+    url: "https://instituteofpsychedelictherapy.org/directory/integration-groups/",
+    modes: ["integration group directory", "professional membership"],
+    access: ["directory-listing", "networking"],
+    audiences: ["integration groups", "counsellors", "psychotherapists"],
+    note: "Directory is qualification-based for facilitators; use as a map of integration audiences and networking contacts, not as an author listing unless eligibility is met.",
+  },
+
+  // Mental-health and behavioral-health paid exposure
+  {
+    id: "adaa",
+    name: "Anxiety & Depression Association of America",
+    category: "mental-health-community",
+    status: "opportunity",
+    url: "https://adaa.org/about-adaa/advertise-with-adaa",
+    modes: ["website ads", "newsletter ads", "podcast sponsorship", "webinar sponsorship", "conference exhibits", "self-help book ecosystem"],
+    access: ["advertising", "sponsorship", "newsletter-placement", "podcast", "event", "partnership"],
+    paidExposure: true,
+    audiences: ["mental health consumers", "clinicians", "researchers", "educators"],
+    note: "ADAA explicitly sells mental-health advertising/sponsorship and maintains a self-help book ecosystem. Any placement must present the book as educational, not treatment or clinical guidance.",
+  },
+  {
+    id: "apa-advertising",
+    name: "American Psychological Association — Advertising",
+    category: "paid-media",
+    status: "opportunity",
+    url: "https://advertising.apa.org/",
+    modes: ["website", "newsletters", "magazine", "webinars", "strategic alliances"],
+    access: ["advertising", "sponsorship", "newsletter-placement", "event", "partnership"],
+    paidExposure: true,
+    audiences: ["psychologists", "researchers", "educators", "students"],
+    note: "Large professional psychology audience. Treat as paid professional-market exposure and verify ad-policy fit before using psychedelic-related creative.",
+  },
+  {
+    id: "mental-health-america",
+    name: "Mental Health America",
+    category: "mental-health-community",
+    status: "opportunity",
+    url: "https://mhanational.org/partner-with-us/",
+    modes: ["partnership", "conference sponsor/exhibit", "webinars", "campaigns", "media outreach"],
+    access: ["partnership", "sponsorship", "event", "advertising"],
+    paidExposure: true,
+    audiences: ["public mental health", "advocates", "professionals", "community organizations"],
+    note: "National mental-health network with partnership and conference sponsorship routes. Position only around education, reflection and responsible mental-health literacy.",
+  },
+  {
+    id: "njpa-advertising",
+    name: "New Jersey Psychological Association — Advertising",
+    category: "paid-media",
+    status: "opportunity",
+    url: "https://psychologynj.org/page/Advertise2",
+    modes: ["website banners", "member e-blast", "digital journal", "event sponsorship"],
+    access: ["advertising", "sponsorship", "newsletter-placement", "event"],
+    paidExposure: true,
+    audiences: ["New Jersey psychologists", "mental health professionals", "consumers"],
+    note: "Local/regional paid access to psychology audiences through website, newsletter, journal and programs; relevant because Maya is in the NYC/NJ market.",
+  },
+  {
+    id: "amhca-advertising",
+    name: "American Mental Health Counselors Association — Advertising",
+    category: "paid-media",
+    status: "opportunity",
+    url: "https://www.amhca.org/about/advertising",
+    modes: ["content marketing", "newsletter ads", "digital magazine"],
+    access: ["advertising", "newsletter-placement", "partnership"],
+    paidExposure: true,
+    audiences: ["mental health counselors", "behavioral health professionals"],
+    note: "Professional mental-health advertising channel; verify that book creative meets advertising policies and does not imply clinical efficacy.",
+  },
+  {
+    id: "society-behavioral-medicine",
+    name: "Society of Behavioral Medicine — Advertising",
+    category: "paid-media",
+    status: "opportunity",
+    url: "https://www.sbm.org/ways-to-give/advertise",
+    modes: ["website ads", "e-newsletters", "webinar sponsorship", "industry resource email"],
+    access: ["advertising", "sponsorship", "newsletter-placement"],
+    paidExposure: true,
+    audiences: ["behavioral medicine", "researchers", "health professionals"],
+    note: "Professional behavioral-health audience; potentially useful for evidence-aware educational positioning.",
+  },
+
+  // Self-help / mindfulness / personal-growth audiences
+  {
+    id: "mindful",
+    name: "Mindful",
+    category: "self-help-wellness",
+    status: "opportunity",
+    url: "https://www.mindful.org/advertise-with-mindful/",
+    modes: ["editorial collaboration", "newsletter", "sponsored article", "podcast", "social", "website", "magazine"],
+    access: ["editorial", "advertising", "sponsorship", "newsletter-placement", "podcast", "video", "partnership"],
+    paidExposure: true,
+    audiences: ["mindfulness", "self-help", "wellness", "personal growth", "meditation"],
+    note: "Multi-channel wellness platform with both earned collaboration and paid advertising. Strong fit for broader self-inquiry/awareness themes beyond psychedelic-only discovery.",
+  },
+  {
+    id: "better-humans",
+    name: "Better Humans on Medium",
+    category: "self-help-wellness",
+    status: "opportunity",
+    url: "https://medium.com/better-humans",
+    modes: ["editorial submission", "self-improvement publication"],
+    access: ["editorial", "community-post"],
+    audiences: ["self-improvement", "personal development", "human potential"],
+    note: "Large self-improvement publication; use original, genuinely useful essays rather than book advertisements.",
+  },
+  {
+    id: "mind-cafe",
+    name: "Mind Cafe on Medium",
+    category: "self-help-wellness",
+    status: "opportunity",
+    url: "https://medium.com/mind-cafe",
+    modes: ["editorial submission", "happiness", "meaning", "self-improvement"],
+    access: ["editorial", "community-post"],
+    audiences: ["self-improvement", "meaning", "personal growth"],
+    note: "Potential broader author exposure for lived-experience and meaning-oriented essays; follow current submission standards.",
+  },
+  {
+    id: "all-about-psychology",
+    name: "All About Psychology — Newsletter Sponsorship",
+    category: "paid-media",
+    status: "opportunity",
+    url: "https://allaboutpsychology.substack.com/",
+    modes: ["sponsored recommendation", "Substack", "LinkedIn amplification", "website placement"],
+    access: ["sponsorship", "newsletter-placement", "advertising"],
+    paidExposure: true,
+    audiences: ["psychology", "mental health", "human behavior", "self-understanding"],
+    note: "Publisher currently offers sponsored recommendations across newsletter, LinkedIn and website. Evaluate book sponsorship only if copy remains educational and non-clinical.",
+  },
+  {
+    id: "addiction-recovery-ebulletin",
+    name: "Addiction Recovery eBulletin",
+    category: "paid-media",
+    status: "opportunity",
+    url: "https://addictionrecoveryebulletin.org/advertising/",
+    modes: ["newsletter ad", "homepage placement", "social amplification"],
+    access: ["advertising", "newsletter-placement", "sponsorship"],
+    paidExposure: true,
+    audiences: ["behavioral health", "recovery professionals", "clinicians", "press"],
+    note: "Adjacent behavioral-health audience; evaluate carefully for thematic fit before spending because the book is not an addiction-treatment text.",
+  },
+
   // Social / syndication
   { id: "linkedin", name: "LinkedIn", category: "social", status: "verified", note: "Existing author/professional presence; connect published articles and book mentions back to canonical URLs." },
   { id: "youtube", name: "YouTube", category: "social", status: "opportunity", note: "Video explainers/interviews can become independent search and AI-discovery surfaces." },
@@ -388,6 +660,8 @@ export function distributionSummary() {
 
   return {
     total: DISTRIBUTION_SURFACES.length,
+    paidCount: DISTRIBUTION_SURFACES.filter((surface) => surface.paidExposure).length,
+    membershipCount: DISTRIBUTION_SURFACES.filter((surface) => surface.access?.includes("membership")).length,
     byCategory: Object.fromEntries(byCategory),
     byStatus: Object.fromEntries(byStatus),
   }

@@ -120,7 +120,7 @@ export default async function VisibilityPage() {
               psychedelic media, social and syndication are tracked as one harmonized coverage system.
             </p>
           </div>
-          <div className="text-sm text-slate-600">{distribution.total} surfaces tracked</div>
+          <div className="text-sm text-slate-600">{distribution.total} surfaces tracked · {distribution.paidCount} paid/sponsor routes · {distribution.membershipCount} membership routes</div>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
           {Object.entries(distribution.byCategory).map(([category, count]) => (

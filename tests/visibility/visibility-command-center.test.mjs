@@ -6,7 +6,7 @@ import { aggregateExternalSources } from "../../src/lib/aeo/source-gaps.ts"
 import { detectCrawler } from "../../src/lib/crawler-telemetry.ts"
 import { VISIBILITY_GRAPH, suggestRelatedNodes } from "../../src/lib/visibility/topic-graph.ts"
 import { EVIDENCE_REGISTRY } from "../../src/lib/visibility/evidence-registry.ts"
-import { DISTRIBUTION_SURFACES, distributionSurface } from "../../src/lib/visibility/distribution-surfaces.ts"
+import { DISTRIBUTION_SURFACES, distributionSurface, distributionSummary } from "../../src/lib/visibility/distribution-surfaces.ts"
 
 test("Search Console opportunity engine finds striking-distance and low-CTR queries", () => {
   const current = [
@@ -145,6 +145,12 @@ test("distribution registry covers search, AI, libraries, reader networks and ps
     "psychedelic-community",
     "psychedelic-marketplace",
     "youtube-channel",
+    "mental-health-community",
+    "self-help-wellness",
+    "integration-group",
+    "membership-club",
+    "professional-network",
+    "paid-media",
     "conference-event",
     "social",
     "syndication",
@@ -172,4 +178,29 @@ test("distribution registry includes psychedelic discussion marketplaces and nam
   ]) {
     assert.ok(distributionSurface(id), "missing distribution surface " + id)
   }
+})
+
+
+test("distribution registry models paid advertising, memberships, integration groups and professional networks", () => {
+  for (const id of [
+    "psychedelic-society-membership",
+    "nectara",
+    "psychedelics-today-navigators",
+    "district216",
+    "psychedelic-health-professional-network",
+    "intercollegiate-psychedelics-network",
+    "adaa",
+    "mental-health-america",
+    "mindful",
+    "njpa-advertising",
+  ]) {
+    assert.ok(distributionSurface(id), "missing audience/placement surface " + id)
+  }
+
+  const summary = distributionSummary()
+  assert.ok(summary.paidCount >= 8)
+  assert.ok(summary.membershipCount >= 4)
+  assert.equal(distributionSurface("adaa")?.paidExposure, true)
+  assert.ok(distributionSurface("mindful")?.access?.includes("advertising"))
+  assert.ok(distributionSurface("nectara")?.access?.includes("membership"))
 })
