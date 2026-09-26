@@ -6,12 +6,11 @@ import { generateText } from "ai"
 // AEO Engine clients — one minimal client per AI engine.
 // =============================================================================
 // Each function:
-//   - Returns null immediately if the engine's API key env var isn't set
-//     (so the AEO tracker gracefully skips engines you haven't enrolled in)
-//   - Uses raw fetch — no SDK dependencies — so adding/removing providers
-//     doesn't churn package.json
-//   - Returns { content, model, error? } — error captured rather than thrown
-//     so one engine's outage doesn't tank the weekly run
+//   - Uses a direct provider path when grounded search is explicitly enabled
+//     and that provider key exists.
+//   - Otherwise falls back to AI Gateway where supported.
+//   - Captures provider errors in the result so one engine outage does not
+//     tank the weekly run.
 //
 // API KEYS:
 //   ANTHROPIC_API_KEY      — Claude (claude.ai/console)
@@ -336,16 +335,11 @@ async function queryPerplexityDirect(prompt: string): Promise<EngineResponse | n
 }
 
 // -----------------------------------------------------------------------------
-// Gemini — routed the same way the rest of the site's AI tools route
+// Gemini — direct grounded search when opted in; Gateway memory fallback otherwise.
 // -----------------------------------------------------------------------------
-// Mirrors src/app/api/chat/route.ts: defaults to Vercel AI Gateway (which uses
-// AI_GATEWAY_API_KEY and pulls from Vercel credits), and switches to direct
-// Google API only if AI_PROVIDER=direct is set (with GOOGLE_GENERATIVE_AI_API_KEY).
-//
-// Why: the direct Google API can have project-specific quota issues
-// (limit: 0 errors even on free-tier models). Going through Gateway uses the
-// same path that already works for the production chat tools, with predictable
-// billing on Vercel rather than Google's free-tier quirks.
+// The AEO tracker is intentionally independent from the chat tool's AI_PROVIDER
+// setting. A direct Google key + AEO_GROUNDED_ENGINES=gemini enables Search
+// grounding here; otherwise AI Gateway can provide a non-search memory probe.
 //
 // Gateway fallback is intentionally non-search and is labelled model-memory
 // in the stored row so it cannot inflate the grounded-search metric.
@@ -421,7 +415,7 @@ export async function queryGemini(prompt: string): Promise<EngineResponse | null
     return {
       engine: "gemini",
       content: "",
-      model: "gemini-2.5-flash",
+      model: "gemini-3.8-flash",
       searchCapable: false,
       error: err instanceof Error ? err.message : String(err),
     }
@@ -434,17 +428,17 @@ export async function queryGemini(prompt: string): Promise<EngineResponse | null
  *  are usable via direct API. */
 export function enabledEngines(): Array<(prompt: string) => Promise<EngineResponse | null>> {
   const hasGateway = !!process.env.AI_GATEWAY_API_KEY
+  const claudeDirect = !!process.env.ANTHROPIC_API_KEY && groundedEngineEnabled("claude")
+  const chatgptDirect = !!process.env.OPENAI_API_KEY && groundedEngineEnabled("chatgpt")
+  const geminiDirect =
+    (!!process.env.GOOGLE_GENAI_API_KEY || !!process.env.GOOGLE_GENERATIVE_AI_API_KEY) &&
+    groundedEngineEnabled("gemini")
+
   const all: Array<{ fn: (p: string) => Promise<EngineResponse | null>; enabled: boolean }> = [
-    { fn: queryClaude, enabled: hasGateway || !!process.env.ANTHROPIC_API_KEY },
-    { fn: queryChatGPT, enabled: hasGateway || !!process.env.OPENAI_API_KEY },
+    { fn: queryClaude, enabled: hasGateway || claudeDirect },
+    { fn: queryChatGPT, enabled: hasGateway || chatgptDirect },
     { fn: queryPerplexity, enabled: hasGateway || !!process.env.PERPLEXITY_API_KEY },
-    {
-      fn: queryGemini,
-      enabled:
-        hasGateway ||
-        !!process.env.GOOGLE_GENAI_API_KEY ||
-        !!process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-    },
+    { fn: queryGemini, enabled: hasGateway || geminiDirect },
   ]
   return all.filter((e) => e.enabled).map((e) => e.fn)
 }
@@ -486,14 +480,14 @@ export function engineReadiness(): EngineReadiness[] {
       }
     }
 
-    if (hasGateway || directKeys[engine]) {
+    if (hasGateway) {
       return {
         engine,
         mode: "model-memory",
         note:
           engine === "perplexity"
-            ? "Credential path exists but search probe is not currently available."
-            : "Probe can run, but live search is not opted in; results measure model memory rather than search visibility.",
+            ? "AI Gateway credential is present; Sonar remains search-backed when available."
+            : "AI Gateway can run a non-search probe; results measure model memory rather than search visibility.",
       }
     }
 
