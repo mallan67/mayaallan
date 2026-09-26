@@ -14,7 +14,7 @@ export default async function AdminAuthGuard({ children }: { children: React.Rea
   // Skip auth for the public auth pages: login + the password-recovery flow.
   // These MUST render without a session (the whole point of "forgot password"
   // is that you can't log in). Keep this list in sync with the PUBLIC_ADMIN_PATHS
-  // allowlist in middleware.ts.
+  // allowlist in proxy.ts.
   const PUBLIC_ADMIN_PATHS = ["/admin/login", "/admin/forgot-password", "/admin/reset-password"]
   if (PUBLIC_ADMIN_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`) || pathname.startsWith(`${p}?`))) {
     return <>{children}</>
