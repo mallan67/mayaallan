@@ -40,7 +40,6 @@ export interface InternalLinkRecommendation {
 
 export async function internalLinkRecommendations(): Promise<InternalLinkRecommendation[]> {
   const graph = await loadTopicGraph()
-  const byId = new Map(graph.nodes.map((node) => [node.id, node]))
   const explicit = new Set(graph.edges.map((edge) => `${edge.from}->${edge.to}`))
   const out: InternalLinkRecommendation[] = []
 
