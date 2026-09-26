@@ -76,3 +76,12 @@ test("visibility engine wiring preserves grounded-vs-memory truth", async () => 
   assert.match(env, /GOOGLE_SEARCH_CONSOLE_CLIENT_EMAIL=/)
   assert.match(vercel, /\/api\/cron\/search-console-sync/)
 })
+
+
+test("grounded label requires provider search evidence, not merely a search-capable API", async () => {
+  const engines = await readFile("src/lib/aeo/engines.ts", "utf8")
+  assert.match(engines, /function groundedPrompt\(/)
+  assert.match(engines, /function hasSearchEvidence\(/)
+  assert.match(engines, /searchMode: searched \? "grounded-search" : "model-memory"/)
+  assert.match(engines, /Search the live web before answering this question/)
+})
