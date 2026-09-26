@@ -57,6 +57,10 @@ export interface CitationRow {
   source_citation?: boolean
   /** URLs the engine returned as citations separately from the text. */
   structured_citations?: string[]
+  /** Search queries the provider executed, when its API exposes them. */
+  search_queries?: string[]
+  /** All web sources exposed by the provider, including non-Maya competitors. */
+  source_urls?: string[]
   /** Full response text, kept so a row can be re-classified later without re-spending credits. */
   response_text?: string
 }
