@@ -58,6 +58,14 @@ CREATE TABLE IF NOT EXISTS public.marketing_events (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Explicit Data API grants for first-party analytics. The app writes and
+-- reads these tables only through the server-side Supabase service role.
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
+  public.marketing_visitors,
+  public.marketing_events
+TO service_role;
+GRANT USAGE, SELECT ON SEQUENCE public.marketing_events_id_seq TO service_role;
+
 -- Most common admin-dashboard query is "events of kind X in the last 30/90 days"
 CREATE INDEX IF NOT EXISTS idx_marketing_events_name_created
   ON public.marketing_events (event_name, created_at DESC);
