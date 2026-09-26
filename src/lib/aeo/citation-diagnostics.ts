@@ -36,6 +36,8 @@ export type CitationStage =
 
 export interface CitationDiagnosticSpec {
   id: string
+  /** Human-readable prompt text for dashboard diagnostics. */
+  text?: string
   family?: string
   goal?: CitationGoal
   expected_paths?: string[]
@@ -139,8 +141,8 @@ function result(
     externalSourceUrls,
     expectedPaths,
     expectedPageHit: expectedPathHit(ownCitedUrls, expectedPaths),
-    bookMention: types.includes("book_title"),
-    authorMention: types.includes("author_name"),
+    bookMention: types.has("book_title"),
+    authorMention: types.has("author_name"),
     repair,
     ...extra,
   }
