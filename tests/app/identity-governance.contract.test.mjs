@@ -157,3 +157,27 @@ test("verified author and book authority URLs are wired into sameAs", () => {
   assert.match(identity, /openlibrary\.org\/authors\/OL16288546A\/Maya_Allan/)
   assert.match(identity, /openlibrary\.org\/works\/OL45177926W/)
 })
+
+
+test("format-specific platform identifiers stay attached to the correct editions", () => {
+  assert.match(identity, /ebook: "B0G765BZDL"/)
+  assert.match(identity, /paperback: "B0G91GZMLT"/)
+  assert.match(identity, /hardcover: "B0G7JWDJYQ"/)
+  assert.match(identity, /Google Books ID", value: "HvafEQAAQBAJ"/)
+  assert.match(structuredData, /formatAsins\[edition\.key\]/)
+  assert.match(structuredData, /BOOK_PLATFORM_IDENTIFIERS\[book\.slug\]/)
+})
+
+test("verified international paperback retailers are linked to the paperback edition", () => {
+  for (const host of [
+    "walmart.com",
+    "foyles.co.uk",
+    "hatchards.co.uk",
+    "adlibris.com",
+    "bol.com",
+    "lafeltrinelli.it",
+    "ebay.fr",
+  ]) {
+    assert.match(identity, new RegExp(host.replaceAll(".", "\\.")))
+  }
+})
