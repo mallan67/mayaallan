@@ -34,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const featuredBook = await getFeaturedBookForMetadata()
 
   // Use absolute title (no template suffix) to control exact SERP wording
-  const title = { absolute: "Maya Allan — Author, Books & Essays" }
+  const title = { absolute: "Maya Allan — Author of the Psilocybin Integration Guide" }
 
   // Canonical SEO description — never the mutable book sales blurb, so the
   // homepage meta/OG/Twitter positioning stays non-clinical and consistent.
