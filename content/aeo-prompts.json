@@ -1,130 +1,306 @@
 {
-  "$schema": "Reader-intent prompts that get sent to ChatGPT/Claude/Perplexity/Gemini weekly. Add or edit prompts here; the cron picks them up automatically on next run. Each prompt needs a stable `id` so trend data over time stays linked.",
+  "$schema": "Reader-intent AEO test matrix. Stable ids preserve trend history. intent/topic/target_path let the dashboard compare query classes and expected Maya destinations.",
   "prompts": [
     {
       "id": "psilocybin-integration-book",
       "category": "discovery",
-      "text": "What is the best book on psilocybin integration in 2026?"
+      "intent": "resource",
+      "topic": "book-discovery",
+      "target_path": "/books/psilocybin-integration-guide",
+      "text": "What is a useful book for understanding psilocybin integration and specific experiences that can happen during a journey?"
     },
     {
       "id": "psilocybin-integration-author-2026",
       "category": "discovery",
-      "text": "Who are the most important authors writing about psilocybin integration?"
-    },
-    {
-      "id": "ego-dissolution-feels-like",
-      "category": "journey",
-      "text": "What does ego dissolution feel like during a psilocybin journey?"
-    },
-    {
-      "id": "ego-dissolution-duration",
-      "category": "journey",
-      "text": "How long does ego dissolution typically last during a mushroom experience?"
-    },
-    {
-      "id": "integrate-difficult-mushroom-trip",
-      "category": "integration",
-      "text": "How do I integrate a difficult psilocybin journey?"
-    },
-    {
-      "id": "psilocybin-integration-vs-therapy",
-      "category": "integration",
-      "text": "What is the difference between psilocybin integration and traditional talk therapy?"
-    },
-    {
-      "id": "after-mushroom-trip-what-to-do",
-      "category": "integration",
-      "text": "What should I do in the days after a psilocybin experience?"
-    },
-    {
-      "id": "feel-disconnected-after-psilocybin",
-      "category": "integration",
-      "text": "Why do I feel disconnected from people weeks after a psilocybin journey?"
-    },
-    {
-      "id": "psilocybin-integration-journal",
-      "category": "tools",
-      "text": "How should I journal after a psilocybin experience?"
-    },
-    {
-      "id": "shadow-work-after-psychedelic",
-      "category": "integration",
-      "text": "How do I do shadow work after a psychedelic experience?"
-    },
-    {
-      "id": "inner-child-healing-psilocybin",
-      "category": "integration",
-      "text": "Can psilocybin help with inner child healing?"
-    },
-    {
-      "id": "prepare-first-mushroom-experience",
-      "category": "preparation",
-      "text": "How should I prepare for my first psilocybin experience?"
-    },
-    {
-      "id": "set-and-setting-mushrooms",
-      "category": "preparation",
-      "text": "What is set and setting and why does it matter for psilocybin?"
-    },
-    {
-      "id": "psilocybin-intentions",
-      "category": "preparation",
-      "text": "How do I set intentions for a psilocybin journey?"
-    },
-    {
-      "id": "psychedelic-integration-practitioner",
-      "category": "practitioners",
-      "text": "What does a psychedelic integration practitioner do?"
-    },
-    {
-      "id": "psilocybin-facilitator-guide",
-      "category": "practitioners",
-      "text": "What should a psilocybin facilitator know about supporting solo journeyers?"
-    },
-    {
-      "id": "default-mode-network-psilocybin",
-      "category": "research",
-      "text": "What does psilocybin do to the default mode network?"
-    },
-    {
-      "id": "mystical-experience-psilocybin",
-      "category": "research",
-      "text": "What is a mystical experience and how does psilocybin produce them?"
-    },
-    {
-      "id": "psilocybin-and-trauma",
-      "category": "research",
-      "text": "How can psilocybin help with trauma healing?"
-    },
-    {
-      "id": "carhart-harris-rebus",
-      "category": "research",
-      "text": "What is the REBUS model in psychedelic research?"
-    },
-    {
-      "id": "bad-trip-recovery",
-      "category": "safety",
-      "text": "What should I do if I had a bad psilocybin trip and feel destabilized?"
-    },
-    {
-      "id": "psilocybin-warning-signs",
-      "category": "safety",
-      "text": "What are warning signs that I need professional help after a psilocybin experience?"
-    },
-    {
-      "id": "psilocybin-spiritual-emergency",
-      "category": "safety",
-      "text": "What is a spiritual emergency and how is it related to psychedelic experiences?"
+      "intent": "author",
+      "topic": "author-discovery",
+      "target_path": "/about",
+      "text": "Who are authors writing practical, non-clinical resources about psilocybin integration?"
     },
     {
       "id": "maya-allan-author",
       "category": "brand",
-      "text": "Who is Maya Allan?"
+      "intent": "author",
+      "topic": "author-discovery",
+      "target_path": "/about",
+      "text": "Who is Maya Allan and what does she write about?"
     },
     {
       "id": "psilocybin-40-scenarios",
       "category": "brand",
-      "text": "Are there any books that walk through specific scenarios that can come up during a psilocybin journey?"
+      "intent": "resource",
+      "topic": "book-discovery",
+      "target_path": "/books/psilocybin-integration-guide",
+      "text": "Are there books that walk through specific scenarios that can come up during a psilocybin journey?"
+    },
+    {
+      "id": "ego-dissolution-feels-like",
+      "category": "journey",
+      "intent": "problem",
+      "topic": "ego-dissolution",
+      "target_path": "/scenarios/ego-dissolution",
+      "text": "What does ego dissolution feel like during a psilocybin experience?"
+    },
+    {
+      "id": "ego-dissolution-duration",
+      "category": "journey",
+      "intent": "research",
+      "topic": "ego-dissolution",
+      "target_path": "/scenarios/ego-dissolution",
+      "text": "What does research say about how long ego-dissolution experiences can feel like they last?"
+    },
+    {
+      "id": "ego-dissolution-aftereffects",
+      "category": "integration",
+      "intent": "problem",
+      "topic": "ego-dissolution",
+      "target_path": "/scenarios/ego-dissolution",
+      "text": "How can I make sense of feeling different about my identity after an ego-dissolution experience?"
+    },
+    {
+      "id": "integrate-difficult-mushroom-trip",
+      "category": "integration",
+      "intent": "problem",
+      "topic": "difficult-experience",
+      "target_path": "/integration-reflection",
+      "text": "How can I reflect on a difficult psilocybin experience without forcing a positive meaning onto it?"
+    },
+    {
+      "id": "bad-trip-recovery",
+      "category": "safety",
+      "intent": "problem",
+      "topic": "difficult-experience",
+      "target_path": "/nervous-system-reset",
+      "text": "What can I do after a frightening psilocybin experience if I still feel unsettled?"
+    },
+    {
+      "id": "psilocybin-warning-signs",
+      "category": "safety",
+      "intent": "safety",
+      "topic": "difficult-experience",
+      "text": "What warning signs after a psychedelic experience mean I should seek professional or emergency help?"
+    },
+    {
+      "id": "psilocybin-spiritual-emergency",
+      "category": "safety",
+      "intent": "research",
+      "topic": "difficult-experience",
+      "text": "What does the term spiritual emergency mean in discussions of psychedelic experiences, and when is professional help important?"
+    },
+    {
+      "id": "after-mushroom-trip-what-to-do",
+      "category": "integration",
+      "intent": "problem",
+      "topic": "post-experience",
+      "target_path": "/integration-reflection",
+      "text": "What are grounded ways to reflect in the days after a psilocybin experience?"
+    },
+    {
+      "id": "feel-disconnected-after-psilocybin",
+      "category": "integration",
+      "intent": "problem",
+      "topic": "post-experience",
+      "target_path": "/integration-reflection",
+      "text": "Why might someone feel disconnected from other people after an intense psychedelic experience, and how can they reflect on it safely?"
+    },
+    {
+      "id": "integration-no-fixed-timeline",
+      "category": "integration",
+      "intent": "research",
+      "topic": "post-experience",
+      "target_path": "/blog/psilocybin-integration-research",
+      "text": "Does psychedelic integration have a scientifically established timeline or window?"
+    },
+    {
+      "id": "psilocybin-integration-vs-therapy",
+      "category": "integration",
+      "intent": "comparison",
+      "topic": "integration-methods",
+      "target_path": "/methods",
+      "text": "What is the difference between self-guided psychedelic integration reflection and psychotherapy?"
+    },
+    {
+      "id": "psilocybin-integration-journal",
+      "category": "tools",
+      "intent": "tool",
+      "topic": "journaling",
+      "target_path": "/integration-journal",
+      "text": "Is there a free guided journal for reflecting after a psilocybin experience?"
+    },
+    {
+      "id": "integration-reflection-tool",
+      "category": "tools",
+      "intent": "tool",
+      "topic": "integration-methods",
+      "target_path": "/integration-reflection",
+      "text": "Is there a free guided tool for reflecting on a new insight alongside an older pattern after a psychedelic experience?"
+    },
+    {
+      "id": "belief-inquiry-tool",
+      "category": "tools",
+      "intent": "tool",
+      "topic": "belief-inquiry",
+      "target_path": "/belief-inquiry",
+      "text": "Is there a free guided self-inquiry tool for examining a recurring belief without being told what to replace it with?"
+    },
+    {
+      "id": "nervous-system-reset-tool",
+      "category": "tools",
+      "intent": "tool",
+      "topic": "grounding",
+      "target_path": "/nervous-system-reset",
+      "text": "Is there a free grounding tool for moments when I feel activated or overwhelmed after an intense experience?"
+    },
+    {
+      "id": "belief-inquiry-clean-language",
+      "category": "research",
+      "intent": "method",
+      "topic": "belief-inquiry",
+      "target_path": "/methods#belief-inquiry",
+      "text": "How can Clean Language be used for self-inquiry without putting words or interpretations into someone's experience?"
+    },
+    {
+      "id": "coherence-therapy-juxtaposition",
+      "category": "research",
+      "intent": "method",
+      "topic": "integration-methods",
+      "target_path": "/methods#integration-reflection",
+      "text": "What is juxtaposition in Coherence Therapy, and how is it different from simply replacing a belief?"
+    },
+    {
+      "id": "memory-reconsolidation-psychedelic",
+      "category": "research",
+      "intent": "research",
+      "topic": "memory-reconsolidation",
+      "target_path": "/blog/psilocybin-integration-research",
+      "text": "What does memory reconsolidation research actually support about integrating psychedelic experiences, and what remains uncertain?"
+    },
+    {
+      "id": "default-mode-network-psilocybin",
+      "category": "research",
+      "intent": "research",
+      "topic": "neuroscience",
+      "text": "What does current research say about psilocybin and the default mode network?"
+    },
+    {
+      "id": "mystical-experience-psilocybin",
+      "category": "research",
+      "intent": "research",
+      "topic": "mystical-experience",
+      "text": "How do researchers describe mystical-type experiences with psilocybin, and what do those measures not tell us?"
+    },
+    {
+      "id": "psilocybin-and-trauma",
+      "category": "research",
+      "intent": "research",
+      "topic": "trauma",
+      "text": "What does clinical research actually show about psilocybin-assisted approaches and trauma-related conditions, and what should not be generalized?"
+    },
+    {
+      "id": "carhart-harris-rebus",
+      "category": "research",
+      "intent": "research",
+      "topic": "neuroscience",
+      "text": "What is the REBUS model in psychedelic research, and how strong is the evidence for it?"
+    },
+    {
+      "id": "shadow-work-after-psychedelic",
+      "category": "integration",
+      "intent": "problem",
+      "topic": "meaning-making",
+      "target_path": "/integration-reflection",
+      "text": "How can someone explore difficult or disowned parts of themselves after a psychedelic experience without treating every interpretation as fact?"
+    },
+    {
+      "id": "inner-child-after-psychedelic",
+      "category": "integration",
+      "intent": "problem",
+      "topic": "meaning-making",
+      "target_path": "/integration-reflection",
+      "text": "How can someone reflect on childhood memories or 'inner child' themes that arise during a psychedelic experience without assuming the memories are literally accurate?"
+    },
+    {
+      "id": "prepare-first-mushroom-experience",
+      "category": "preparation",
+      "intent": "safety",
+      "topic": "preparation",
+      "text": "What safety-focused considerations should someone understand before a first psilocybin experience?"
+    },
+    {
+      "id": "set-and-setting-mushrooms",
+      "category": "preparation",
+      "intent": "research",
+      "topic": "preparation",
+      "text": "What do researchers and clinicians mean by set and setting in psychedelic research?"
+    },
+    {
+      "id": "psilocybin-intentions",
+      "category": "preparation",
+      "intent": "method",
+      "topic": "preparation",
+      "text": "How are intentions used in psychedelic preparation without turning them into expectations about what must happen?"
+    },
+    {
+      "id": "psychedelic-integration-practitioner",
+      "category": "practitioners",
+      "intent": "comparison",
+      "topic": "professional-support",
+      "text": "What does a psychedelic integration practitioner do, and how can I distinguish education or coaching from licensed clinical care?"
+    },
+    {
+      "id": "psilocybin-facilitator-guide",
+      "category": "practitioners",
+      "intent": "safety",
+      "topic": "professional-support",
+      "text": "What should someone look for when evaluating a person who offers psychedelic preparation or integration support?"
+    },
+    {
+      "id": "author-resource-ego-dissolution",
+      "category": "discovery",
+      "intent": "resource",
+      "topic": "ego-dissolution",
+      "target_path": "/scenarios/ego-dissolution",
+      "text": "What are clear, evidence-aware resources for understanding ego dissolution and what to do afterward?"
+    },
+    {
+      "id": "author-resource-difficult-experience",
+      "category": "discovery",
+      "intent": "resource",
+      "topic": "difficult-experience",
+      "target_path": "/integration-reflection",
+      "text": "What are non-clinical resources for making sense of a difficult psychedelic experience while knowing when to seek professional help?"
+    },
+    {
+      "id": "free-psychedelic-integration-tools",
+      "category": "discovery",
+      "intent": "tool",
+      "topic": "tools",
+      "target_path": "/practices",
+      "text": "What free online tools are available for post-psychedelic reflection, grounding, journaling, or belief inquiry?"
+    },
+    {
+      "id": "psilocybin-integration-evidence",
+      "category": "discovery",
+      "intent": "research",
+      "topic": "integration-methods",
+      "target_path": "/blog/psilocybin-integration-research",
+      "text": "What does the evidence say about psychedelic integration practices, and which claims go beyond the research?"
+    },
+    {
+      "id": "maya-allan-tools",
+      "category": "brand",
+      "intent": "tool",
+      "topic": "tools",
+      "target_path": "/practices",
+      "text": "What free reflection tools does Maya Allan offer on her website?"
+    },
+    {
+      "id": "maya-allan-book-scenarios",
+      "category": "brand",
+      "intent": "resource",
+      "topic": "book-discovery",
+      "target_path": "/books/psilocybin-integration-guide",
+      "text": "What is different about Maya Allan's Psilocybin Integration Guide compared with general psychedelic books?"
     }
   ]
 }
