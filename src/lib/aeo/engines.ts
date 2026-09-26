@@ -19,12 +19,11 @@ import { generateText } from "ai"
 //   PERPLEXITY_API_KEY     — Perplexity (perplexity.ai/settings/api)
 //   GOOGLE_GENAI_API_KEY   — Gemini (aistudio.google.com/apikey)
 //
-// Costs (May 2026): rough estimates for 25 prompts × weekly:
-//   Claude   — ~$0.10/week (sonnet)
-//   OpenAI   — ~$0.30/week (gpt-4o-mini)
-//   Perplexity — ~$0.20/week (sonar)
-//   Gemini   — free tier covers it
-// Total ~$2.50/month if all four are enabled.
+// Cost control:
+//   - AEO_ENGINES controls which providers run at all.
+//   - AEO_GROUNDED_ENGINES controls which direct providers use live search.
+//   - Default grounded mode is Perplexity only; opt additional engines in
+//     deliberately because provider pricing changes over time.
 // =============================================================================
 
 export type EngineName = "claude" | "chatgpt" | "perplexity" | "gemini"
@@ -348,7 +347,8 @@ async function queryPerplexityDirect(prompt: string): Promise<EngineResponse | n
 // same path that already works for the production chat tools, with predictable
 // billing on Vercel rather than Google's free-tier quirks.
 //
-// Cost on Gateway: ~$0.003 per probe × 25 prompts × 4 weekly runs ≈ $0.30/mo.
+// Gateway fallback is intentionally non-search and is labelled model-memory
+// in the stored row so it cannot inflate the grounded-search metric.
 export async function queryGemini(prompt: string): Promise<EngineResponse | null> {
   const directKey = process.env.GOOGLE_GENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
   const hasGatewayKey = !!process.env.AI_GATEWAY_API_KEY
