@@ -7,6 +7,7 @@ import {
   AUTHOR_JOB_TITLE,
   BOOK_PROFILES,
   BOOK_ASINS,
+  BOOK_PLATFORM_IDENTIFIERS,
   BOOK_EDITIONS,
   AUTHOR_ID,
   WEBSITE_ID,
@@ -299,9 +300,12 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
   if (book.isbn && !hasEditionMap) {
     bookIdentifiers.push({ "@type": "PropertyValue", propertyID: "ISBN", value: book.isbn })
   }
-  const asin = BOOK_ASINS[book.slug]
-  if (asin) {
-    bookIdentifiers.push({ "@type": "PropertyValue", propertyID: "ASIN", value: asin })
+  const formatAsins = BOOK_ASINS[book.slug] ?? {}
+  if (!hasEditionMap) {
+    const legacyAsin = Object.values(formatAsins)[0]
+    if (legacyAsin) {
+      bookIdentifiers.push({ "@type": "PropertyValue", propertyID: "ASIN", value: legacyAsin })
+    }
   }
 
   const authorIdentifiers = authorIdentifierNodes()
@@ -372,6 +376,17 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
           url: siteUrl,
         },
         exampleOfWork: { "@id": workId },
+        identifier: [
+          { "@type": "PropertyValue", propertyID: "ISBN", value: edition.isbn },
+          ...(formatAsins[edition.key]
+            ? [{ "@type": "PropertyValue", propertyID: "ASIN", value: formatAsins[edition.key] }]
+            : []),
+          ...((BOOK_PLATFORM_IDENTIFIERS[book.slug]?.[edition.key] ?? []).map((id) => ({
+            "@type": "PropertyValue",
+            propertyID: id.propertyID,
+            value: id.value,
+          }))),
+        ],
         url: `${siteUrl}/books/${book.slug}`,
       })),
     }),
