@@ -47,6 +47,7 @@ export function ResetChat() {
   const [input, setInput] = useState("")
   const [sessionComplete, setSessionComplete] = useState(false)
   const [userRequestedExport, setUserRequestedExport] = useState(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -72,9 +73,15 @@ export function ResetChat() {
     if (container && messages.length > 0) {
       // Scroll the PAGE (not an inner box) to the latest message, unless the
       // user has scrolled up to read back.
-      const nearBottom =
-        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 240
-      if (nearBottom) window.scrollTo({ top: document.documentElement.scrollHeight })
+      const chat = chatContainerRef.current
+      const chatBottom = chat
+        ? window.scrollY + chat.getBoundingClientRect().bottom
+        : window.scrollY + container.getBoundingClientRect().bottom
+      const viewportBottom = window.scrollY + window.innerHeight
+      const nearBottom = viewportBottom >= chatBottom - 240
+      if (nearBottom) {
+        window.scrollTo({ top: Math.max(0, chatBottom - window.innerHeight) })
+      }
     }
 
     const userMessages = messages.filter((m) => m.role === "user").length
@@ -173,7 +180,7 @@ export function ResetChat() {
     .filter((m) => m.text.length > 0)
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div ref={chatContainerRef} className="flex-1 flex flex-col">
       {/* ── Messages Area ──────────────────────────────────── */}
       <div
         ref={messagesContainerRef}
