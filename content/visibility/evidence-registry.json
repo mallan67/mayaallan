@@ -1,0 +1,96 @@
+{
+  "$schema": "Claim/evidence registry for high-stakes research statements. This registry does not replace citations in visible content; it records provenance, evidence class, limitations, and the pages that rely on each claim.",
+  "claims": [
+    {
+      "id": "reconsolidation-animal-established",
+      "claim": "Retrieved consolidated memories can, under some conditions, re-enter a changeable state before being stored again; this is well established in animal research.",
+      "evidenceClass": "primary-animal-research",
+      "status": "supported-with-scope-limit",
+      "sources": [
+        {
+          "citation": "Nader K, Schafe GE, LeDoux JE (2000), Nature 406:722-726",
+          "url": "https://doi.org/10.1038/35021052"
+        }
+      ],
+      "limitations": "Animal fear-memory research does not by itself establish neural rewriting of emotional beliefs in humans or during psychedelic integration.",
+      "usedBy": [
+        "/blog/psilocybin-integration-research"
+      ]
+    },
+    {
+      "id": "human-reconsolidation-contested",
+      "claim": "Human memory-reconsolidation findings are mixed and the mechanism remains contested.",
+      "evidenceClass": "critical-review-and-verification",
+      "status": "supported",
+      "sources": [
+        {
+          "citation": "Chalkia A, Van Oudenhove L, Beckers T (2020), Cortex 129:510-525",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7115860/"
+        },
+        {
+          "citation": "Elsey JWB, Van Ast VA, Kindt M (2018), Psychological Bulletin 144(8):797-848",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/29792441/"
+        }
+      ],
+      "limitations": "Evidence does not establish a specific post-psilocybin reconsolidation protocol.",
+      "usedBy": [
+        "/blog/psilocybin-integration-research",
+        "/integration-reflection"
+      ]
+    },
+    {
+      "id": "rebus-theoretical-model",
+      "claim": "REBUS is an influential theoretical model proposing that psychedelics relax the precision of high-level beliefs.",
+      "evidenceClass": "theoretical-model",
+      "status": "theory-not-finding",
+      "sources": [
+        {
+          "citation": "Carhart-Harris RL, Friston KJ (2019), Pharmacological Reviews 71(3):316-344",
+          "url": "https://doi.org/10.1124/pr.118.017160"
+        }
+      ],
+      "limitations": "The model is not itself proof that a particular belief changes or that a specific integration practice works.",
+      "usedBy": [
+        "/blog/psilocybin-integration-research"
+      ]
+    },
+    {
+      "id": "psychedelic-integration-no-validated-best-protocol",
+      "claim": "The published literature does not establish one validated, universally agreed psychedelic-integration protocol or one integration framework proven superior to others.",
+      "evidenceClass": "reviews",
+      "status": "supported",
+      "sources": [
+        {
+          "citation": "Bathje GJ, Majeski E, Kudowor M (2022), Frontiers in Psychology 13:824077",
+          "url": "https://doi.org/10.3389/fpsyg.2022.824077"
+        }
+      ],
+      "limitations": "Absence of comparative evidence is not evidence that every integration practice is equally effective or ineffective.",
+      "usedBy": [
+        "/blog/psilocybin-integration-research",
+        "/integration-journal",
+        "/integration-reflection"
+      ]
+    },
+    {
+      "id": "psilocybin-plasticity-preclinical",
+      "claim": "Preclinical work has found structural-plasticity changes after psychedelic exposure in cells and animals.",
+      "evidenceClass": "preclinical-primary-research",
+      "status": "supported-with-scope-limit",
+      "sources": [
+        {
+          "citation": "Ly C et al. (2018), Cell Reports 23(11):3170-3182",
+          "url": "https://doi.org/10.1016/j.celrep.2018.05.022"
+        },
+        {
+          "citation": "Shao LX et al. (2021), Neuron 109(16)",
+          "url": "https://doi.org/10.1016/j.neuron.2021.06.008"
+        }
+      ],
+      "limitations": "Preclinical plasticity findings do not establish a human therapeutic window or the efficacy of a post-experience practice.",
+      "usedBy": [
+        "/blog/psilocybin-integration-research"
+      ]
+    }
+  ]
+}
