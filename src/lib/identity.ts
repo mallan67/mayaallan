@@ -205,6 +205,21 @@ export const BOOK_EDITIONS: Record<string, BookEditionIdentity[]> = {
   ],
 }
 
+export const BOOK_DISCOVERED_RETAILERS: Record<
+  string,
+  Array<{ name: string; url: string; format: "ebook" | "paperback" | "hardcover" | "audiobook" }>
+> = {
+  "psilocybin-integration-guide": [
+    { name: "Walmart", url: "https://www.walmart.com/ip/Psilocybin-Integration-Guide-40-Real-Scenarios-for-Navigating-What-You-See-Feel-Experience-Paperback-9798994148839/18999463307", format: "paperback" },
+    { name: "Foyles", url: "https://www.foyles.co.uk/book/psilocybin-integration-guide/maya-allan/9798994148839", format: "paperback" },
+    { name: "Hatchards", url: "https://www.hatchards.co.uk/book/psilocybin-integration-guide/maya-allan/9798994148839", format: "paperback" },
+    { name: "Adlibris", url: "https://www.adlibris.com/sv/bok/psilocybin-integration-guide-9798994148839", format: "paperback" },
+    { name: "Bol", url: "https://www.bol.com/nl/nl/p/psilocybin-integration-guide/9300000253222512/", format: "paperback" },
+    { name: "Feltrinelli", url: "https://www.lafeltrinelli.it/psilocybin-integration-guide-40-real-libro-inglese-maya-allan/e/9798994148839", format: "paperback" },
+    { name: "eBay France", url: "https://www.ebay.fr/itm/188780563782", format: "paperback" },
+  ],
+}
+
 // -----------------------------------------------------------------------------
 // BOOK_MACHINE_SUMMARIES — machine-facing book descriptions
 // -----------------------------------------------------------------------------
