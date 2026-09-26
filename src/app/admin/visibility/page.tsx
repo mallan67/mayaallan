@@ -11,6 +11,7 @@ import { visualAssetReadiness } from "@/lib/visibility/visual-readiness"
 import { VISIBILITY_GRAPH } from "@/lib/visibility/topic-graph"
 import { EVIDENCE_REGISTRY } from "@/lib/visibility/evidence-registry"
 import { loadPrompts } from "@/lib/aeo/prompts"
+import { CoveragePanel } from "./CoveragePanel"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -85,6 +86,17 @@ export default async function VisibilityPage() {
         />
         <Metric label="Citation-gap domains" value={String(gaps.length)} />
       </section>
+
+      <CoveragePanel
+        graphNodes={VISIBILITY_GRAPH.length}
+        graphLinks={graphLinks}
+        evidenceRecords={EVIDENCE_REGISTRY.length}
+        prompts={prompts.length}
+        promptIntents={promptIntents}
+        visualReady={visualReadyCount}
+        visualTotal={visuals.length}
+        readiness={readinessItems}
+      />
 
       <section>
         <h2 className="text-lg font-semibold mb-3">Google Search Console</h2>
