@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import type { NextFetchEvent, NextRequest } from "next/server"
+import { detectCrawler, recordCrawlerHit } from "@/lib/crawler-telemetry"
 
 // Supported i18n locales — keep in sync with src/lib/identity.ts LOCALES.
 // Duplicated here because middleware runs at the edge before module resolution
