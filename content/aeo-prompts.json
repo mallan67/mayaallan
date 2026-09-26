@@ -125,6 +125,54 @@
       "id": "psilocybin-40-scenarios",
       "category": "brand",
       "text": "Are there any books that walk through specific scenarios that can come up during a psilocybin journey?"
+    },
+    {
+      "id": "free-guided-integration-tool",
+      "category": "tools",
+      "intent": "tool",
+      "text": "Is there a free guided reflection tool for processing a meaningful psychedelic experience afterward?"
+    },
+    {
+      "id": "evidence-aware-integration-resources",
+      "category": "integration",
+      "intent": "resource",
+      "text": "What are evidence-aware resources for making sense of a difficult psychedelic experience after it is over?"
+    },
+    {
+      "id": "integration-journal-vs-practitioner",
+      "category": "integration",
+      "intent": "comparison",
+      "text": "How is using an integration journal different from working with a therapist or integration practitioner?"
+    },
+    {
+      "id": "ego-dissolution-afterward",
+      "category": "journey",
+      "intent": "problem",
+      "text": "What can help when an ego dissolution experience still feels unsettling afterward?"
+    },
+    {
+      "id": "guided-belief-inquiry",
+      "category": "tools",
+      "intent": "tool",
+      "text": "Is there a guided tool for exploring a recurring limiting belief without replacing it with an affirmation?"
+    },
+    {
+      "id": "grounding-after-intense-experience",
+      "category": "tools",
+      "intent": "tool",
+      "text": "What is a gentle grounding practice when I feel overwhelmed after an intense experience?"
+    },
+    {
+      "id": "scenario-based-psilocybin-guide",
+      "category": "discovery",
+      "intent": "discovery",
+      "text": "Who has written a guide organized around specific scenarios that can arise during a psilocybin journey?"
+    },
+    {
+      "id": "integration-outcomes-evidence",
+      "category": "research",
+      "intent": "research",
+      "text": "What evidence exists that psychedelic integration techniques improve outcomes?"
     }
   ]
 }
