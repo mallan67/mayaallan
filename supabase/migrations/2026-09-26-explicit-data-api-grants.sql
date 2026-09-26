@@ -15,42 +15,62 @@
 --   - Therefore these grants are deliberately limited to service_role.
 --   - Do NOT broaden these grants to anon/authenticated without an explicit
 --     product/security decision and appropriate RLS policies.
+--
+-- Fresh-database safety:
+--   - Some historical feature tables are created by manually-run SQL scripts,
+--     not by the dated migration chain.
+--   - This remediation migration therefore grants only relations that already
+--     exist instead of assuming every historical table is present.
+--   - Serial sequences are discovered from each existing table's id column and
+--     granted only when a sequence actually exists.
 -- =============================================================================
 
 BEGIN;
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
-  public.books,
-  public.retailers,
-  public.book_retailer_links,
-  public.navigation_items,
-  public.site_settings,
-  public.email_subscribers,
-  public.contact_submissions,
-  public.orders,
-  public.download_tokens,
-  public.events,
-  public.media_items,
-  public.admin_auth,
-  public.pending_paypal_orders,
-  public.marketing_visitors,
-  public.marketing_events
-TO service_role;
+DO $$
+DECLARE
+  table_name TEXT;
+  relation_name TEXT;
+  sequence_name TEXT;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY[
+    'books',
+    'retailers',
+    'book_retailer_links',
+    'navigation_items',
+    'site_settings',
+    'email_subscribers',
+    'contact_submissions',
+    'orders',
+    'download_tokens',
+    'events',
+    'media_items',
+    'admin_auth',
+    'pending_paypal_orders',
+    'marketing_visitors',
+    'marketing_events'
+  ]
+  LOOP
+    relation_name := format('public.%I', table_name);
 
-GRANT USAGE, SELECT ON SEQUENCE
-  public.books_id_seq,
-  public.retailers_id_seq,
-  public.book_retailer_links_id_seq,
-  public.navigation_items_id_seq,
-  public.site_settings_id_seq,
-  public.email_subscribers_id_seq,
-  public.contact_submissions_id_seq,
-  public.orders_id_seq,
-  public.download_tokens_id_seq,
-  public.events_id_seq,
-  public.media_items_id_seq,
-  public.pending_paypal_orders_id_seq,
-  public.marketing_events_id_seq
-TO service_role;
+    IF to_regclass(relation_name) IS NOT NULL THEN
+      EXECUTE format(
+        'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.%I TO service_role',
+        table_name
+      );
+
+      -- UUID/non-serial primary keys and plain INTEGER ids have no owned
+      -- sequence; pg_get_serial_sequence returns NULL for those tables.
+      sequence_name := pg_get_serial_sequence(relation_name, 'id');
+      IF sequence_name IS NOT NULL THEN
+        EXECUTE format(
+          'GRANT USAGE, SELECT ON SEQUENCE %s TO service_role',
+          sequence_name
+        );
+      END IF;
+    END IF;
+  END LOOP;
+END
+$$;
 
 COMMIT;
