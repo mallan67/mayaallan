@@ -83,6 +83,16 @@ test("FROZEN EXCEPTION: the scenario page is untouched and still carries the han
 
 const DB_IDENTITY_TOKENS = /author_name|author_bio|authorName|authorBio/
 
+test("identity.ts contains the one approved author bio and rejects prior variants", () => {
+  assert.match(identity, /Deep inner clarity is a fundamental human birthright/)
+  assert.match(identity, /no one can do this inner work for us/)
+  assert.match(identity, /This is practical, grounded work: self-knowledge and radical acceptance/)
+  assert.match(identity, /explorer of consciousness—not an authority, but a provider of information/)
+  assert.doesNotMatch(identity, /no one can heal us but ourselves/)
+  assert.doesNotMatch(identity, /True healing is a practical, grounded process/)
+  assert.doesNotMatch(identity, /Maya Allan is an author and educator focused on psilocybin integration/)
+})
+
 test("Home renders canonical AUTHOR_NAME / AUTHOR_BIO and reads only the author photo from site_settings", () => {
   assert.match(home, /import\s*\{[^}]*\bAUTHOR_NAME\b[^}]*\}\s*from\s*"@\/lib\/identity"/)
   assert.match(home, /import\s*\{[^}]*\bAUTHOR_BIO\b[^}]*\}\s*from\s*"@\/lib\/identity"/)

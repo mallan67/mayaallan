@@ -166,17 +166,25 @@ Additional tags for Goodreads / BookBub / LibraryThing (descriptive of the book'
 
 ---
 
-## Author bio variants
+## Canonical author bio
 
-Derived directly from the canonical `AUTHOR_BIO` and `AUTHOR_JOB_TITLE` in `src/lib/identity.ts`. Do not add credentials, lived psychedelic experience, therapeutic qualifications, practitioner status, or clinical authority. If `identity.ts` changes, regenerate these.
+Use the canonical `AUTHOR_BIO` from `src/lib/identity.ts` exactly. Do not create short, medium, retailer-specific, SEO-specific, or platform-specific biography variants.
 
-### Short (~50 words)
-
-> Maya Allan is an author and educator focused on psilocybin integration, post-journey reflection, and self-inquiry. She writes non-clinical, educational resources — including the Psilocybin Integration Guide — that help readers make sense of their own experiences. Free reflection tools and more writing are at mayaallan.com.
-
-### Medium (~80 words)
-
-> Maya Allan is an author and educator focused on psilocybin integration, post-journey reflection, and self-inquiry. She writes non-clinical, educational resources — including the Psilocybin Integration Guide — that help readers make sense of their own experiences and build a personal reflective practice. Her work centers on personal agency: the meaning-making after an experience is the reader's own to do. Free reflection tools and integration resources are available at mayaallan.com.
+> Deep inner clarity is a fundamental human birthright. It is a capacity we all possess, though it is often buried under the noise of inherited narratives and the pressure of who we are "supposed" to be.
+>
+> My work is built on a simple conviction: no one can do this inner work for us. This is practical, grounded work: self-knowledge and radical acceptance. It happens when we stop seeking external approval, drop the weight of inherited guilt, and finally feel at home in our own skin.
+>
+> The Foundation: My own path involved years of navigating these complexities, which led me to value clear, evidence-based tools over abstract theories. I view myself as an explorer of consciousness—not an authority, but a provider of information. My focus is on reclaiming personal agency by examining the factors that shape our daily experience:
+>
+> Belief Systems: How the stories we believe dictate the lives we lead.
+>
+> Ancestry & Memory: Understanding how the past influences our present choices and biology.
+>
+> Mental Reshaping: How the mind forms, and how it can be consciously reshaped.
+>
+> Your Journey: Through my writing, I offer structure and insights to help you trust your own perception. My goal is to empower you to question what you’ve inherited and to step fully into the authorship of your own transformation.
+>
+> Awareness is not a destination to reach, but a flow to cultivate. It requires a kind relationship with yourself, a regulated nervous system, and a willingness to be exactly who you are. To know and accept yourself is to be "home." Others are here to share the journey, but the return to yourself is a path only you can take.
 
 ---
 
