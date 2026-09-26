@@ -23,7 +23,7 @@ import { loadRecentRuns, allRows, type CitationRow, type AeoRun } from "@/lib/ae
 import { aggregateByEngine, aggregateBySearchCapability, aggregateByPrompt, aggregateByUrl, isClassifiedRow, type DimensionCounts } from "@/lib/aeo/aggregate"
 import { aggregateExternalSources } from "@/lib/aeo/source-gaps"
 import { loadPrompts } from "@/lib/aeo/prompts"
-import { compareDiagnosticRuns, diagnoseCitationRow, summarizeDiagnostics, type CitationDiagnosticSpec } from "@/lib/aeo/citation-diagnostics"
+import { compareDiagnosticRuns, summarizeDiagnostics, type CitationDiagnosticSpec } from "@/lib/aeo/citation-diagnostics"
 import { RunNowButton } from "./RunNowButton"
 import { CopyButton } from "./CopyButton"
 import { ClearAllButton } from "./ClearAllButton"
