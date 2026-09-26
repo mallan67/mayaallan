@@ -89,6 +89,42 @@ function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
 }
 
+function groundedPrompt(prompt: string): string {
+  return [
+    "Search the live web before answering this question. Use current web sources and include source citations when the provider supports them.",
+    "Answer the reader's question naturally; do not mention this measurement instruction.",
+    "",
+    prompt,
+  ].join("\n")
+}
+
+function hasSearchEvidence(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false
+  if (Array.isArray(value)) return value.some(hasSearchEvidence)
+
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    const normalizedKey = key.toLowerCase()
+    if (
+      normalizedKey.includes("groundingmetadata") ||
+      normalizedKey.includes("grounding_metadata") ||
+      normalizedKey.includes("websearchqueries") ||
+      normalizedKey.includes("web_search_queries")
+    ) {
+      return true
+    }
+    if (
+      (key === "type" || key === "name") &&
+      typeof child === "string" &&
+      /web[_ -]?search|search_query|search_results?/i.test(child)
+    ) {
+      return true
+    }
+    if (hasSearchEvidence(child)) return true
+  }
+  return false
+}
+
+
 async function responseError(res: Response): Promise<string> {
   const text = await res.text().catch(() => "")
   return `HTTP ${res.status}${text ? `: ${text.slice(0, 1200)}` : ""}`
@@ -160,7 +196,7 @@ async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null>
       body: JSON.stringify({
         model,
         max_tokens: MAX_OUTPUT_TOKENS,
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user", content: groundedPrompt(prompt) }],
         tools: [
           {
             type: "web_search_20250305",
@@ -191,12 +227,13 @@ async function queryClaudeDirect(prompt: string): Promise<EngineResponse | null>
           .join("\n")
       : ""
 
+    const searched = hasSearchEvidence(data)
     return {
       engine: "claude",
       content,
       model,
       searchCapable: true,
-      searchMode: "grounded-search",
+      searchMode: searched ? "grounded-search" : "model-memory",
       citations: collectUrls(data),
       searchQueries: collectQueries(data),
     }
@@ -238,7 +275,7 @@ async function queryChatGPTDirect(prompt: string): Promise<EngineResponse | null
       },
       body: JSON.stringify({
         model,
-        input: prompt,
+        input: groundedPrompt(prompt),
         tools: [{ type: "web_search", search_context_size: "low" }],
         max_output_tokens: MAX_OUTPUT_TOKENS,
       }),
@@ -268,12 +305,13 @@ async function queryChatGPTDirect(prompt: string): Promise<EngineResponse | null
               .join("\n")
           : ""
 
+    const searched = hasSearchEvidence(data?.output ?? data)
     return {
       engine: "chatgpt",
       content,
       model,
       searchCapable: true,
-      searchMode: "grounded-search",
+      searchMode: searched ? "grounded-search" : "model-memory",
       citations: collectUrls(data?.output ?? data),
       searchQueries: collectQueries(data?.output ?? data),
     }
@@ -315,7 +353,7 @@ async function queryPerplexityDirect(prompt: string): Promise<EngineResponse | n
       },
       body: JSON.stringify({
         model,
-        messages: [{ role: "user", content: prompt }],
+        messages: [{ role: "user", content: groundedPrompt(prompt) }],
         max_tokens: MAX_OUTPUT_TOKENS,
       }),
       cache: "no-store",
@@ -387,7 +425,7 @@ async function queryGeminiDirect(prompt: string): Promise<EngineResponse | null>
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        contents: [{ role: "user", parts: [{ text: groundedPrompt(prompt) }] }],
         tools: [{ google_search: {} }],
         generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
       }),
@@ -412,12 +450,13 @@ async function queryGeminiDirect(prompt: string): Promise<EngineResponse | null>
       : ""
     const grounding = candidate?.groundingMetadata ?? candidate?.grounding_metadata ?? {}
 
+    const searched = hasSearchEvidence(grounding)
     return {
       engine: "gemini",
       content,
       model,
       searchCapable: true,
-      searchMode: "grounded-search",
+      searchMode: searched ? "grounded-search" : "model-memory",
       citations: collectUrls(grounding),
       searchQueries: uniqueStrings([
         ...(Array.isArray(grounding?.webSearchQueries) ? grounding.webSearchQueries : []),
