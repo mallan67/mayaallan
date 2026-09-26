@@ -2,6 +2,9 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { IntegrationChat } from "@/components/IntegrationChat"
 import { Sparkles } from "lucide-react"
+import { jsonLdScript } from "@/lib/json-ld"
+import { SITE_URL, AUTHOR_NAME } from "@/lib/identity"
+import { generateBreadcrumbSchema, generateSoftwareApplicationSchema } from "@/lib/structured-data"
 
 export const metadata: Metadata = {
   title: "Integration Tool — Help a New Insight or Experience Land",
@@ -32,6 +35,24 @@ export const metadata: Metadata = {
 }
 
 export default function IntegrationPage() {
+  const url = `${SITE_URL}/integration-reflection`
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: SITE_URL },
+    { name: "Integration Reflection", url },
+  ])
+  const softwareSchema = generateSoftwareApplicationSchema({
+    name: "Integration Reflection",
+    url,
+    description:
+      "A free AI-guided reflection tool for placing a new experience or insight alongside an older pattern and exploring what changes when both are held together.",
+    featureList: [
+      "Post-experience reflection",
+      "Juxtaposition-informed prompts",
+      "User-led meaning-making",
+      "No signup required to begin",
+    ],
+  })
+
   return (
     <>
       <style>{`
@@ -39,6 +60,8 @@ export default function IntegrationPage() {
       `}</style>
 
       <div className="bg-white min-h-[calc(100dvh-71px)] flex flex-col">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbSchema) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(softwareSchema) }} />
         <div className="px-5 sm:px-8 pt-4 pb-3 text-center max-w-2xl mx-auto">
           <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-charcoal tracking-[-0.02em] mb-1.5">
             Integration
@@ -68,6 +91,50 @@ export default function IntegrationPage() {
         <div className="max-w-3xl mx-auto w-full px-3 sm:px-6 flex-1 flex flex-col">
           <IntegrationChat />
         </div>
+
+        <section className="w-full border-t border-[#E8ECF0] mt-8">
+          <div className="max-w-3xl mx-auto px-5 sm:px-8 py-12 space-y-10 text-charcoal-mid">
+            <div>
+              <h2 className="font-serif text-2xl font-semibold text-charcoal mb-3">What Integration Reflection does</h2>
+              <p className="leading-relaxed">
+                Integration Reflection is a guided meaning-making tool for after an experience, insight, or emotional
+                shift. It helps you describe what felt new, notice an older pattern that does not fully fit the new
+                experience, and hold both in view without being told what the experience is supposed to mean.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold text-charcoal mb-2">From insight to ordinary life</h3>
+                <p className="text-sm leading-relaxed">
+                  The conversation slows down the urge to turn a powerful moment into a sweeping conclusion. It asks
+                  what actually happened, what changed in your perception, and what small implications are worth testing
+                  in daily life.
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-charcoal mb-2">Juxtaposition, not replacement</h3>
+                <p className="text-sm leading-relaxed">
+                  The tool is informed by Coherence Therapy&apos;s use of juxtaposition: an older expectation is held
+                  alongside contradictory lived experience. It does not claim that a chat session causes memory
+                  reconsolidation or installs a new belief.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm leading-relaxed">
+              See{" "}
+              <Link href="/methods#integration-reflection" className="text-liquid-blue hover:underline">
+                Methods &amp; Attributions
+              </Link>{" "}
+              and the{" "}
+              <Link href="/blog/psilocybin-integration-research" className="text-liquid-blue hover:underline">
+                integration research article
+              </Link>{" "}
+              for the evidence and its limits. {AUTHOR_NAME} is an author and educator, not a clinician.
+            </p>
+          </div>
+        </section>
       </div>
     </>
   )
