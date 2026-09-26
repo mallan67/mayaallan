@@ -52,6 +52,9 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
             <Link href="/admin/aeo" className="hover:opacity-70">
               AI Search
             </Link>
+            <Link href="/admin/search-visibility" className="hover:opacity-70">
+              Search Visibility
+            </Link>
             <Link href="/" className="hover:opacity-70">
               View Site
             </Link>
