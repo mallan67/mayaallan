@@ -567,7 +567,7 @@ export default async function BookPage({ params }: BookPageProps) {
                         {formatType}
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {(links as any[]).map((link: any) => (
+                        {links.map((link) => (
                           <a
                             key={link.id}
                             href={link.url}
