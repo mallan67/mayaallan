@@ -9,7 +9,7 @@ This file records the branch consolidation decision so future work does not recr
 
 ## Preserve temporarily
 
-- `audiobook-approved-manifest` — active audiobook review evidence and comparison artifacts.
+- `audiobook-approved-manifest` — audiobook review evidence and comparison artifacts. **Not approved yet**; Maya needs to review the audiobook again before any approval decision.
 - `feat/analytics-visibility-2026-09-07` — blocked source branch. PR #57 is closed; retain only until its useful analytics pieces are selectively rebuilt with the two known attribution defects fixed.
 - `work/site-visibility` — research archive. PR #58 is closed; contains September 24 crawl/ranking/book ecosystem/AI-search evidence and strategy. Do not merge as application code.
 
