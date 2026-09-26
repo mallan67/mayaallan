@@ -12,6 +12,8 @@ export type PostFrontmatter = {
   tool_link?: string
   tool_name?: string
   tags?: string[]
+  /** Optional 40-120 word direct answer displayed near the top for readers and parsers. */
+  shortAnswer?: string
 }
 
 export type PostSummary = PostFrontmatter & {
@@ -63,6 +65,7 @@ export async function listPosts(): Promise<PostSummary[]> {
       tool_link: data.tool_link ? String(data.tool_link) : undefined,
       tool_name: data.tool_name ? String(data.tool_name) : undefined,
       tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
+      shortAnswer: data.shortAnswer ? String(data.shortAnswer) : undefined,
     })
   }
 
@@ -93,6 +96,7 @@ export async function getPost(slug: string): Promise<PostFull | null> {
     tool_link: data.tool_link ? String(data.tool_link) : undefined,
     tool_name: data.tool_name ? String(data.tool_name) : undefined,
     tags: Array.isArray(data.tags) ? data.tags.map(String) : undefined,
+    shortAnswer: data.shortAnswer ? String(data.shortAnswer) : undefined,
     body: content,
   }
 }
