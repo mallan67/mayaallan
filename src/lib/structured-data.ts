@@ -205,7 +205,7 @@ export const AUTHOR_FAQS: FAQItem[] = [
   },
   {
     question: "What does Maya Allan write about?",
-    answer: "Maya Allan writes books, essays, and reflective resources about consciousness, self-inquiry, personal agency, and transformative experience. Her published work includes the Psilocybin Integration Guide.",
+    answer: "Maya Allan writes about psilocybin integration, post-journey reflection, and self-inquiry. Her books offer educational guidance for readers reflecting on and integrating their own psychedelic experiences.",
   },
   {
     question: "What is psilocybin integration?",
@@ -213,7 +213,7 @@ export const AUTHOR_FAQS: FAQItem[] = [
   },
   {
     question: "Who are Maya Allan's books for?",
-    answer: "Maya Allan's books are written for curious readers interested in consciousness, self-inquiry, personal agency, reflection, and making meaning from transformative experiences.",
+    answer: "Maya Allan's books are written for readers navigating their own psilocybin experiences — anyone seeking clear, educational guidance for reflection, integration, and self-agency.",
   },
 ]
 
