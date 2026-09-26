@@ -18,6 +18,8 @@
 // =============================================================================
 
 export const SITE_URL = "https://www.mayaallan.com"
+export const AUTHOR_ID = `${SITE_URL}/#maya-allan`
+export const WEBSITE_ID = `${SITE_URL}/#website`
 
 // -----------------------------------------------------------------------------
 // AUTHOR_PROFILES — every place "Maya Allan" exists online as a verified entity
@@ -28,6 +30,7 @@ export const SITE_URL = "https://www.mayaallan.com"
 export const AUTHOR_PROFILES: string[] = [
   // Social
   "https://www.instagram.com/maya.allan66/", // VERIFIED 2026-05-19 (first post live)
+  "https://www.linkedin.com/in/mayaallan", // VERIFIED live 2026-09-26
   // "https://x.com/mayaallan",                       // TODO: claim or remove
   // "https://www.facebook.com/mayaallan",            // TODO: claim or remove
   // "https://www.linkedin.com/in/mayaallan",         // TODO: claim
@@ -51,7 +54,7 @@ export const AUTHOR_PROFILES: string[] = [
   // "https://www.amazon.com/author/mayaallan",       // TODO: claim Amazon Author Central (highest single-source ROI)
   // "https://www.bookbub.com/profile/maya-allan",    // TODO: claim
   // "https://app.thestorygraph.com/profile/mayaallan", // TODO: claim
-  // "https://openlibrary.org/authors/OLXXXXXA/Maya_Allan", // TODO: add via openlibrary.org
+  "https://openlibrary.org/authors/OL16288546A/Maya_Allan", // VERIFIED live 2026-09-26
   // "https://www.librarything.com/author/allanmaya",  // TODO: claim
 
   // Knowledge / identifier services (these light up Knowledge Panels)
@@ -85,6 +88,7 @@ export const BOOK_PROFILES: Record<string, string[]> = {
     "https://www.abebooks.com/9798994148839/Psilocybin-Integration-Guide-Real-Scenarios/plp",
     "https://www.goodreads.com/book/show/245299940-psilocybin-integration-guide", // VERIFIED 2026-05-19
     "https://play.google.com/store/books/details/Maya_Allan_Psilocybin_Integration_Guide?id=HvafEQAAQBAJ", // VERIFIED 2026-05-19 ($9.99 ebook)
+    "https://openlibrary.org/works/OL45177926W", // VERIFIED via Open Library author works API 2026-09-26
 
     // TODO: paste the actual URLs once confirmed (Maya: these listings exist
     // but the canonical URLs weren't programmatically findable — copy from the
@@ -109,6 +113,56 @@ export const BOOK_PROFILES: Record<string, string[]> = {
 // -----------------------------------------------------------------------------
 export const BOOK_ASINS: Record<string, string> = {
   "psilocybin-integration-guide": "B0G7JWDJYQ",
+}
+
+
+// -----------------------------------------------------------------------------
+// BOOK_EDITIONS — bibliographic identity for each format/edition.
+// -----------------------------------------------------------------------------
+// A book work may have many legitimate ISBNs. Keep each ISBN attached to the
+// edition it identifies instead of flattening the whole work into books.isbn.
+// Retailer/platform-only identifiers (ASIN, GGKEY, Apple ID, etc.) belong in
+// their own identifier maps, never in the ISBN field.
+export interface BookEditionIdentity {
+  key: string
+  label: string
+  isbn: string
+  bookFormat:
+    | "https://schema.org/EBook"
+    | "https://schema.org/Paperback"
+    | "https://schema.org/Hardcover"
+    | "https://schema.org/AudiobookFormat"
+  publisher: string
+  language?: string
+}
+
+export const BOOK_EDITIONS: Record<string, BookEditionIdentity[]> = {
+  "psilocybin-integration-guide": [
+    {
+      key: "paperback",
+      label: "Paperback",
+      isbn: "9798994148839",
+      bookFormat: "https://schema.org/Paperback",
+      publisher: "Maya Allan",
+      language: "en",
+    },
+    {
+      key: "hardcover",
+      label: "Hardcover",
+      isbn: "9798994148853",
+      bookFormat: "https://schema.org/Hardcover",
+      publisher: "Maya Allan",
+      language: "en",
+    },
+    {
+      key: "ebook",
+      label: "Ebook",
+      isbn: "9798994148891",
+      bookFormat: "https://schema.org/EBook",
+      publisher: "Maya Allan",
+      language: "en",
+    },
+  ],
 }
 
 // -----------------------------------------------------------------------------
@@ -173,11 +227,10 @@ export const AUTHOR_IDENTIFIERS: AuthorIdentifier[] = [
 // Consistent identity information can reduce ambiguity across sources; it is
 // not a guaranteed ranking signal.
 export const AUTHOR_BIO =
-  "Maya Allan is an author and educator focused on psilocybin integration, post-journey " +
-  "reflection, and self-inquiry. She writes non-clinical, educational resources — including " +
-  "the Psilocybin Integration Guide — that help readers make sense of their own experiences " +
-  "and build a personal reflective practice. Her work centers on personal agency: the " +
-  "meaning-making after an experience is the reader's own to do."
+  "Maya Allan is an author and educator whose work explores consciousness, self-inquiry, " +
+  "personal agency, and how people make meaning from transformative experiences. She is the " +
+  "author of the Psilocybin Integration Guide and creates books, essays, and reflective " +
+  "resources designed to support curiosity, discernment, and independent meaning-making."
 
 export const AUTHOR_NAME = "Maya Allan"
 export const AUTHOR_JOB_TITLE = "Author and Educator"
@@ -190,7 +243,7 @@ export const AUTHOR_JOB_TITLE = "Author and Educator"
 // tagline edit can never silently reintroduce off-brand positioning into the
 // SEO surface. The tagline may still be used for visible display copy.
 export const SITE_SEO_DESCRIPTION =
-  "Maya Allan is an author and educator offering non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
+  "Official website of author Maya Allan — books, essays, and reflective resources exploring consciousness, self-inquiry, personal agency, and transformative experience."
 
 // -----------------------------------------------------------------------------
 // SUPPORTED_LOCALES — i18n configuration
