@@ -376,6 +376,7 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
           url: siteUrl,
         },
         exampleOfWork: { "@id": workId },
+        ...(edition.sameAs && edition.sameAs.length > 0 && { sameAs: edition.sameAs }),
         identifier: [
           { "@type": "PropertyValue", propertyID: "ISBN", value: edition.isbn },
           ...(formatAsins[edition.key]
