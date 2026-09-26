@@ -257,12 +257,7 @@ export function IntegrationChat() {
               {isRateLimited ? (
                 "Daily limit reached. Come back tomorrow."
               ) : (
-                <>
-                  Something went wrong. Please try again.
-                  <span className="block mt-1 text-xs text-red-500/80">
-                    Reference: {Date.now().toString(36).slice(-6)}
-                  </span>
-                </>
+                "Something went wrong. Please try again."
               )}
             </div>
           </div>
