@@ -111,8 +111,25 @@ export const BOOK_PROFILES: Record<string, string[]> = {
 // identifier alongside ISBN). Helps Google merge the Amazon listing with the
 // rest of the Book entity graph.
 // -----------------------------------------------------------------------------
-export const BOOK_ASINS: Record<string, string> = {
-  "psilocybin-integration-guide": "B0G7JWDJYQ",
+export const BOOK_ASINS: Record<string, Record<string, string>> = {
+  "psilocybin-integration-guide": {
+    ebook: "B0G765BZDL",
+    paperback: "B0G91GZMLT",
+    hardcover: "B0G7JWDJYQ",
+  },
+}
+
+export const BOOK_PLATFORM_IDENTIFIERS: Record<
+  string,
+  Record<string, Array<{ propertyID: string; value: string }>>
+> = {
+  "psilocybin-integration-guide": {
+    ebook: [
+      { propertyID: "Google Books ID", value: "HvafEQAAQBAJ" },
+    ],
+    paperback: [],
+    hardcover: [],
+  },
 }
 
 
