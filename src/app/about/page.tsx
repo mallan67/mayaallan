@@ -92,8 +92,12 @@ export default async function AboutPage() {
   const author = await getAuthorInfo()
   const authorPhotoUrl = author?.authorPhotoUrl ?? null
 
-  // ProfilePage + Person schema — explicitly identifies /about as Maya's author profile.
-  const profileSchema = generateProfilePageSchema(SITE_URL, AUTHOR_BIO, authorPhotoUrl ?? undefined)
+  // ProfilePage + Person schema — use the owner-controlled author bio when present.
+  const profileSchema = generateProfilePageSchema(
+    SITE_URL,
+    author?.authorBio || "Maya Allan is an author and educator exploring consciousness, integration, and self-agency through lived experience and inquiry.",
+    authorPhotoUrl ?? undefined,
+  )
 
   // FAQPage JSON-LD — mirrors the visible reader questions below
   const faqSchema = generateFAQSchema(AUTHOR_FAQS, `${SITE_URL}/about`)
