@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { LOCALES, type Locale } from "@/lib/identity"
+import { LOCALES } from "@/lib/identity"
 
 // =============================================================================
 // /[locale]/* — non-English locale routes.
