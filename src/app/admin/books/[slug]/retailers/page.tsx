@@ -93,7 +93,7 @@ export default function AdminBookRetailersPage({ params }: { params: Promise<{ s
         ← Back to Book
       </button>
 
-      <h1 className="text-2xl font-semibold mb-2">Manage Retailers for "{book.title}"</h1>
+      <h1 className="text-2xl font-semibold mb-2">Manage Retailers for &ldquo;{book.title}&rdquo;</h1>
       <p className="text-sm text-slate-600 mb-6">Select which retailers should display purchase links for this book</p>
 
       <div className="space-y-4">

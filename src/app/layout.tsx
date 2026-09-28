@@ -8,7 +8,7 @@ import { Footer } from "@/components/footer"
 import ConsentBanner from "@/components/ConsentBanner"
 import { GatedAnalytics, GatedMarketing } from "@/components/AnalyticsGated"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
-import { generateWebSiteSchema, generateOrganizationSchema } from "@/lib/structured-data"
+import { generateWebSiteSchema, generatePublisherSchema } from "@/lib/structured-data"
 import { DEFAULT_LOCALE, LOCALE_LABELS, LOCALES, type Locale, SITE_URL, SITE_SEO_DESCRIPTION } from "@/lib/identity"
 import { iconMimeTypeFromUrl } from "@/lib/icon-mime"
 
@@ -179,7 +179,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const websiteSchema = generateWebSiteSchema()
-  const organizationSchema = generateOrganizationSchema()
+  const publisherSchema = generatePublisherSchema()
 
   // Locale + direction are detected in middleware.ts and passed in via the
   // x-locale header. Layouts can't see params from nested [locale] routes, so
@@ -199,6 +199,8 @@ export default async function RootLayout({
         {/* Preconnect to image origins so cache-miss image requests don't pay the TLS handshake cost. */}
         <link rel="preconnect" href="https://yaqhbuvjnaq0ur0v.public.blob.vercel-storage.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://yaqhbuvjnaq0ur0v.public.blob.vercel-storage.com" />
+        <link rel="alternate" type="application/rss+xml" title="Maya Allan — Writing" href={`${SITE_URL}/feed.xml`} />
+        <link rel="alternate" type="application/feed+json" title="Maya Allan — Writing" href={`${SITE_URL}/feed.json`} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -208,7 +210,7 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: jsonLdScript(organizationSchema),
+            __html: jsonLdScript(publisherSchema),
           }}
         />
       </head>

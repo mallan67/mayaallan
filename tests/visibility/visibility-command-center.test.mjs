@@ -6,6 +6,8 @@ import { aggregateExternalSources } from "../../src/lib/aeo/source-gaps.ts"
 import { detectCrawler } from "../../src/lib/crawler-telemetry.ts"
 import { VISIBILITY_GRAPH, suggestRelatedNodes } from "../../src/lib/visibility/topic-graph.ts"
 import { EVIDENCE_REGISTRY } from "../../src/lib/visibility/evidence-registry.ts"
+import { DISTRIBUTION_SURFACES, distributionSurface, distributionSummary } from "../../src/lib/visibility/distribution-surfaces.ts"
+import { AUTOMATIC_DISTRIBUTION, deliveryReadiness } from "../../src/lib/distribution/delivery-plan.ts"
 
 test("Search Console opportunity engine finds striking-distance and low-CTR queries", () => {
   const current = [
@@ -110,4 +112,113 @@ test("multimodal explainer visuals use a registered route.ts handler and are emb
     assert.ok(page.includes("SeoExplainerVisual"), pagePath + " embeds the shared visual component")
     assert.ok(page.includes(`slug="${slug}"`), pagePath + " points at the expected visual slug")
   }
+})
+
+
+test("distribution registry separates root indexes from downstream surfaces", () => {
+  assert.equal(distributionSurface("bing")?.status, "active")
+  assert.deepEqual(distributionSurface("yahoo")?.coverageFrom, ["bing"])
+  assert.deepEqual(distributionSurface("copilot")?.coverageFrom, ["bing"])
+  assert.equal(distributionSurface("yahoo")?.status, "inherited")
+})
+
+test("Goodreads remains eligible for future retry and is never modeled as blocked", () => {
+  const goodreads = distributionSurface("goodreads")
+  assert.ok(goodreads)
+  assert.equal(goodreads.status, "retry-later")
+  assert.equal(goodreads.attempts, 10)
+  assert.match(goodreads.note, /do NOT block/i)
+  assert.equal(DISTRIBUTION_SURFACES.some((surface) => surface.status === "blocked"), false)
+})
+
+test("distribution registry covers search, AI, libraries, reader networks and psychedelic ecosystem", () => {
+  const categories = new Set(DISTRIBUTION_SURFACES.map((surface) => surface.category))
+  for (const required of [
+    "root-index",
+    "downstream-search",
+    "ai-answer",
+    "bibliographic",
+    "reader-network",
+    "library",
+    "psychedelic-editorial",
+    "psychedelic-podcast",
+    "psychedelic-directory",
+    "psychedelic-community",
+    "psychedelic-marketplace",
+    "youtube-channel",
+    "mental-health-community",
+    "self-help-wellness",
+    "integration-group",
+    "membership-club",
+    "professional-network",
+    "paid-media",
+    "conference-event",
+    "social",
+    "syndication",
+  ]) {
+    assert.ok(categories.has(required), "missing distribution category " + required)
+  }
+})
+
+
+test("distribution registry includes psychedelic discussion marketplaces and named YouTube channels", () => {
+  for (const id of [
+    "reddit-psychedelictherapy",
+    "how-to-use-psychedelics",
+    "violette",
+    "global-psychedelic-society",
+    "shroomery",
+    "meetup-psychedelic",
+    "eventbrite-psychedelic",
+    "youtube-maps",
+    "youtube-psychedelics-today",
+    "youtube-third-wave",
+    "youtube-doubleblind",
+    "youtube-psychedelic-spotlight",
+    "youtube-psychedelic-integration-compass",
+  ]) {
+    assert.ok(distributionSurface(id), "missing distribution surface " + id)
+  }
+})
+
+
+test("distribution registry models paid advertising, memberships, integration groups and professional networks", () => {
+  for (const id of [
+    "psychedelic-society-membership",
+    "nectara",
+    "psychedelics-today-navigators",
+    "district216",
+    "psychedelic-health-professional-network",
+    "intercollegiate-psychedelics-network",
+    "adaa",
+    "mental-health-america",
+    "mindful",
+    "njpa-advertising",
+  ]) {
+    assert.ok(distributionSurface(id), "missing audience/placement surface " + id)
+  }
+
+  const summary = distributionSummary()
+  assert.ok(summary.paidCount >= 8)
+  assert.ok(summary.membershipCount >= 4)
+  assert.equal(distributionSurface("adaa")?.paidExposure, true)
+  assert.ok(distributionSurface("mindful")?.access?.includes("advertising"))
+  assert.ok(distributionSurface("nectara")?.access?.includes("membership"))
+})
+
+
+test("canonical outbound feeds are registered as automatic distribution", () => {
+  assert.ok(AUTOMATIC_DISTRIBUTION.some((item) => item.url === "/feed.xml"))
+  assert.ok(AUTOMATIC_DISTRIBUTION.some((item) => item.url === "/feed.json"))
+  assert.equal(deliveryReadiness(distributionSurface("rss")).mode, "automatic-feed")
+  assert.equal(deliveryReadiness(distributionSurface("json-feed")).mode, "automatic-feed")
+})
+
+test("API channels require connection while communities stay review-first", () => {
+  assert.equal(deliveryReadiness(distributionSurface("linkedin")).mode, "api-after-connect")
+  assert.equal(deliveryReadiness(distributionSurface("pinterest")).mode, "api-after-connect")
+  assert.equal(deliveryReadiness(distributionSurface("youtube")).mode, "api-after-connect")
+  assert.equal(deliveryReadiness(distributionSurface("reddit-psychedelictherapy")).mode, "community-review")
+  assert.equal(deliveryReadiness(distributionSurface("psychedelics-today-editorial")).mode, "human-outreach")
+  assert.equal(deliveryReadiness(distributionSurface("adaa")).mode, "paid-placement")
 })

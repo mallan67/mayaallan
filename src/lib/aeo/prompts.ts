@@ -14,6 +14,12 @@ export interface AeoPrompt {
   category: string
   text: string
   intent?: "discovery" | "problem" | "resource" | "tool" | "comparison" | "research" | "safety" | "brand"
+  /** Stable paraphrase/topic family for trend analysis. */
+  family?: string
+  /** Observable outcome the citation diagnostic should expect. */
+  goal?: "source-citation" | "book-discovery" | "author-discovery"
+  /** MayaAllan.com paths that are especially relevant for this prompt. */
+  expected_paths?: string[]
 }
 
 const PROMPTS_FILE = path.join(process.cwd(), "content", "aeo-prompts.json")

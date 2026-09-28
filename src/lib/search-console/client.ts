@@ -141,6 +141,25 @@ export async function querySearchConsole(query: SearchConsoleQuery): Promise<Sea
   return Array.isArray(data.rows) ? data.rows : []
 }
 
+export async function listSearchConsoleSitemaps(): Promise<unknown[]> {
+  const creds = credentials()
+  if (!creds) return []
+
+  const token = await accessToken()
+  const endpoint = `https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(creds.siteUrl)}/sitemaps`
+  const res = await fetch(endpoint, {
+    headers: { authorization: `Bearer ${token}` },
+    cache: "no-store",
+  })
+
+  if (!res.ok) {
+    throw new Error(`Search Console sitemaps.list failed: HTTP ${res.status} ${await res.text()}`)
+  }
+
+  const data = (await res.json()) as { sitemap?: unknown[] }
+  return Array.isArray(data.sitemap) ? data.sitemap : []
+}
+
 export async function inspectSearchConsoleUrl(url: string): Promise<unknown | null> {
   const creds = credentials()
   if (!creds) return null
