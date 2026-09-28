@@ -6,9 +6,9 @@
  * pin the surfaces that used to drift from it:
  *   - Contact positioning ("speaking engagements" → press / collaborations /
  *     reader inquiries);
- *   - Home and About render the canonical name/bio, not site_settings;
- *   - Admin Settings can no longer overwrite the public author name/bio
- *     (the author PHOTO stays editable);
+ *   - Home and About render the single editable bio from site_settings with
+ *     the approved code bio as a fallback;
+ *   - Admin Settings can edit that one public bio and does not create variants;
  *   - the unclaimed X handle is not attributed on the root layout or the
  *     book page (the frozen scenario page is a known temporary exception).
  */
@@ -90,32 +90,33 @@ test("identity.ts contains the one approved author bio and rejects prior variant
   assert.doesNotMatch(identity, /Maya Allan is an author and educator focused on psilocybin integration/)
 })
 
-test("Home renders AUTHOR_BIO and never reads author_bio from site_settings", () => {
-  assert.match(home, /\bAUTHOR_BIO\b/)
-  assert.match(home, /\{AUTHOR_BIO\}/)
-  assert.doesNotMatch(home, /author_bio|authorBio/)
-  assert.match(home, /\.select\("author_photo_url"\)/)
+test("Home renders the one editable author_bio value with AUTHOR_BIO fallback", () => {
+  assert.match(home, /\.select\("author_photo_url, author_bio"\)/)
+  assert.match(home, /authorBio:\s*data\.author_bio\s*\|\|\s*AUTHOR_BIO/)
+  assert.match(home, /\{authorBio\}/)
+  assert.match(home, /generateAuthorSchema\(SITE_URL, authorBio\)/)
 })
 
-test("About renders AUTHOR_BIO and never reads author_bio from site_settings", () => {
-  assert.match(about, /\bAUTHOR_BIO\b/)
-  assert.match(about, /\{AUTHOR_BIO\}/)
-  assert.doesNotMatch(about, /author_bio|authorBio/)
-  assert.match(about, /\.select\("author_photo_url"\)/)
+test("About renders the one editable author_bio value with AUTHOR_BIO fallback", () => {
+  assert.match(about, /\.select\("author_photo_url, author_bio"\)/)
+  assert.match(about, /authorBio:\s*\(settings\?\.author_bio as string \| null\) \|\| AUTHOR_BIO/)
+  assert.match(about, /\{authorBio\}/)
+  assert.match(about, /generateProfilePageSchema\(SITE_URL, authorBio/)
 })
 
-test("Admin Settings shows the canonical bio read-only and cannot submit another version", () => {
-  assert.match(adminSettingsUi, /Canonical Author Bio/)
-  assert.match(adminSettingsUi, /\{AUTHOR_BIO\}/)
-  assert.doesNotMatch(adminSettingsUi, /name="authorName"|name="authorBio"/)
-  assert.doesNotMatch(adminSettingsUi, /authorName:\s*String\(|authorBio:\s*String\(/)
+test("Admin Settings exposes exactly one editable author bio field", () => {
+  assert.match(adminSettingsUi, /name="authorBio"/)
+  assert.match(adminSettingsUi, /authorBio:\s*String\(form\.get\("authorBio"\)/)
+  assert.match(adminSettingsUi, /defaultValue=\{settings\.authorBio \|\| AUTHOR_BIO\}/)
+  assert.doesNotMatch(adminSettingsUi, /name="authorName"/)
   assert.match(adminSettingsUi, /label="Author Photo"/)
 })
 
-test("Admin Settings API does not accept, expose, or write alternate author bio fields", () => {
+test("Admin Settings API accepts, exposes, and writes the single author bio", () => {
   const schema = adminSettingsApi.slice(adminSettingsApi.indexOf("const SettingsSchema"), adminSettingsApi.indexOf("export async function GET"))
-  assert.doesNotMatch(schema, /^\s*(authorName|authorBio)\s*:/m)
+  assert.match(schema, /^\s*authorBio\s*:/m)
   const write = adminSettingsApi.slice(adminSettingsApi.indexOf("const settingsData"), adminSettingsApi.indexOf("updated_at:"))
-  assert.doesNotMatch(write, /^\s*(author_name|author_bio)\s*:/m)
-  assert.doesNotMatch(adminSettingsApi, /authorName:\s*row\.author_name|authorBio:\s*row\.author_bio/)
+  assert.match(write, /^\s*author_bio:\s*data\.authorBio/m)
+  assert.match(adminSettingsApi, /authorBio:\s*row\.author_bio \?\? AUTHOR_BIO/)
+  assert.doesNotMatch(adminSettingsApi, /authorName:\s*row\.author_name/)
 })

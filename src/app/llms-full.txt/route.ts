@@ -45,9 +45,22 @@ export const revalidate = 300
 export async function GET() {
   const lines: string[] = []
 
+  let authorBio = AUTHOR_BIO
+  try {
+    const { data } = await supabaseAdmin
+      .from(Tables.siteSettings)
+      .select("author_bio")
+      .order("id", { ascending: true })
+      .limit(1)
+      .single()
+    authorBio = (data?.author_bio as string | null) || AUTHOR_BIO
+  } catch {
+    // Keep the code fallback if settings are temporarily unavailable.
+  }
+
   lines.push(`# ${AUTHOR_NAME}`)
   lines.push("")
-  lines.push(`> ${AUTHOR_BIO}`)
+  lines.push(`> ${authorBio}`)
   lines.push("")
   lines.push("Canonical site: " + SITE_URL)
   lines.push("Author: " + AUTHOR_NAME)
