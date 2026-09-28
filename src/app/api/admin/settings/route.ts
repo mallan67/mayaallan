@@ -113,7 +113,7 @@ export async function GET() {
 // Internal: DB row (snake_case) ↔ API/admin-UI shape (camelCase).
 // Mirrors the books / events pattern: snake_case in the DB, camelCase
 // over the wire so existing admin UI doesn't need a rewrite.
-function settingsRowToObject(row: any): Record<string, unknown> {
+function settingsRowToObject(row: Record<string, unknown>): Record<string, unknown> {
   return {
     id: row.id,
     siteName: row.site_name,
