@@ -70,7 +70,7 @@
 ## 🔄 Next Steps (When Adding Real Database)
 
 ### To Connect a Real Database:
-1. **Choose your integration**: Supabase, Neon, or other PostgreSQL
+1. **Choose your integration**: Supabase or other PostgreSQL
 2. **Update `src/db/index.ts`**: Add proper connection string
 3. **Run migrations**: Use the schema in `src/db/schema.ts`
 4. **Replace mock functions** in `lib/mock-data.ts` with real queries:
