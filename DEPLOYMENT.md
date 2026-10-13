@@ -174,13 +174,6 @@ Currently, the site uses mock data that resets on deployment. To persist data:
 5. Update database configuration
 6. Run migrations
 
-### Option 3: Neon (Serverless Postgres)
-1. Create account at [neon.tech](https://neon.tech)
-2. Create database
-3. Copy connection string
-4. Add to Vercel as `DATABASE_URL`
-5. Configure and migrate
-
 ---
 
 ## Updating Your Site
