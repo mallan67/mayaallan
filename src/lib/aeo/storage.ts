@@ -39,6 +39,10 @@ export interface CitationRow {
   prompt_id: string
   prompt_category: string
   prompt_intent?: string
+  /** Stable prompt family + diagnostic expectations captured at run time. */
+  prompt_family?: string
+  prompt_goal?: "source-citation" | "book-discovery" | "author-discovery"
+  expected_paths?: string[]
   /** v2: same as source_citation. Legacy rows: any mention at all. */
   was_cited: boolean
   mention_types: string[]

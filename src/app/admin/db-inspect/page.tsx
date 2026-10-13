@@ -44,6 +44,14 @@ type VisibleEventRow = {
   isPast: boolean | null
 }
 
+type VisibleEventDbRow = {
+  slug: string
+  starts_at: string | null
+  ends_at: string | null
+  keep_visible_after_end: boolean | null
+  is_visible: boolean | null
+}
+
 type Report = {
   generatedAt: string
   note: string
@@ -146,7 +154,8 @@ async function getVisibleEventsCheck(): Promise<{
       return { rows: null, error: error.message?.slice(0, 200) ?? "Unknown error" }
     }
     const nowMs = Date.now()
-    const rows: VisibleEventRow[] = (data ?? []).map((row: any) => ({
+    const eventRows = (data ?? []) as VisibleEventDbRow[]
+    const rows: VisibleEventRow[] = eventRows.map((row) => ({
       slug: row.slug,
       startsAt: row.starts_at ?? null,
       endsAt: row.ends_at ?? null,

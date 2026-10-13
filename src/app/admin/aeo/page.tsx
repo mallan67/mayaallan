@@ -22,6 +22,8 @@ import { redirect } from "next/navigation"
 import { loadRecentRuns, allRows, type CitationRow, type AeoRun } from "@/lib/aeo/storage"
 import { aggregateByEngine, aggregateBySearchCapability, aggregateByPrompt, aggregateByUrl, isClassifiedRow, type DimensionCounts } from "@/lib/aeo/aggregate"
 import { aggregateExternalSources } from "@/lib/aeo/source-gaps"
+import { loadPrompts } from "@/lib/aeo/prompts"
+import { compareDiagnosticRuns, summarizeDiagnostics, type CitationDiagnosticSpec } from "@/lib/aeo/citation-diagnostics"
 import { RunNowButton } from "./RunNowButton"
 import { CopyButton } from "./CopyButton"
 import { ClearAllButton } from "./ClearAllButton"
@@ -46,6 +48,19 @@ export default async function AeoDashboardPage() {
   }
 
   const rows: Row[] = allRows(runs)
+  const promptSpecs = await loadPrompts()
+  const specMap = new Map<string, CitationDiagnosticSpec>(promptSpecs.map((prompt) => [prompt.id, prompt]))
+  const latestRows = runs[0]?.rows ?? []
+  const previousRows = runs[1]?.rows ?? []
+  const diagnosticDeltas = compareDiagnosticRuns(latestRows, previousRows, specMap)
+  const groundedDiagnostics = diagnosticDeltas.map((item) => item.current).filter((item) => item.searched)
+  const diagnosticSummary = summarizeDiagnostics(groundedDiagnostics)
+  const improvedDiagnostics = diagnosticDeltas.filter((item) => item.movement === "improved").length
+  const regressedDiagnostics = diagnosticDeltas.filter((item) => item.movement === "regressed").length
+  const repairQueue = diagnosticDeltas
+    .filter((item) => item.current.searched && !["citation-success", "search-unobserved", "error"].includes(item.current.stage))
+    .sort((a, b) => a.current.score - b.current.score || a.key.localeCompare(b.key))
+    .slice(0, 20)
   const byEngine = aggregateByEngine(rows)
   const bySearch = aggregateBySearchCapability(rows)
   const byPrompt = aggregateByPrompt(rows)
@@ -71,9 +86,10 @@ export default async function AeoDashboardPage() {
           <code className="bg-slate-100 px-1 rounded text-xs">aeo/runs/*.json</code>.
         </p>
         <p className="mt-2 text-xs text-slate-500">
-          Only Perplexity searches the web. The Claude, ChatGPT and Gemini probes are plain model calls
-          that answer from training data; a brand mention from them says nothing about what a consumer
-          search product would show.
+          Grounded-search mode is measured separately from model memory. Perplexity is search-backed;
+          ChatGPT, Claude and Gemini can also run grounded provider searches when enabled in
+          <code className="bg-slate-100 px-1 rounded ml-1">AEO_GROUNDED_ENGINES</code>. Hidden provider
+          ranking/reranking stages are never inferred when the API does not expose them.
         </p>
         {fetchError && (
           <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-sm">
@@ -122,12 +138,80 @@ export default async function AeoDashboardPage() {
         <ClearAllButton runCount={runs.length} />
       </header>
 
+      <section className="mb-10 border border-slate-200 rounded-xl bg-white p-4">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Citation engineering loop</h2>
+            <p className="text-xs text-slate-500 mt-1 max-w-3xl">
+              Observable path: searched → Maya source exposed/retrieved → cited → expected Maya page →
+              book/author linkage when the prompt requires it. Private provider reranking is deliberately
+              marked unobservable instead of guessed.
+            </p>
+          </div>
+          <div className="text-xs text-slate-500">
+            latest grounded probes: {diagnosticSummary.total}
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-4">
+          <CitationMetric label="Retrieved" value={diagnosticSummary.retrieved} />
+          <CitationMetric label="Cited" value={diagnosticSummary.cited} />
+          <CitationMetric label="Full success" value={diagnosticSummary.success} />
+          <CitationMetric label="Improved vs prior" value={improvedDiagnostics} />
+          <CitationMetric label="Regressed vs prior" value={regressedDiagnostics} />
+        </div>
+
+        <div className="mt-5">
+          <h3 className="text-sm font-semibold text-slate-800">Targeted repair queue</h3>
+          <p className="text-xs text-slate-500 mt-1">
+            Lowest observable stage first. Repairs are recommendations for the specific failure stage,
+            not automatic rewrites.
+          </p>
+          {repairQueue.length === 0 ? (
+            <p className="text-sm text-slate-500 mt-3 italic">
+              No grounded repair items yet. Run grounded probes to populate the learning loop.
+            </p>
+          ) : (
+            <div className="mt-3 divide-y divide-slate-100">
+              {repairQueue.map((item) => (
+                <div key={item.key} className="py-3 grid md:grid-cols-[170px_1fr] gap-3">
+                  <div>
+                    <div className="text-xs font-semibold uppercase text-slate-700">{item.current.engine}</div>
+                    <div className="text-[11px] text-slate-500 mt-1">{item.current.stage.replaceAll("-", " ")}</div>
+                    <div className="text-[11px] text-slate-400">
+                      score {item.current.score}/5
+                      {item.delta === null ? " · new" : ` · ${item.delta >= 0 ? "+" : ""}${item.delta} vs prior`}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-slate-800">
+                      {specMap.get(item.current.promptId)?.text ?? item.current.promptId}
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1">{item.current.repair}</p>
+                    {item.current.searchQueries.length > 0 && (
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        Search query: {item.current.searchQueries.join(" · ")}
+                      </p>
+                    )}
+                    {item.current.externalSourceUrls.length > 0 && (
+                      <p className="text-[11px] text-slate-500 mt-1 break-all">
+                        Other sources seen: {item.current.externalSourceUrls.slice(0, 3).join(" · ")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* SEARCH-CAPABLE VS NOT */}
       <section className="mb-10">
         <h2 className="text-lg font-semibold text-slate-900 mb-3">By search capability</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <DimensionCard title="Search-capable engines (Perplexity)" counts={bySearch.search_capable} />
-          <DimensionCard title="Non-search engines (Claude, ChatGPT, Gemini)" counts={bySearch.non_search} />
+          <DimensionCard title="Search-capable probes" counts={bySearch.search_capable} />
+          <DimensionCard title="Model-memory probes" counts={bySearch.non_search} />
         </div>
       </section>
 
@@ -462,6 +546,15 @@ export default async function AeoDashboardPage() {
           ← Back to admin
         </Link>
       </footer>
+    </div>
+  )
+}
+
+function CitationMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="border border-slate-100 rounded-lg p-3">
+      <div className="text-[10px] uppercase tracking-[0.14em] text-slate-500">{label}</div>
+      <div className="text-2xl font-semibold text-slate-900 mt-1">{value}</div>
     </div>
   )
 }

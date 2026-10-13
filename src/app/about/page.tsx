@@ -12,9 +12,13 @@ import {
 } from "@/lib/structured-data"
 import { SITE_URL, AUTHOR_JOB_TITLE, AUTHOR_NAME, AUTHOR_BIO } from "@/lib/identity"
 
-// Cache the author photo lookup for 5 min. Public author identity is canonical in code.
+// Cache the author photo lookup for 5 min (admin edits in Settings will
+// revalidate the page automatically when they save).
 export const revalidate = 300
 
+// Public author identity (name, bio) is governed in code — src/lib/identity.ts
+// (AUTHOR_NAME, AUTHOR_BIO). site_settings only supplies the author PHOTO, so
+// an admin edit can never change what the site says Maya is.
 async function getAuthorPhoto(): Promise<string | null> {
   try {
     const { data: settings, error } = await supabaseAdmin
@@ -28,7 +32,6 @@ async function getAuthorPhoto(): Promise<string | null> {
       console.error("About page - Error fetching author photo:", error.message, error.code)
       return null
     }
-
     return (settings?.author_photo_url as string | null) ?? null
   } catch (error) {
     console.error("About page - Failed to fetch author photo:", error)
@@ -39,13 +42,9 @@ async function getAuthorPhoto(): Promise<string | null> {
 export async function generateMetadata(): Promise<Metadata> {
   const title = "About"
 
-  const truncateAtWord = (str: string, max = 155) => {
-    if (str.length <= max) return str
-    const slice = str.slice(0, max)
-    const lastSpace = slice.lastIndexOf(" ")
-    return slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…"
-  }
-  const description = truncateAtWord(AUTHOR_BIO, 155)
+  // Canonical, code-governed description (not derived from any DB field).
+  const description =
+    "Learn more about Maya Allan — author and educator writing non-clinical, educational resources for psilocybin integration, post-journey reflection, and self-inquiry."
   // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
   // Author photos may not be the correct aspect ratio for social sharing
   const imageUrl = `${SITE_URL}/opengraph-image`
@@ -83,7 +82,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AboutPage() {
   const authorPhotoUrl = await getAuthorPhoto()
 
-  // ProfilePage + Person schema — one approved bio everywhere.
+  // ProfilePage + Person schema — explicitly identifies /about as Maya's author profile.
   const profileSchema = generateProfilePageSchema(SITE_URL, AUTHOR_BIO, authorPhotoUrl ?? undefined)
 
   // FAQPage JSON-LD — mirrors the visible reader questions below
@@ -169,6 +168,7 @@ export default async function AboutPage() {
       {/* ── Bio Section ── */}
       <section className="py-16 md:py-20">
         <div className="max-w-[680px] mx-auto px-5 md:px-9">
+          {/* Canonical bio — governed in src/lib/identity.ts, never from the DB */}
           <div className="text-[1.05rem] leading-[1.85] text-charcoal-mid whitespace-pre-wrap">
             {AUTHOR_BIO}
           </div>
@@ -219,7 +219,7 @@ export default async function AboutPage() {
       <section className="py-16 md:py-20">
         <div className="max-w-[680px] mx-auto px-5 md:px-9 text-center">
           <blockquote className="font-serif italic font-light text-[clamp(1.2rem,3vw,1.5rem)] text-charcoal leading-[1.7] mb-6">
-            &ldquo;To know and accept yourself is to be &quot;home.&quot; Others are here to share the journey, but the return to yourself is a path only you can take.&rdquo;
+            &ldquo;To know and accept your ever-evolving self is to be home. Others are here to share the journey — but the return to your ever-evolving self is a path only you can take.&rdquo;
           </blockquote>
           <div className="w-12 h-0.5 bg-gold mx-auto mb-8" />
           <div className="flex flex-wrap gap-3.5 justify-center">

@@ -7,6 +7,10 @@ import {
   AUTHOR_JOB_TITLE,
   BOOK_PROFILES,
   BOOK_ASINS,
+  BOOK_PLATFORM_IDENTIFIERS,
+  BOOK_EDITIONS,
+  AUTHOR_ID,
+  WEBSITE_ID,
   SITE_URL,
   SITE_SEO_DESCRIPTION,
   bookMachineSummary,
@@ -147,7 +151,6 @@ export interface ArticleSchemaInput {
 }
 
 export function generateArticleSchema(input: ArticleSchemaInput, siteUrl = SITE_URL) {
-  const authorIdentifiers = authorIdentifierNodes()
   return {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -163,12 +166,14 @@ export function generateArticleSchema(input: ArticleSchemaInput, siteUrl = SITE_
       keywords: Array.isArray(input.keywords) ? input.keywords.join(", ") : input.keywords,
     }),
     ...(input.wordCount && { wordCount: input.wordCount }),
+    // FROZEN through the active indexing experiment: preserve the exact
+    // pre-experiment Article JSON-LD output. Author-first identity changes are
+    // applied to the site/person/book graph, not to frozen article/scenario nodes.
     author: {
       "@type": "Person",
       name: AUTHOR_NAME,
       url: siteUrl,
-      sameAs: AUTHOR_PROFILES,
-      ...(authorIdentifiers && { identifier: authorIdentifiers }),
+      sameAs: ["https://www.instagram.com/maya.allan66/"],
     },
     publisher: {
       "@type": "Organization",
@@ -216,12 +221,14 @@ export function generateWebSiteSchema(siteName = "Maya Allan", siteUrl = SITE_UR
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": WEBSITE_ID,
     name: siteName,
     url: siteUrl,
     description: SITE_SEO_DESCRIPTION,
     publisher: {
       "@type": "Person",
-      name: "Maya Allan",
+      "@id": AUTHOR_ID,
+      name: AUTHOR_NAME,
       url: siteUrl,
     },
     // No SearchAction: the site has no search endpoint, and Google retired the
@@ -230,25 +237,16 @@ export function generateWebSiteSchema(siteName = "Maya Allan", siteUrl = SITE_UR
   }
 }
 
-export function generateOrganizationSchema(siteName = AUTHOR_NAME, siteUrl = SITE_URL, logoUrl?: string) {
+export function generatePublisherSchema(siteUrl = SITE_URL) {
   return {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    name: siteName,
+    "@type": "Person",
+    "@id": AUTHOR_ID,
+    name: AUTHOR_NAME,
     url: siteUrl,
-    ...(logoUrl && { logo: logoUrl }),
-    // sameAs sourced from src/lib/identity.ts — add new profiles there once.
+    jobTitle: AUTHOR_JOB_TITLE,
+    description: AUTHOR_BIO,
     sameAs: AUTHOR_PROFILES,
-    contactPoint: {
-      "@type": "ContactPoint",
-      contactType: "customer service",
-      url: `${siteUrl}/contact`,
-    },
-    founder: {
-      "@type": "Person",
-      name: AUTHOR_NAME,
-      url: siteUrl,
-    },
   }
 }
 
@@ -291,27 +289,37 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
   // Book entity has its own consolidated authority web independent of the author.
   const bookSameAs = options?.sameAs ?? BOOK_PROFILES[book.slug] ?? []
 
-  // ISBN + ASIN identifiers, emitted as schema.org PropertyValue nodes so
-  // Google can match the Book entity against retailer catalogs in either direction.
+  const editions = BOOK_EDITIONS[book.slug] ?? []
+  const hasEditionMap = editions.length > 0
+
+  // Work-level identifiers should not flatten edition ISBNs together. When an
+  // edition map exists, ISBNs live on workExample nodes only. Legacy books
+  // without an edition map may still expose their single books.isbn value.
   const bookIdentifiers: Array<{ "@type": "PropertyValue"; propertyID: string; value: string }> = []
-  if (book.isbn) {
+  if (book.isbn && !hasEditionMap) {
     bookIdentifiers.push({ "@type": "PropertyValue", propertyID: "ISBN", value: book.isbn })
   }
-  const asin = BOOK_ASINS[book.slug]
-  if (asin) {
-    bookIdentifiers.push({ "@type": "PropertyValue", propertyID: "ASIN", value: asin })
+  const formatAsins = BOOK_ASINS[book.slug] ?? {}
+  if (!hasEditionMap) {
+    const legacyAsin = Object.values(formatAsins)[0]
+    if (legacyAsin) {
+      bookIdentifiers.push({ "@type": "PropertyValue", propertyID: "ASIN", value: legacyAsin })
+    }
   }
 
   const authorIdentifiers = authorIdentifierNodes()
 
+  const workId = `${siteUrl}/books/${book.slug}#work`
+
   return {
     "@context": "https://schema.org",
     "@type": "Book",
+    "@id": workId,
     name: book.title,
     ...(book.subtitle1 && { alternativeHeadline: book.subtitle1 }),
     // Machine-facing summary, NEVER the mutable sales blurb (book.blurb).
     description: bookMachineSummary(book.slug, book.title),
-    ...(book.isbn && { isbn: book.isbn }),
+    ...(book.isbn && !hasEditionMap && { isbn: book.isbn }),
     ...(bookIdentifiers.length > 0 && { identifier: bookIdentifiers }),
     ...(book.copyright && { copyrightNotice: book.copyright }),
     ...(book.coverUrl && {
@@ -322,13 +330,15 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
     }),
     author: {
       "@type": "Person",
+      "@id": AUTHOR_ID,
       name: AUTHOR_NAME,
       url: siteUrl,
       sameAs: AUTHOR_PROFILES,
       ...(authorIdentifiers && { identifier: authorIdentifiers }),
     },
     publisher: {
-      "@type": "Organization",
+      "@type": "Person",
+      "@id": AUTHOR_ID,
       name: AUTHOR_NAME,
       url: siteUrl,
     },
@@ -349,6 +359,37 @@ export function generateBookSchema(book: Book, siteUrl = SITE_URL, options?: Boo
     ],
     url: `${siteUrl}/books/${book.slug}`,
     ...(bookSameAs.length > 0 && { sameAs: bookSameAs }),
+    ...(editions.length > 0 && {
+      workExample: editions.map((edition) => ({
+        "@type": "Book",
+        "@id": `${siteUrl}/books/${book.slug}#edition-${edition.key}`,
+        name: book.title,
+        isbn: edition.isbn,
+        bookFormat: edition.bookFormat,
+        inLanguage: edition.language ?? "en",
+        author: { "@id": AUTHOR_ID },
+        publisher: {
+          "@type": "Person",
+          "@id": AUTHOR_ID,
+          name: edition.publisher,
+          url: siteUrl,
+        },
+        exampleOfWork: { "@id": workId },
+        ...(edition.sameAs && edition.sameAs.length > 0 && { sameAs: edition.sameAs }),
+        identifier: [
+          { "@type": "PropertyValue", propertyID: "ISBN", value: edition.isbn },
+          ...(formatAsins[edition.key]
+            ? [{ "@type": "PropertyValue", propertyID: "ASIN", value: formatAsins[edition.key] }]
+            : []),
+          ...((BOOK_PLATFORM_IDENTIFIERS[book.slug]?.[edition.key] ?? []).map((id) => ({
+            "@type": "PropertyValue",
+            propertyID: id.propertyID,
+            value: id.value,
+          }))),
+        ],
+        url: `${siteUrl}/books/${book.slug}`,
+      })),
+    }),
     ...(options?.aggregateRating && {
       aggregateRating: {
         "@type": "AggregateRating",
@@ -439,6 +480,7 @@ export function generateAuthorSchema(siteUrl = SITE_URL, bio?: string, imageUrl?
   return {
     "@context": "https://schema.org",
     "@type": "Person",
+    "@id": AUTHOR_ID,
     name: AUTHOR_NAME,
     url: siteUrl,
     jobTitle: AUTHOR_JOB_TITLE,
@@ -455,11 +497,7 @@ export function generateAuthorSchema(siteUrl = SITE_URL, bio?: string, imageUrl?
       "Shadow work",
       "Spiritual integration",
     ],
-    worksFor: {
-      "@type": "Organization",
-      name: AUTHOR_NAME,
-      url: siteUrl,
-    },
+    mainEntityOfPage: { "@id": WEBSITE_ID },
   }
 }
 

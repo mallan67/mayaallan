@@ -28,6 +28,7 @@ const about = read("../../src/app/about/page.tsx")
 const adminSettingsUi = read("../../src/app/admin/settings/page.tsx")
 const adminSettingsApi = read("../../src/app/api/admin/settings/route.ts")
 const scenarioPage = read("../../src/app/scenarios/[slug]/page.tsx")
+const structuredData = read("../../src/lib/structured-data.ts")
 
 const FORBIDDEN_POSITIONING = /\b(speaker|speaking|wellness advocate|therapist|facilitator|coach|clinician|healer|psychedelic practitioner|lived[- ]experience)\b/i
 
@@ -77,8 +78,10 @@ test("FROZEN EXCEPTION: the scenario page is untouched and still carries the han
 })
 
 // ---------------------------------------------------------------------------
-// B. Canonical author bio governance
+// B. Canonical author name / bio governance
 // ---------------------------------------------------------------------------
+
+const DB_IDENTITY_TOKENS = /author_name|author_bio|authorName|authorBio/
 
 test("identity.ts contains the one approved author bio and rejects prior variants", () => {
   assert.match(identity, /Deep inner clarity is a fundamental human birthright/)
@@ -90,32 +93,117 @@ test("identity.ts contains the one approved author bio and rejects prior variant
   assert.doesNotMatch(identity, /Maya Allan is an author and educator focused on psilocybin integration/)
 })
 
-test("Home renders AUTHOR_BIO and never reads author_bio from site_settings", () => {
-  assert.match(home, /\bAUTHOR_BIO\b/)
-  assert.match(home, /\{AUTHOR_BIO\}/)
-  assert.doesNotMatch(home, /author_bio|authorBio/)
+test("Home renders canonical AUTHOR_NAME / AUTHOR_BIO and reads only the author photo from site_settings", () => {
+  assert.match(home, /import\s*\{[^}]*\bAUTHOR_NAME\b[^}]*\}\s*from\s*"@\/lib\/identity"/)
+  assert.match(home, /import\s*\{[^}]*\bAUTHOR_BIO\b[^}]*\}\s*from\s*"@\/lib\/identity"/)
+  assert.doesNotMatch(home, DB_IDENTITY_TOKENS)
   assert.match(home, /\.select\("author_photo_url"\)/)
+  assert.match(home, /\{AUTHOR_BIO\}/)
+  assert.match(home, /\{AUTHOR_NAME\}/)
 })
 
-test("About renders AUTHOR_BIO and never reads author_bio from site_settings", () => {
-  assert.match(about, /\bAUTHOR_BIO\b/)
+test("About renders canonical AUTHOR_NAME / AUTHOR_BIO and reads only the author photo from site_settings", () => {
+  assert.match(about, /import\s*\{[^}]*\bAUTHOR_NAME\b[^}]*\}\s*from\s*"@\/lib\/identity"/)
+  assert.match(about, /import\s*\{[^}]*\bAUTHOR_BIO\b[^}]*\}\s*from\s*"@\/lib\/identity"/)
+  assert.doesNotMatch(about, DB_IDENTITY_TOKENS)
+  assert.match(about, /\.select\("(id, )?author_photo_url"\)/)
   assert.match(about, /\{AUTHOR_BIO\}/)
-  assert.doesNotMatch(about, /author_bio|authorBio/)
-  assert.match(about, /\.select\("author_photo_url"\)/)
+  assert.match(about, /<h1[^>]*>\s*\{AUTHOR_NAME\}/)
+  assert.match(about, /generateProfilePageSchema\(\s*SITE_URL,\s*AUTHOR_BIO/)
+  assert.match(about, /About \$\{AUTHOR_NAME\}/)
 })
 
-test("Admin Settings shows the canonical bio read-only and cannot submit another version", () => {
-  assert.match(adminSettingsUi, /Canonical Author Bio/)
-  assert.match(adminSettingsUi, /\{AUTHOR_BIO\}/)
-  assert.doesNotMatch(adminSettingsUi, /name="authorName"|name="authorBio"/)
-  assert.doesNotMatch(adminSettingsUi, /authorName:\s*String\(|authorBio:\s*String\(/)
+test("Admin Settings UI no longer presents author name/bio as editable, and never sends them", () => {
+  assert.doesNotMatch(adminSettingsUi, /name="authorName"/)
+  assert.doesNotMatch(adminSettingsUi, /name="authorBio"/)
+  assert.doesNotMatch(adminSettingsUi, /authorName:\s*String\(/)
+  assert.doesNotMatch(adminSettingsUi, /authorBio:\s*String\(/)
+  // Author photo remains editable exactly as before.
   assert.match(adminSettingsUi, /label="Author Photo"/)
+  assert.match(adminSettingsUi, /authorPhotoUrl:\s*authorPhotoUrl \|\| ""/)
 })
 
-test("Admin Settings API does not accept, expose, or write alternate author bio fields", () => {
+test("Admin Settings API no longer accepts or writes author name/bio; the photo column is still written", () => {
   const schema = adminSettingsApi.slice(adminSettingsApi.indexOf("const SettingsSchema"), adminSettingsApi.indexOf("export async function GET"))
+  // Key definitions only (an explanatory comment may still name the fields).
   assert.doesNotMatch(schema, /^\s*(authorName|authorBio)\s*:/m)
+  assert.match(schema, /authorPhotoUrl:\s*optionalHttpsUrl/)
   const write = adminSettingsApi.slice(adminSettingsApi.indexOf("const settingsData"), adminSettingsApi.indexOf("updated_at:"))
   assert.doesNotMatch(write, /^\s*(author_name|author_bio)\s*:/m)
+  assert.match(write, /author_photo_url:\s*data\.authorPhotoUrl/)
+  // The wire shape no longer advertises the fields either.
   assert.doesNotMatch(adminSettingsApi, /authorName:\s*row\.author_name|authorBio:\s*row\.author_bio/)
+})
+
+
+// ---------------------------------------------------------------------------
+// D. Author-first publishing identity + edition governance
+// ---------------------------------------------------------------------------
+
+test("Maya Allan has one stable Person identity across the active site, publisher, and book graph", () => {
+  assert.match(identity, /export const AUTHOR_ID = `\$\{SITE_URL\}\/\#maya-allan`/)
+
+  const publisherSchema = structuredData.slice(
+    structuredData.indexOf("export function generatePublisherSchema"),
+    structuredData.indexOf("// -----------------------------------------------------------------------------\n// Reviews & Ratings")
+  )
+  const bookSchema = structuredData.slice(
+    structuredData.indexOf("export function generateBookSchema"),
+    structuredData.indexOf("export interface SoftwareApplicationSchemaInput")
+  )
+
+  for (const graph of [publisherSchema, bookSchema]) {
+    assert.match(graph, /"@type": "Person"/)
+    assert.match(graph, /"@id": AUTHOR_ID/)
+    assert.doesNotMatch(graph, /"@type": "Organization",[\s\S]{0,120}name: AUTHOR_NAME/)
+  }
+
+  // The Article generator is intentionally frozen during the active indexing
+  // experiment and may retain its pre-experiment Organization publisher shape.
+})
+
+test("Psilocybin Integration Guide models paperback, hardcover and ebook as distinct ISBN editions", () => {
+  assert.match(identity, /isbn: "9798994148839"/)
+  assert.match(identity, /isbn: "9798994148853"/)
+  assert.match(identity, /isbn: "9798994148891"/)
+  assert.match(identity, /bookFormat: "https:\/\/schema\.org\/Paperback"/)
+  assert.match(identity, /bookFormat: "https:\/\/schema\.org\/Hardcover"/)
+  assert.match(identity, /bookFormat: "https:\/\/schema\.org\/EBook"/)
+  assert.match(structuredData, /workExample: editions\.map/)
+  assert.match(structuredData, /exampleOfWork: \{ "@id": workId \}/)
+})
+
+test("edition-mapped books do not publish the legacy single ISBN at work level", () => {
+  assert.match(structuredData, /book\.isbn && !hasEditionMap/)
+  assert.match(structuredData, /book\.isbn && !hasEditionMap && \{ isbn: book\.isbn \}/)
+})
+
+test("verified author and book authority URLs are wired into sameAs", () => {
+  assert.match(identity, /linkedin\.com\/in\/mayaallan/)
+  assert.match(identity, /openlibrary\.org\/authors\/OL16288546A\/Maya_Allan/)
+  assert.match(identity, /openlibrary\.org\/works\/OL45177926W/)
+})
+
+
+test("format-specific platform identifiers stay attached to the correct editions", () => {
+  assert.match(identity, /ebook: "B0G765BZDL"/)
+  assert.match(identity, /paperback: "B0G91GZMLT"/)
+  assert.match(identity, /hardcover: "B0G7JWDJYQ"/)
+  assert.match(identity, /Google Books ID", value: "HvafEQAAQBAJ"/)
+  assert.match(structuredData, /formatAsins\[edition\.key\]/)
+  assert.match(structuredData, /BOOK_PLATFORM_IDENTIFIERS\[book\.slug\]/)
+})
+
+test("verified international paperback retailers are linked to the paperback edition", () => {
+  for (const host of [
+    "walmart.com",
+    "foyles.co.uk",
+    "hatchards.co.uk",
+    "adlibris.com",
+    "bol.com",
+    "lafeltrinelli.it",
+    "ebay.fr",
+  ]) {
+    assert.match(identity, new RegExp(host.replaceAll(".", "\\.")))
+  }
 })

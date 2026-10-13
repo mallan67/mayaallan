@@ -18,6 +18,8 @@
 // =============================================================================
 
 export const SITE_URL = "https://www.mayaallan.com"
+export const AUTHOR_ID = `${SITE_URL}/#maya-allan`
+export const WEBSITE_ID = `${SITE_URL}/#website`
 
 // -----------------------------------------------------------------------------
 // AUTHOR_PROFILES — every place "Maya Allan" exists online as a verified entity
@@ -28,6 +30,7 @@ export const SITE_URL = "https://www.mayaallan.com"
 export const AUTHOR_PROFILES: string[] = [
   // Social
   "https://www.instagram.com/maya.allan66/", // VERIFIED 2026-05-19 (first post live)
+  "https://www.linkedin.com/in/mayaallan", // VERIFIED live 2026-09-26
   // "https://x.com/mayaallan",                       // TODO: claim or remove
   // "https://www.facebook.com/mayaallan",            // TODO: claim or remove
   // "https://www.linkedin.com/in/mayaallan",         // TODO: claim
@@ -51,7 +54,7 @@ export const AUTHOR_PROFILES: string[] = [
   // "https://www.amazon.com/author/mayaallan",       // TODO: claim Amazon Author Central (highest single-source ROI)
   // "https://www.bookbub.com/profile/maya-allan",    // TODO: claim
   // "https://app.thestorygraph.com/profile/mayaallan", // TODO: claim
-  // "https://openlibrary.org/authors/OLXXXXXA/Maya_Allan", // TODO: add via openlibrary.org
+  "https://openlibrary.org/authors/OL16288546A/Maya_Allan", // VERIFIED live 2026-09-26
   // "https://www.librarything.com/author/allanmaya",  // TODO: claim
 
   // Knowledge / identifier services (these light up Knowledge Panels)
@@ -85,6 +88,7 @@ export const BOOK_PROFILES: Record<string, string[]> = {
     "https://www.abebooks.com/9798994148839/Psilocybin-Integration-Guide-Real-Scenarios/plp",
     "https://www.goodreads.com/book/show/245299940-psilocybin-integration-guide", // VERIFIED 2026-05-19
     "https://play.google.com/store/books/details/Maya_Allan_Psilocybin_Integration_Guide?id=HvafEQAAQBAJ", // VERIFIED 2026-05-19 ($9.99 ebook)
+    "https://openlibrary.org/works/OL45177926W", // VERIFIED via Open Library author works API 2026-09-26
 
     // TODO: paste the actual URLs once confirmed (Maya: these listings exist
     // but the canonical URLs weren't programmatically findable — copy from the
@@ -107,8 +111,113 @@ export const BOOK_PROFILES: Record<string, string[]> = {
 // identifier alongside ISBN). Helps Google merge the Amazon listing with the
 // rest of the Book entity graph.
 // -----------------------------------------------------------------------------
-export const BOOK_ASINS: Record<string, string> = {
-  "psilocybin-integration-guide": "B0G7JWDJYQ",
+export const BOOK_ASINS: Record<string, Record<string, string>> = {
+  "psilocybin-integration-guide": {
+    ebook: "B0G765BZDL",
+    paperback: "B0G91GZMLT",
+    hardcover: "B0G7JWDJYQ",
+  },
+}
+
+export const BOOK_PLATFORM_IDENTIFIERS: Record<
+  string,
+  Record<string, Array<{ propertyID: string; value: string }>>
+> = {
+  "psilocybin-integration-guide": {
+    ebook: [
+      { propertyID: "Google Books ID", value: "HvafEQAAQBAJ" },
+    ],
+    paperback: [],
+    hardcover: [],
+  },
+}
+
+
+// -----------------------------------------------------------------------------
+// BOOK_EDITIONS — bibliographic identity for each format/edition.
+// -----------------------------------------------------------------------------
+// A book work may have many legitimate ISBNs. Keep each ISBN attached to the
+// edition it identifies instead of flattening the whole work into books.isbn.
+// Retailer/platform-only identifiers (ASIN, GGKEY, Apple ID, etc.) belong in
+// their own identifier maps, never in the ISBN field.
+export interface BookEditionIdentity {
+  key: string
+  label: string
+  isbn: string
+  bookFormat:
+    | "https://schema.org/EBook"
+    | "https://schema.org/Paperback"
+    | "https://schema.org/Hardcover"
+    | "https://schema.org/AudiobookFormat"
+  publisher: string
+  language?: string
+  sameAs?: string[]
+}
+
+export const BOOK_EDITIONS: Record<string, BookEditionIdentity[]> = {
+  "psilocybin-integration-guide": [
+    {
+      key: "paperback",
+      label: "Paperback",
+      isbn: "9798994148839",
+      bookFormat: "https://schema.org/Paperback",
+      publisher: "Maya Allan",
+      language: "en",
+      sameAs: [
+        "https://www.amazon.com/Psilocybin-Integration-Guide-Navigating-Experience/dp/B0G91GZMLT",
+        "https://www.barnesandnoble.com/w/psilocybin-integration-guide-maya-allan/1148993659?ean=9798994148839",
+        "https://bookshop.org/p/books/psilocybin-integration-guide-40-real-scenarios-for-navigating-what-you-see-feel-experience-maya-allan/3c9390316323761a?ean=9798994148839",
+        "https://www.waterstones.com/book/psilocybin-integration-guide/maya-allan/9798994148839",
+        "https://www.bokus.com/bok/9798994148839/psilocybin-integration-guide-40-real-scenarios-for-navigating-what-you-see-feel-experience",
+        "https://www.abebooks.com/9798994148839/Psilocybin-Integration-Guide-Real-Scenarios/plp",
+        "https://www.walmart.com/ip/Psilocybin-Integration-Guide-40-Real-Scenarios-for-Navigating-What-You-See-Feel-Experience-Paperback-9798994148839/18999463307",
+        "https://www.foyles.co.uk/book/psilocybin-integration-guide/maya-allan/9798994148839",
+        "https://www.hatchards.co.uk/book/psilocybin-integration-guide/maya-allan/9798994148839",
+        "https://www.adlibris.com/sv/bok/psilocybin-integration-guide-9798994148839",
+        "https://www.bol.com/nl/nl/p/psilocybin-integration-guide/9300000253222512/",
+        "https://www.lafeltrinelli.it/psilocybin-integration-guide-40-real-libro-inglese-maya-allan/e/9798994148839",
+        "https://www.ebay.fr/itm/188780563782",
+      ],
+    },
+    {
+      key: "hardcover",
+      label: "Hardcover",
+      isbn: "9798994148853",
+      bookFormat: "https://schema.org/Hardcover",
+      publisher: "Maya Allan",
+      language: "en",
+      sameAs: [
+        "https://www.amazon.com/Psilocybin-Integration-Guide-Navigating-Experience/dp/B0G7JWDJYQ",
+      ],
+    },
+    {
+      key: "ebook",
+      label: "Ebook",
+      isbn: "9798994148891",
+      bookFormat: "https://schema.org/EBook",
+      publisher: "Maya Allan",
+      language: "en",
+      sameAs: [
+        "https://www.amazon.com/Psilocybin-Integration-Guide-Navigating-Experience-ebook/dp/B0G765BZDL",
+        "https://play.google.com/store/books/details?id=HvafEQAAQBAJ",
+      ],
+    },
+  ],
+}
+
+export const BOOK_DISCOVERED_RETAILERS: Record<
+  string,
+  Array<{ name: string; url: string; format: "ebook" | "paperback" | "hardcover" | "audiobook" }>
+> = {
+  "psilocybin-integration-guide": [
+    { name: "Walmart", url: "https://www.walmart.com/ip/Psilocybin-Integration-Guide-40-Real-Scenarios-for-Navigating-What-You-See-Feel-Experience-Paperback-9798994148839/18999463307", format: "paperback" },
+    { name: "Foyles", url: "https://www.foyles.co.uk/book/psilocybin-integration-guide/maya-allan/9798994148839", format: "paperback" },
+    { name: "Hatchards", url: "https://www.hatchards.co.uk/book/psilocybin-integration-guide/maya-allan/9798994148839", format: "paperback" },
+    { name: "Adlibris", url: "https://www.adlibris.com/sv/bok/psilocybin-integration-guide-9798994148839", format: "paperback" },
+    { name: "Bol", url: "https://www.bol.com/nl/nl/p/psilocybin-integration-guide/9300000253222512/", format: "paperback" },
+    { name: "Feltrinelli", url: "https://www.lafeltrinelli.it/psilocybin-integration-guide-40-real-libro-inglese-maya-allan/e/9798994148839", format: "paperback" },
+    { name: "eBay France", url: "https://www.ebay.fr/itm/188780563782", format: "paperback" },
+  ],
 }
 
 // -----------------------------------------------------------------------------
