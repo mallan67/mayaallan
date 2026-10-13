@@ -167,11 +167,12 @@ export const AUTHOR_IDENTIFIERS: AuthorIdentifier[] = [
 ]
 
 // -----------------------------------------------------------------------------
-// AUTHOR_BIO — single canonical public author bio; do not create variants
+// AUTHOR_BIO — approved fallback for the editable public author bio
 // -----------------------------------------------------------------------------
-// This exact text is the only approved Maya Allan biography. Public pages,
-// structured data, admin display, and external-profile guidance must source it
-// from here rather than maintaining alternate short/medium/platform versions.
+// The live public biography is edited in Admin Settings and stored once in
+// site_settings.author_bio. This constant is the approved fallback used when
+// settings are unavailable or before an editable value has been saved. Do not
+// create separate short/medium/platform bio variants.
 export const AUTHOR_BIO =
   "Deep inner clarity is a fundamental human birthright. It is a capacity we all possess, though it is often buried under the noise of inherited narratives and the pressure of who we are \"supposed\" to be.\\n\\n" +
   "My work is built on a simple conviction: no one can do this inner work for us. This is practical, grounded work: self-knowledge and radical acceptance. It happens when we stop seeking external approval, drop the weight of inherited guilt, and finally feel at home in our own skin.\\n\\n" +

@@ -4,6 +4,7 @@ import { z } from "zod"
 import { isAuthenticated } from "@/lib/session"
 import { supabaseAdmin, Tables } from "@/lib/supabaseAdmin"
 import { assertAdminSameOrigin } from "@/lib/admin-request-guard"
+import { AUTHOR_BIO } from "@/lib/identity"
 
 /**
  * Validation rules for the settings payload.
@@ -75,6 +76,7 @@ const SettingsSchema = z.object({
   socialYoutube: optionalHttpsUrl,
   socialTiktok: optionalHttpsUrl,
   footerText: optionalString(500),
+  authorBio: z.string().trim().min(1, { message: "authorBio is required" }).max(6000, { message: "authorBio too long" }),
   authorPhotoUrl: optionalHttpsUrl,
   defaultOgImageUrl: optionalHttpsUrl,
   siteIconUrl: optionalHttpsUrl,
@@ -111,7 +113,7 @@ export async function GET() {
 // Internal: DB row (snake_case) ↔ API/admin-UI shape (camelCase).
 // Mirrors the books / events pattern: snake_case in the DB, camelCase
 // over the wire so existing admin UI doesn't need a rewrite.
-function settingsRowToObject(row: any): Record<string, unknown> {
+function settingsRowToObject(row: Record<string, unknown>): Record<string, unknown> {
   return {
     id: row.id,
     siteName: row.site_name,
@@ -123,6 +125,7 @@ function settingsRowToObject(row: any): Record<string, unknown> {
     socialYoutube: row.social_youtube,
     socialTiktok: row.social_tiktok,
     footerText: row.footer_text,
+    authorBio: row.author_bio ?? AUTHOR_BIO,
     authorPhotoUrl: row.author_photo_url,
     defaultOgImageUrl: row.default_og_image_url,
     siteIconUrl: row.site_icon_url,
@@ -182,6 +185,7 @@ export async function PATCH(request: Request) {
       social_youtube: data.socialYoutube,
       social_tiktok: data.socialTiktok,
       footer_text: data.footerText,
+      author_bio: data.authorBio,
       author_photo_url: data.authorPhotoUrl,
       default_og_image_url: data.defaultOgImageUrl,
       site_icon_url: data.siteIconUrl,
@@ -219,6 +223,8 @@ export async function PATCH(request: Request) {
     // Invalidate all cached pages that use settings
     revalidatePath("/", "layout")
     revalidatePath("/about", "page")
+    revalidatePath("/llms.txt", "page")
+    revalidatePath("/llms-full.txt", "page")
     revalidatePath("/books", "page")
     revalidatePath("/contact", "page")
 

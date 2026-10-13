@@ -15,6 +15,7 @@ type SiteSettings = {
   socialFacebook?: string | null
   socialYoutube?: string | null
   socialTiktok?: string | null
+  authorBio?: string | null
   authorPhotoUrl?: string | null
   defaultOgImageUrl?: string | null
   siteIconUrl?: string | null
@@ -58,6 +59,7 @@ export default function AdminSettingsPage() {
         siteName: String(form.get("siteName") || ""),
         tagline: String(form.get("tagline") || ""),
         footerText: String(form.get("footerText") || ""),
+        authorBio: String(form.get("authorBio") || ""),
         contactEmail: String(form.get("contactEmail") || ""),
         socialX: String(form.get("socialX") || ""),
         socialInstagram: String(form.get("socialInstagram") || ""),
@@ -146,14 +148,21 @@ export default function AdminSettingsPage() {
         <div className="border border-slate-200 rounded-lg p-6 space-y-4">
           <h2 className="text-lg font-semibold">Author</h2>
 
-          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Canonical Author Bio
-            </p>
+          <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 space-y-3">
             <p className="text-sm font-medium text-slate-900">{AUTHOR_NAME} — {AUTHOR_JOB_TITLE}</p>
-            <p className="text-sm text-slate-700 whitespace-pre-wrap">{AUTHOR_BIO}</p>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                Author Bio
+              </label>
+              <textarea
+                name="authorBio"
+                rows={16}
+                defaultValue={settings.authorBio || AUTHOR_BIO}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg font-sans leading-relaxed"
+              />
+            </div>
             <p className="text-xs text-slate-500">
-              This is the single approved author bio used across the site and structured metadata.
+              This is the single author bio used across the public site, structured metadata, and AI-facing feeds.
             </p>
           </div>
 

@@ -15,29 +15,33 @@ import { SITE_URL, AUTHOR_JOB_TITLE, AUTHOR_NAME, AUTHOR_BIO } from "@/lib/ident
 // Cache the author photo lookup for 5 min. Public author identity is canonical in code.
 export const revalidate = 300
 
-async function getAuthorPhoto(): Promise<string | null> {
+async function getAuthorProfile(): Promise<{ authorPhotoUrl: string | null; authorBio: string }> {
   try {
     const { data: settings, error } = await supabaseAdmin
       .from(Tables.siteSettings)
-      .select("author_photo_url")
+      .select("author_photo_url, author_bio")
       .order("id", { ascending: true })
       .limit(1)
       .single()
 
     if (error) {
       console.error("About page - Error fetching author photo:", error.message, error.code)
-      return null
+      return { authorPhotoUrl: null, authorBio: AUTHOR_BIO }
     }
 
-    return (settings?.author_photo_url as string | null) ?? null
+    return {
+      authorPhotoUrl: (settings?.author_photo_url as string | null) ?? null,
+      authorBio: (settings?.author_bio as string | null) || AUTHOR_BIO,
+    }
   } catch (error) {
-    console.error("About page - Failed to fetch author photo:", error)
-    return null
+    console.error("About page - Failed to fetch author profile:", error)
+    return { authorPhotoUrl: null, authorBio: AUTHOR_BIO }
   }
 }
 
 export async function generateMetadata(): Promise<Metadata> {
   const title = "About"
+  const { authorBio } = await getAuthorProfile()
 
   const truncateAtWord = (str: string, max = 155) => {
     if (str.length <= max) return str
@@ -45,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const lastSpace = slice.lastIndexOf(" ")
     return slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd() + "…"
   }
-  const description = truncateAtWord(AUTHOR_BIO, 155)
+  const description = truncateAtWord(authorBio, 155)
   // ALWAYS use dynamic OG image for consistent 1200x630 sizing across all platforms
   // Author photos may not be the correct aspect ratio for social sharing
   const imageUrl = `${SITE_URL}/opengraph-image`
@@ -81,10 +85,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  const authorPhotoUrl = await getAuthorPhoto()
+  const { authorPhotoUrl, authorBio } = await getAuthorProfile()
 
-  // ProfilePage + Person schema — one approved bio everywhere.
-  const profileSchema = generateProfilePageSchema(SITE_URL, AUTHOR_BIO, authorPhotoUrl ?? undefined)
+  // ProfilePage + Person schema uses the same editable bio shown on the page.
+  const profileSchema = generateProfilePageSchema(SITE_URL, authorBio, authorPhotoUrl ?? undefined)
 
   // FAQPage JSON-LD — mirrors the visible reader questions below
   const faqSchema = generateFAQSchema(AUTHOR_FAQS, `${SITE_URL}/about`)
@@ -170,7 +174,7 @@ export default async function AboutPage() {
       <section className="py-16 md:py-20">
         <div className="max-w-[680px] mx-auto px-5 md:px-9">
           <div className="text-[1.05rem] leading-[1.85] text-charcoal-mid whitespace-pre-wrap">
-            {AUTHOR_BIO}
+            {authorBio}
           </div>
         </div>
       </section>

@@ -112,6 +112,7 @@ export default async function HomePage() {
 
   let authorInfo: {
     authorPhotoUrl: string | null
+    authorBio: string
   } | null = null
 
   let upcomingEvents: {
@@ -139,7 +140,7 @@ export default async function HomePage() {
       .single(),
     supabaseAdmin
       .from(Tables.siteSettings)
-      .select("author_photo_url")
+      .select("author_photo_url, author_bio")
       .limit(1)
       .single(),
     supabaseAdmin
@@ -186,12 +187,13 @@ export default async function HomePage() {
     console.error("Homepage featured book fetch failed:", featuredBookResult.reason)
   }
 
-  // Public author identity is canonical in code; site_settings supplies only the photo.
+  // One editable author bio lives in site_settings; AUTHOR_BIO is the safe fallback.
   if (authorInfoResult.status === "fulfilled") {
     const { data } = authorInfoResult.value
     if (data) {
       authorInfo = {
         authorPhotoUrl: data.author_photo_url,
+        authorBio: data.author_bio || AUTHOR_BIO,
       }
     }
   } else {
@@ -218,8 +220,9 @@ export default async function HomePage() {
     // Events section won't render if empty
   }
 
-  // Author schema for SEO — one approved bio everywhere.
-  const authorSchema = generateAuthorSchema(SITE_URL, AUTHOR_BIO)
+  const authorBio = authorInfo?.authorBio || AUTHOR_BIO
+  // Author schema for SEO — the same editable bio shown on the page.
+  const authorSchema = generateAuthorSchema(SITE_URL, authorBio)
 
   // Extract blurb preview (first 2-3 sentences)
   const getBlurbPreview = (blurb: string | null) => {
@@ -559,7 +562,7 @@ export default async function HomePage() {
                 About Me
               </h2>
               <div className="text-[0.95rem] text-white/85 leading-[1.85] mb-7 whitespace-pre-wrap">
-                {AUTHOR_BIO}
+                {authorBio}
               </div>
 
               {/* Pillars */}
